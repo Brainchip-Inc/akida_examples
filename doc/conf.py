@@ -37,6 +37,7 @@ sphinx_gallery_conf = {
     'default_thumb_file': 'doc/img/brn.png',
     'examples_dirs': '../examples',
     'gallery_dirs': 'examples',
+    'remove_config_comments': True
 }
 
 # Sphinx gallery will raise a Matplotlib agg warning that can only be silenced
