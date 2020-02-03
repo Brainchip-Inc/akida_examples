@@ -8,16 +8,22 @@ Requirements
 * **Python version:** python 3.6 to 3.7
 * **TensorFlow version:** 2.0.0
 
-.. note::
-    Using Windows, you may need to install the latest
-    `Visual C++ redistributable package <https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads>`_.
+.. warning::
+    Using Windows, the latest Visual C++ redistributable package is required.
+    Please refer to `this link
+    <https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads>`_
+    for installation.
 
 Quick installation
 ------------------
 
 .. warning::
-    TensorFlow package is not automatically installed. Please refer to
-    `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_.
+    TensorFlow package is required to use the `CNN2SNN tool
+    <https://pypi.org/project/cnn2snn>`_, the `Akida model zoo
+    <https://pypi.org/project/akida-models>`_ and to run the `examples
+    <examples/index.html>`_. Please refer to
+    `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_
+    for installation.
 
 The Akida Execution Engine, the CNN2SNN tool, and the Akida models packages can
 be setup with Python's pip package manager:
@@ -29,11 +35,11 @@ be setup with Python's pip package manager:
     pip install akida-models
 
 .. note::
-    We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_
+    We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_:
 
     .. code-block:: bash
 
-      ``conda create --name akida_env python=3.6``
+      conda create --name akida_env python=3.6
 
 Running examples
 ----------------
