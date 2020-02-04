@@ -2,39 +2,8 @@
 Getting started
 ===============
 
-The Akida Development Environment relies on a high-level neural networks API,
-written in Python, and largely inspired by the `Keras API <https://keras.io>`_.
-
-The core data structure used by the Akida Execution Engine is a neural network
-**model**\ , which itself is a linear stack of **layers**.
-
-The major difference with other machine learning frameworks is that the data
-exchanged between layers is not the usual **dense** multidimensional arrays,
-but sets of spatially organized events that can be modelled as **sparse**
-multidimensional arrays.
-
-Throughout this documentation, those events will often be referred as "spikes",
-due to their close similarity with the signals exchanged by biological neurons.
-
-.. note::
-    Although the preferred input of an Akida model is a set of spikes, dense
-    inputs are also supported through dedicated adaptation layers that convert
-    the dense input data frames into spikes.
-
-The Akida Development Environment comprises three main python packages:
-
-* the `Akida Simulator <https://pypi.org/project/akida>`_ is an interface to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the development of Akida models without an actual Akida hardware, it includes a software backend that simulates the Akida NSoC.
-
-* the `CNN2SNN tool <https://pypi.org/project/cnn2snn>`_ provides means to convert Convolutional Neural Networks (CNN) that were trained using Deep Learning methods to a low-latency and low-power Spiking Neural Network (SNN) for use with the Akida Execution Engine.
-
-* the `Akida model zoo <https://pypi.org/project/akida-models>`_ contains pre-created spiking neural network (SNN) models built with the Akida sequential API and the CNN2SNN tool using quantized Keras models.
-
-.. figure:: ../img/ade.png
-   :target: ../_images/ade.png
-   :alt: Brainchip
-   :align: center
-
-   Figure 1. Akida Development Environment
+The Akida Development Tools can easily be installed using `pip
+<https://pypi.org/project/pip/>`_ python installer (see `Installation <../installation.html>`_).
 
 For beginners
 -------------
