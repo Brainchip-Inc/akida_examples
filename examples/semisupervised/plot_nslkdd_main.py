@@ -437,10 +437,8 @@ model.summary()
 
 ######################################################################
 # Depending on your setup, training the Akida model will take some time
-# (~10 min).
 
 # Start learning and print final performance
-stats = model.get_statistics()
 pbar = ProgressBar(maxval=X_train.shape[0]).start()
 for i,sample in enumerate(X_train):
     pbar.update(i)
@@ -456,12 +454,6 @@ model.save(saved_model_name)
 file = os.path.join(working_dir, 'NSLKDD_Label_mapping.pkl')
 with open(file, 'wb') as handle:
     pickle.dump(Label_mapping, handle)
-
-# Print model statistics
-print("Model statistics")
-for _, stat in stats.items():
-    print(stat)
-
 
 ######################################################################
 # 7. Display results
@@ -547,6 +539,16 @@ print("Accuracy: "+"{0:.2f}".format(100*results["accuracy"])+"% / "+"F1 score: "
 
 # For non-regression purpose
 assert results["accuracy"] > 0.85
+
+# Get model statistics on a few samples
+stats = model.get_statistics()
+for i in range(20):
+    model.forward(X_test_spikes[i])
+
+# Print model statistics
+print("Model statistics")
+for _, stat in stats.items():
+    print(stat)
 
 ######################################################################
 
