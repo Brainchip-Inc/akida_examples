@@ -179,7 +179,7 @@ X_test = data[data.split=='test'].drop(['label','split'],axis=1)
 
 # Display train set shape and data sneak peek
 print ('Train set shape: %s' % (X_train.shape,))
-X_train.head()
+print(X_train.head())
 
 
 ######################################################################
