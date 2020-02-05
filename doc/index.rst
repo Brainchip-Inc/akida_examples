@@ -40,9 +40,7 @@ reducing power by changing convolutions to event based computations.
 The Akida chip includes a number of key features that differentiate it from
 other neural networks and SNN implementations. These are:
 
-* Synaptic modeling
-* Event-based computing resulting in sparsity
-* Highly configurable connectivity from one layer to the next
+* Event-based computing leveraging SNN inherent sparsity
 * Fully configurable neural processing cores, supporting convolutional,
   separable-convolutional, pooling and fully connected layers
 * Incremental learning after off-line training
@@ -115,13 +113,11 @@ and SNN tutorials. One can check models performances against MNIST, CIFAR10,
 ImageNet and Google Speech Commands (KWS) datasets.
 
 .. note::
-    While the Akida examples are provided under an
-    `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
-    the underlying AEE library is proprietary.
-
-    Please refer to the `End User License Agreement <license.html>`__ for
-    terms and conditions.
-
+    | While the Akida examples are provided under an
+      `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
+      the underlying AEE library is proprietary.
+    | Please refer to the `End User License Agreement <license.html>`__ for
+      terms and conditions.
 
 ____
 
