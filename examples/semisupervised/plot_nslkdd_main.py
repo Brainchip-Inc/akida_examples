@@ -422,7 +422,7 @@ print(pd.Series(y_train).value_counts(normalize=True, sort=False))
 
 #Create a model
 model = Model()
-model.add(InputData("input", input_width=312, input_height=1, input_features=1))
+model.add(InputData("input", input_width=1, input_height=1, input_features=312))
 fully = FullyConnected("fully", num_neurons=10240, activations_enabled=False)
 model.add(fully)
 # Configure the last layer for semi-supervised training
@@ -441,7 +441,7 @@ model.summary()
 def convert_dataset_to_spikes(X):
     X_spikes = []
     for i in ProgressBar()(range(X.shape[0])):
-        sample = X[i].reshape((X[i].shape[0], 1, 1))
+        sample = X[i].reshape((1, 1, X[i].shape[0]))
         X_spikes.append(dense_to_sparse(sample))
     return X_spikes
 
