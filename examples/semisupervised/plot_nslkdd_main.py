@@ -533,7 +533,7 @@ res = res.append(results, ignore_index=True)
 print("Accuracy: "+"{0:.2f}".format(100*results["accuracy"])+"% / "+"F1 score: "+"{0:.2f}".format(results["f1"]))
 
 # For non-regression purpose
-assert results["accuracy"] > 0.85
+assert results["accuracy"] > 0.84
 
 # Get model statistics on a few samples
 stats = model.get_statistics()
