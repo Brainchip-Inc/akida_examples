@@ -438,13 +438,19 @@ model.summary()
 ######################################################################
 # Depending on your setup, training the Akida model will take some time
 
-# Start learning and print final performance
-pbar = ProgressBar(maxval=X_train.shape[0]).start()
-for i,sample in enumerate(X_train):
-    pbar.update(i)
-    l = y_train[i]
-    spikes = dense_to_sparse(sample)
-    model.fit(spikes, input_labels=y_train[i])
+def convert_dataset_to_spikes(X):
+    X_spikes = []
+    for i in ProgressBar()(range(X.shape[0])):
+        sample = X[i].reshape((X[i].shape[0], 1, 1))
+        X_spikes.append(dense_to_sparse(sample))
+    return X_spikes
+
+print("Convert the train set to spikes")
+X_train_spikes = convert_dataset_to_spikes(X_train)
+
+print("Perform training one sample at a time")
+for i in ProgressBar()(range(len(X_train_spikes))):
+    model.fit(X_train_spikes[i], input_labels=y_train[i])
 
 ######################################################################
 # 7. Display results
@@ -512,13 +518,12 @@ def CS_performance_measures(y_true, y_pred, labels=None, normal_class=0):
 # Check performances against the test set
 res = pd.DataFrame()
 
-# Create spikes out of the test set
-X_test_spikes = []
-for i,sample in enumerate(X_test):
-    X_test_spikes.append(dense_to_sparse(sample))
+print("Convert the test set to spikes")
+X_test_spikes = convert_dataset_to_spikes(X_test)
 
+print("Classify test samples")
 y_pred = np.empty((0, 1), dtype=int)
-for i in range(len(X_test_spikes)):
+for i in ProgressBar()(range(len(X_test_spikes))):
     outputs = model.predict(X_test_spikes[i], 5)
     y_pred = np.append(y_pred, outputs)
 results = CS_performance_measures(y_test, y_pred, list(Label_mapping.values()), normal_class=4)
