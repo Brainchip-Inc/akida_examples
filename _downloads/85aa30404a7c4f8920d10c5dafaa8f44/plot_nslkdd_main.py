@@ -166,11 +166,11 @@ data = pd.concat([train_data, test_data])
 data, Label_mapping = data_prep_NSLKDD(data)
 
 # Resplit train and test sets
-y_train = data.label[data.split=='train']
-X_train = data[data.split=='train'].drop(['label','split'],axis=1)
+y_train_df = data.label[data.split=='train']
+X_train_df = data[data.split=='train'].drop(['label','split'],axis=1)
 
-y_test = data.label[data.split=='test']
-X_test = data[data.split=='test'].drop(['label','split'],axis=1)
+y_test_df = data.label[data.split=='test']
+X_test_df = data[data.split=='test'].drop(['label','split'],axis=1)
 
 
 ######################################################################
@@ -178,8 +178,8 @@ X_test = data[data.split=='test'].drop(['label','split'],axis=1)
 # ---------------------------------------
 
 # Display train set shape and data sneak peek
-print ('Train set shape: %s' % (X_train.shape,))
-X_train.head()
+print ('Train set shape: %s' % (X_train_df.shape,))
+print(X_train_df.head())
 
 
 ######################################################################
@@ -373,11 +373,9 @@ def onehotencode_categorical_column(X, mapping_index):
 ######################################################################
 
 # Convert from tabular to binary data
-mappings = compute_df_mappings(X_train, n_bins=20)
-X_train, mappings = onehotencode_df(X_train, mappings=mappings)
-X_test, mappings = onehotencode_df(X_test, mappings=mappings)
-print(X_train.shape)
-
+mappings = compute_df_mappings(X_train_df, n_bins=20)
+X_train, mappings = onehotencode_df(X_train_df, mappings=mappings)
+X_test, mappings = onehotencode_df(X_test_df, mappings=mappings)
 
 ######################################################################
 # .. Note:: The output printed from the cell above should be used to define
@@ -394,15 +392,17 @@ print(X_train.shape)
 # all classes are equally represented.
 
 # Re-sampling specific import
-# Uncomment the following line if necessary
-#!{sys.executable} -m pip install imblearn
 from imblearn.over_sampling import RandomOverSampler
 
 ######################################################################
 
 # Check original distribution
 print('Classes and their frequencies in the dataset:')
-print(y_train.value_counts(normalize=True, sort=False))
+print(y_train_df.value_counts(normalize=True, sort=False))
+
+# Convert label series to numpy arrays
+y_train = y_train_df.to_numpy()
+y_test = y_test_df.to_numpy()
 
 # Oversampling
 ros = RandomOverSampler(random_state=0)
@@ -422,7 +422,7 @@ print(pd.Series(y_train).value_counts(normalize=True, sort=False))
 
 #Create a model
 model = Model()
-model.add(InputData("input", input_width=312, input_height=1, input_features=1))
+model.add(InputData("input", input_width=1, input_height=1, input_features=312))
 fully = FullyConnected("fully", num_neurons=10240, activations_enabled=False)
 model.add(fully)
 # Configure the last layer for semi-supervised training
@@ -438,22 +438,19 @@ model.summary()
 ######################################################################
 # Depending on your setup, training the Akida model will take some time
 
-# Start learning and print final performance
-pbar = ProgressBar(maxval=X_train.shape[0]).start()
-for i,sample in enumerate(X_train):
-    pbar.update(i)
-    l = y_train[i]
-    spikes = dense_to_sparse(sample)
-    model.fit(spikes, input_labels=y_train[i])
+def convert_dataset_to_spikes(X):
+    X_spikes = []
+    for i in ProgressBar()(range(X.shape[0])):
+        sample = X[i].reshape((1, 1, X[i].shape[0]))
+        X_spikes.append(dense_to_sparse(sample))
+    return X_spikes
 
-# Save the model configuration/weights once learning done
-saved_model_name = os.path.join(working_dir, 'nsl_example.fbz')
-model.save(saved_model_name)
+print("Convert the train set to spikes")
+X_train_spikes = convert_dataset_to_spikes(X_train)
 
-# Also save the Label original names for later use
-file = os.path.join(working_dir, 'NSLKDD_Label_mapping.pkl')
-with open(file, 'wb') as handle:
-    pickle.dump(Label_mapping, handle)
+print("Perform training one sample at a time")
+for i in ProgressBar()(range(len(X_train_spikes))):
+    model.fit(X_train_spikes[i], input_labels=y_train[i])
 
 ######################################################################
 # 7. Display results
@@ -521,16 +518,14 @@ def CS_performance_measures(y_true, y_pred, labels=None, normal_class=0):
 # Check performances against the test set
 res = pd.DataFrame()
 
-# Create spikes out of the test set
-X_test_spikes = []
-for i,sample in enumerate(X_test):
-    X_test_spikes.append(dense_to_sparse(sample))
+print("Convert the test set to spikes")
+X_test_spikes = convert_dataset_to_spikes(X_test)
 
+print("Classify test samples")
 y_pred = np.empty((0, 1), dtype=int)
-for i in range(len(X_test_spikes)):
+for i in ProgressBar()(range(len(X_test_spikes))):
     outputs = model.predict(X_test_spikes[i], 5)
     y_pred = np.append(y_pred, outputs)
-y_pred=y_pred.flatten()
 results = CS_performance_measures(y_test, y_pred, list(Label_mapping.values()), normal_class=4)
 
 # Display results
@@ -538,7 +533,7 @@ res = res.append(results, ignore_index=True)
 print("Accuracy: "+"{0:.2f}".format(100*results["accuracy"])+"% / "+"F1 score: "+"{0:.2f}".format(results["f1"]))
 
 # For non-regression purpose
-assert results["accuracy"] > 0.85
+assert results["accuracy"] > 0.84
 
 # Get model statistics on a few samples
 stats = model.get_statistics()
