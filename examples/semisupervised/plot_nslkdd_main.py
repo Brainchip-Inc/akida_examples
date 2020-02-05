@@ -166,11 +166,11 @@ data = pd.concat([train_data, test_data])
 data, Label_mapping = data_prep_NSLKDD(data)
 
 # Resplit train and test sets
-y_train = data.label[data.split=='train']
-X_train = data[data.split=='train'].drop(['label','split'],axis=1)
+y_train_df = data.label[data.split=='train']
+X_train_df = data[data.split=='train'].drop(['label','split'],axis=1)
 
-y_test = data.label[data.split=='test']
-X_test = data[data.split=='test'].drop(['label','split'],axis=1)
+y_test_df = data.label[data.split=='test']
+X_test_df = data[data.split=='test'].drop(['label','split'],axis=1)
 
 
 ######################################################################
@@ -178,8 +178,8 @@ X_test = data[data.split=='test'].drop(['label','split'],axis=1)
 # ---------------------------------------
 
 # Display train set shape and data sneak peek
-print ('Train set shape: %s' % (X_train.shape,))
-print(X_train.head())
+print ('Train set shape: %s' % (X_train_df.shape,))
+print(X_train_df.head())
 
 
 ######################################################################
@@ -373,11 +373,9 @@ def onehotencode_categorical_column(X, mapping_index):
 ######################################################################
 
 # Convert from tabular to binary data
-mappings = compute_df_mappings(X_train, n_bins=20)
-X_train, mappings = onehotencode_df(X_train, mappings=mappings)
-X_test, mappings = onehotencode_df(X_test, mappings=mappings)
-print(X_train.shape)
-
+mappings = compute_df_mappings(X_train_df, n_bins=20)
+X_train, mappings = onehotencode_df(X_train_df, mappings=mappings)
+X_test, mappings = onehotencode_df(X_test_df, mappings=mappings)
 
 ######################################################################
 # .. Note:: The output printed from the cell above should be used to define
@@ -402,7 +400,11 @@ from imblearn.over_sampling import RandomOverSampler
 
 # Check original distribution
 print('Classes and their frequencies in the dataset:')
-print(y_train.value_counts(normalize=True, sort=False))
+print(y_train_df.value_counts(normalize=True, sort=False))
+
+# Convert label series to numpy arrays
+y_train = y_train_df.to_numpy()
+y_test = y_test_df.to_numpy()
 
 # Oversampling
 ros = RandomOverSampler(random_state=0)
