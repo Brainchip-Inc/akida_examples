@@ -392,8 +392,6 @@ X_test, mappings = onehotencode_df(X_test_df, mappings=mappings)
 # all classes are equally represented.
 
 # Re-sampling specific import
-# Uncomment the following line if necessary
-#!{sys.executable} -m pip install imblearn
 from imblearn.over_sampling import RandomOverSampler
 
 ######################################################################
@@ -447,15 +445,6 @@ for i,sample in enumerate(X_train):
     l = y_train[i]
     spikes = dense_to_sparse(sample)
     model.fit(spikes, input_labels=y_train[i])
-
-# Save the model configuration/weights once learning done
-saved_model_name = os.path.join(working_dir, 'nsl_example.fbz')
-model.save(saved_model_name)
-
-# Also save the Label original names for later use
-file = os.path.join(working_dir, 'NSLKDD_Label_mapping.pkl')
-with open(file, 'wb') as handle:
-    pickle.dump(Label_mapping, handle)
 
 ######################################################################
 # 7. Display results
@@ -532,7 +521,6 @@ y_pred = np.empty((0, 1), dtype=int)
 for i in range(len(X_test_spikes)):
     outputs = model.predict(X_test_spikes[i], 5)
     y_pred = np.append(y_pred, outputs)
-y_pred=y_pred.flatten()
 results = CS_performance_measures(y_test, y_pred, list(Label_mapping.values()), normal_class=4)
 
 # Display results
