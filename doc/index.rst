@@ -55,8 +55,8 @@ The Akida Development Environment (ADE) relies on a high-level neural networks
 API, written in Python, and largely inspired by the `Keras API
 <https://keras.io>`_.
 
-The core data structure used by the Akida Execution Engine (AEE) is a neural
-network **model**\ , which itself is a linear stack of **layers**.
+The core data structure used by the Akida Execution Engine is a neural network
+**model**\ , which itself is a linear stack of **layers**.
 
 The ADE leverages `TensorFlow <https://www.tensorflow.org/>`_ framework and
 `PyPI <https://pypi.org/>`_ for BrainChip tools installation.
@@ -82,10 +82,10 @@ due to their close similarity with the signals exchanged by biological neurons.
 
 The Akida Development Environment comprises three main python packages:
 
-* the `Akida Execution Engine (AEE) <https://pypi.org/project/akida>`_ is an
-  interface to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow
-  the development of Akida models without an actual Akida hardware, it includes
-  a runtime, an Hardware Abstraction Layer (HAL) and a software backend that
+* the `Akida Execution Engine <https://pypi.org/project/akida>`_ is an interface
+  to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the
+  development of Akida models without an actual Akida hardware, it includes a
+  runtime, an Hardware Abstraction Layer (HAL) and a software backend that
   simulates the Akida NSoC (see *Figure 3*\ ).
 
 .. figure:: img/AEE.png
@@ -115,7 +115,7 @@ ImageNet and Google Speech Commands (KWS) datasets.
 .. note::
     | While the Akida examples are provided under an
       `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
-      the underlying AEE library is proprietary.
+      the underlying Akida library is proprietary.
     | Please refer to the `End User License Agreement <license.html>`__ for
       terms and conditions.
 

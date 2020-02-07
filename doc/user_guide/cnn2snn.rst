@@ -8,25 +8,25 @@ Overview
 The Brainchip CNN2SNN toolkit provides a means to convert Convolutional Neural
 Networks (CNN) that were trained using Deep Learning methods to a low-latency
 and low-power Spiking Neural Network (SNN) for use with the Akida Execution
-Engine (AEE). This document is a guide to that process.
+Engine. This document is a guide to that process.
 
-The AEE provides Spiking Neural Networks (SNN) in which communications between
-neurons take the form of “spikes” or impulses that are generated when a neuron
-exceeds a threshold level of activation. Neurons that do not cross the threshold
-generate no output and contribute no further computational cost downstream. This
-feature is key to the efficiency of the AEE. The AEE further extends this
-efficiency by operating with low bitwidth “synapses” or weights of connections
-between neurons.
+The Akida Execution Engine provides Spiking Neural Networks (SNN) in which
+communications between neurons take the form of “spikes” or impulses that are
+generated when a neuron exceeds a threshold level of activation. Neurons that
+do not cross the threshold generate no output and contribute no further
+computational cost downstream. This feature is key to Akida hardware efficiency.
+The Akida Execution Engine further extends this efficiency by operating with low
+bitwidth “synapses” or weights of connections between neurons.
 
 Despite the apparent fundamental differences between SNNs and CNNs, the
 underlying mathematical operations performed by each may be rendered identical.
-Consequently, the trained parameters of a CNN can be converted to be compatible
-with those of the AEE, given only a small number of constraints [#fn-1]_. By
-careful attention to specifics in the architecture and training of the CNN, an
-overly complex conversion step from CNN to SNN can be avoided. The CNN2SNN
-toolkit comprises a set of functions designed for the popular `Tensorflow Keras
-<https://www.tensorflow.org/guide/keras>`_ framework, making it easy
-to train a SNN-compatible network.
+Consequently, the trained parameters of a CNN can be converted to be
+Akida-compatible, given only a small number of constraints [#fn-1]_. By careful
+attention to specifics in the architecture and training of the CNN, an overly
+complex conversion step from CNN to SNN can be avoided. The CNN2SNN toolkit
+comprises a set of functions designed for the popular `Tensorflow Keras
+<https://www.tensorflow.org/guide/keras>`_ framework, making it easy to train a
+SNN-compatible network.
 
 Conversion Workflow
 ^^^^^^^^^^^^^^^^^^^
@@ -41,7 +41,7 @@ Compatibility Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When designing a model from scratch, or converting an existing model to obtain a
-final model compatible with the AEE, consider compatibility at these distinct
+final Akida-compatible model, consider compatibility at these distinct
 levels:
 
 
@@ -66,14 +66,14 @@ the base Keras layer types.
 Typical training scenario
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We recommend preparing your model for the AEE in two (or more) training
-episodes.
+We recommend preparing your model for the in two (or more) training episodes.
 In the first episode, train with the standard Keras versions of the weights
 and activations.
 
 Once it is established that the overall model configuration prior to
 quantization yields a satisfactory performance on the task, proceed with
-quantization suitable for the AEE, changing only the quantization parameters.
+quantization suitable for Akida architecture, changing only the quantization
+parameters.
 
 We recommend saving the weights of your trained non-quantized model and using
 those to initialize the quantized version; typically leading to both faster
@@ -119,7 +119,7 @@ The CNN2SNN toolkit currently supports the following layer types:
   * Dropout
 
 .. note::
-    AEE `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`_
+    Akida `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`_
     function gives an indication regarding incompatible layers before conversion.
     A good practice is to check model compatibility before going through the
     training process.
@@ -175,16 +175,16 @@ bitwidth of the quantized activations.
 Training-Only Layers
 ^^^^^^^^^^^^^^^^^^^^
 
-The AEE is used in CNN conversion for inference only. Training is done within
-the Keras environment and training-only layers may be added at will, such as
-BatchNormalization or Dropout layers. These are handled fully by Keras during
-the training and do not need to be modified to be Akida-compatible for
-inference.
+The Akida Execution Engine is used in CNN conversion for inference only.
+Training is done within the Keras environment and training-only layers may be
+added at will, such as BatchNormalization or Dropout layers. These are handled
+fully by Keras during the training and do not need to be modified to be
+Akida-compatible for inference.
 
-As regards the implementation within the AEE: it may be helpful to understand
-that the associated scaling operations (multiplication and shift) are never
-performed within the AEE during inference. The computational cost is reduced by
-wrapping the (optional) batch normalization function and quantized activation
+As regards the implementation within the Akida Execution Engine: it may be
+helpful to understand that the associated scaling operations (multiplication and
+shift) are never performed during inference. The computational cost is reduced
+by wrapping the (optional) batch normalization function and quantized activation
 function into the spike generating thresholds and other parameters of the Akida
 SNN.
 That process is completely transparent to the user. It does, however, have an
@@ -198,7 +198,7 @@ Most layers of an Akida model only accept sparse inputs.
 In order to support the most common classes of models in computer vision, a
 special layer (`InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__)
 is however able to receive image data (8-bit grayscale or RGB). See the
-`AEE user guide <aee.html>`__ for further details.
+`Akida user guide <aee.html>`__ for further details.
 
 The CNN2SNN toolkit supports any quantization-aware training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
@@ -213,7 +213,7 @@ The `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`_
 layer only receives 8-bit input values:
 
 
-* if the data is already in 8-bit format it can be sent to the AEE inputs
+* if the data is already in 8-bit format it can be sent to the Akida inputs
   without rescaling.
 * if the data has been scaled to ease training, it is necessary to provide the
   scaling coefficients at model conversion.
@@ -223,8 +223,8 @@ data are not 8-bit, the process is more complex, and we recommend applying
 rescaling in two steps:
 
 
-#. Taking the data to an 8-bit unsigned integer format suitable for the AEE.
-   Apply this step both for training and inference data.
+#. Taking the data to an 8-bit unsigned integer format suitable for Akida
+   architecture. Apply this step both for training and inference data.
 #. Rescaling the 8-bit values to some unit or zero centered range suitable for
    CNN training, as above. This step should only be applied for the CNN training.
    Also, remember to provide those scaling coefficients when converting the
@@ -234,12 +234,12 @@ Final Layers
 ^^^^^^^^^^^^
 
 As is typical for CNNs, the final layer of a model does not include the
-standard activation nonlinearity. If that is the case, once converted to Akida,
-the model will give the potentials levels and in most cases, taking the
+standard activation nonlinearity. If that is the case, once converted to Akida
+hardware, the model will give the potentials levels and in most cases, taking the
 maximum among these values is sufficient to obtain the correct response from
 the model.
-However, if there is a difference in performance between the Keras and the Akida
-compatible implementations of the model, it is likely be at this step.
+However, if there is a difference in performance between the Keras and the
+Akida-compatible implementations of the model, it is likely be at this step.
 
 Layer Blocks
 ------------
@@ -374,9 +374,10 @@ substitutions that might come in handy:
 
 ____
 
-.. [#fn-1] Typically, for the AEE – quantized weights and quantized activations.
+.. [#fn-1] Typically, for the Akida harware – quantized weights and quantized
+           activations.
 .. [#fn-2] The spike value depends on the intensity of the potential, see the
-           `AEE documentation <aee.html>`_ for details on the activation.
+           `Akida documentation <aee.html>`_ for details on the activation.
 .. [#fn-3] Parallel layers and "residual" connections are currently not
            supported.
 .. [#fn-4] Sparsity refers to the fraction of both weights and activations with
