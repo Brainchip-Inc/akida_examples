@@ -485,8 +485,8 @@ model_akida.summary()
 
 
 ######################################################################
-# 5.2 Performances check with the AEE
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 5.2 Performances check with the Akida Execution Engine
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
 num_samples = 1000

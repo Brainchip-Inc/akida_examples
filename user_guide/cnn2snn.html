@@ -39,7 +39,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hardware constraints" href="hw_constraints.html" />
-    <link rel="prev" title="AEE user guide" href="aee.html" /> 
+    <link rel="prev" title="Akida user guide" href="aee.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.7.3
+                1.7.4
               </div>
             
           
@@ -104,7 +104,7 @@
 <li class="toctree-l3"><a class="reference internal" href="getting_started.html#for-users-familiar-with-deep-learning">For users familiar with deep-learning</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="aee.html">AEE user guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aee.html">Akida user guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="aee.html#the-akida-execution-engine">The Akida Execution Engine</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="aee.html#id1">1. The Spiking Neural Network model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="aee.html#id2">2. Input data format</a></li>
@@ -164,7 +164,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api_reference/api_reference.html">API reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference/aee_apis.html">AEE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference/aee_apis.html">Akida Execution Engine</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
@@ -366,22 +366,22 @@
 <p>The Brainchip CNN2SNN toolkit provides a means to convert Convolutional Neural
 Networks (CNN) that were trained using Deep Learning methods to a low-latency
 and low-power Spiking Neural Network (SNN) for use with the Akida Execution
-Engine (AEE). This document is a guide to that process.</p>
-<p>The AEE provides Spiking Neural Networks (SNN) in which communications between
-neurons take the form of “spikes” or impulses that are generated when a neuron
-exceeds a threshold level of activation. Neurons that do not cross the threshold
-generate no output and contribute no further computational cost downstream. This
-feature is key to the efficiency of the AEE. The AEE further extends this
-efficiency by operating with low bitwidth “synapses” or weights of connections
-between neurons.</p>
+Engine. This document is a guide to that process.</p>
+<p>The Akida Execution Engine provides Spiking Neural Networks (SNN) in which
+communications between neurons take the form of “spikes” or impulses that are
+generated when a neuron exceeds a threshold level of activation. Neurons that
+do not cross the threshold generate no output and contribute no further
+computational cost downstream. This feature is key to Akida hardware efficiency.
+The Akida Execution Engine further extends this efficiency by operating with low
+bitwidth “synapses” or weights of connections between neurons.</p>
 <p>Despite the apparent fundamental differences between SNNs and CNNs, the
 underlying mathematical operations performed by each may be rendered identical.
-Consequently, the trained parameters of a CNN can be converted to be compatible
-with those of the AEE, given only a small number of constraints <a class="footnote-reference brackets" href="#fn-1" id="id1">1</a>. By
-careful attention to specifics in the architecture and training of the CNN, an
-overly complex conversion step from CNN to SNN can be avoided. The CNN2SNN
-toolkit comprises a set of functions designed for the popular <a class="reference external" href="https://www.tensorflow.org/guide/keras">Tensorflow Keras</a> framework, making it easy
-to train a SNN-compatible network.</p>
+Consequently, the trained parameters of a CNN can be converted to be
+Akida-compatible, given only a small number of constraints <a class="footnote-reference brackets" href="#fn-1" id="id1">1</a>. By careful
+attention to specifics in the architecture and training of the CNN, an overly
+complex conversion step from CNN to SNN can be avoided. The CNN2SNN toolkit
+comprises a set of functions designed for the popular <a class="reference external" href="https://www.tensorflow.org/guide/keras">Tensorflow Keras</a> framework, making it easy to train a
+SNN-compatible network.</p>
 <div class="section" id="conversion-workflow">
 <h3>Conversion Workflow<a class="headerlink" href="#conversion-workflow" title="Permalink to this headline">¶</a></h3>
 <a class="reference external image-reference" href="../_images/CNN2SNN_Flow.png"><img alt="CNN2SNN Flow" src="../_images/CNN2SNN_Flow.png" /></a>
@@ -389,7 +389,7 @@ to train a SNN-compatible network.</p>
 <div class="section" id="compatibility-constraints">
 <h3>Compatibility Constraints<a class="headerlink" href="#compatibility-constraints" title="Permalink to this headline">¶</a></h3>
 <p>When designing a model from scratch, or converting an existing model to obtain a
-final model compatible with the AEE, consider compatibility at these distinct
+final Akida-compatible model, consider compatibility at these distinct
 levels:</p>
 <ul class="simple">
 <li><p>Weights must be quantized (using <a class="reference external" href="hw_constraints.html">1, 2, 3, 4 or 8 bits</a>).</p></li>
@@ -410,13 +410,13 @@ the base Keras layer types.</p>
 </div>
 <div class="section" id="typical-training-scenario">
 <h3>Typical training scenario<a class="headerlink" href="#typical-training-scenario" title="Permalink to this headline">¶</a></h3>
-<p>We recommend preparing your model for the AEE in two (or more) training
-episodes.
+<p>We recommend preparing your model for the in two (or more) training episodes.
 In the first episode, train with the standard Keras versions of the weights
 and activations.</p>
 <p>Once it is established that the overall model configuration prior to
 quantization yields a satisfactory performance on the task, proceed with
-quantization suitable for the AEE, changing only the quantization parameters.</p>
+quantization suitable for Akida architecture, changing only the quantization
+parameters.</p>
 <p>We recommend saving the weights of your trained non-quantized model and using
 those to initialize the quantized version; typically leading to both faster
 convergence and better final performance values.
@@ -462,7 +462,7 @@ a quantization-aware child of Keras <a class="reference external" href="https://
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>AEE <a class="reference external" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a>
+<p>Akida <a class="reference external" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a>
 function gives an indication regarding incompatible layers before conversion.
 A good practice is to check model compatibility before going through the
 training process.</p>
@@ -516,15 +516,15 @@ bitwidth of the quantized activations.</p>
 </div>
 <div class="section" id="training-only-layers">
 <h3>Training-Only Layers<a class="headerlink" href="#training-only-layers" title="Permalink to this headline">¶</a></h3>
-<p>The AEE is used in CNN conversion for inference only. Training is done within
-the Keras environment and training-only layers may be added at will, such as
-BatchNormalization or Dropout layers. These are handled fully by Keras during
-the training and do not need to be modified to be Akida-compatible for
-inference.</p>
-<p>As regards the implementation within the AEE: it may be helpful to understand
-that the associated scaling operations (multiplication and shift) are never
-performed within the AEE during inference. The computational cost is reduced by
-wrapping the (optional) batch normalization function and quantized activation
+<p>The Akida Execution Engine is used in CNN conversion for inference only.
+Training is done within the Keras environment and training-only layers may be
+added at will, such as BatchNormalization or Dropout layers. These are handled
+fully by Keras during the training and do not need to be modified to be
+Akida-compatible for inference.</p>
+<p>As regards the implementation within the Akida Execution Engine: it may be
+helpful to understand that the associated scaling operations (multiplication and
+shift) are never performed during inference. The computational cost is reduced
+by wrapping the (optional) batch normalization function and quantized activation
 function into the spike generating thresholds and other parameters of the Akida
 SNN.
 That process is completely transparent to the user. It does, however, have an
@@ -537,7 +537,7 @@ important consequence for the output of the final layer of the model; see
 In order to support the most common classes of models in computer vision, a
 special layer (<a class="reference external" href="../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a>)
 is however able to receive image data (8-bit grayscale or RGB). See the
-<a class="reference external" href="aee.html">AEE user guide</a> for further details.</p>
+<a class="reference external" href="aee.html">Akida user guide</a> for further details.</p>
 <p>The CNN2SNN toolkit supports any quantization-aware training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
@@ -548,7 +548,7 @@ layer.</p>
 <p>The <a class="reference external" href="../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a>
 layer only receives 8-bit input values:</p>
 <ul class="simple">
-<li><p>if the data is already in 8-bit format it can be sent to the AEE inputs
+<li><p>if the data is already in 8-bit format it can be sent to the Akida inputs
 without rescaling.</p></li>
 <li><p>if the data has been scaled to ease training, it is necessary to provide the
 scaling coefficients at model conversion.</p></li>
@@ -557,8 +557,8 @@ scaling coefficients at model conversion.</p></li>
 data are not 8-bit, the process is more complex, and we recommend applying
 rescaling in two steps:</p>
 <ol class="arabic simple">
-<li><p>Taking the data to an 8-bit unsigned integer format suitable for the AEE.
-Apply this step both for training and inference data.</p></li>
+<li><p>Taking the data to an 8-bit unsigned integer format suitable for Akida
+architecture. Apply this step both for training and inference data.</p></li>
 <li><p>Rescaling the 8-bit values to some unit or zero centered range suitable for
 CNN training, as above. This step should only be applied for the CNN training.
 Also, remember to provide those scaling coefficients when converting the
@@ -569,12 +569,12 @@ trained model to an Akida-compatible format.</p></li>
 <div class="section" id="id6">
 <h3>Final Layers<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <p>As is typical for CNNs, the final layer of a model does not include the
-standard activation nonlinearity. If that is the case, once converted to Akida,
-the model will give the potentials levels and in most cases, taking the
+standard activation nonlinearity. If that is the case, once converted to Akida
+hardware, the model will give the potentials levels and in most cases, taking the
 maximum among these values is sufficient to obtain the correct response from
 the model.
-However, if there is a difference in performance between the Keras and the Akida
-compatible implementations of the model, it is likely be at this step.</p>
+However, if there is a difference in performance between the Keras and the
+Akida-compatible implementations of the model, it is likely be at this step.</p>
 </div>
 </div>
 <div class="section" id="layer-blocks">
@@ -688,11 +688,12 @@ convolutional layers that contain smaller filters</a>.</p></li>
 <hr class="docutils" />
 <dl class="footnote brackets">
 <dt class="label" id="fn-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Typically, for the AEE – quantized weights and quantized activations.</p>
+<dd><p>Typically, for the Akida harware – quantized weights and quantized
+activations.</p>
 </dd>
 <dt class="label" id="fn-2"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
 <dd><p>The spike value depends on the intensity of the potential, see the
-<a class="reference external" href="aee.html">AEE documentation</a> for details on the activation.</p>
+<a class="reference external" href="aee.html">Akida documentation</a> for details on the activation.</p>
 </dd>
 <dt class="label" id="fn-3"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
 <dd><p>Parallel layers and “residual” connections are currently not
@@ -721,7 +722,7 @@ efficient inference: A whitepaper” - Raghuraman Krishnamoorthi, 2018</p>
         <a href="hw_constraints.html" class="btn btn-neutral float-right" title="Hardware constraints" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="aee.html" class="btn btn-neutral float-left" title="AEE user guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="aee.html" class="btn btn-neutral float-left" title="Akida user guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
