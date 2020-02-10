@@ -1,0 +1,52 @@
+kind: pipeline
+name: build-doc
+
+trigger:
+  ref:
+    include:
+    - refs/pull/**
+    - refs/heads/master
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: build
+  image: bender:5000/doc_build:python37_tf200
+  volumes:
+  - name: docs
+    path: /tmp/docs
+  commands:
+  - pip install -r requirements.txt
+  - sphinx-build -D plot_gallery=1 -b html ./doc ./build
+  - rm -rf /tmp/docs/*
+  - cp -R build/* /tmp/docs
+
+- name: update_gh_pages
+  image: bender:5000/drone/git:linux
+  volumes:
+  - name: docs
+    path: /tmp/docs
+  when:
+    ref:
+      exclude:
+      - refs/pull/**
+  commands:
+  - git fetch
+  - git checkout gh-pages
+  - rm -rf _* examples/ api_reference/ user_guide/
+  - rm *.html *.inv *.js
+  - cp -R /tmp/docs/* .
+  - rm -rf _sources/
+  - git add .
+  - git diff --quiet && git diff --staged --quiet || git commit -am "Automated tutorials push"
+  - git push origin gh-pages
+
+node:
+  rigel: ktsiknos
+
+volumes:
+- name: docs
+  host:
+    path: /home/ktsiknos/nightly_doc
