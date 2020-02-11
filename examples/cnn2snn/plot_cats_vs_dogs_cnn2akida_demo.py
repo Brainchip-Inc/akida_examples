@@ -19,24 +19,6 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
           model and its conversion to an Akida network. A textual explanation
           of the training is given below.
 
-This tutorial goes as follows:
-
-    1. `Details of the transfer learning process <cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process>`__
-    2. `Load and preprocess data <cats_vs_dogs_cnn2akida_demo.html#load-and-preprocess-data>`__
-
-        1. Load and split data
-        2. Preprocess the test set
-        3. Get labels
-    3. `Convert a quantized Keras model to Akida <cats_vs_dogs_cnn2akida_demo.html#convert-a-quantized-keras-model-to-akida>`__
-
-        1. Instantiate a Keras model
-        2. Change top layer
-        3. Convert to an Akida model
-    4. `Compare performance <cats_vs_dogs_cnn2akida_demo.html#classify-test-images>`__
-
-            1. Classify test images
-            2. Compare results
-
 """
 
 

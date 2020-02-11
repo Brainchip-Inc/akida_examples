@@ -7,13 +7,6 @@ In this tutorial you will test the ability of a spiking neural network
 to detect a small pattern (a smiley face) embedded in a noisy image
 (random dots).
 
-You will:
-
-    * create random dots images with an embedded repeating pattern
-    * create an akida instance
-    * train your model with two presentations of the repeating pattern
-    * test the ability of the model to recognize the pattern
-
 """
 
 ######################################################################

@@ -23,14 +23,6 @@ Please refer to `Load and reshape Keyword Spotting dataset (KWS)
 <../../examples/cnn2snn/kws_dataset.html>`__ example for details about the
 dataset preparation.
 
-This tutorial goes as follow:
-
-1. Load CNN2SNN tool dependencies.
-2. Load the keyword spotting pre-processed dataset.
-3. Create a Keras model, with pre-trained weights, satisfying Akida NSoC requirements.
-4. Check performance.
-5. Convert trained model for Akida NSoC and test it.
-
 """
 
 ######################################################################

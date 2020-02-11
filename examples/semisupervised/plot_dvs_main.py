@@ -23,17 +23,6 @@ in the current demo, we've discarded the polarity information for
 simplicity (and because it's not useful in a task where we're only
 interested in object shape and not direction of movement).
 
-
-With this tutorial you will:
-
-    * load the characters DVS dataset
-    * look at some events
-    * load an Akida kernel configuration
-    * train your model with a few events for both 'A' and 'B' samples
-      (unsupervised)
-    * check inference results presenting a few more samples for each 'class'
-    * repeat the above unsupervised but with predefined classes to identify
-
 """
 
 ######################################################################

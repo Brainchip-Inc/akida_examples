@@ -20,16 +20,6 @@ compatible with the **Akida NSoC** in a few steps.
 
 .. image:: ../../img/cnn2snn_flow_small.png
 
-**In this tutorial you will:**
-
-    * load and reshape MNIST dataset,
-    * create a CNN model,
-    * configure it for Akida NSoC,
-    * quantize it,
-    * train it,
-    * convert to an Akida model,
-    * check its performance using the Akida Execution Engine.
-
 """
 
 ######################################################################

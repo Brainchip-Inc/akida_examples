@@ -10,20 +10,7 @@ Inference on ImageNet with MobileNet
 
 This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
 model into Akida. The performances are assessed using the ImageNet
-dataset. This example goes as follow:
-
-1. Load CNN2SNN tool dependencies.
-2. Load test images and labels.
-3. Create a quantized Keras model satifying Akida NSoC requirements
-
-   * Instantiate a Keras model with pre-trained weights
-   * Check performance
-
-4. Convert to Akida model
-
-   * Convert Keras model to Akida model compatible for Akida NSoC
-   * Test performance
-   * Show predictions for some images
+dataset.
 
 """
 
