@@ -9,8 +9,9 @@ Inference on ImageNet with MobileNet
           the CNN2SNN conversion.
 
 This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
-model into Akida. The performances are assessed using the ImageNet
-dataset.
+model into Akida. As ImageNet images are not publicly available, performances
+are assessed using a set of 10 copyright free images that were found on Google
+using ImageNet class names.
 
 """
 
@@ -56,11 +57,7 @@ from akida_models.mobilenet.imagenet import imagenet_preprocessing
 #   (*integer*) is given through ``imagenet_preprocessing.index_to_label``
 #   method.
 #
-# .. Note:: A set of 10 copyright free images extracted from Google using
-#           ImageNet labels are used here as ImageNet images are not free of
-#           rights.
-#
-#           Akida Execution Engine is configured to take 8-bit inputs
+# .. Note:: Akida Execution Engine is configured to take 8-bit inputs
 #           without rescaling. For conversion, rescaling values used for
 #           training the Keras model are needed.
 #
