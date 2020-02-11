@@ -125,7 +125,6 @@ checkpoints = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 3000, 5000, 7000, 10000
 counter = 0
 
 # Change Matplotlib backend for dynamic display
-# %matplotlib notebook
 
 # Adjust Plot parameters
 # sphinx_gallery_thumbnail_number = 2

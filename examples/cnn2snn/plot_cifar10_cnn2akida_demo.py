@@ -481,8 +481,6 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 
-#%matplotlib notebook
-
 label_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # prepare plot
