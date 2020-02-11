@@ -42,31 +42,6 @@ Keras model accuracy.
 | MobileNet Akida           | **93.22 %** |
 +---------------------------+-------------+
 
-With this tutorial you will:
-
-    1. `Load CNN2SNN tool dependencies <cifar10_cnn2akida_demo.html#load-cnn2snn-tool-dependencies>`__
-    2. `Load and reshape CIFAR10 dataset <cifar10_cnn2akida_demo.html#load-and-reshape-cifar10-dataset>`__
-    3. `Create a quantized Keras VGG model <cifar10_cnn2akida_demo.html#create-a-quantized-keras-vgg-model>`__
-       satisfying Akida NSoC requirements
-
-        1. Instantiate a Keras VGG model with pre-trained weights
-        2. Check performance
-    4. `Conversion to Akida <cifar10_cnn2akida_demo.html#conversion-to-akida>`__
-
-        1. Convert to Akida model
-        2. Check hardware compliancy
-        3. Check performance
-    5. `Create a quantized Keras MobileNet model <cifar10_cnn2akida_demo.html#create-a-quantized-keras-mobilenet-model>`__
-       satisfying Akida NSoC requirements
-
-        1. Instantiate a Keras MobileNet model with pre-trained weights
-        2. Check performance
-    6. `Conversion to Akida <cifar10_cnn2akida_demo.html#id4>`__
-
-        1. Convert to Akida model
-        2. Check hardware compliancy
-        3. Check performance
-        4. Show predictions for results
 
 """
 

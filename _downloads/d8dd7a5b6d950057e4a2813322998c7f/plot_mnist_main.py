@@ -6,13 +6,6 @@ The MNIST dataset is a handwritten digits database. It has a training
 set of 60,000 images, and a test set of 10,000 images. An image has
 28x28 pixels (784 features) and an associated label.
 
-With this tutorial you will:
-
-    * load the `MNIST dataset <http://yann.lecun.com/exdb/mnist/>`__
-    * load an Akida Execution Engine configuration
-    * train your neural model with the training set (unsupervised, using
-      embedded spike generator) and check its performance
-
 """
 
 ######################################################################

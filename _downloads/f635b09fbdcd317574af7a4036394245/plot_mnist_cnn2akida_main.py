@@ -15,14 +15,6 @@ The MNIST dataset is a handwritten digits database. It has a training
 set of 60,000 samples, and a test set of 10,000 samples. Each sample
 comprises a 28x28 pixel image and an associated label.
 
-**In this tutorial you will:**
-
-    * load the MNIST test dataset only,
-    * load a pre-trained neural network model,
-    * run test samples through the model in inference-only mode (i.e. without
-      any further learning),
-    * check performance.
-
 """
 
 ######################################################################
