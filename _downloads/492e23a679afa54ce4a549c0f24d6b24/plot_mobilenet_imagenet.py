@@ -363,8 +363,6 @@ def update_bars_chart(rects, vals, true_label):
             rect.set_facecolor('red')
         counter+=1
 
-# %matplotlib notebook
-
 # Prepare plots
 fig, imgobj, ax1, rects = prepare_plots()
 
