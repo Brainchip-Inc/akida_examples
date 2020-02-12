@@ -138,7 +138,7 @@ x_test = (x_test - b)/a
 # loss has stopped decreasing for 20 epochs.
 #
 # The table below summarizes the results obtained when preparing the
-# weights stored under ``http://data.brainchip.com/models/vgg/``:
+# weights stored under `<http://data.brainchip.com/models/vgg/>`__:
 #
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |

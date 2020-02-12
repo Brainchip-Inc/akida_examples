@@ -127,7 +127,7 @@ input_scaling = (max_int_value, 0)
 #   with weights initialized from those trained in the previous episode.
 #
 # The table below summarizes the results obtained when preparing the
-# weights stored under ``http://data.brainchip.com/models/mobilenet/`` :
+# weights stored under `<http://data.brainchip.com/models/mobilenet/>`__ :
 #
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |

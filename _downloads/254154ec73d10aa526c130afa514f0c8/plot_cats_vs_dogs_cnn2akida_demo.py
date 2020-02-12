@@ -55,7 +55,8 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # In our transfer learning process, the base model is frozen, i.e., the
 # weights are not updated during training. Pre-trained weights for the
-# quantized model are provided in the ``data/imagenet`` folder. These are
+# quantized model are provided on
+# `<http://data.brainchip.com/models/mobilenet/>`__. These are
 # loaded in our frozen base model.
 #
 # **Top layer**
