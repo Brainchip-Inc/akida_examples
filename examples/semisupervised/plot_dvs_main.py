@@ -100,9 +100,9 @@ print(test_events[1,:])
 # events occurring at the same input location). Try varying the
 # packet_size in the following:
 #
-# [Note that this reconstruction of the events into an image is purely for
+# Note that this reconstruction of the events into an image is purely for
 # visualization here - this is not at all what happens inside the Akida
-# Execution Engine]
+# Execution Engine.
 
 # Displaying a 'packet' of events as an image
 packet_size = 150
