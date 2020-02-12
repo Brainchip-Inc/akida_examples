@@ -47,7 +47,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # The base model is an Akida-compatible version of MobileNet v1. This
 # model was trained and quantized using the ImageNet dataset. Please refer
-# to the corresponding `example <imagenet_cnn2akida_demo.html>`__ for
+# to the corresponding `example <plot_mobilenet_imagenet.html>`__ for
 # more information. The layers have 4-bit weights (except for the first
 # layer having 8-bit weights) and the activations are quantized to 4 bits.
 # This base model ends with a global average pooling whose output is (1,
@@ -238,7 +238,7 @@ print(f"Test set composed of {num_images} images: "
 # Here, we instantiate a quantized Keras model based on a MobileNet model.
 # This base model was previously trained using the 1000 classes of the
 # ImageNet dataset. For more information, please see the `ImageNet
-# tutorial <imagenet_cnn2akida_demo.html>`__.
+# tutorial <plot_mobilenet_imagenet.html>`__.
 #
 # The quantized MobileNet model satisfies the Akida NSoC requirements:
 #
@@ -264,7 +264,7 @@ base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 # 3.B - Modify the network and load pre-trained weights
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# As explained in `section 1 <cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process>`__,
+# As explained in `section 1 <plot_cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process>`__,
 # we add a separable convolutional layer as top layer with one output neuron.
 # The new model is now appropriate for the ``cats_vs_dogs`` dataset and is
 # Akida-compatible. Note that a sigmoid activation is added at the end of

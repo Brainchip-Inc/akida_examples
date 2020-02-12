@@ -3,7 +3,7 @@ Inference on ImageNet with MobileNet
 ====================================
 
 .. Note:: Please refer to `CNN2SNN Conversion Tutorial (MNIST)
-          <../../examples/cnn2snn/mnist_cnn2akida_demo.html>`__ notebook
+          <plot_mnist_cnn2akida_demo.html>`__ notebook
           and/or the `CNN2SNN documentation
           <../../user_guide/cnn2snn.html>`__ for flow and steps details of
           the CNN2SNN conversion.
