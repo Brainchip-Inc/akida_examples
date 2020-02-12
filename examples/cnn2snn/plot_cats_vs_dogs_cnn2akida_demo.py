@@ -165,9 +165,10 @@ tfds.disable_progress_bar()
 #
 # We must apply the same preprocessing as for training: rescaling and
 # resizing. Since Akida models directly accept integer-valued images, we
-# also define a preprocessing function for Akida: - for Keras: images are
-# rescaled between 0 and 1, and resized to 160x160 - for Akida: images are
-# only resized to 160x160 (uint8 values).
+# also define a preprocessing function for Akida:
+#
+#   - for Keras: images are rescaled between 0 and 1, and resized to 160x160
+#   - for Akida: images are only resized to 160x160 (uint8 values).
 #
 # Keras and Akida models require 4-dimensional (N,H,W,C) arrays as inputs.
 # We must then create batches of images to feed the model. For inference,
@@ -220,7 +221,7 @@ print(f"Test set composed of {num_images} images: "
 #
 # In this section, we will instantiate a quantized Keras model based on
 # MobileNet and modify the last layers to specify the classification for
-# 'cats_vs_dogs'. After loading the pre-trained weights, we will convert
+# ``cats_vs_dogs``. After loading the pre-trained weights, we will convert
 # the Keras model to Akida.
 #
 # This section goes as follows:
@@ -243,8 +244,8 @@ print(f"Test set composed of {num_images} images: "
 #
 #   * The model relies on a convolutional layer (first layer) and separable
 #     convolutional layers, all being Akida-compatible.
-#   * All the separable conv. layers have 4-bit weights, the first conv. layer
-#     has 8-bit weights.
+#   * All the separable convolutional layers have 4-bit weights, the first
+#     convolutional layer has 8-bit weights.
 #   * The activations are quantized with 4 bits.
 #
 # Using the provided quantized MobileNet model, we create an instance
@@ -270,9 +271,9 @@ base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 # the model: the output neuron returns a probability between 0 and 1 that
 # the input image is a dog.
 #
-# The transfer learning process has been run in the provided training
-# script and the weights have been saved. In this tutorial, the
-# pre-trained weights are loaded for inference and conversion.
+# The transfer learning process has been run internally and the weights have
+# been saved. In this tutorial, the pre-trained weights are loaded for inference
+# and conversion.
 #
 # .. Note:: The pre-trained weights which are loaded corresponds to the
 #           quantization parameters described as above. If you want to modify
