@@ -154,10 +154,9 @@ for i in range(num_images):
 # 3.1 Instantiate Keras model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The CNN2SNN module offers a way to easily instantiate a MobileNet model
-# based on Keras with quantized weights and activations. Our ``MobileNet``
-# function returns a Keras model with custom quantized layers (see
-# ``quantization_layers.py`` in the CNN2SNN module).
+# The `mobilenet_imagenet <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`__
+# method included in akida_models package offers a way to easily instantiate a
+# MobileNet model based on Keras with quantized weights and activations.
 #
 # .. Note:: The pre-trained weights which are loaded correspond to the
 #    parameters in the next cell. If you want to modify some of these
@@ -199,8 +198,6 @@ print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 # Here, the Keras quantized model is converted into a suitable version for
 # the Akida NSoC. The `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`__
 # function needs as arguments the Keras model and the input scaling parameters.
-# The Akida model is then saved in a YAML file with the corresponding weights
-# binary files.
 #
 # This section goes as follows:
 #
@@ -216,7 +213,7 @@ print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
-# Convert to Akida and save model
+# Convert to Akida
 from cnn2snn import convert
 
 print("Converting Keras model for Akida NSoC...")
