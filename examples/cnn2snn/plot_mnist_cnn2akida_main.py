@@ -75,7 +75,6 @@ model_file = get_file("gxnor_mnist.fbz",
                       "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
                       cache_subdir='models/gxnor')
 model_akida = Model(model_file)
-print (model_file + ' loaded...')
 model_akida.summary()
 
 

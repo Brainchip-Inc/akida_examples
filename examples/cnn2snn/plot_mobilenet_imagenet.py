@@ -126,8 +126,6 @@ labels_test = np.zeros(num_images)
 for i in range(num_images):
     labels_test[i] = int(validation_labels[x_test_files[i]])
 
-print('Labels loaded.')
-
 
 ######################################################################
 # 3. Create a quantized Keras model
@@ -166,8 +164,6 @@ print('Labels loaded.')
 #    parameters, you must re-train the model and save the weights.
 #
 
-print("Instantiating MobileNet...")
-
 input_shape = (IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)
 model_keras = mobilenet_imagenet(input_shape=input_shape,
                   classes=NUM_CLASSES,
@@ -175,8 +171,6 @@ model_keras = mobilenet_imagenet(input_shape=input_shape,
                   weights_quantization=4,
                   activ_quantization=4,
                   input_weights_quantization=8)
-
-print("...done.")
 
 model_keras.summary()
 

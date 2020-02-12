@@ -71,7 +71,6 @@ for fn in datafilenames[:]:
     else:
         print("Failed to find data file " + fname)
 
-print ('Using charDVS dataset')
 # Using 32 x 32 images
 dvs_sz = (32, 32)
 dvs_shape = (*dvs_sz, 1)

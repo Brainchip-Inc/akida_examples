@@ -63,7 +63,6 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, \
 # Retrieve NSLKDD dataset
 file_path = get_file('NSL-KDD.zip', 'https://iscxdownloads.cs.unb.ca/iscxdownloads/NSL-KDD/NSL-KDD.zip', cache_subdir='datasets/NSL-KDD', extract=True)
 working_dir = os.path.dirname(file_path)
-print ('Using NSL-KDD dataset')
 
 ######################################################################
 
