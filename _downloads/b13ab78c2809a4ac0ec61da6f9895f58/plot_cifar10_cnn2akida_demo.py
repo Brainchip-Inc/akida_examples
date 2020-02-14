@@ -156,7 +156,7 @@ x_test = (x_test - b)/a
 # | 6       | 2 bits         | 2 bits        | 91.31 %  | 74     |
 # +---------+----------------+---------------+----------+--------+
 #
-# Please refer to `mnist_cnn2akida_demo example <mnist_cnn2akida_demo.html>`__
+# Please refer to `CNN conversion tutorial <plot_mnist_cnn2akida_demo.html>`__
 # and/or the `CNN2SNN toolkit <../../api_reference/cnn2snn_apis.html>`__
 # documentation for flow and training steps details.
 
@@ -342,7 +342,7 @@ for _, stat in stats.items():
 # | 2       | 4 bits         | 4 bits        | 93.07 %  | 44     |
 # +---------+----------------+---------------+----------+--------+
 #
-# Please refer to `mnist_cnn2akida_demo example <mnist_cnn2akida_demo.html>`__
+# Please refer to `CNN conversion tutorial <plot_mnist_cnn2akida_demo.html>`__
 # and/or the `CNN2SNN toolkit <../../api_reference/cnn2snn_apis.html>`__
 # documentation for flow and training steps details.
 

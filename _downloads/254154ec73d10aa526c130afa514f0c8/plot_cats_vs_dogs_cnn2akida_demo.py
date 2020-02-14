@@ -47,7 +47,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # The base model is an Akida-compatible version of MobileNet v1. This
 # model was trained and quantized using the ImageNet dataset. Please refer
-# to the corresponding `example <imagenet_cnn2akida_demo.html>`__ for
+# to the corresponding `example <plot_mobilenet_imagenet.html>`__ for
 # more information. The layers have 4-bit weights (except for the first
 # layer having 8-bit weights) and the activations are quantized to 4 bits.
 # This base model ends with a global average pooling whose output is (1,
@@ -165,9 +165,10 @@ tfds.disable_progress_bar()
 #
 # We must apply the same preprocessing as for training: rescaling and
 # resizing. Since Akida models directly accept integer-valued images, we
-# also define a preprocessing function for Akida: - for Keras: images are
-# rescaled between 0 and 1, and resized to 160x160 - for Akida: images are
-# only resized to 160x160 (uint8 values).
+# also define a preprocessing function for Akida:
+#
+#   - for Keras: images are rescaled between 0 and 1, and resized to 160x160
+#   - for Akida: images are only resized to 160x160 (uint8 values).
 #
 # Keras and Akida models require 4-dimensional (N,H,W,C) arrays as inputs.
 # We must then create batches of images to feed the model. For inference,
@@ -220,7 +221,7 @@ print(f"Test set composed of {num_images} images: "
 #
 # In this section, we will instantiate a quantized Keras model based on
 # MobileNet and modify the last layers to specify the classification for
-# 'cats_vs_dogs'. After loading the pre-trained weights, we will convert
+# ``cats_vs_dogs``. After loading the pre-trained weights, we will convert
 # the Keras model to Akida.
 #
 # This section goes as follows:
@@ -237,14 +238,14 @@ print(f"Test set composed of {num_images} images: "
 # Here, we instantiate a quantized Keras model based on a MobileNet model.
 # This base model was previously trained using the 1000 classes of the
 # ImageNet dataset. For more information, please see the `ImageNet
-# tutorial <imagenet_cnn2akida_demo.html>`__.
+# tutorial <plot_mobilenet_imagenet.html>`__.
 #
 # The quantized MobileNet model satisfies the Akida NSoC requirements:
 #
 #   * The model relies on a convolutional layer (first layer) and separable
 #     convolutional layers, all being Akida-compatible.
-#   * All the separable conv. layers have 4-bit weights, the first conv. layer
-#     has 8-bit weights.
+#   * All the separable convolutional layers have 4-bit weights, the first
+#     convolutional layer has 8-bit weights.
 #   * The activations are quantized with 4 bits.
 #
 # Using the provided quantized MobileNet model, we create an instance
@@ -263,16 +264,16 @@ base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 # 3.B - Modify the network and load pre-trained weights
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# As explained in `section 1 <cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process>`__,
+# As explained in `section 1 <plot_cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process>`__,
 # we add a separable convolutional layer as top layer with one output neuron.
 # The new model is now appropriate for the ``cats_vs_dogs`` dataset and is
 # Akida-compatible. Note that a sigmoid activation is added at the end of
 # the model: the output neuron returns a probability between 0 and 1 that
 # the input image is a dog.
 #
-# The transfer learning process has been run in the provided training
-# script and the weights have been saved. In this tutorial, the
-# pre-trained weights are loaded for inference and conversion.
+# The transfer learning process has been run internally and the weights have
+# been saved. In this tutorial, the pre-trained weights are loaded for inference
+# and conversion.
 #
 # .. Note:: The pre-trained weights which are loaded corresponds to the
 #           quantization parameters described as above. If you want to modify

@@ -70,7 +70,7 @@ from tensorflow.keras.utils import to_categorical
 #           implementation of the Akida neural network allows us to completely
 #           skip the rescaling step (i.e. the Akida model should be fed with
 #           the raw 8-bit values) but that does require information about what
-#           scaling was applied prior to training -see below for more details-.
+#           scaling was applied prior to training - see below for more details.
 #
 # 3. Transform the loaded labels from a scalar representation (single integer
 # value per sample) to a one-hot vector representation, appropriate for use
@@ -213,7 +213,7 @@ print('Test accuracy:', score[1])
 # the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__ documentation for full
 # details):
 #
-# * Standard Conv2D and Dense layers are supported (Note that
+# * Standard Conv2D and Dense layers are supported (note that
 #   there is currently no support for skip, recursive and parallel layers).
 # * Each of these trainable core layers except for the last one must be followed
 #   by an Activation layer.
@@ -462,9 +462,9 @@ print('Test accuracy:', score[1])
 # in inference mode:
 #
 # .. Note:: One needs to supply the coefficients used to rescale the input
-#           dataset before the training - here ``input_scaling`` -
+#           dataset before the training - here ``input_scaling``.
 #
-# As with Keras, the summary() method provides a textual representation of the 
+# As with Keras, the summary() method provides a textual representation of the
 # model.
 #
 

@@ -19,10 +19,6 @@ images <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequ
 that allows us to use a model architecture that is typically used for
 image recognition tasks.
 
-Please refer to `Load and reshape Keyword Spotting dataset (KWS)
-<../../examples/cnn2snn/kws_dataset.html>`__ example for details about the
-dataset preparation.
-
 """
 
 ######################################################################

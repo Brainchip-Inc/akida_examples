@@ -421,7 +421,7 @@ Keras model in order to convert it to an Akida one.</p>
 <p><strong>Base model</strong></p>
 <p>The base model is an Akida-compatible version of MobileNet v1. This
 model was trained and quantized using the ImageNet dataset. Please refer
-to the corresponding <a class="reference external" href="imagenet_cnn2akida_demo.html">example</a> for
+to the corresponding <a class="reference external" href="plot_mobilenet_imagenet.html">example</a> for
 more information. The layers have 4-bit weights (except for the first
 layer having 8-bit weights) and the activations are quantized to 4 bits.
 This base model ends with a global average pooling whose output is (1,
@@ -577,9 +577,13 @@ Use eager execution and:
 <h3>2.B - Preprocess the test set<a class="headerlink" href="#b-preprocess-the-test-set" title="Permalink to this headline">¶</a></h3>
 <p>We must apply the same preprocessing as for training: rescaling and
 resizing. Since Akida models directly accept integer-valued images, we
-also define a preprocessing function for Akida: - for Keras: images are
-rescaled between 0 and 1, and resized to 160x160 - for Akida: images are
-only resized to 160x160 (uint8 values).</p>
+also define a preprocessing function for Akida:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>for Keras: images are rescaled between 0 and 1, and resized to 160x160</p></li>
+<li><p>for Akida: images are only resized to 160x160 (uint8 values).</p></li>
+</ul>
+</div></blockquote>
 <p>Keras and Akida models require 4-dimensional (N,H,W,C) arrays as inputs.
 We must then create batches of images to feed the model. For inference,
 the batch size is not relevant; you can set it such that the batch of
@@ -631,7 +635,7 @@ We read through the batches to extract the labels.</p>
 <h2>3. Convert a quantized Keras model to Akida<a class="headerlink" href="#convert-a-quantized-keras-model-to-akida" title="Permalink to this headline">¶</a></h2>
 <p>In this section, we will instantiate a quantized Keras model based on
 MobileNet and modify the last layers to specify the classification for
-‘cats_vs_dogs’. After loading the pre-trained weights, we will convert
+<code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code>. After loading the pre-trained weights, we will convert
 the Keras model to Akida.</p>
 <p>This section goes as follows:</p>
 <blockquote>
@@ -645,15 +649,15 @@ the Keras model to Akida.</p>
 <h3>3.A - Instantiate a Keras base model<a class="headerlink" href="#a-instantiate-a-keras-base-model" title="Permalink to this headline">¶</a></h3>
 <p>Here, we instantiate a quantized Keras model based on a MobileNet model.
 This base model was previously trained using the 1000 classes of the
-ImageNet dataset. For more information, please see the <a class="reference external" href="imagenet_cnn2akida_demo.html">ImageNet
+ImageNet dataset. For more information, please see the <a class="reference external" href="plot_mobilenet_imagenet.html">ImageNet
 tutorial</a>.</p>
 <p>The quantized MobileNet model satisfies the Akida NSoC requirements:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>The model relies on a convolutional layer (first layer) and separable
 convolutional layers, all being Akida-compatible.</p></li>
-<li><p>All the separable conv. layers have 4-bit weights, the first conv. layer
-has 8-bit weights.</p></li>
+<li><p>All the separable convolutional layers have 4-bit weights, the first
+convolutional layer has 8-bit weights.</p></li>
 <li><p>The activations are quantized with 4 bits.</p></li>
 </ul>
 </div></blockquote>
@@ -670,15 +674,15 @@ without the top classification layer (‘include_top=False’).</p>
 </div>
 <div class="section" id="b-modify-the-network-and-load-pre-trained-weights">
 <h3>3.B - Modify the network and load pre-trained weights<a class="headerlink" href="#b-modify-the-network-and-load-pre-trained-weights" title="Permalink to this headline">¶</a></h3>
-<p>As explained in <a class="reference external" href="cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process">section 1</a>,
+<p>As explained in <a class="reference external" href="plot_cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process">section 1</a>,
 we add a separable convolutional layer as top layer with one output neuron.
 The new model is now appropriate for the <code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code> dataset and is
 Akida-compatible. Note that a sigmoid activation is added at the end of
 the model: the output neuron returns a probability between 0 and 1 that
 the input image is a dog.</p>
-<p>The transfer learning process has been run in the provided training
-script and the weights have been saved. In this tutorial, the
-pre-trained weights are loaded for inference and conversion.</p>
+<p>The transfer learning process has been run internally and the weights have
+been saved. In this tutorial, the pre-trained weights are loaded for inference
+and conversion.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The pre-trained weights which are loaded corresponds to the
@@ -828,19 +832,15 @@ _________________________________________________________________
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5
 
     8192/12997744 [..............................] - ETA: 25s
-  106496/12997744 [..............................] - ETA: 7s 
-  688128/12997744 [&gt;.............................] - ETA: 2s
+   81920/12997744 [..............................] - ETA: 10s
+  606208/12997744 [&gt;.............................] - ETA: 2s 
  2195456/12997744 [====&gt;.........................] - ETA: 2s
- 2392064/12997744 [====&gt;.........................] - ETA: 2s
- 2498560/12997744 [====&gt;.........................] - ETA: 2s
- 2875392/12997744 [=====&gt;........................] - ETA: 2s
- 3907584/12997744 [========&gt;.....................] - ETA: 1s
- 5267456/12997744 [===========&gt;..................] - ETA: 1s
- 6463488/12997744 [=============&gt;................] - ETA: 0s
- 7790592/12997744 [================&gt;.............] - ETA: 0s
- 9273344/12997744 [====================&gt;.........] - ETA: 0s
-10788864/12997744 [=======================&gt;......] - ETA: 0s
-12222464/12997744 [===========================&gt;..] - ETA: 0s
+ 5136384/12997744 [==========&gt;...................] - ETA: 0s
+ 5324800/12997744 [===========&gt;..................] - ETA: 0s
+ 6356992/12997744 [=============&gt;................] - ETA: 0s
+ 7970816/12997744 [=================&gt;............] - ETA: 0s
+ 9691136/12997744 [=====================&gt;........] - ETA: 0s
+11526144/12997744 [=========================&gt;....] - ETA: 0s
 13000704/12997744 [==============================] - 1s 0us/step
 </pre></div>
 </div>
@@ -940,7 +940,7 @@ the Akida probabilities.</p></li>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 11.75 s.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 11.71 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Classify test images with the Akida model</span>
@@ -1039,7 +1039,7 @@ the Akida probabilities.</p></li>
  98% |####################################################################### |
 100% |########################################################################|
 100% |########################################################################|
-Akida inference on 2320 images took 41.22 s.
+Akida inference on 2320 images took 41.15 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
@@ -1151,7 +1151,7 @@ Akida accuracy:           97.11 %  (2253 / 2320 images)
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Confusion matrix quantized Akida:
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  29.634 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  10.237 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-cnn2snn-plot-cats-vs-dogs-cnn2akida-demo-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/254154ec73d10aa526c130afa514f0c8/plot_cats_vs_dogs_cnn2akida_demo.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_cats_vs_dogs_cnn2akida_demo.py</span></code></a></p>
