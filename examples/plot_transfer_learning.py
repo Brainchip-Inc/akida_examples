@@ -64,7 +64,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 # While the Tensorflow tutorial uses a fully-connected top layer with one
 # output neuron, the only Akida layer supporting 4-bit weights is a separable
 # convolutional layer (see `hardware compatibility
-# <../../user_guide/hw_constraints.html>`__).
+# <../user_guide/hw_constraints.html>`__).
 #
 # We thus decided to use a separable convolutional layer with one output
 # neuron for the top layer of our model.
@@ -342,13 +342,13 @@ model_akida.summary()
 #     careful to use the correct inputs: uint8 images for Akida and float
 #     rescaled images for Keras.
 #   * The ``predict`` function of tf.keras can take a ``tf.data.Dataset``
-#     object as argument. However, the Akida `evaluate <../../api_reference/aee_apis.html#akida.Model.evaluate>`__
+#     object as argument. However, the Akida `evaluate <../api_reference/aee_apis.html#akida.Model.evaluate>`__
 #     function takes a NumPy array containing the images. Though the Akida
-#     `predict <../../api_reference/aee_apis.html#akida.Model.predict>`__
+#     `predict <../api_reference/aee_apis.html#akida.Model.predict>`__
 #     function exists, it outputs a class label and not the raw predictions.
 #   * The Keras ``predict`` function returns the probability to be a dog:
 #     if the output is greater than 0.5, the model predicts a 'dog'. However,
-#     the Akida `evaluate <../../api_reference/aee_apis.html#akida.Model.evaluate>`__
+#     the Akida `evaluate <../api_reference/aee_apis.html#akida.Model.evaluate>`__
 #     function directly returns the potential before the 'sigmoid' activation, which has
 #     no SNN equivalent. We must therefore apply it explicitly on the model outputs to obtain
 #     the Akida probabilities.

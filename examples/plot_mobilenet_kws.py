@@ -1,13 +1,12 @@
 """
-Inference on KWS with MobileNet
-===============================
-
+MobileNet/KWS inference
+=======================
 
 This tutorial illustrates how to build a basic speech recognition
 Akida network that recognizes ten different words.
 
 The model will be first defined as a CNN and trained in Keras, then
-converted using the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__.
+converted using the `CNN2SNN toolkit <../user_guide/cnn2snn.html>`__.
 
 This example uses a Keyword Spotting Dataset prepared using
 **TensorFlow** `audio recognition

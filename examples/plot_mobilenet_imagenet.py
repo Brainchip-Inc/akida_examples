@@ -1,11 +1,11 @@
 """
-Inference on ImageNet with MobileNet
-====================================
+MobileNet/ImageNet inference
+============================
 
 .. Note:: Please refer to `CNN2SNN Conversion Tutorial (MNIST)
           <plot_mnist_cnn2akida_demo.html>`__ notebook
           and/or the `CNN2SNN documentation
-          <../../user_guide/cnn2snn.html>`__ for flow and steps details of
+          <../user_guide/cnn2snn.html>`__ for flow and steps details of
           the CNN2SNN conversion.
 
 This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
@@ -196,7 +196,7 @@ print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Here, the Keras quantized model is converted into a suitable version for
-# the Akida NSoC. The `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`__
+# the Akida NSoC. The `cnn2snn.convert <../api_reference/cnn2snn_apis.html#convert>`__
 # function needs as arguments the Keras model and the input scaling parameters.
 #
 # This section goes as follows:

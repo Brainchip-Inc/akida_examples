@@ -1,6 +1,6 @@
 """
-Inference on CIFAR10 with VGG and MobileNet
-===========================================
+VGG and MobileNet/CIFAR10 inference
+===================================
 
 The CIFAR-10 dataset consists of 60000 32x32 color images in 10 classes,
 with 6000 images per class. There are 50000 training images and 10000
@@ -156,8 +156,8 @@ x_test = (x_test - b)/a
 # | 6       | 2 bits         | 2 bits        | 91.31 %  | 74     |
 # +---------+----------------+---------------+----------+--------+
 #
-# Please refer to `CNN conversion tutorial <plot_mnist_cnn2akida_demo.html>`__
-# and/or the `CNN2SNN toolkit <../../api_reference/cnn2snn_apis.html>`__
+# Please refer to `CNN conversion tutorial <plot_cnn_flow.html>`__
+# and/or the `CNN2SNN toolkit <../api_reference/cnn2snn_apis.html>`__
 # documentation for flow and training steps details.
 
 # Instantiate the quantized model
@@ -222,7 +222,7 @@ model_akida = convert(model_keras, input_scaling=input_scaling)
 # 4.B Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary() <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 #
 # It also indicates it they are hardware-compatible (see the ``HW`` third
@@ -342,8 +342,8 @@ for _, stat in stats.items():
 # | 2       | 4 bits         | 4 bits        | 93.07 %  | 44     |
 # +---------+----------------+---------------+----------+--------+
 #
-# Please refer to `CNN conversion tutorial <plot_mnist_cnn2akida_demo.html>`__
-# and/or the `CNN2SNN toolkit <../../api_reference/cnn2snn_apis.html>`__
+# Please refer to `CNN conversion tutorial <plot_cnn_flow.html>`__
+# and/or the `CNN2SNN toolkit <../api_reference/cnn2snn_apis.html>`__
 # documentation for flow and training steps details.
 
 # Use a quantized model with pretrained quantized weights (93.07% accuracy)
@@ -409,7 +409,7 @@ model_akida = convert(model_keras, input_scaling=input_scaling)
 # 6.B Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary() <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 #
 # It also indicates it they are hardware-compatible (see the ``HW`` third

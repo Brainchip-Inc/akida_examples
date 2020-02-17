@@ -1,6 +1,6 @@
 """
-CNN conversion flow tutorial for MNIST
-======================================
+CNN conversion flow tutorial
+============================
 
 The CNN2SNN tool is based on Keras, TensorFlow high-level API for building and
 training deep learning models.
@@ -18,7 +18,7 @@ compatible with the **Akida NSoC** in a few steps.
           <https://www.tensorflow.org/install/gpu>`__ to run the CNN2SNN
           tool.
 
-.. image:: ../../img/cnn2snn_flow_small.png
+.. image:: ../img/cnn2snn_flow_small.png
 
 """
 
@@ -210,7 +210,7 @@ print('Test accuracy:', score[1])
 #
 # The first step is to ensure that the model as defined doesn't include
 # any layers or operations that aren't Akida-compatible (please refer to
-# the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__ documentation for full
+# the `CNN2SNN toolkit <../user_guide/cnn2snn.html>`__ documentation for full
 # details):
 #
 # * Standard Conv2D and Dense layers are supported (note that
@@ -505,5 +505,5 @@ for _, stat in stats.items():
 # .. Note:: Akida-compatible model first layer type is ``InputConvolutional``
 #           and holds underlying data to spike conversion (please refer to
 #           `Akida Execution Engine documentation
-#           <../../user_guide/aee.html>`__ for more details).
+#           <../user_guide/aee.html>`__ for more details).
 #

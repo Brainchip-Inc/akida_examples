@@ -1,19 +1,13 @@
 """
-Inference on MNIST
-==================
-
-The Akida Execution Engine includes a powerful native learning
-algorithm. However, it is also possible to train an Akida-compatible
-model externally, using specialized deep-learning techniques, and to
-then implement that model within the Akida Execution Engine as an
-efficient inference-only tool using the `CNN2SNN
-toolkit <../../user_guide/cnn2snn.html>`__. In this tutorial, you will
-simply load one such pre-trained model, use it to process the MNIST
-dataset, and look at how to make sense of the outputs.
+GXNOR/MNIST inference
+=====================
 
 The MNIST dataset is a handwritten digits database. It has a training
 set of 60,000 samples, and a test set of 10,000 samples. Each sample
 comprises a 28x28 pixel image and an associated label.
+
+This tutorial illustrates how to use a pre-trained Akida model to process the
+MNIST dataset.
 
 """
 
