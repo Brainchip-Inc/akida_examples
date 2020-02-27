@@ -70,15 +70,17 @@ Akida Execution Engine API
 
         .. automethod:: __init__
 
-    Tensor
+    Dense
     ======
-    .. autoclass:: Tensor
+    .. autoclass:: Dense
         :members:
+        :inherited-members:
 
     Sparse
     ======
     .. autoclass:: Sparse
         :members:
+        :inherited-members:
 
     coords_to_sparse
     ================
