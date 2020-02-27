@@ -9,6 +9,9 @@ CNN2SNN Toolkit API
     =======
     .. autofunction:: convert
 
+    A detailed description of the input_scaling parameter is given in the
+    `user guide <../user_guide/cnn2snn.html#input-scaling>`__.
+
     check_model_compatibility
     =========================
     .. autofunction:: check_model_compatibility
