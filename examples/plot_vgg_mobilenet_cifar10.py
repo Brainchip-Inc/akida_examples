@@ -163,9 +163,9 @@ x_test = (x_test - b)/a
 # Instantiate the quantized model
 model_keras = vgg_cifar10(input_shape,
                           weights='cifar10',
-                          weights_quantization=2,
+                          weight_quantization=2,
                           activ_quantization=2,
-                          input_weights_quantization=2)
+                          input_weight_quantization=2)
 model_keras.summary()
 
 ######################################################################
@@ -349,9 +349,9 @@ for _, stat in stats.items():
 # Use a quantized model with pretrained quantized weights (93.07% accuracy)
 model_keras = mobilenet_cifar10(input_shape,
                                 weights='cifar10',
-                                weights_quantization=4,
+                                weight_quantization=4,
                                 activ_quantization=4,
-                                input_weights_quantization=8)
+                                input_weight_quantization=8)
 model_keras.summary()
 
 

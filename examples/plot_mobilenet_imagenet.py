@@ -167,9 +167,9 @@ input_shape = (IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)
 model_keras = mobilenet_imagenet(input_shape=input_shape,
                   classes=NUM_CLASSES,
                   weights='imagenet',
-                  weights_quantization=4,
+                  weight_quantization=4,
                   activ_quantization=4,
-                  input_weights_quantization=8)
+                  input_weight_quantization=8)
 
 model_keras.summary()
 
