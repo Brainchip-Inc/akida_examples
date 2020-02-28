@@ -255,9 +255,9 @@ print(f"Test set composed of {num_images} images: "
 base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
                             include_top=False,
                             pooling='avg',
-                            weights_quantization=4,
+                            weight_quantization=4,
                             activ_quantization=4,
-                            input_weights_quantization=8)
+                            input_weight_quantization=8)
 
 
 ######################################################################

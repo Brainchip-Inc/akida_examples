@@ -139,9 +139,9 @@ K.clear_session()
 model_keras = mobilenet_kws(input_shape,
                             classes=CLASSES,
                             weights='kws',
-                            weights_quantization=4,
+                            weight_quantization=4,
                             activ_quantization=4,
-                            input_weights_quantization=8)
+                            input_weight_quantization=8)
 model_keras.summary()
 
 
