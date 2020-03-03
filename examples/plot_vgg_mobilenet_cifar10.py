@@ -65,7 +65,6 @@ from akida_models import mobilenet_cifar10, vgg_cifar10
 # CNN2SNN
 from cnn2snn import convert
 
-
 ######################################################################
 # 2. Load and reshape CIFAR10 dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,9 +86,8 @@ b = 0
 input_scaling = (a, b)
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
-x_train = (x_train - b)/a
-x_test = (x_test - b)/a
-
+x_train = (x_train - b) / a
+x_test = (x_test - b) / a
 
 ######################################################################
 # 3. Create a quantized Keras VGG model
@@ -111,7 +109,6 @@ x_test = (x_test - b)/a
 #     specifications and load pre-trained weights** that performs 91 % accuracy
 #     on the test dataset.
 #   * **3.B - Check performance** on the test set.
-
 
 ######################################################################
 # 3.A Instantiate Keras model
@@ -198,10 +195,9 @@ potentials_keras = model_keras.predict(x_test[:num_images])
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 
 accuracy = accuracy_score(y_test[:num_images], preds_keras)
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 end = timer()
 print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
-
 
 ######################################################################
 # 4. Conversion to Akida
@@ -217,7 +213,6 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 # Convert the model
 model_akida = convert(model_keras, input_scaling=input_scaling)
 
-
 ######################################################################
 # 4.B Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,7 +224,6 @@ model_akida = convert(model_keras, input_scaling=input_scaling)
 # column).
 
 model_akida.summary()
-
 
 ######################################################################
 # 4.C Check performance
@@ -267,7 +261,7 @@ start = timer()
 results = model_akida.predict(raw_x_test[:num_images])
 accuracy = accuracy_score(y_test[:num_images], results)
 
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 end = timer()
 print(f'Akida inference on {num_images} images took {end-start:.2f} s.\n')
 
@@ -283,7 +277,6 @@ stats = model_akida.get_statistics()
 model_akida.predict(raw_x_test[:20])
 for _, stat in stats.items():
     print(stat)
-
 
 ######################################################################
 # 5. Create a quantized Keras MobileNet model
@@ -306,7 +299,6 @@ for _, stat in stats.items():
 #   * **5.A - Instantiate a quantized Keras model** according to above
 #     specifications
 #   * **5.B - Check performance** on the test set.
-
 
 ######################################################################
 # 5.A Instantiate Keras MobileNet model
@@ -354,7 +346,6 @@ model_keras = mobilenet_cifar10(input_shape,
                                 input_weight_quantization=8)
 model_keras.summary()
 
-
 ######################################################################
 # 5.B Check performance
 # ^^^^^^^^^^^^^^^^^^^^^
@@ -385,15 +376,13 @@ potentials_keras = model_keras.predict(x_test[:num_images])
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 
 accuracy = accuracy_score(y_test[:num_images], preds_keras)
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 end = timer()
 print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
-
 
 ######################################################################
 # 6. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
-
 
 ######################################################################
 # 6.A Convert to Akida model
@@ -403,7 +392,6 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 # and the input scaling that was used during training.
 
 model_akida = convert(model_keras, input_scaling=input_scaling)
-
 
 ######################################################################
 # 6.B Check hardware compliancy
@@ -416,7 +404,6 @@ model_akida = convert(model_keras, input_scaling=input_scaling)
 # column).
 
 model_akida.summary()
-
 
 ######################################################################
 # 6.C Check performance
@@ -454,7 +441,7 @@ start = timer()
 results = model_akida.predict(raw_x_test[:num_images])
 accuracy = accuracy_score(y_test[:num_images], results)
 
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 end = timer()
 print(f'Akida inference on {num_images} images took {end-start:.2f} s.\n')
 
@@ -471,7 +458,6 @@ model_akida.predict(raw_x_test[:20])
 for _, stat in stats.items():
     print(stat)
 
-
 ######################################################################
 # 6D. Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -481,13 +467,17 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 
-label_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+label_names = [
+    'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
+    'ship', 'truck'
+]
 
 # prepare plot
 barWidth = 0.75
 pause_time = 1
 
-fig = plt.figure(num='CIFAR10 Classification by Akida Execution Engine', figsize=(8, 4))
+fig = plt.figure(num='CIFAR10 Classification by Akida Execution Engine',
+                 figsize=(8, 4))
 ax0 = plt.subplot(1, 3, 1)
 imgobj = ax0.imshow(np.zeros((32, 32, 3), dtype=np.uint8))
 ax0.set_axis_off()
@@ -503,11 +493,11 @@ predicted_class = ax0.text(20, 37, 'None')
 i = np.random.randint(y_test.shape[0])
 
 true_idx = int(y_test[i])
-pot =  model_akida.evaluate(np.expand_dims(raw_x_test[i], axis=0)).squeeze()
+pot = model_akida.evaluate(np.expand_dims(raw_x_test[i], axis=0)).squeeze()
 
 rpot = np.arange(len(pot))
 ax1.barh(rpot, pot, height=barWidth)
-ax1.set_yticks(rpot - 0.07*barWidth)
+ax1.set_yticks(rpot - 0.07 * barWidth)
 ax1.set_yticklabels(label_names)
 predicted_idx = pot.argmax()
 imgobj.set_data(raw_x_test[i])

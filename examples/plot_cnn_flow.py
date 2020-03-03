@@ -46,7 +46,6 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 
-
 ######################################################################
 # 1.2 Load and reshape MNIST dataset
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,13 +98,12 @@ b = 0
 input_scaling = (a, b)
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
-x_train = (x_train - b)/a
-x_test = (x_test - b)/a
+x_train = (x_train - b) / a
+x_test = (x_test - b) / a
 
 # Transform scalar labels to one-hot representation, scaled to +/- 1 appropriate for squared hinge loss function
 y_train = to_categorical(y_train, 10) * 2 - 1
 y_test = to_categorical(y_test, 10) * 2 - 1
-
 
 ######################################################################
 # 1.3 Set training parameters
@@ -121,8 +119,7 @@ batch_size = 128
 # Set the learning rate parameters
 lr_start = 1e-3
 lr_end = 1e-4
-lr_decay = (lr_end / lr_start) ** (1. / epochs)
-
+lr_decay = (lr_end / lr_start)**(1. / epochs)
 
 ######################################################################
 # 2. Model creation and performance check
@@ -150,21 +147,16 @@ x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
 x = BatchNormalization()(x)
 x = ReLU(6.)(x)
 
-x = Conv2D(filters=64,
-           kernel_size=(5, 5),
-           padding='same',
-           use_bias=False)(x)
+x = Conv2D(filters=64, kernel_size=(5, 5), padding='same', use_bias=False)(x)
 x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
 x = BatchNormalization()(x)
 x = ReLU(6.)(x)
 
 x = Flatten()(x)
-x = Dense(512,
-          use_bias=False)(x)
+x = Dense(512, use_bias=False)(x)
 x = BatchNormalization()(x)
 x = ReLU(6.)(x)
-x = Dense(10,
-          use_bias=False)(x)
+x = Dense(10, use_bias=False)(x)
 
 model_keras = Model(img_input, x, name='mnistnet')
 
@@ -172,12 +164,10 @@ opt = Adam(lr=lr_start)
 model_keras.compile(loss='squared_hinge', optimizer=opt, metrics=['accuracy'])
 model_keras.summary()
 
-
 ######################################################################
 # .. Note:: Adam optimizer is commonly used, more details can be found
 #           `here <https://arxiv.org/abs/1609.04747>`__.
 #
-
 
 ######################################################################
 # 2.2 Performance check
@@ -190,16 +180,18 @@ model_keras.summary()
 #
 
 callbacks = []
-lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay ** e)
+lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay**e)
 callbacks.append(lr_scheduler)
-history = model_keras.fit(x_train, y_train,
-                    batch_size=batch_size, epochs=epochs,
-                    verbose=1, validation_data=(x_test, y_test),
-                    callbacks=callbacks)
+history = model_keras.fit(x_train,
+                          y_train,
+                          batch_size=batch_size,
+                          epochs=epochs,
+                          verbose=1,
+                          validation_data=(x_test, y_test),
+                          callbacks=callbacks)
 score = model_keras.evaluate(x_test, y_test, verbose=0)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-
 
 ######################################################################
 # 3. Model Akida-compatibility check and changes
@@ -229,7 +221,6 @@ print('Test accuracy:', score[1])
 # (guidelines included in the documentation).
 #
 
-
 ######################################################################
 # 3.2 Model adaptation
 # ^^^^^^^^^^^^^^^^^^^^
@@ -242,7 +233,6 @@ print('Test accuracy:', score[1])
 #
 
 from akida_models.quantization_blocks import conv_block, dense_block
-
 
 ######################################################################
 # The following code illustrates how to express the MNIST model defined
@@ -277,7 +267,8 @@ img_input = Input(shape=(28, 28, 1))
 # x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
 # x = BatchNormalization()(x)
 # x = ReLU(6.)(x)
-x = conv_block(img_input, filters=32,
+x = conv_block(img_input,
+               filters=32,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
@@ -292,7 +283,8 @@ x = conv_block(img_input, filters=32,
 # x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
 # x = BatchNormalization()(x)
 # x = ReLU(6.)(x)
-x = conv_block(x, filters=64,
+x = conv_block(x,
+               filters=64,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
@@ -306,7 +298,8 @@ x = Flatten()(x)
 #           use_bias=False)(x)
 # x = BatchNormalization()(x)
 # x = ReLU(6.)(x)
-x = dense_block(x, units=512,
+x = dense_block(x,
+                units=512,
                 use_bias=False,
                 name='dense_2',
                 add_batchnorm=True)
@@ -314,7 +307,8 @@ x = dense_block(x, units=512,
 # x = Dense(10,
 #           use_bias=False)(x)
 # x = BatchNormalization()(x)
-x = dense_block(x, units=10,
+x = dense_block(x,
+                units=10,
                 use_bias=False,
                 name='dense_3',
                 activ_quantization=None)
@@ -325,7 +319,6 @@ opt = Adam(lr=lr_start)
 model_keras.compile(loss='squared_hinge', optimizer=opt, metrics=['accuracy'])
 model_keras.summary()
 
-
 ######################################################################
 # 3.3 Performance check
 # ^^^^^^^^^^^^^^^^^^^^^
@@ -334,16 +327,18 @@ model_keras.summary()
 #
 
 callbacks = []
-lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay ** e)
+lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay**e)
 callbacks.append(lr_scheduler)
-history = model_keras.fit(x_train, y_train,
-                    batch_size=batch_size, epochs=epochs,
-                    verbose=1, validation_data=(x_test, y_test),
-                    callbacks=callbacks)
+history = model_keras.fit(x_train,
+                          y_train,
+                          batch_size=batch_size,
+                          epochs=epochs,
+                          verbose=1,
+                          validation_data=(x_test, y_test),
+                          callbacks=callbacks)
 score = model_keras.evaluate(x_test, y_test, verbose=0)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-
 
 ######################################################################
 # Saving the model weights as ``mnistnet_act_fp_wgt_fp.hdf5`` to reload
@@ -353,8 +348,8 @@ print('Test accuracy:', score[1])
 #
 
 temp_dir = TemporaryDirectory()
-model_keras.save_weights(os.path.join(temp_dir.name, 'mnistnet_act_fp_wgt_fp.hdf5'))
-
+model_keras.save_weights(
+    os.path.join(temp_dir.name, 'mnistnet_act_fp_wgt_fp.hdf5'))
 
 ######################################################################
 # 4. Model quantization and training
@@ -391,7 +386,8 @@ model_keras.save_weights(os.path.join(temp_dir.name, 'mnistnet_act_fp_wgt_fp.hdf
 K.clear_session()
 
 img_input = Input(shape=(28, 28, 1))
-x = conv_block(img_input, filters=32,
+x = conv_block(img_input,
+               filters=32,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
@@ -400,7 +396,8 @@ x = conv_block(img_input, filters=32,
                activ_quantization=1,
                pooling='max',
                add_batchnorm=True)
-x = conv_block(x, filters=64,
+x = conv_block(x,
+               filters=64,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
@@ -410,13 +407,15 @@ x = conv_block(x, filters=64,
                pooling='max',
                add_batchnorm=True)
 x = Flatten()(x)
-x = dense_block(x, units=512,
+x = dense_block(x,
+                units=512,
                 use_bias=False,
                 name='dense_2',
                 weight_quantization=2,
                 activ_quantization=1,
                 add_batchnorm=True)
-x = dense_block(x, units=10,
+x = dense_block(x,
+                units=10,
                 use_bias=False,
                 name='dense_3',
                 weight_quantization=2,
@@ -429,8 +428,8 @@ model_keras.compile(loss='squared_hinge', optimizer=opt, metrics=['accuracy'])
 model_keras.summary()
 
 # Reload previously computed weights as init weights for the quantization step
-load_status = model_keras.load_weights(os.path.join(temp_dir.name, 'mnistnet_act_fp_wgt_fp.hdf5'))
-
+load_status = model_keras.load_weights(
+    os.path.join(temp_dir.name, 'mnistnet_act_fp_wgt_fp.hdf5'))
 
 ######################################################################
 # 4.2 Performance check
@@ -440,16 +439,18 @@ load_status = model_keras.load_weights(os.path.join(temp_dir.name, 'mnistnet_act
 #
 
 callbacks = []
-lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay ** e)
+lr_scheduler = LearningRateScheduler(lambda e: lr_start * lr_decay**e)
 callbacks.append(lr_scheduler)
-history = model_keras.fit(x_train, y_train,
-                    batch_size=batch_size, epochs=epochs,
-                    verbose=1, validation_data=(x_test, y_test),
-                    callbacks=callbacks)
+history = model_keras.fit(x_train,
+                          y_train,
+                          batch_size=batch_size,
+                          epochs=epochs,
+                          verbose=1,
+                          validation_data=(x_test, y_test),
+                          callbacks=callbacks)
 score = model_keras.evaluate(x_test, y_test, verbose=0)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-
 
 ######################################################################
 # 5. Convert trained model for Akida and test
@@ -473,7 +474,6 @@ from cnn2snn import convert
 model_akida = convert(model_keras, input_scaling=input_scaling)
 model_akida.summary()
 
-
 ######################################################################
 # 5.2 Performances check with the Akida Execution Engine
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -484,7 +484,7 @@ num_samples = 1000
 results = model_akida.predict(raw_x_test[:num_samples])
 accuracy = accuracy_score(raw_y_test[:num_samples], results[:num_samples])
 
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 # For non-regression purpose
 assert accuracy > 0.95
@@ -495,7 +495,6 @@ stats = model_akida.get_statistics()
 model_akida.predict(raw_x_test[:20])
 for _, stat in stats.items():
     print(stat)
-
 
 ######################################################################
 # Depending on the number of samples you run, you should find a

@@ -42,7 +42,7 @@ input_shape = x_test.shape[1:]
 a = np.std(x_train)
 b = np.mean(x_train)
 input_scaling = (a, b)
-x_test_keras = (x_test.astype('float32') - b)/a
+x_test_keras = (x_test.astype('float32') - b) / a
 
 # For akida training, use uint8 raw data
 x_test_akida = x_test.astype('uint8')
@@ -106,7 +106,6 @@ print("Keras MAE: {0:.4f}".format(mae_keras))
 # Convert the model
 model_akida = convert(model_keras, input_scaling=input_scaling)
 model_akida.summary()
-
 
 #####################################################################
 # 5.2 Check Akida model accuracy

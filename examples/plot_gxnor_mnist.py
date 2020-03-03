@@ -41,7 +41,6 @@ from akida import Model
 train_set = np.expand_dims(train_set, -1)
 test_set = np.expand_dims(test_set, -1)
 
-
 ######################################################################
 # 2. Look at some images from the test dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,11 +48,10 @@ test_set = np.expand_dims(test_set, -1)
 
 # Display a few images from the test set
 f, axarr = plt.subplots(1, 4)
-for i in range (0, 4):
-    axarr[i].imshow(test_set[i].reshape((28,28)), cmap=cm.Greys_r)
+for i in range(0, 4):
+    axarr[i].imshow(test_set[i].reshape((28, 28)), cmap=cm.Greys_r)
     axarr[i].set_title('Class %d' % test_label[i])
 plt.show()
-
 
 ######################################################################
 # 3. Load the pre-trained Akida model
@@ -71,7 +69,6 @@ model_file = get_file("gxnor_mnist.fbz",
 model_akida = Model(model_file)
 model_akida.summary()
 
-
 ######################################################################
 # 4. Classify a single image
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,19 +80,18 @@ model_akida.summary()
 # Test a single example
 sample_image = 0
 image = test_set[sample_image]
-outputs = model_akida.evaluate(image.reshape(1,28,28,1))
+outputs = model_akida.evaluate(image.reshape(1, 28, 28, 1))
 print('Input Label: %i' % test_label[sample_image])
 
 # sphinx_gallery_thumbnail_number = 2
 f, axarr = plt.subplots(1, 2)
-axarr[0].imshow(test_set[sample_image].reshape((28,28)), cmap=cm.Greys_r)
+axarr[0].imshow(test_set[sample_image].reshape((28, 28)), cmap=cm.Greys_r)
 axarr[0].set_title('Class %d' % test_label[sample_image])
-axarr[1].bar(range(10),outputs.squeeze())
+axarr[1].bar(range(10), outputs.squeeze())
 axarr[1].set_xticks(range(10))
 plt.show()
 
 print(outputs.squeeze())
-
 
 ######################################################################
 # Consider the output from the model, printed above. As is typical in
@@ -113,7 +109,6 @@ print(outputs.squeeze())
 # sample_image in the script above (anything from 0 to 9999).
 #
 
-
 ######################################################################
 # 5. Check performance across a number of samples
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,8 +123,8 @@ num_samples = 10000
 results = model_akida.predict(test_set[:int(num_samples)], 10)
 accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
 f1 = f1_score(test_label[:num_samples],
-               results[:num_samples],
-               average='weighted')
+              results[:num_samples],
+              average='weighted')
 
 # For non-regression purpose
 assert accuracy > 0.99
@@ -142,9 +137,8 @@ for _, stat in stats.items():
     print(stat)
 
 # Display results
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"% / "
-       +"F1 score: "+"{0:.2f}".format(f1))
-
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "% / " + "F1 score: " +
+      "{0:.2f}".format(f1))
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
