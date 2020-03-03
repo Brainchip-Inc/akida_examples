@@ -39,3 +39,10 @@ Note that by removing the *-D plot_gallery=0* option in the previous command,
 examples will be executed for a nicer rendering but it will take much more time.
 
 * Open *.build/index.html* once done
+
+## Style check
+~~~~
+yapf --style="{based_on_style:google}" -dr examples/
+~~~~
+
+Use the '-i' option instead of '-d' to apply formatting to a file.

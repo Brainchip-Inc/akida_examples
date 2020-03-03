@@ -1,4 +1,24 @@
 kind: pipeline
+name: check-style
+
+trigger:
+  ref:
+    include:
+    - refs/pull/**
+    - refs/heads/master
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: yapf
+  image: bender:5000/doc_build:python37_tf200
+  commands:
+  - pip install -U yapf
+  - yapf --style="{based_on_style:google}" -dr examples/
+---
+kind: pipeline
 name: build-doc
 
 trigger:
@@ -51,3 +71,6 @@ volumes:
 - name: docs
   host:
     path: /home/ktsiknos/nightly_doc
+
+depends_on:
+  - check-style
