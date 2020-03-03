@@ -62,7 +62,6 @@ from akida_models.mobilenet.imagenet import imagenet_preprocessing
 #           training the Keras model are needed.
 #
 
-
 ######################################################################
 # 2.1 Load test images and preprocess test images
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,28 +74,28 @@ NUM_CLASSES = 1000
 
 num_images = 10
 
-file_path = tf.keras.utils.get_file("imagenet_like.zip",
-                                    "http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-                                    cache_subdir='datasets/imagenet_like',
-                                    extract=True)
+file_path = tf.keras.utils.get_file(
+    "imagenet_like.zip",
+    "http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
+    cache_subdir='datasets/imagenet_like',
+    extract=True)
 data_folder = os.path.dirname(file_path)
 
 # Load images for test set
 x_test_files = []
 x_test = np.zeros((num_images, 224, 224, 3)).astype('uint8')
 for id in range(num_images):
-    test_file = 'image_' + str(id+1).zfill(2) + '.jpg'
+    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
     x_test_files.append(test_file)
     img_path = os.path.join(data_folder, test_file)
     base_image = tf.io.read_file(img_path)
-    image = imagenet_preprocessing.preprocess_image(
-        image_buffer=base_image,
-        bbox=None,
-        output_width=IMAGE_SIZE,
-        output_height=IMAGE_SIZE,
-        num_channels=NUM_CHANNELS,
-        alpha=1.,
-        beta=0.)
+    image = imagenet_preprocessing.preprocess_image(image_buffer=base_image,
+                                                    bbox=None,
+                                                    output_width=IMAGE_SIZE,
+                                                    output_height=IMAGE_SIZE,
+                                                    num_channels=NUM_CHANNELS,
+                                                    alpha=1.,
+                                                    beta=0.)
     x_test[id, :, :, :] = np.expand_dims(image.numpy(), axis=0)
 
 # Rescale images for Keras model (normalization between -1 and 1)
@@ -107,7 +106,6 @@ input_scaling = (a, b)
 x_test_preprocess = (x_test.astype('float32') - b) / a
 
 print(f'{num_images} images loaded and preprocessed.')
-
 
 ######################################################################
 # 2.2 Load labels
@@ -125,7 +123,6 @@ with open(fname, newline='') as csvfile:
 labels_test = np.zeros(num_images)
 for i in range(num_images):
     labels_test[i] = int(validation_labels[x_test_files[i]])
-
 
 ######################################################################
 # 3. Create a quantized Keras model
@@ -149,7 +146,6 @@ for i in range(num_images):
 #   images, the inference could last for several minutes.
 #
 
-
 ######################################################################
 # 3.1 Instantiate Keras model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -165,11 +161,11 @@ for i in range(num_images):
 
 input_shape = (IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)
 model_keras = mobilenet_imagenet(input_shape=input_shape,
-                  classes=NUM_CLASSES,
-                  weights='imagenet',
-                  weight_quantization=4,
-                  activ_quantization=4,
-                  input_weight_quantization=8)
+                                 classes=NUM_CLASSES,
+                                 weights='imagenet',
+                                 weight_quantization=4,
+                                 activ_quantization=4,
+                                 input_weight_quantization=8)
 
 model_keras.summary()
 
@@ -190,7 +186,6 @@ accuracy_keras = np.sum(np.equal(preds_keras, labels_test)) / num_images
 
 print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 
-
 ######################################################################
 # 4. Convert Keras model for Akida NSoC
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -207,7 +202,6 @@ print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 # * **Show predictions** for some test images.
 #
 
-
 ######################################################################
 # 4.1 Convert Keras model to an Akida compatible model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -219,7 +213,6 @@ from cnn2snn import convert
 print("Converting Keras model for Akida NSoC...")
 model_akida = convert(model_keras, input_scaling=input_scaling)
 model_akida.summary()
-
 
 ######################################################################
 # 4.2 Test performance of the Akida model
@@ -247,7 +240,6 @@ model_akida.predict(x_test[:20])
 for _, stat in stats.items():
     print(stat)
 
-
 ######################################################################
 # 4.3 Show predictions for a random test image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -270,7 +262,7 @@ def get_top5(potentials, true_label):
         top5.append(best)
         tmp_pots[best] = min_val
 
-    vals = np.zeros((6, ))
+    vals = np.zeros((6,))
     vals[:5] = potentials[top5]
     if true_label not in top5:
         vals[5] = potentials[true_label]
@@ -280,15 +272,18 @@ def get_top5(potentials, true_label):
 
     class_name = []
     for ii in range(5):
-        class_name.append(imagenet_preprocessing.index_to_label(top5[ii]).split(',')[0])
+        class_name.append(
+            imagenet_preprocessing.index_to_label(top5[ii]).split(',')[0])
     if true_label in top5:
         class_name.append('')
     else:
-        class_name.append(imagenet_preprocessing.index_to_label(true_label).split(',')[0])
+        class_name.append(
+            imagenet_preprocessing.index_to_label(true_label).split(',')[0])
 
     return top5, vals, class_name
 
-def adjust_spines(ax,spines):
+
+def adjust_spines(ax, spines):
     for loc, spine in ax.spines.items():
         if loc in spines:
             spine.set_position(('outward', 10))  # outward by 10 points
@@ -305,6 +300,7 @@ def adjust_spines(ax,spines):
     else:
         # no xaxis ticks
         ax.xaxis.set_ticks([])
+
 
 def prepare_plots():
     fig = plt.figure(figsize=(8, 4))
@@ -328,20 +324,28 @@ def prepare_plots():
     # Adjust Plot Positions
     ax0.set_position([0.05, 0.055, 0.3, 0.9])
     l1, b1, w1, h1 = ax1.get_position().bounds
-    ax1.set_position([l1*1.05, b1 + 0.09*h1, w1, 0.8*h1])
+    ax1.set_position([l1 * 1.05, b1 + 0.09 * h1, w1, 0.8 * h1])
     # Add title box
-    plt.figtext(0.5, 0.9, "Imagenet Classification by Akida", size=20, ha="center", va="center",
-                bbox=dict(boxstyle="round", ec=(0.5, 0.5, 0.5), fc=(0.9, 0.9, 1.0)))
+    plt.figtext(0.5,
+                0.9,
+                "Imagenet Classification by Akida",
+                size=20,
+                ha="center",
+                va="center",
+                bbox=dict(boxstyle="round",
+                          ec=(0.5, 0.5, 0.5),
+                          fc=(0.9, 0.9, 1.0)))
 
     return fig, imgobj, ax1, rects
+
 
 def update_bars_chart(rects, vals, true_label):
     counter = 0
     for rect, h in zip(rects, yvals):
         rect.set_width(h)
-        if counter<5:
+        if counter < 5:
             if top5[counter] == true_label:
-                if counter==0:
+                if counter == 0:
                     rect.set_facecolor((0.0, 1.0, 0.0))
                 else:
                     rect.set_facecolor((0.0, 0.5, 0.0))
@@ -349,7 +353,8 @@ def update_bars_chart(rects, vals, true_label):
                 rect.set_facecolor('gray')
         elif counter == 5:
             rect.set_facecolor('red')
-        counter+=1
+        counter += 1
+
 
 # Prepare plots
 fig, imgobj, ax1, rects = prepare_plots()
@@ -358,7 +363,8 @@ fig, imgobj, ax1, rects = prepare_plots()
 img = np.random.randint(num_images)
 
 # Predict image class
-potentials_akida = model_akida.evaluate(np.expand_dims(x_test[img], axis=0)).squeeze()
+potentials_akida = model_akida.evaluate(np.expand_dims(x_test[img],
+                                                       axis=0)).squeeze()
 
 # Get top 5 prediction labels and associated names
 true_label = int(validation_labels[x_test_files[img]])

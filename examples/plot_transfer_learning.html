@@ -597,9 +597,11 @@ preprocess batches of data (one can look at the TensorFlow guide
 <span class="n">splits</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="o">.</span><span class="n">subsplit</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="n">SPLIT_WEIGHTS</span><span class="p">)</span>
 
 <span class="n">tfds</span><span class="o">.</span><span class="n">disable_progress_bar</span><span class="p">()</span>
-<span class="p">(</span><span class="n">raw_train</span><span class="p">,</span> <span class="n">raw_validation</span><span class="p">,</span> <span class="n">raw_test</span><span class="p">),</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
-    <span class="s1">&#39;cats_vs_dogs:2.0.1&#39;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">splits</span><span class="p">),</span>
-    <span class="n">with_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">as_supervised</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">(</span><span class="n">raw_train</span><span class="p">,</span> <span class="n">raw_validation</span><span class="p">,</span>
+ <span class="n">raw_test</span><span class="p">),</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;cats_vs_dogs:2.0.1&#39;</span><span class="p">,</span>
+                                 <span class="n">split</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">splits</span><span class="p">),</span>
+                                 <span class="n">with_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">as_supervised</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
@@ -633,11 +635,13 @@ images can be loaded in memory depending on your CPU/GPU.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IMG_SIZE</span> <span class="o">=</span> <span class="mi">160</span>
 <span class="n">input_scaling</span> <span class="o">=</span> <span class="p">(</span><span class="mf">127.5</span><span class="p">,</span> <span class="mf">127.5</span><span class="p">)</span>
 
+
 <span class="k">def</span> <span class="nf">format_example_keras</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">-</span> <span class="n">input_scaling</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">input_scaling</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="n">IMG_SIZE</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span>
+
 
 <span class="k">def</span> <span class="nf">format_example_akida</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="n">IMG_SIZE</span><span class="p">))</span>
@@ -706,11 +710,11 @@ convolutional layer has 8-bit weights.</p></li>
 <p>Using the provided quantized MobileNet model, we create an instance
 without the top classification layer (‘include_top=False’).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">base_model_keras</span> <span class="o">=</span> <span class="n">mobilenet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="n">IMG_SIZE</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;avg&#39;</span><span class="p">,</span>
-                            <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                            <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                            <span class="n">input_weight_quantization</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+                                      <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;avg&#39;</span><span class="p">,</span>
+                                      <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                      <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                      <span class="n">input_weight_quantization</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -734,7 +738,8 @@ these parameters, you must re-train the model and save weights.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a top layer for classification</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">base_model_keras</span><span class="o">.</span><span class="n">output</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                         <span class="n">filters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                          <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -743,7 +748,9 @@ these parameters, you must re-train the model and save weights.</p>
                          <span class="n">activ_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">preds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_2&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">model_keras</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model_keras</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;model_cats_vs_dogs&quot;</span><span class="p">)</span>
+<span class="n">model_keras</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model_keras</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                             <span class="n">outputs</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;model_cats_vs_dogs&quot;</span><span class="p">)</span>
 
 <span class="n">model_keras</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
@@ -864,9 +871,10 @@ _________________________________________________________________
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load pre-trained weights</span>
-<span class="n">pretrained_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span><span class="s2">&quot;mobilenet_cats_vs_dogs_wq4_aq4.h5&quot;</span><span class="p">,</span>
-                                             <span class="s2">&quot;http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5&quot;</span><span class="p">,</span>
-                                             <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/mobilenet&#39;</span><span class="p">)</span>
+<span class="n">pretrained_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+    <span class="s2">&quot;mobilenet_cats_vs_dogs_wq4_aq4.h5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5&quot;</span><span class="p">,</span>
+    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/mobilenet&#39;</span><span class="p">)</span>
 <span class="n">model_keras</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">pretrained_weights</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -876,14 +884,43 @@ _________________________________________________________________
     8192/12997744 [..............................] - ETA: 26s
    81920/12997744 [..............................] - ETA: 10s
   614400/12997744 [&gt;.............................] - ETA: 2s 
- 2129920/12997744 [===&gt;..........................] - ETA: 2s
- 4988928/12997744 [==========&gt;...................] - ETA: 0s
- 5201920/12997744 [===========&gt;..................] - ETA: 0s
- 6356992/12997744 [=============&gt;................] - ETA: 0s
- 7954432/12997744 [=================&gt;............] - ETA: 0s
- 9666560/12997744 [=====================&gt;........] - ETA: 0s
-11501568/12997744 [=========================&gt;....] - ETA: 0s
-13000704/12997744 [==============================] - 1s 0us/step
+ 2138112/12997744 [===&gt;..........................] - ETA: 0s
+ 4161536/12997744 [========&gt;.....................] - ETA: 1s
+ 4423680/12997744 [=========&gt;....................] - ETA: 1s
+ 4448256/12997744 [=========&gt;....................] - ETA: 1s
+ 4481024/12997744 [=========&gt;....................] - ETA: 1s
+ 4521984/12997744 [=========&gt;....................] - ETA: 1s
+ 4579328/12997744 [=========&gt;....................] - ETA: 1s
+ 4644864/12997744 [=========&gt;....................] - ETA: 1s
+ 4718592/12997744 [=========&gt;....................] - ETA: 1s
+ 4792320/12997744 [==========&gt;...................] - ETA: 1s
+ 4882432/12997744 [==========&gt;...................] - ETA: 1s
+ 4980736/12997744 [==========&gt;...................] - ETA: 1s
+ 5054464/12997744 [==========&gt;...................] - ETA: 1s
+ 5218304/12997744 [===========&gt;..................] - ETA: 1s
+ 5341184/12997744 [===========&gt;..................] - ETA: 1s
+ 5472256/12997744 [===========&gt;..................] - ETA: 1s
+ 5619712/12997744 [===========&gt;..................] - ETA: 1s
+ 5767168/12997744 [============&gt;.................] - ETA: 1s
+ 5931008/12997744 [============&gt;.................] - ETA: 1s
+ 6103040/12997744 [=============&gt;................] - ETA: 1s
+ 6291456/12997744 [=============&gt;................] - ETA: 1s
+ 6488064/12997744 [=============&gt;................] - ETA: 1s
+ 6717440/12997744 [==============&gt;...............] - ETA: 1s
+ 6955008/12997744 [===============&gt;..............] - ETA: 1s
+ 7217152/12997744 [===============&gt;..............] - ETA: 1s
+ 7503872/12997744 [================&gt;.............] - ETA: 1s
+ 7806976/12997744 [=================&gt;............] - ETA: 1s
+ 8134656/12997744 [=================&gt;............] - ETA: 1s
+ 8495104/12997744 [==================&gt;...........] - ETA: 1s
+ 8896512/12997744 [===================&gt;..........] - ETA: 0s
+ 9338880/12997744 [====================&gt;.........] - ETA: 0s
+ 9830400/12997744 [=====================&gt;........] - ETA: 0s
+10371072/12997744 [======================&gt;.......] - ETA: 0s
+10952704/12997744 [========================&gt;.....] - ETA: 0s
+11591680/12997744 [=========================&gt;....] - ETA: 0s
+12279808/12997744 [===========================&gt;..] - ETA: 0s
+13000704/12997744 [==============================] - 2s 0us/step
 </pre></div>
 </div>
 </div>
@@ -983,7 +1020,7 @@ the Akida probabilities.</p></li>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 11.99 s.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 12.01 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Classify test images with the Akida model</span>
@@ -1082,13 +1119,13 @@ the Akida probabilities.</p></li>
  98% |####################################################################### |
 100% |########################################################################|
 100% |########################################################################|
-Akida inference on 2320 images took 47.05 s.
+Akida inference on 2320 images took 46.92 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
 <span class="n">stats</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">()</span>
-<span class="n">batch</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">test_batches_akida</span><span class="p">)</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+<span class="n">batch</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">test_batches_akida</span><span class="p">)</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
@@ -1165,6 +1202,7 @@ Akida accuracy:           97.11 %  (2253 / 2320 images)
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">tp</span><span class="p">,</span> <span class="n">fn</span><span class="p">],</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">tn</span><span class="p">]])</span>
 
+
 <span class="k">def</span> <span class="nf">plot_confusion_matrix_2classes</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
     <span class="n">cm</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="n">cm</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
 
@@ -1172,8 +1210,10 @@ Akida accuracy:           97.11 %  (2253 / 2320 images)
     <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">classes</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">classes</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{cm[i, j]:.2f}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">j</span><span class="p">,</span>
+                 <span class="n">i</span><span class="p">,</span>
+                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{cm[i, j]:.2f}</span><span class="s2">&quot;</span><span class="p">,</span>
                  <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
                  <span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span> <span class="k">if</span> <span class="n">cm</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">cm</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="mf">2.</span> <span class="k">else</span> <span class="s2">&quot;black&quot;</span><span class="p">)</span>
 
@@ -1194,7 +1234,7 @@ Akida accuracy:           97.11 %  (2253 / 2320 images)
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Confusion matrix quantized Akida:
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  42.588 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  42.356 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-plot-transfer-learning-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/1a4bd0ec3b45ea55ca8f4288d600d59f/plot_transfer_learning.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_transfer_learning.py</span></code></a></p>

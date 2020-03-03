@@ -43,14 +43,15 @@ from tensorflow.keras.utils import get_file
 # KWS model imports
 from akida_models import mobilenet_kws
 
-
 ######################################################################
 # 2. Load the preprocessed dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-wanted_words = ['down','go','left','no','off','on','right','stop','up','yes']
-all_words = ['_silence_','_unknown_'] + wanted_words
+wanted_words = [
+    'down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes'
+]
+all_words = ['_silence_', '_unknown_'] + wanted_words
 
 # Preprocessed dataset parameters
 CHANNELS = 1
@@ -61,13 +62,15 @@ FINGERPRINT_WIDTH = 10
 input_shape = (SPECTROGRAM_LENGTH, FINGERPRINT_WIDTH, CHANNELS)
 
 # Try to load pre-processed dataset
-fname = get_file("preprocessed_data.pkl",
-                 "http://data.brainchip.com/dataset-mirror/kws/preprocessed_data.pkl",
-                 cache_subdir='datasets/kws')
+fname = get_file(
+    "preprocessed_data.pkl",
+    "http://data.brainchip.com/dataset-mirror/kws/preprocessed_data.pkl",
+    cache_subdir='datasets/kws')
 if os.path.isfile(fname):
     print('Re-loading previously preprocessed dataset...')
     f = open(fname, 'rb')
-    [x_train, y_train, x_valid, y_valid, train_files, val_files, word_to_index] = pickle.load(f)
+    [x_train, y_train, x_valid, y_valid, train_files, val_files,
+     word_to_index] = pickle.load(f)
     f.close()
 else:
     raise ValueError("Unable to load the pre-processed KWS dataset.")
@@ -78,15 +81,16 @@ x_train_max = x_train.max()
 max_int_value = 255.0
 
 # For akida hardware training and validation range [0, 255] inclusive uint8
-x_train_akida = ((x_train-x_train_min) * max_int_value / (x_train_max - x_train_min)).astype(np.uint8)
-x_valid_akida = ((x_valid-x_train_min) * max_int_value / (x_train_max - x_train_min)).astype(np.uint8)
+x_train_akida = ((x_train - x_train_min) * max_int_value /
+                 (x_train_max - x_train_min)).astype(np.uint8)
+x_valid_akida = ((x_valid - x_train_min) * max_int_value /
+                 (x_train_max - x_train_min)).astype(np.uint8)
 
 # For cnn2snn training and validation range [0,1] inclusive float32
-x_train_rescaled_cnn = (x_train_akida.astype(np.float32))/max_int_value
-x_valid_rescaled_cnn = (x_valid_akida.astype(np.float32))/max_int_value
+x_train_rescaled_cnn = (x_train_akida.astype(np.float32)) / max_int_value
+x_valid_rescaled_cnn = (x_valid_akida.astype(np.float32)) / max_int_value
 
 input_scaling = (max_int_value, 0)
-
 
 ######################################################################
 # 3. Create a Keras model satisfying Akida NSoC requirements
@@ -144,7 +148,6 @@ model_keras = mobilenet_kws(input_shape,
                             input_weight_quantization=8)
 model_keras.summary()
 
-
 ######################################################################
 # 4. Check performance
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,8 +157,7 @@ potentials_keras = model_keras.predict(x_valid_rescaled_cnn)
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 
 accuracy = accuracy_score(y_valid, preds_keras)
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
-
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
 # 5. Conversion to Akida
@@ -174,16 +176,15 @@ from cnn2snn import convert
 model_akida = convert(model_keras, input_scaling=input_scaling)
 model_akida.summary()
 
-
 ######################################################################
 # 5.2 Check prediction accuracy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
-preds_akida = model_akida.predict(x_valid_akida, num_classes = CLASSES)
+preds_akida = model_akida.predict(x_valid_akida, num_classes=CLASSES)
 
 accuracy = accuracy_score(y_valid, preds_akida)
-print("Accuracy: "+"{0:.2f}".format(100*accuracy)+"%")
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 # For non-regression purpose
 assert accuracy > 0.83
@@ -191,10 +192,9 @@ assert accuracy > 0.83
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
-model_akida.predict(x_valid_akida[:20], num_classes = CLASSES)
+model_akida.predict(x_valid_akida[:20], num_classes=CLASSES)
 for _, stat in stats.items():
     print(stat)
-
 
 ######################################################################
 # 5.3 Confusion matrix
@@ -221,11 +221,11 @@ cm = confusion_matrix(y_valid, preds_akida, list(label_mapping.values()))
 cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
 # Display confusion matrix
-plt.rcParams["figure.figsize"] = (8,8)
+plt.rcParams["figure.figsize"] = (8, 8)
 plt.figure()
 
-classes=label_mapping
-title='Confusion matrix'
+classes = label_mapping
+title = 'Confusion matrix'
 cmap = plt.cm.Blues
 
 plt.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -237,7 +237,9 @@ plt.yticks(tick_marks, classes)
 
 thresh = cm.max() / 2.
 for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-    plt.text(j, i, format(cm[i, j], '.2f'),
+    plt.text(j,
+             i,
+             format(cm[i, j], '.2f'),
              horizontalalignment="center",
              color="white" if cm[i, j] > thresh else "black")
 

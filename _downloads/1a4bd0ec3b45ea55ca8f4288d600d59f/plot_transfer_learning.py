@@ -21,7 +21,6 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 
 """
 
-
 ######################################################################
 # 1. Transfer learning process
 # ----------------------------
@@ -121,7 +120,6 @@ from akida_models import mobilenet_imagenet
 from cnn2snn import convert
 from akida_models.quantization_blocks import separable_conv_block
 
-
 ######################################################################
 # 2. Load and preprocess data
 # ---------------------------
@@ -133,7 +131,6 @@ from akida_models.quantization_blocks import separable_conv_block
 #     10% of the dataset.
 #   * **2.B - Preprocess the test set** by resizing and rescaling the images.
 #   * **2.C - Get labels**
-
 
 ######################################################################
 # 2.A - Load and split data
@@ -154,10 +151,11 @@ SPLIT_WEIGHTS = (8, 1, 1)
 splits = tfds.Split.TRAIN.subsplit(weighted=SPLIT_WEIGHTS)
 
 tfds.disable_progress_bar()
-(raw_train, raw_validation, raw_test), metadata = tfds.load(
-    'cats_vs_dogs:2.0.1', split=list(splits),
-    with_info=True, as_supervised=True)
-
+(raw_train, raw_validation,
+ raw_test), metadata = tfds.load('cats_vs_dogs:2.0.1',
+                                 split=list(splits),
+                                 with_info=True,
+                                 as_supervised=True)
 
 ######################################################################
 # 2.B - Preprocess the test set
@@ -178,23 +176,25 @@ tfds.disable_progress_bar()
 IMG_SIZE = 160
 input_scaling = (127.5, 127.5)
 
+
 def format_example_keras(image, label):
     image = tf.cast(image, tf.float32)
     image = (image - input_scaling[1]) / input_scaling[0]
     image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
     return image, label
 
+
 def format_example_akida(image, label):
     image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
     image = tf.cast(image, tf.uint8)
     return image, label
+
 
 ######################################################################
 
 BATCH_SIZE = 32
 test_batches_keras = raw_test.map(format_example_keras).batch(BATCH_SIZE)
 test_batches_akida = raw_test.map(format_example_akida).batch(BATCH_SIZE)
-
 
 ######################################################################
 # 2.C - Get labels
@@ -214,7 +214,6 @@ print(f"Test set composed of {num_images} images: "
       f"{np.count_nonzero(labels==0)} cats and "
       f"{np.count_nonzero(labels==1)} dogs.")
 
-
 ######################################################################
 # 3. Convert a quantized Keras model to Akida
 # -------------------------------------------
@@ -229,7 +228,6 @@ print(f"Test set composed of {num_images} images: "
 #   * **3.A - Instantiate a Keras base model**
 #   * **3.B - Modify the network and load pre-trained weights**
 #   * **3.C - Convert to Akida**
-
 
 ######################################################################
 # 3.A - Instantiate a Keras base model
@@ -251,14 +249,12 @@ print(f"Test set composed of {num_images} images: "
 # Using the provided quantized MobileNet model, we create an instance
 # without the top classification layer ('include_top=False').
 
-
 base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
-                            include_top=False,
-                            pooling='avg',
-                            weight_quantization=4,
-                            activ_quantization=4,
-                            input_weight_quantization=8)
-
+                                      include_top=False,
+                                      pooling='avg',
+                                      weight_quantization=4,
+                                      activ_quantization=4,
+                                      input_weight_quantization=8)
 
 ######################################################################
 # 3.B - Modify the network and load pre-trained weights
@@ -283,7 +279,8 @@ base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 # Add a top layer for classification
 x = base_model_keras.output
 x = tf.keras.layers.Reshape((1, 1, 1024), name='reshape_1')(x)
-x = separable_conv_block(x, filters=1,
+x = separable_conv_block(x,
+                         filters=1,
                          kernel_size=(3, 3),
                          padding='same',
                          use_bias=False,
@@ -292,18 +289,20 @@ x = separable_conv_block(x, filters=1,
                          activ_quantization=None)
 x = tf.keras.layers.Activation('sigmoid')(x)
 preds = tf.keras.layers.Reshape((1,), name='reshape_2')(x)
-model_keras = tf.keras.Model(inputs=base_model_keras.input, outputs=preds, name="model_cats_vs_dogs")
+model_keras = tf.keras.Model(inputs=base_model_keras.input,
+                             outputs=preds,
+                             name="model_cats_vs_dogs")
 
 model_keras.summary()
 
 ######################################################################
 
 # Load pre-trained weights
-pretrained_weights = tf.keras.utils.get_file("mobilenet_cats_vs_dogs_wq4_aq4.h5",
-                                             "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5",
-                                             cache_subdir='models/mobilenet')
+pretrained_weights = tf.keras.utils.get_file(
+    "mobilenet_cats_vs_dogs_wq4_aq4.h5",
+    "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5",
+    cache_subdir='models/mobilenet')
 model_keras.load_weights(pretrained_weights)
-
 
 ######################################################################
 # 3.C - Convert to Akida
@@ -318,7 +317,6 @@ model_keras.load_weights(pretrained_weights)
 model_akida = convert(model_keras, input_scaling=input_scaling)
 
 model_akida.summary()
-
 
 ######################################################################
 # 4. Classify test images
@@ -389,11 +387,10 @@ print(f"Akida inference on {num_images} images took {end-start:.2f} s.\n")
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
-batch, _  = iter(test_batches_akida).get_next()
+batch, _ = iter(test_batches_akida).get_next()
 model_akida.evaluate(batch[:20].numpy())
 for _, stat in stats.items():
     print(stat)
-
 
 ######################################################################
 # 4.B Compare results
@@ -422,6 +419,7 @@ assert akida_accuracy > 0.97
 
 ######################################################################
 
+
 def confusion_matrix_2classes(labels, predictions):
     tp = np.count_nonzero(labels + predictions == 2)
     tn = np.count_nonzero(labels + predictions == 0)
@@ -430,6 +428,7 @@ def confusion_matrix_2classes(labels, predictions):
 
     return np.array([[tp, fn], [fp, tn]])
 
+
 def plot_confusion_matrix_2classes(cm, classes):
     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
@@ -437,14 +436,17 @@ def plot_confusion_matrix_2classes(cm, classes):
     plt.xticks([0, 1], classes)
     plt.yticks([0, 1], classes)
 
-    for i, j in zip([0,0,1,1],[0,1,0,1]):
-        plt.text(j, i, f"{cm[i, j]:.2f}",
+    for i, j in zip([0, 0, 1, 1], [0, 1, 0, 1]):
+        plt.text(j,
+                 i,
+                 f"{cm[i, j]:.2f}",
                  horizontalalignment="center",
                  color="white" if cm[i, j] > cm.max() / 2. else "black")
 
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.autoscale()
+
 
 ######################################################################
 
