@@ -74,3 +74,30 @@ volumes:
 
 depends_on:
   - check-style
+
+---
+
+# This pipeline runs examples using the latest internal RC versions of
+# akida/cnn2snn/akida_models, available on bender
+kind: pipeline
+name: run-examples-latest-versions
+
+trigger:
+  cron:
+    - nightly
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: build
+  image: bender:5000/doc_build:python37_tf200
+  commands:
+  - pip install -r requirements.txt
+  - pip install --index-url http://172.17.0.39:81/ --trusted-host 172.17.0.39 --pre -U cnn2snn
+  - pip install --index-url http://172.17.0.39:81/ --trusted-host 172.17.0.39 --pre -U akida_models
+  - sphinx-build -D plot_gallery=1 -b html ./doc ./build
+
+node:
+  rigel: ktsiknos
