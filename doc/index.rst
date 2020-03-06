@@ -11,6 +11,7 @@ Overview
    User guide <user_guide/user_guide.rst>
    API reference <api_reference/api_reference.rst>
    Examples <examples/index.rst>
+   Changelog <https://github.com/Brainchip-Inc/akida_examples/releases>
    Support <https://support.brainchip.com/portal/home>
    license.rst
 
