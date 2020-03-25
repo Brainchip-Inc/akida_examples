@@ -90,6 +90,10 @@ Akida Execution Engine API
     ===============
     .. autofunction:: dense_to_sparse
 
+    packetize
+    ===============
+    .. autofunction:: packetize
+    
     BackendType
     ===========
     .. autoclass:: BackendType
