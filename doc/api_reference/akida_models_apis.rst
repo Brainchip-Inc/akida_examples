@@ -42,6 +42,7 @@ Akida models API
     .. autofunction:: akida_models.imagenet.preprocessing.input_fn
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
+    .. autofunction:: akida_models.imagenet.preprocessing.resize_and_crop
 
     KWS
     ~~~~~~~~~~~~~
