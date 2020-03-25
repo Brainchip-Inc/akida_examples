@@ -36,12 +36,12 @@ Akida models API
 
     Preprocessing
     *************
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.process_record_dataset
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.get_filenames
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.parse_record
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.input_fn
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.preprocess_image
-    .. autofunction:: akida_models.mobilenet.imagenet.imagenet_preprocessing.index_to_label
+    .. autofunction:: akida_models.imagenet.preprocessing.process_record_dataset
+    .. autofunction:: akida_models.imagenet.preprocessing.get_filenames
+    .. autofunction:: akida_models.imagenet.preprocessing.parse_record
+    .. autofunction:: akida_models.imagenet.preprocessing.input_fn
+    .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
+    .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
 
     KWS
     ~~~~~~~~~~~~~
@@ -49,10 +49,10 @@ Akida models API
 
     Preprocessing
     *************
-    .. autofunction:: akida_models.mobilenet.kws.kws_preprocessing.prepare_model_settings
-    .. autofunction:: akida_models.mobilenet.kws.kws_preprocessing.prepare_words_list
-    .. autofunction:: akida_models.mobilenet.kws.kws_preprocessing.which_set
-    .. autoclass:: akida_models.mobilenet.kws.kws_preprocessing.AudioProcessor
+    .. autofunction:: akida_models.kws.preprocessing.prepare_model_settings
+    .. autofunction:: akida_models.kws.preprocessing.prepare_words_list
+    .. autofunction:: akida_models.kws.preprocessing.which_set
+    .. autoclass:: akida_models.kws.preprocessing.AudioProcessor
         :members:
 
     VGG
