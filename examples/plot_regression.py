@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 # Akida imports
 from cnn2snn import convert
 from akida_models import vgg_utk_face
-from akida_models.vgg.utk_face.utk_face_preprocessing import load_data
+from akida_models.utk_face.preprocessing import load_data
 
 ######################################################################
 # 2. Load the dataset
