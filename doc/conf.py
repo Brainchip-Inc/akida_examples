@@ -8,7 +8,7 @@ author = 'Brainchip'
 import pkg_resources
 
 try:
-    version = pkg_resources.get_distribution('akida').version
+    version = 'Akida '+pkg_resources.get_distribution('akida').version
 except Exception:
     version = 'unknown'
 
