@@ -35,7 +35,7 @@ from timeit import default_timer as timer
 
 # ImageNet tutorial imports
 from akida_models import mobilenet_imagenet
-from akida_models.mobilenet.imagenet import imagenet_preprocessing
+from akida_models.imagenet import preprocessing
 
 ######################################################################
 # 2. Load test images from ImageNet
@@ -50,11 +50,11 @@ from akida_models.mobilenet.imagenet import imagenet_preprocessing
 #
 # * **Load and preprocess images.** The test images all have at least 256 pixels
 #   in the smallest dimension. They must be preprocessed to fit in the model.
-#   The ``imagenet_preprocessing.preprocess_image`` function decodes, crops and
+#   The ``imagenet.preprocessing.resize_and_crop`` function decodes, crops and
 #   extracts a square 224x224x3 patch from an input image.
 # * **Load corresponding labels.** The labels for test images are stored in the
 #   akida_models package. The matching between names (*string*) and labels
-#   (*integer*) is given through ``imagenet_preprocessing.index_to_label``
+#   (*integer*) is given through ``imagenet.preprocessing.index_to_label``
 #   method.
 #
 # .. Note:: Akida Execution Engine is configured to take 8-bit inputs
@@ -89,14 +89,11 @@ for id in range(num_images):
     x_test_files.append(test_file)
     img_path = os.path.join(data_folder, test_file)
     base_image = tf.io.read_file(img_path)
-    image = imagenet_preprocessing.preprocess_image(image_buffer=base_image,
-                                                    bbox=None,
-                                                    output_width=IMAGE_SIZE,
-                                                    output_height=IMAGE_SIZE,
-                                                    num_channels=NUM_CHANNELS,
-                                                    alpha=1.,
-                                                    beta=0.)
-    x_test[id, :, :, :] = np.expand_dims(image.numpy(), axis=0)
+    image = preprocessing.resize_and_crop(image_buffer=base_image,
+                                          output_width=IMAGE_SIZE,
+                                          output_height=IMAGE_SIZE,
+                                          num_channels=NUM_CHANNELS)
+    x_test[id, :, :, :] = np.expand_dims(image, axis=0)
 
 # Rescale images for Keras model (normalization between -1 and 1)
 # Assume rescaling format of (x - b)/a
@@ -272,13 +269,12 @@ def get_top5(potentials, true_label):
 
     class_name = []
     for ii in range(5):
-        class_name.append(
-            imagenet_preprocessing.index_to_label(top5[ii]).split(',')[0])
+        class_name.append(preprocessing.index_to_label(top5[ii]).split(',')[0])
     if true_label in top5:
         class_name.append('')
     else:
         class_name.append(
-            imagenet_preprocessing.index_to_label(true_label).split(',')[0])
+            preprocessing.index_to_label(true_label).split(',')[0])
 
     return top5, vals, class_name
 

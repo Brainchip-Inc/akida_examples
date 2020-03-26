@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.7.6
+                1.8.1
               </div>
             
           
@@ -179,6 +179,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sparse">Sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coords-to-sparse">coords_to_sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dense-to-sparse">dense_to_sparse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#poolingtype">PoolingType</a></li>
@@ -440,7 +441,7 @@
 <td><p>Prepare the internal parameters of the last layer of the model for training</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.evaluate" title="akida.Model.evaluate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code></a>(input)</p></td>
-<td><p>Evaluates a set of images or events propagation through the model.</p></td>
+<td><p>Evaluates a set of images or events through the model.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.fit" title="akida.Model.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(input[, input_labels])</p></td>
 <td><p>Trains a set of images or events through the model.</p></td>
@@ -555,21 +556,29 @@ with each learning step.</p></li>
 <dl class="method">
 <dt id="akida.Model.evaluate">
 <code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates a set of images or events propagation through the model.</p>
-<p>This method propagates a set of events through the model and returns the
-results in the form of a numpy array of float values.
-It applies ONLY on models whithout an activation on the last layer.
+<dd><p>Evaluates a set of images or events through the model.</p>
+<p>Forwards an input tensor through the model and returns a float array.</p>
+<p>It applies ONLY to models without an activation on the last layer.
 The output values are obtained from the model discrete potentials by
 applying a shift and a scale.</p>
+<p>The expected input tensor dimensions are:</p>
+<ul class="simple">
+<li><p>n, representing the number of frames or samples,</p></li>
+<li><p>w, representing the width,</p></li>
+<li><p>h, representing the height,</p></li>
+<li><p>c, representing the channel, or more generally the feature.</p></li>
+</ul>
+<p>If the inputs are events, the input shape must be (n, w, h, c), but if
+the inputs are images (numpy array), their shape must be (n, h, w, c).</p>
+<p>Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</p>
+<p>The output tensor shape is always (n, out_w, out_h, out_c).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a Sparse object of shape
-(w, h, f) containing the events, or a numpy.ndarray of
-shape (n, h, w, c) containing the n images.
-(grayscale (c=1) or RGB (c=3))</p>
+<dd class="field-odd"><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a (n, w, h, c) Sparse or a
+(n, h, w, c) numpy.ndarray</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an array of shape (n, w, h, c).</p>
+<dd class="field-even"><p>a float array of shape (n, w, h, c).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
@@ -590,15 +599,27 @@ shape (n, h, w, c) containing the n images.
 <dt id="akida.Model.fit">
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">input_labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Trains a set of images or events through the model.</p>
-<p>Trains input data (images or events) through the model and returns
-the outputs, including spike values.</p>
+<p>Trains the model with the specified input tensor.</p>
+<p>The expected input tensor dimensions are:</p>
+<ul class="simple">
+<li><p>n, representing the number of frames or samples,</p></li>
+<li><p>w, representing the width,</p></li>
+<li><p>h, representing the height,</p></li>
+<li><p>c, representing the channel, or more generally the feature.</p></li>
+</ul>
+<p>If the inputs are events, the input shape must be (n, w, h, c), but if
+the inputs are images (numpy array), their shape must be (n, h, w, c).</p>
+<p>Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</p>
+<p>If activations are enabled for the last layer, the output tensor is a
+Sparse object.</p>
+<p>If activations are disabled for the last layer, the output tensor is a
+numpy array.</p>
+<p>The output tensor shape is always (n, out_w, out_h, out_c).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a Sparse object of shape
-(w, h, f) containing the events, or a numpy.ndarray of
-shape (n, h, w, c) containing the n images.
-(grayscale (c=1) or RGB (c=3))</p></li>
+<li><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a (n, w, h, c) Sparse or a
+(n, h, w, c) numpy.ndarray</p></li>
 <li><p><strong>input_labels</strong> (<em>list</em><em>(</em><em>int</em><em>)</em><em>, </em><em>optional</em>) – input labels.
 Must have one label per input, or a single label for all inputs.
 If a label exceeds the defined number of classes, the input will
@@ -606,13 +627,10 @@ be discarded. (Default value = None).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a sparse tensor of shape (n, x, y, f).</p>
+<dd class="field-even"><p>a Sparse or a numpy array of shape (n, out_w, out_h, out_c).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a></p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>TypeError</strong> – if the input doesn’t have the correct type
     (Sparse, numpy.ndarray).</p></li>
 <li><p><strong>ValueError</strong> – if the input doesn’t match the required shape,
@@ -626,23 +644,32 @@ be discarded. (Default value = None).</p></li>
 <dt id="akida.Model.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Forwards a set of images or events through the model.</p>
-<p>Forwards input data (images or events) through the model and returns
-the outputs, including spike values.</p>
+<p>Forwards an input tensor through the model and returns an output tensor.</p>
+<p>The expected input tensor dimensions are:</p>
+<ul class="simple">
+<li><p>n, representing the number of frames or samples,</p></li>
+<li><p>w, representing the width,</p></li>
+<li><p>h, representing the height,</p></li>
+<li><p>c, representing the channel, or more generally the feature.</p></li>
+</ul>
+<p>If the inputs are events, the input shape must be (n, w, h, c), but if
+the inputs are images (numpy array), their shape must be (n, h, w, c).</p>
+<p>Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</p>
+<p>If activations are enabled for the last layer, the output tensor is a
+Sparse object.</p>
+<p>If activations are disabled for the last layer, the output tensor is a
+numpy array.</p>
+<p>The output tensor shape is always (n, out_w, out_h, out_c).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a Sparse object of shape
-(w, h, f) containing the events, or a numpy.ndarray of
-shape (n, h, w, c) containing the n images.
-(grayscale (c=1) or RGB (c=3))</p>
+<dd class="field-odd"><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a (n, w, h, c) Sparse or a
+(n, h, w, c) numpy.ndarray</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a sparse tensor of shape (n, x, y, f).</p>
+<dd class="field-even"><p>a Sparse or a numpy array of shape (n, out_w, out_h, out_c).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a></p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>TypeError</strong> – if the input doesn’t have the correct type
     (Sparse, numpy.ndarray).</p></li>
 <li><p><strong>ValueError</strong> – if the input doesn’t match the required shape,
@@ -784,22 +811,30 @@ retrieve layer output spikes and potentials.</p>
 <dt id="akida.Model.predict">
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">num_classes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the model class predictions.</p>
-<p>Forwards input data (images or events) through the model and compute
-predictions based on the neuron id.
+<p>Forwards an input tensor (images or events) through the model
+and compute predictions based on the neuron id.
 If the number of output neurons is greater than the number of classes,
 the neurons are automatically assigned to a class by dividing their id
 by the number of classes.</p>
-<p>Note that the predictions are based on the spike values of the last
+<p>The expected input tensor dimensions are:</p>
+<ul class="simple">
+<li><p>n, representing the number of frames or samples,</p></li>
+<li><p>w, representing the width,</p></li>
+<li><p>h, representing the height,</p></li>
+<li><p>c, representing the channel, or more generally the feature.</p></li>
+</ul>
+<p>If the inputs are events, the input shape must be (n, w, h, c), but if
+the inputs are images (numpy array), their shape must be (n, h, w, c).</p>
+<p>Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</p>
+<p>Note that the predictions are based on the activation values of the last
 layer: for most use cases, you may want to disable activations for that
 layer (ie setting <code class="docutils literal notranslate"><span class="pre">activations_enabled=False</span></code>) to get a better
 accuracy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a Sparse object of
-shape (w, h, f) containing the events, or a numpy.ndarray of
-shape (n, h, w, c) containing the n images.
-(grayscale (c=1) or RGB (c=3))</p></li>
+<li><p><strong>input</strong> (<a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a>,`numpy.ndarray`) – a (n, w, h, c) Sparse or a
+(n, h, w, c) numpy.ndarray</p></li>
 <li><p><strong>num_classes</strong> (<em>int</em><em>, </em><em>optional</em>) – optional parameter (defaults to the
 number of neurons in the last layer).</p></li>
 </ul>
@@ -1170,16 +1205,19 @@ possible spikes, row_sparsity).</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.input_sparsity" title="akida.LayerStatistics.input_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_sparsity</span></code></a></p></td>
 <td><p>Get average input sparsity for the layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.ops" title="akida.LayerStatistics.ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ops</span></code></a></p></td>
-<td><p>Get number of inference operations per input event.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.layer_name" title="akida.LayerStatistics.layer_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layer_name</span></code></a></p></td>
+<td><p>Get the name of the corresponding layer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.output_sparsity" title="akida.LayerStatistics.output_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_sparsity</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.ops" title="akida.LayerStatistics.ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ops</span></code></a></p></td>
+<td><p>Get average number of inference operations per sample.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.output_sparsity" title="akida.LayerStatistics.output_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_sparsity</span></code></a></p></td>
 <td><p>Get average output sparsity for the layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.possible_spikes" title="akida.LayerStatistics.possible_spikes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">possible_spikes</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.possible_spikes" title="akida.LayerStatistics.possible_spikes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">possible_spikes</span></code></a></p></td>
 <td><p>Get possible spikes for the layer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.row_sparsity" title="akida.LayerStatistics.row_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_sparsity</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.row_sparsity" title="akida.LayerStatistics.row_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_sparsity</span></code></a></p></td>
 <td><p>Get kernel row sparsity.</p></td>
 </tr>
 </tbody>
@@ -1199,12 +1237,26 @@ possible spikes, row_sparsity).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="akida.LayerStatistics.ops">
-<em class="property">property </em><code class="sig-name descname">ops</code><a class="headerlink" href="#akida.LayerStatistics.ops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get number of inference operations per input event.</p>
+<dt id="akida.LayerStatistics.layer_name">
+<em class="property">property </em><code class="sig-name descname">layer_name</code><a class="headerlink" href="#akida.LayerStatistics.layer_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of the corresponding layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the number of operations per event.</p>
+<dd class="field-odd"><p>the layer name.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="akida.LayerStatistics.ops">
+<em class="property">property </em><code class="sig-name descname">ops</code><a class="headerlink" href="#akida.LayerStatistics.ops" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get average number of inference operations per sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the number of operations per sample.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>int</p>
@@ -1305,7 +1357,7 @@ potentials for a given layer.</p>
 <p>Returns a dictionary of potentials generated by the attached layer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a dictionary of <cite>numpy.ndarray</cite> objects of size (w, h, c).</p>
+<dd class="field-odd"><p>a dictionary of <cite>numpy.ndarray</cite> objects of shape (w, h, c).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1318,7 +1370,7 @@ potentials for a given layer.</p>
 by their source id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a dictionary of <a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a> objects.</p>
+<dd class="field-odd"><p>a dictionary of <a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a> objects of shape (w, h, c).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1330,42 +1382,22 @@ by their source id.</p>
 <h2>InputData<a class="headerlink" href="#inputdata" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="akida.InputData">
-<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">InputData</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">input_width</em>, <em class="sig-param">input_height</em>, <em class="sig-param">input_features</em>, <em class="sig-param">packet_size=0</em>, <em class="sig-param">accumulate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.InputData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">InputData</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">input_width</em>, <em class="sig-param">input_height</em>, <em class="sig-param">input_channels</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.InputData" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the general purpose input layer. It takes events in a simple
 address-event data format; that is, each event is characterized by a trio
-of values giving x, y and feature values. The <code class="docutils literal notranslate"><span class="pre">InputData</span></code> layer can simply
-pass them to the rest of the model for processing or group the generated
-events into packets (packetizing option).</p>
-<p>Packetizing feature is mainly relevant when the events are produced as a
-continuous stream, and not already grouped in frames. When fed with a stream
-of data, packetizing will take events in the received order until a
-predefined packet_size is reached, and then the packet is sent for
-processing. If the stream ends on an incomplete packet, the layer can either
-send an incomplete packet or wait for the next call stream of events to
-resume its processing. With that configurable behaviour, the InputData layer
-can handle both small and large numbers of events at a time; small numbers,
-will be accumulated until the packet is filled, and then sent. Large numbers
-will be subdivided into multiple packets.</p>
+of values giving x, y and channel values.</p>
 <p>Regarding the input dimension values, note that AEE expects inputs with
 zero-based indexing, i.e., if input_width is defined as 12, then the model
-expects all input events to have x-values in the range 0–11.
-The input_features dimension is simply a third input dimension, e.g.,
-certain DVS cameras generate events with x- and y-pixel values, but also
-with an event polarity, that is: on for increasing luminance, or off for
-decreasing luminance. In which case, the features-dimension would be used to
-encode the polarity and would be defined with size 2.</p>
+expects all input events to have x-values in the range 0–11.</p>
 <p>Where possible:</p>
 <ul class="simple">
 <li><p>The x and y dimensions should be used for discretely-sampled continuous
 domains such as space (e.g., images) or time-series (e.g., an audio
 signal).</p></li>
-<li><p>The f dimension should be used for ‘category indices’, where there is no
+<li><p>The c dimension should be used for ‘category indices’, where there is no
 particular relationship between neighboring values.</p></li>
 </ul>
-<p>The important distinction in neural networks targeting the Akida NSoC is
-that convolutional layers are limited to performing the stride of the
-convolution in the x- and y-dimensions. Convolution across the f dimension
-is not supported. The input dimension values are used for:</p>
+<p>The input dimension values are used for:</p>
 <ul class="simple">
 <li><p>Error checking – input events are checked and if any fall outside the
 defined input range, then the whole set of events sent on that
@@ -1376,7 +1408,7 @@ model.</p></li>
 </ul>
 <dl class="method">
 <dt id="akida.InputData.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">input_width</em>, <em class="sig-param">input_height</em>, <em class="sig-param">input_features</em>, <em class="sig-param">packet_size=0</em>, <em class="sig-param">accumulate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.InputData.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">input_width</em>, <em class="sig-param">input_height</em>, <em class="sig-param">input_channels</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.InputData.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an <code class="docutils literal notranslate"><span class="pre">InputData</span></code> layer from a name and parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1384,10 +1416,7 @@ model.</p></li>
 <li><p><strong>name</strong> (<em>str</em>) – name of the layer.</p></li>
 <li><p><strong>input_width</strong> (<em>int</em>) – input width.</p></li>
 <li><p><strong>input_height</strong> (<em>int</em>) – input height.</p></li>
-<li><p><strong>input_features</strong> (<em>int</em>) – size of the third input dimension.</p></li>
-<li><p><strong>packet_size</strong> (<em>int</em><em>, </em><em>optional</em>) – size of a packet.</p></li>
-<li><p><strong>accumulate</strong> (<em>bool</em><em>, </em><em>optional</em>) – defines if the layer maintains its
-packetizing buffer when dealing with an incomplete packet.</p></li>
+<li><p><strong>input_channels</strong> (<em>int</em>) – size of the third input dimension.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1643,7 +1672,31 @@ the neuron response.</p></li>
 <dl class="class">
 <dt id="akida.Dense">
 <em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">Dense</code><a class="headerlink" href="#akida.Dense" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>Attributes</strong></p>
+<dd><p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Dense.as_dense" title="akida.Dense.as_dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_dense</span></code></a>(self)</p></td>
+<td><p>Downcast the Tensor to a Dense.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Dense.as_sparse" title="akida.Dense.as_sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_sparse</span></code></a>(self)</p></td>
+<td><p>Downcast the Tensor to a Sparse.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Dense.to_dense" title="akida.Dense.to_dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dense</span></code></a>(self)</p></td>
+<td><p>Get a Dense copy of the Tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Dense.to_numpy" title="akida.Dense.to_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_numpy</span></code></a>(self)</p></td>
+<td><p>Converts the Dense tensor to a numpy.ndarray object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Dense.to_sparse" title="akida.Dense.to_sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sparse</span></code></a>(self)</p></td>
+<td><p>Get a Sparse copy of the Tensor.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Attributes</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
@@ -1661,18 +1714,18 @@ the neuron response.</p></li>
 </tr>
 </tbody>
 </table>
-<p><strong>Methods</strong></p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Dense.to_numpy" title="akida.Dense.to_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_numpy</span></code></a>(self)</p></td>
-<td><p>Converts the Dense tensor to a numpy.ndarray object.</p></td>
-</tr>
-</tbody>
-</table>
+<dl class="method">
+<dt id="akida.Dense.as_dense">
+<code class="sig-name descname">as_dense</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Dense<a class="headerlink" href="#akida.Dense.as_dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downcast the Tensor to a Dense.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="akida.Dense.as_sparse">
+<code class="sig-name descname">as_sparse</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Sparse<a class="headerlink" href="#akida.Dense.as_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downcast the Tensor to a Sparse.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="akida.Dense.shape">
 <em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#akida.Dense.shape" title="Permalink to this definition">¶</a></dt>
@@ -1686,6 +1739,12 @@ the neuron response.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="akida.Dense.to_dense">
+<code class="sig-name descname">to_dense</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Dense<a class="headerlink" href="#akida.Dense.to_dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Dense copy of the Tensor.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="akida.Dense.to_numpy">
 <code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Dense</em><span class="sig-paren">)</span> &#x2192; array<a class="headerlink" href="#akida.Dense.to_numpy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts the Dense tensor to a numpy.ndarray object.</p>
@@ -1694,6 +1753,12 @@ the neuron response.</p></li>
 <dd class="field-odd"><p>a numpy.ndarray</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="akida.Dense.to_sparse">
+<code class="sig-name descname">to_sparse</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Sparse<a class="headerlink" href="#akida.Dense.to_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Sparse copy of the Tensor.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1717,6 +1782,12 @@ the neuron response.</p></li>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sparse.as_dense" title="akida.Sparse.as_dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_dense</span></code></a>(self)</p></td>
+<td><p>Downcast the Tensor to a Dense.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Sparse.as_sparse" title="akida.Sparse.as_sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_sparse</span></code></a>(self)</p></td>
+<td><p>Downcast the Tensor to a Sparse.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sparse.chip" title="akida.Sparse.chip"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chip</span></code></a>(self, dimension, coord)</p></td>
 <td><p>Returns a Sparse sliced with the given coord and for which the</p></td>
 </tr>
@@ -1728,6 +1799,9 @@ the neuron response.</p></li>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Sparse.to_dense" title="akida.Sparse.to_dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dense</span></code></a>(self)</p></td>
 <td><p>Returns a dense representation of this tensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sparse.to_sparse" title="akida.Sparse.to_sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sparse</span></code></a>(self)</p></td>
+<td><p>Get a Sparse copy of the Tensor.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1755,6 +1829,18 @@ the neuron response.</p></li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="akida.Sparse.as_dense">
+<code class="sig-name descname">as_dense</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Dense<a class="headerlink" href="#akida.Sparse.as_dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downcast the Tensor to a Dense.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="akida.Sparse.as_sparse">
+<code class="sig-name descname">as_sparse</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Sparse<a class="headerlink" href="#akida.Sparse.as_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downcast the Tensor to a Sparse.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="akida.Sparse.chip">
 <code class="sig-name descname">chip</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Sparse</em>, <em class="sig-param">dimension: int</em>, <em class="sig-param">coord: int</em><span class="sig-paren">)</span> &#x2192; akida.core.Sparse<a class="headerlink" href="#akida.Sparse.chip" title="Permalink to this definition">¶</a></dt>
@@ -1836,6 +1922,12 @@ second, etc. All dimensions must be specified.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="akida.Sparse.to_sparse">
+<code class="sig-name descname">to_sparse</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.Tensor</em><span class="sig-paren">)</span> &#x2192; akida::Sparse<a class="headerlink" href="#akida.Sparse.to_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Sparse copy of the Tensor.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="akida.Sparse.type">
 <em class="property">property </em><code class="sig-name descname">type</code><a class="headerlink" href="#akida.Sparse.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the type of this tensor.</p>
@@ -1849,21 +1941,27 @@ second, etc. All dimensions must be specified.</p>
 <dl class="function">
 <dt id="akida.coords_to_sparse">
 <code class="sig-prename descclassname">akida.</code><code class="sig-name descname">coords_to_sparse</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.coords_to_sparse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a list of coordinates to a Sparse input.</p>
-<p>Akida expects the spikes to be encoded as a Sparse object, where
-each coordinate corresponds to the following information:</p>
+<dd><p>Converts a list of 3D or 4D event coordinates to a Sparse input.</p>
+<p>Event coordinates should contain:</p>
 <ul class="simple">
-<li><p>first spatial coordinate (typically x, the pixel column),</p></li>
-<li><p>second spatial coordinate (typically y, the pixel line),</p></li>
+<li><p>an optional index corresponding to the frame or sample,</p></li>
+<li><p>a first spatial coordinate (typically x, the pixel column),</p></li>
+<li><p>a second spatial coordinate (typically y, the pixel line),</p></li>
 <li><p>a feature index representing the spike (starting from index zero)</p></li>
 </ul>
-<p>This function converts a numpy array of event coordinates to a Sparse object
-where the event values are set to 1.</p>
+<p>The output Sparse will have a shape of (n, w, h, c), where:</p>
+<ul class="simple">
+<li><p>n is the number of frames or samples,</p></li>
+<li><p>w is the size of the first spatial dimension (typically, the width),</p></li>
+<li><p>h is the size of the second spatial dimension (typically, the height),</p></li>
+<li><p>c is the size of the last dimension (typically, the channel or feature).</p></li>
+</ul>
+<p>Event values are automatically set to 1.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coords</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – a (n,3) array of input coordinates.</p></li>
-<li><p><strong>shape</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple[int]</span></code>) – the three dimensions of the input space.</p></li>
+<li><p><strong>coords</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – a (n, 3) or (n, 4) array of coordinates.</p></li>
+<li><p><strong>shape</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple[int]</span></code>) – the 3 or 4 dimensions of the input space.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1882,23 +1980,66 @@ where the event values are set to 1.</p>
 <dt id="akida.dense_to_sparse">
 <code class="sig-prename descclassname">akida.</code><code class="sig-name descname">dense_to_sparse</code><span class="sig-paren">(</span><em class="sig-param">in_array</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.dense_to_sparse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a hollow dense array to a Sparse input.</p>
-<p>Akida expects the spikes to be encoded as a Sparse object, where
-each coordinate corresponds to the following information:</p>
-<ul class="simple">
-<li><p>first spatial coordinate (typically x, the pixel column),</p></li>
-<li><p>second spatial coordinate (typically y, the pixel line),</p></li>
-<li><p>a feature index representing the spike (starting from index zero)</p></li>
-</ul>
 <p>The input array will simply be converted to a list of events corresponding
 to its active (non-zero) coordinates.
-The event values extracted from the input array will be converted to 32 bits
+The event values extracted from the input array will be converted to 32-bit
 integers.</p>
+<p>The input array must have a (w, h, c) or (n, w, h, c) shape, where:</p>
+<ul class="simple">
+<li><p>n is the number of samples,</p></li>
+<li><p>w is the size of the first spatial dimension (typically, the width),</p></li>
+<li><p>h is the size of the second spatial dimension (typically, the height),</p></li>
+<li><p>c is the size of the last dimension (typically, the channel or feature).</p></li>
+</ul>
+<p>The output Sparse will have a shape of (n, w, h, c), with n = 1 if the
+input array only has three dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>(</strong> (<em>in_array</em>) – obj:numpy.ndarray): an array of 1D, 2D or 3D coordinates.</p>
+<dd class="field-odd"><p><strong>(</strong> (<em>in_array</em>) – obj:numpy.ndarray): an array of 3D or 4D coordinates.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the events corresponding to non-null values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="packetize">
+<h2>packetize<a class="headerlink" href="#packetize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="akida.packetize">
+<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">packetize</code><span class="sig-paren">(</span><em class="sig-param">events</em>, <em class="sig-param">shape</em>, <em class="sig-param">packet_size</em><span class="sig-paren">)</span><a class="headerlink" href="#akida.packetize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a list of 3D coordinates to a 4-dimensional Sparse input.</p>
+<p>This function converts a numpy array of event coordinates to a Sparse object
+where the event coordinates are grouped according to the specified packet
+size.</p>
+<p>3D event coordinates should contain:</p>
+<ul class="simple">
+<li><p>a first spatial coordinate (typically x, the pixel column),</p></li>
+<li><p>a second spatial coordinate (typically y, the pixel line),</p></li>
+<li><p>a feature index representing the spike (starting from index zero)</p></li>
+</ul>
+<p>The output Sparse will have a shape of (n, w, h, c), where:</p>
+<ul class="simple">
+<li><p>n is the number of packets,</p></li>
+<li><p>w is the size of the first spatial dimension (typically, the width),</p></li>
+<li><p>h is the size of the second spatial dimension (typically, the height),</p></li>
+<li><p>c is the size of the last dimension (typically, the channel or feature).</p></li>
+</ul>
+<p>Event values are automatically set to 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>events</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – a (n, 3) array of input coordinates.</p></li>
+<li><p><strong>shape</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple[int]</span></code>) – the three dimensions of the input space.</p></li>
+<li><p><strong>packet_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – the number of events per packet.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the (n, w, h, c) events corresponding to the coordinates.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a></p>

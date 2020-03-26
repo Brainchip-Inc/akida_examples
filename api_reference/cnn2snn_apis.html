@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.7.6
+                1.8.1
               </div>
             
           
@@ -179,6 +179,7 @@
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#sparse">Sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="aee_apis.html#poolingtype">PoolingType</a></li>
@@ -472,6 +473,9 @@ generation of the model map.</p></li>
 <li><p>Other checks are then done based on the model map.</p></li>
 </ol>
 </div></blockquote>
+<p>Note that this function doesn’t check if the quantization bitwidths (weights
+or activations) are supported by the Akida Execution Engine or by the Akida
+NSoC.</p>
 <p><strong>1. How to build a compatible Keras quantized model?</strong></p>
 <p>The following lines give details and constraints on how to build a Keras
 model compatible for the conversion to an Akida model.</p>
@@ -597,12 +601,13 @@ otherwise it will be inputConvolutional.</p></li>
 <dt id="cnn2snn.WeightQuantizer">
 <em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">WeightQuantizer</code><span class="sig-paren">(</span><em class="sig-param">threshold=3</em>, <em class="sig-param">bitwidth=4</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightQuantizer" title="Permalink to this definition">¶</a></dt>
 <dd><p>A uniform quantizer.</p>
-<p>Quantize the specified weights into 2^k-1 values, k representing the
-bitwidth.
-The relationship between raw weights and quantized weights is:
-(1) W = Wq * scale_factor</p>
-<p>All values below or above a specified multiple of the weights standard
-deviation are automatically assigned to the min (resp max) value.</p>
+<p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
+E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
+with qstep being the quantization step. The quantization step is defined by:</p>
+<p>qstep = threshold * std(W) / max_value</p>
+<p>with max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
+<p>All values below or above threshold * std(W) are automatically assigned to
+the min (resp max) value.</p>
 <p><strong>Methods</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -675,7 +680,7 @@ quantized values.</p></li>
 <h2>WeightFloat<a class="headerlink" href="#weightfloat" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="cnn2snn.WeightFloat">
-<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">WeightFloat</code><span class="sig-paren">(</span><em class="sig-param">bitwidth=0</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightFloat" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">WeightFloat</code><a class="headerlink" href="#cnn2snn.WeightFloat" title="Permalink to this definition">¶</a></dt>
 <dd><p>This quantizer actually does not perform any quantization, and it might
 be used for training.</p>
 <p><strong>Methods</strong></p>
@@ -695,7 +700,7 @@ be used for training.</p>
 </table>
 <dl class="method">
 <dt id="cnn2snn.WeightFloat.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">bitwidth=0</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightFloat.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightFloat.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a Weights quantizer for the specified bitwidth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -760,6 +765,9 @@ the forward pass.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.QuantizedConv2D.call" title="cnn2snn.QuantizedConv2D.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
 <td><p>Evaluates input Tensor.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.QuantizedConv2D.get_config" title="cnn2snn.QuantizedConv2D.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
 </tbody>
 </table>
 <dl class="method">
@@ -807,6 +815,24 @@ Tensor and produces the output Tensor.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="cnn2snn.QuantizedConv2D.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedConv2D.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -827,6 +853,9 @@ weights during the forward pass.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.QuantizedDepthwiseConv2D.call" title="cnn2snn.QuantizedDepthwiseConv2D.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
 <td><p>Evaluates input Tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.QuantizedDepthwiseConv2D.get_config" title="cnn2snn.QuantizedDepthwiseConv2D.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
 </tr>
 </tbody>
 </table>
@@ -872,6 +901,24 @@ Tensor and produces the output Tensor.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="cnn2snn.QuantizedDepthwiseConv2D.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDepthwiseConv2D.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -892,6 +939,9 @@ the forward pass.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.QuantizedDense.call" title="cnn2snn.QuantizedDense.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
 <td><p>Evaluates input Tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.QuantizedDense.get_config" title="cnn2snn.QuantizedDense.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
 </tr>
 </tbody>
 </table>
@@ -936,6 +986,24 @@ Tensor and produces the output Tensor.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="cnn2snn.QuantizedDense.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDense.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -956,6 +1024,9 @@ weights during the forward pass.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.QuantizedSeparableConv2D.call" title="cnn2snn.QuantizedSeparableConv2D.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
 <td><p>Evaluates input Tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.QuantizedSeparableConv2D.get_config" title="cnn2snn.QuantizedSeparableConv2D.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1005,6 +1076,24 @@ Tensor and produces the output Tensor.</p>
 </dl>
 </dd></dl>
 
+<dl class="method">
+<dt id="cnn2snn.QuantizedSeparableConv2D.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1023,7 +1112,10 @@ Tensor and produces the output Tensor.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.ActivationDiscreteRelu.activation" title="cnn2snn.ActivationDiscreteRelu.activation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">activation</span></code></a>(x)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.ActivationDiscreteRelu.get_config" title="cnn2snn.ActivationDiscreteRelu.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.ActivationDiscreteRelu.quantized_activation" title="cnn2snn.ActivationDiscreteRelu.quantized_activation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantized_activation</span></code></a>(x)</p></td>
 <td><p>Evaluates the activations for the specified input Tensor.</p></td>
 </tr>
 </tbody>
@@ -1034,14 +1126,32 @@ Tensor and produces the output Tensor.</p>
 <dd><p>Creates a discrete ReLU for the specified bitwidth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>bitwidth</strong> (<em>integer</em>) – the activation bitwidth.</p>
+<dd class="field-odd"><p><strong>bitwidth</strong> (<em>int</em>) – the activation bitwidth.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="cnn2snn.ActivationDiscreteRelu.activation">
-<code class="sig-name descname">activation</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.ActivationDiscreteRelu.activation" title="Permalink to this definition">¶</a></dt>
+<dt id="cnn2snn.ActivationDiscreteRelu.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.ActivationDiscreteRelu.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.ActivationDiscreteRelu.quantized_activation">
+<code class="sig-name descname">quantized_activation</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.ActivationDiscreteRelu.quantized_activation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the activations for the specified input Tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
