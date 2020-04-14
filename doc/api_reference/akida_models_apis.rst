@@ -61,4 +61,12 @@ Akida models API
 
     CIFAR-10
     ~~~~~~~~~~~
-    .. autofunction::  akida_models.vgg_cifar10
+    .. autofunction:: akida_models.vgg_cifar10
+
+    UTK Face
+    ~~~~~~~~
+    .. autofunction:: akida_models.vgg_utk_face
+
+    Preprocessing
+    *************
+    .. autofunction:: akida_models.utk_face.preprocessing.load_data
