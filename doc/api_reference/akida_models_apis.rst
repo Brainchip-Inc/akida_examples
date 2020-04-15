@@ -26,10 +26,6 @@ Akida models API
     Mobilenet
     ---------
 
-    CIFAR-10
-    ~~~~~~~~~~~~~~~~~
-    .. autofunction:: akida_models.mobilenet_cifar10
-
     ImageNet
     ~~~~~~~~~~~~~~~~~~
     .. autofunction:: akida_models.mobilenet_imagenet
@@ -44,9 +40,16 @@ Akida models API
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
     .. autofunction:: akida_models.imagenet.preprocessing.resize_and_crop
 
+    DS-CNN
+    ---------
+
+    CIFAR-10
+    ~~~~~~~~~~~~~~~~~
+    .. autofunction:: akida_models.ds_cnn_cifar10
+
     KWS
     ~~~~~~~~~~~~~
-    .. autofunction:: akida_models.mobilenet_kws
+    .. autofunction:: akida_models.ds_cnn_kws
 
     Preprocessing
     *************

@@ -1,5 +1,5 @@
 """
-MobileNet/KWS inference
+DS-CNN/KWS inference
 =======================
 
 This tutorial illustrates how to build a basic speech recognition
@@ -41,7 +41,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import get_file
 
 # KWS model imports
-from akida_models import mobilenet_kws
+from akida_models import ds_cnn_kws
 
 ######################################################################
 # 2. Load the preprocessed dataset
@@ -126,7 +126,7 @@ input_scaling = (max_int_value, 0)
 #   with weights initialized from those trained in the previous episode.
 #
 # The table below summarizes the results obtained when preparing the
-# weights stored under `<http://data.brainchip.com/models/mobilenet/>`__ :
+# weights stored under `<http://data.brainchip.com/models/ds_cnn/>`__ :
 #
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |
@@ -140,12 +140,12 @@ input_scaling = (max_int_value, 0)
 #
 
 K.clear_session()
-model_keras = mobilenet_kws(input_shape,
-                            classes=CLASSES,
-                            weights='kws',
-                            weight_quantization=4,
-                            activ_quantization=4,
-                            input_weight_quantization=8)
+model_keras = ds_cnn_kws(input_shape,
+                         classes=CLASSES,
+                         weights='kws',
+                         weight_quantization=4,
+                         activ_quantization=4,
+                         input_weight_quantization=8)
 model_keras.summary()
 
 ######################################################################

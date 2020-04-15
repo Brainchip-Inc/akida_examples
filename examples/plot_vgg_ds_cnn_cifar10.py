@@ -1,5 +1,5 @@
 """
-VGG and MobileNet/CIFAR10 inference
+VGG and DS-CNN/CIFAR10 inference
 ===================================
 
 The CIFAR-10 dataset consists of 60000 32x32 color images in 10 classes,
@@ -22,7 +22,7 @@ The VGG architecture uses Convolutional and Dense layers: these layers
 must therefore be quantized with at most 2 bits of precision to be
 compatible with the Akida NSoC. This causes a 2 % drop in accuracy.
 
-The MobileNet architecture uses Separable Convolutional layers that can
+The DS-CNN architecture uses Separable Convolutional layers that can
 be quantized using 4 bits of precision, allowing to preserve the base
 Keras model accuracy.
 
@@ -35,11 +35,11 @@ Keras model accuracy.
 +---------------------------+-------------+
 | VGG Akida                 | **91.59 %** |
 +---------------------------+-------------+
-| MobileNet Keras           | 93.49 %     |
+| DS-CNN Keras              | 93.49 %     |
 +---------------------------+-------------+
-| MobileNet Keras quantized | 93.07 %     |
+| DS-CNN Keras quantized    | 93.07 %     |
 +---------------------------+-------------+
-| MobileNet Akida           | **93.22 %** |
+| DS-CNN Akida              | **93.22 %** |
 +---------------------------+-------------+
 
 
@@ -60,7 +60,7 @@ from timeit import default_timer as timer
 from tensorflow.keras.datasets import cifar10
 
 # Akida models imports
-from akida_models import mobilenet_cifar10, vgg_cifar10
+from akida_models import ds_cnn_cifar10, vgg_cifar10
 
 # CNN2SNN
 from cnn2snn import convert
@@ -279,10 +279,10 @@ for _, stat in stats.items():
     print(stat)
 
 ######################################################################
-# 5. Create a quantized Keras MobileNet model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 5. Create a quantized Keras DS-CNN model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A Keras model based on the
+# A DS-CNN Keras model based on the
 # `MobileNets <https://arxiv.org/abs/1704.04861>`__ architecture is
 # instantiated with quantized weights and activations.
 #
@@ -301,10 +301,10 @@ for _, stat in stats.items():
 #   * **5.B - Check performance** on the test set.
 
 ######################################################################
-# 5.A Instantiate Keras MobileNet model
+# 5.A Instantiate Keras DS-CNN model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The ``mobilenet_cifar10`` function returns a MobileNet Keras model with
+# The ``ds_cnn_cifar10`` function returns a MobileNet-like Keras model with
 # custom quantized layers (see ``quantization_layers.py`` in the CNN2SNN
 # module).
 #
@@ -324,7 +324,7 @@ for _, stat in stats.items():
 # decreasing for 20 epochs.
 #
 # The table below summarizes the results obtained when preparing the
-# weights stored under ``http://data.brainchip.com/models/mobilenet/``:
+# weights stored under ``http://data.brainchip.com/models/ds_cnn/``:
 #
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |
@@ -339,11 +339,11 @@ for _, stat in stats.items():
 # documentation for flow and training steps details.
 
 # Use a quantized model with pretrained quantized weights (93.07% accuracy)
-model_keras = mobilenet_cifar10(input_shape,
-                                weights='cifar10',
-                                weight_quantization=4,
-                                activ_quantization=4,
-                                input_weight_quantization=8)
+model_keras = ds_cnn_cifar10(input_shape,
+                             weights='cifar10',
+                             weight_quantization=4,
+                             activ_quantization=4,
+                             input_weight_quantization=8)
 model_keras.summary()
 
 ######################################################################
