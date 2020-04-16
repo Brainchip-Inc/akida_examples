@@ -25,14 +25,10 @@ Run the MNIST example below, then visit the `Akida examples <../examples/index.h
    # Retrieve MNIST dataset
    (train_set, train_label), (test_set, test_label) = mnist.load_data()
 
-   # Add a dimension to images sets as akida expects 4 dimensions inputs
-   train_set = np.expand_dims(train_set, -1)
-   test_set = np.expand_dims(test_set, -1)
-
    # Load pre-trained MNIST model
    model_file = get_file("gxnor_mnist.fbz",
-                      "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
-                      cache_subdir='models/gxnor')
+                         "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
+                         cache_subdir='models/gxnor')
    model = Model(model_file)
 
    # Test the first image of the test set
@@ -61,7 +57,7 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
    layer_input = InputData("input",
                            input_height=1,
                            input_width=1,
-                           input_features=2)
+                           input_channels=2)
    xor.add(layer_input)
    layer_hidden = FullyConnected("hidden", num_neurons=2, weights_bits=1)
    xor.add(layer_hidden)
@@ -107,16 +103,16 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
    in_coords = np.array([[0,0,1]])
    in_spikes = coords_to_sparse(in_coords, (1,1,2))
    out_spikes = xor.forward(in_spikes)
-   assert (out_spikes.nnz == 1)
+   assert (np.count_nonzero(out_spikes) == 1)
 
    # 1, 0 -> spikes
    in_coords = np.array([[0,0,0]])
    in_spikes = coords_to_sparse(in_coords, (1,1,2))
    out_spikes = xor.forward(in_spikes)
-   assert (out_spikes.nnz == 1)
+   assert (np.count_nonzero(out_spikes) == 1)
 
    # 1, 1 -> no spikes
    in_coords = np.array([[0,0,0],[0,0,1]])
    in_spikes = coords_to_sparse(in_coords, (1,1,2))
    out_spikes = xor.forward(in_spikes)
-   assert (out_spikes.nnz == 0)
+   assert (np.count_nonzero(out_spikes) == 0)
