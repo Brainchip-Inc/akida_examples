@@ -67,3 +67,7 @@ Fully connected layer
 .. note::
        The layer placed before a FullyConnected layer must have a
        ``threshold_fire_bits`` set to 1 or 2.
+
+.. note::
+       FullyConnected layers cannot be placed after a layer with max pooling
+       enabled.
