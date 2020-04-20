@@ -147,8 +147,12 @@ x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
 x = BatchNormalization()(x)
 x = ReLU(6.)(x)
 
-x = Conv2D(filters=64, kernel_size=(5, 5), padding='same', use_bias=False)(x)
+x = Conv2D(filters=32, kernel_size=(5, 5), padding='same', use_bias=False)(x)
 x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same')(x)
+x = BatchNormalization()(x)
+x = ReLU(6.)(x)
+
+x = Conv2D(filters=32, kernel_size=(5, 5), padding='same', use_bias=False)(x)
 x = BatchNormalization()(x)
 x = ReLU(6.)(x)
 
@@ -276,7 +280,7 @@ x = conv_block(img_input,
                pooling='max',
                add_batchnorm=True)
 
-# x = Conv2D(filters=64,
+# x = Conv2D(filters=32,
 #            kernel_size=(5, 5),
 #            padding='same',
 #            use_bias=False)(x)
@@ -284,12 +288,26 @@ x = conv_block(img_input,
 # x = BatchNormalization()(x)
 # x = ReLU(6.)(x)
 x = conv_block(x,
-               filters=64,
+               filters=32,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
                name='conv_1',
                pooling='max',
+               add_batchnorm=True)
+
+# x = Conv2D(filters=32,
+#            kernel_size=(5, 5),
+#            padding='same',
+#            use_bias=False)(x)
+# x = BatchNormalization()(x)
+# x = ReLU(6.)(x)
+x = conv_block(x,
+               filters=32,
+               kernel_size=(5, 5),
+               padding='same',
+               use_bias=False,
+               name='conv_2',
                add_batchnorm=True)
 
 x = Flatten()(x)
@@ -397,7 +415,7 @@ x = conv_block(img_input,
                pooling='max',
                add_batchnorm=True)
 x = conv_block(x,
-               filters=64,
+               filters=32,
                kernel_size=(5, 5),
                padding='same',
                use_bias=False,
@@ -405,6 +423,15 @@ x = conv_block(x,
                weight_quantization=2,
                activ_quantization=1,
                pooling='max',
+               add_batchnorm=True)
+x = conv_block(x,
+               filters=32,
+               kernel_size=(5, 5),
+               padding='same',
+               use_bias=False,
+               name='conv_2',
+               weight_quantization=2,
+               activ_quantization=1,
                add_batchnorm=True)
 x = Flatten()(x)
 x = dense_block(x,

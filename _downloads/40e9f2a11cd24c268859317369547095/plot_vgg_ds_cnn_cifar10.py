@@ -1,5 +1,5 @@
 """
-VGG and MobileNet/CIFAR10 inference
+VGG and DS-CNN/CIFAR10 inference
 ===================================
 
 The CIFAR-10 dataset consists of 60000 32x32 color images in 10 classes,
@@ -22,24 +22,24 @@ The VGG architecture uses Convolutional and Dense layers: these layers
 must therefore be quantized with at most 2 bits of precision to be
 compatible with the Akida NSoC. This causes a 2 % drop in accuracy.
 
-The MobileNet architecture uses Separable Convolutional layers that can
+The DS-CNN architecture uses Separable Convolutional layers that can
 be quantized using 4 bits of precision, allowing to preserve the base
 Keras model accuracy.
 
 +---------------------------+-------------+
 | Model                     | Accuracy    |
 +===========================+=============+
-| VGG Keras                 | 93.15 %     |
+| VGG Keras                 | 93.23 %     |
 +---------------------------+-------------+
-| VGG Keras quantized       | 91.30 %     |
+| VGG Keras quantized       | 90.59 %     |
 +---------------------------+-------------+
-| VGG Akida                 | **91.59 %** |
+| VGG Akida                 | **90.67 %** |
 +---------------------------+-------------+
-| MobileNet Keras           | 93.49 %     |
+| DS-CNN Keras              | 93.49 %     |
 +---------------------------+-------------+
-| MobileNet Keras quantized | 93.07 %     |
+| DS-CNN Keras quantized    | 93.07 %     |
 +---------------------------+-------------+
-| MobileNet Akida           | **93.22 %** |
+| DS-CNN Akida              | **93.22 %** |
 +---------------------------+-------------+
 
 
@@ -60,7 +60,7 @@ from timeit import default_timer as timer
 from tensorflow.keras.datasets import cifar10
 
 # Akida models imports
-from akida_models import mobilenet_cifar10, vgg_cifar10
+from akida_models import ds_cnn_cifar10, vgg_cifar10
 
 # CNN2SNN
 from cnn2snn import convert
@@ -140,17 +140,17 @@ x_test = (x_test - b) / a
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |
 # +=========+================+===============+==========+========+
-# | 1       | N/A            | N/A           | 93.15 %  | 1000   |
+# | 1       | N/A            | N/A           | 93.23 %  | 1000   |
 # +---------+----------------+---------------+----------+--------+
-# | 2       | 4 bits         | 4 bits        | 93.24 %  | 30     |
+# | 2       | 4 bits         | 4 bits        | 93.15 %  | 35     |
 # +---------+----------------+---------------+----------+--------+
-# | 3       | 3 bits         | 4 bits        | 92.91 %  | 50     |
+# | 3       | 3 bits         | 4 bits        | 92.65 %  | 40     |
 # +---------+----------------+---------------+----------+--------+
-# | 4       | 3 bits         | 3 bits        | 92.38 %  | 64     |
+# | 4       | 3 bits         | 3 bits        | 92.01 %  | 83     |
 # +---------+----------------+---------------+----------+--------+
-# | 5       | 2 bits         | 3 bits        | 91.48 %  | 82     |
+# | 5       | 2 bits         | 3 bits        | 90.45 %  | 100    |
 # +---------+----------------+---------------+----------+--------+
-# | 6       | 2 bits         | 2 bits        | 91.31 %  | 74     |
+# | 6       | 2 bits         | 2 bits        | 90.59 %  | 40     |
 # +---------+----------------+---------------+----------+--------+
 #
 # Please refer to `CNN conversion tutorial <plot_cnn_flow.html>`__
@@ -179,9 +179,9 @@ model_keras.summary()
 # +=========+==========+
 # | 100     | 94.00 %  |
 # +---------+----------+
-# | 1000    | 90.80 %  |
+# | 1000    | 91.80 %  |
 # +---------+----------+
-# | 10000   | 91.30 %  |
+# | 10000   | 90.59 %  |
 # +---------+----------+
 #
 # .. Note:: Depending on your hardware setup, the processing time may vary
@@ -237,11 +237,11 @@ model_akida.summary()
 # +---------+----------+
 # | #Images | Accuracy |
 # +=========+==========+
-# | 100     | 95.00 %  |
+# | 100     | 93.00 %  |
 # +---------+----------+
-# | 1000    | 91.90 %  |
+# | 1000    | 92.10 %  |
 # +---------+----------+
-# | 10000   | 91.59 %  |
+# | 10000   | 90.67 %  |
 # +---------+----------+
 #
 # Due to the conversion process, the predictions may be slightly different
@@ -267,7 +267,7 @@ print(f'Akida inference on {num_images} images took {end-start:.2f} s.\n')
 
 # For non-regression purpose
 if num_images == 1000:
-    assert accuracy == 0.919
+    assert accuracy == 0.921
 
 ######################################################################
 
@@ -279,10 +279,10 @@ for _, stat in stats.items():
     print(stat)
 
 ######################################################################
-# 5. Create a quantized Keras MobileNet model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 5. Create a quantized Keras DS-CNN model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A Keras model based on the
+# A DS-CNN Keras model based on the
 # `MobileNets <https://arxiv.org/abs/1704.04861>`__ architecture is
 # instantiated with quantized weights and activations.
 #
@@ -301,10 +301,10 @@ for _, stat in stats.items():
 #   * **5.B - Check performance** on the test set.
 
 ######################################################################
-# 5.A Instantiate Keras MobileNet model
+# 5.A Instantiate Keras DS-CNN model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The ``mobilenet_cifar10`` function returns a MobileNet Keras model with
+# The ``ds_cnn_cifar10`` function returns a MobileNet-like Keras model with
 # custom quantized layers (see ``quantization_layers.py`` in the CNN2SNN
 # module).
 #
@@ -324,7 +324,7 @@ for _, stat in stats.items():
 # decreasing for 20 epochs.
 #
 # The table below summarizes the results obtained when preparing the
-# weights stored under ``http://data.brainchip.com/models/mobilenet/``:
+# weights stored under ``http://data.brainchip.com/models/ds_cnn/``:
 #
 # +---------+----------------+---------------+----------+--------+
 # | Episode | Weights Quant. | Activ. Quant. | Accuracy | Epochs |
@@ -339,11 +339,11 @@ for _, stat in stats.items():
 # documentation for flow and training steps details.
 
 # Use a quantized model with pretrained quantized weights (93.07% accuracy)
-model_keras = mobilenet_cifar10(input_shape,
-                                weights='cifar10',
-                                weight_quantization=4,
-                                activ_quantization=4,
-                                input_weight_quantization=8)
+model_keras = ds_cnn_cifar10(input_shape,
+                             weights='cifar10',
+                             weight_quantization=4,
+                             activ_quantization=4,
+                             input_weight_quantization=8)
 model_keras.summary()
 
 ######################################################################

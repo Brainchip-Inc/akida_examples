@@ -57,10 +57,10 @@ plt.show()
 # 3. Load the pre-trained Akida model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The pre-trained neural network model is included in the models/cnn2snn
-# directory. You only need to pass this .fbz file to the Akida Execution
-# Engine in order to instantiate the model.
-#
+# The pre-trained neural network model is available on
+# `Brainchip data server <http://data.brainchip.com/models/gxnor/>`_
+# You only need to pass this .fbz file to the Akida Execution Engine in order
+# to instantiate the model.
 
 # Load provided model configuration file
 model_file = get_file("gxnor_mnist.fbz",
