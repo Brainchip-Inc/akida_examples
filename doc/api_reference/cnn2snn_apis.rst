@@ -23,6 +23,13 @@ CNN2SNN Toolkit API
 
         .. automethod:: __init__
 
+    TrainableWeightQuantizer
+    ========================
+    .. autoclass:: TrainableWeightQuantizer
+        :members:
+
+        .. automethod:: __init__
+
     WeightFloat
     ===========
     .. autoclass:: WeightFloat
@@ -61,6 +68,14 @@ CNN2SNN Toolkit API
     ActivationDiscreteRelu
     ======================
     .. autoclass:: ActivationDiscreteRelu
+        :members:
+
+        .. automethod:: __init__
+
+
+    QuantizedReLU
+    =============
+    .. autoclass:: QuantizedReLU
         :members:
 
         .. automethod:: __init__
