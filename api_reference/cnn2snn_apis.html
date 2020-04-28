@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                Akida 1.8.2
+                Akida 1.8.3
               </div>
             
           
@@ -189,12 +189,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#weightquantizer">WeightQuantizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trainableweightquantizer">TrainableWeightQuantizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#weightfloat">WeightFloat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizedconv2d">QuantizedConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizeddepthwiseconv2d">QuantizedDepthwiseConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizeddense">QuantizedDense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizedseparableconv2d">QuantizedSeparableConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#activationdiscreterelu">ActivationDiscreteRelu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantizedrelu">QuantizedReLU</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="akida_models_apis.html">Akida models</a><ul>
@@ -615,10 +617,13 @@ the min (resp max) value.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightQuantizer.quantize" title="cnn2snn.WeightQuantizer.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightQuantizer.get_config" title="cnn2snn.WeightQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.WeightQuantizer.quantize" title="cnn2snn.WeightQuantizer.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
 <td><p>Quantizes the specified weights Tensor.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.WeightQuantizer.scale_factor" title="cnn2snn.WeightQuantizer.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightQuantizer.scale_factor" title="cnn2snn.WeightQuantizer.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
 <td><p>Evaluates the scale factor for the specified weights Tensor.</p></td>
 </tr>
 </tbody>
@@ -635,6 +640,24 @@ outliers.</p></li>
 <li><p><strong>bitwidth</strong> (<em>integer</em>) – the quantizer bitwidth defining the number of
 quantized values.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.WeightQuantizer.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightQuantizer.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -676,6 +699,111 @@ quantized values.</p></li>
 </dd></dl>
 
 </div>
+<div class="section" id="trainableweightquantizer">
+<h2>TrainableWeightQuantizer<a class="headerlink" href="#trainableweightquantizer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cnn2snn.TrainableWeightQuantizer">
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">TrainableWeightQuantizer</code><span class="sig-paren">(</span><em class="sig-param">threshold=3</em>, <em class="sig-param">bitwidth=4</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A trainable weight quantizer.</p>
+<p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
+E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
+with qstep being the quantization step. The quantization step is defined by:</p>
+<p>qstep = threshold * std(W) / max_value</p>
+<p>with:
+- max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.
+- threshold a trainable parameter whose initial value can be specified.</p>
+<p>All values below or above threshold * std(W) are automatically assigned to
+the min (resp max) value.</p>
+<p>This is the trainable version of the WeightQuantizer class.</p>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.TrainableWeightQuantizer.get_config" title="cnn2snn.TrainableWeightQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.TrainableWeightQuantizer.quantize" title="cnn2snn.TrainableWeightQuantizer.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
+<td><p>Quantizes the specified weights Tensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.TrainableWeightQuantizer.scale_factor" title="cnn2snn.TrainableWeightQuantizer.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
+<td><p>Evaluates the scale factor for the specified weights Tensor.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="cnn2snn.TrainableWeightQuantizer.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">threshold=3</em>, <em class="sig-param">bitwidth=4</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a trainable weights quantizer for the specified bitwidth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>integer</em>) – the initial value of the standard deviation
+multiplier used to exclude outliers.</p></li>
+<li><p><strong>bitwidth</strong> (<em>integer</em>) – the quantizer bitwidth defining the number of
+quantized values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.TrainableWeightQuantizer.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.TrainableWeightQuantizer.quantize">
+<code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param">w</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer.quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quantizes the specified weights Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code>) – the weights Tensor to quantize.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Tensor of quantized weights.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.TrainableWeightQuantizer.scale_factor">
+<code class="sig-name descname">scale_factor</code><span class="sig-paren">(</span><em class="sig-param">w</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer.scale_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the scale factor for the specified weights Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code>) – the weights Tensor to quantize.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Tensor containing a single scalar value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="weightfloat">
 <h2>WeightFloat<a class="headerlink" href="#weightfloat" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -690,10 +818,13 @@ be used for training.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightFloat.quantize" title="cnn2snn.WeightFloat.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightFloat.get_config" title="cnn2snn.WeightFloat.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.WeightFloat.quantize" title="cnn2snn.WeightFloat.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
 <td><p>Quantizes the specified weights Tensor.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.WeightFloat.scale_factor" title="cnn2snn.WeightFloat.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.WeightFloat.scale_factor" title="cnn2snn.WeightFloat.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
 <td><p>Evaluates the scale factor for the specified weights Tensor.</p></td>
 </tr>
 </tbody>
@@ -706,6 +837,24 @@ be used for training.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>bitwidth</strong> (<em>integer</em>) – the quantizer bitwidth defining the number of
 quantized values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.WeightFloat.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightFloat.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1152,6 +1301,88 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <dl class="method">
 <dt id="cnn2snn.ActivationDiscreteRelu.quantized_activation">
 <code class="sig-name descname">quantized_activation</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.ActivationDiscreteRelu.quantized_activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the activations for the specified input Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code>) – the input values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="quantizedrelu">
+<h2>QuantizedReLU<a class="headerlink" href="#quantizedrelu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cnn2snn.QuantizedReLU">
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedReLU</code><span class="sig-paren">(</span><em class="sig-param">bitwidth=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Trainable Quantized ReLU Keras Activation.</p>
+<p>Activations will be clipped to a trainable range, and quantized to a number
+of values defined by the bitwidth: N = (2^bitwidth - 1) values plus zero</p>
+<p>More specifically, this class uses two trainable variables:
+- t0_k represents the lower bound of the activation range,
+- gamma_k represents the step between two quantized activation values.</p>
+<dl class="simple">
+<dt>The activation range is therefore [t0_k, tN_k], with:</dt><dd><p>tN_k = t0_k + N * gamma_k = (2^bitwidth - 1) * gamma_k</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.QuantizedReLU.get_config" title="cnn2snn.QuantizedReLU.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.QuantizedReLU.quantized_activation" title="cnn2snn.QuantizedReLU.quantized_activation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantized_activation</span></code></a>(x)</p></td>
+<td><p>Evaluates the activations for the specified input Tensor.</p></td>
+</tr>
+</tbody>
+</table>
+<p>In other words:
+- inputs below t0_k will result in no activation
+- inputs between t0_k and t0_k + tN_k will be ceiled to the nearest</p>
+<blockquote>
+<div><p>t0_k + n * gamma_k, and result in a activation of n * gamma_k</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>inputs above t0_k + tN_k will result in a activation of N * gamma_k</p></li>
+</ul>
+<dl class="method">
+<dt id="cnn2snn.QuantizedReLU.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">bitwidth=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedReLU.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a QuantizedReLU for the specified bitwidth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bitwidth</strong> (<em>int</em>) – the activation bitwidth.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.QuantizedReLU.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedReLU.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="cnn2snn.QuantizedReLU.quantized_activation">
+<code class="sig-name descname">quantized_activation</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedReLU.quantized_activation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the activations for the specified input Tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

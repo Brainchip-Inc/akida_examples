@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                Akida 1.8.2
+                Akida 1.8.3
               </div>
             
           
@@ -189,12 +189,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#trainableweightquantizer">TrainableWeightQuantizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#weightfloat">WeightFloat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantizedconv2d">QuantizedConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantizeddepthwiseconv2d">QuantizedDepthwiseConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantizeddense">QuantizedDense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantizedseparableconv2d">QuantizedSeparableConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#activationdiscreterelu">ActivationDiscreteRelu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantizedrelu">QuantizedReLU</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../api_reference/akida_models_apis.html">Akida models</a><ul>
@@ -913,7 +915,7 @@ _________________________________________________________________
  5185536/12997744 [==========&gt;...................] - ETA: 2s
  5382144/12997744 [===========&gt;..................] - ETA: 2s
  5578752/12997744 [===========&gt;..................] - ETA: 2s
- 5775360/12997744 [============&gt;.................] - ETA: 2s
+ 5775360/12997744 [============&gt;.................] - ETA: 1s
  5971968/12997744 [============&gt;.................] - ETA: 1s
  6168576/12997744 [=============&gt;................] - ETA: 1s
  6365184/12997744 [=============&gt;................] - ETA: 1s
@@ -968,39 +970,42 @@ ignored during the conversion.</p>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Warning: the activation layer &#39;activation&#39; will be discarded at conversion. The outputs of the Akida model will be the potentials before this activation layer.
--------------------------------------------------------------------------------------------------------------------------
-Layer (type)           HW  Input shape   Output shape  Kernel shape  Learning (#classes)       #InConn/#Weights/ThFire
-=========================================================================================================================
-conv_0 (InputConvoluti yes [160, 160, 3] [80, 80, 32]  (3 x 3 x 3)   N/A                       27 / 26 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_1 (Separable yes [80, 80, 32]  [80, 80, 64]  (3 x 3 x 32)  N/A                       288 / 19 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_2 (Separable yes [80, 80, 64]  [40, 40, 128] (3 x 3 x 64)  N/A                       576 / 39 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_3 (Separable yes [40, 40, 128] [40, 40, 128] (3 x 3 x 128) N/A                       1152 / 61 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_4 (Separable yes [40, 40, 128] [20, 20, 256] (3 x 3 x 128) N/A                       1152 / 79 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_5 (Separable yes [20, 20, 256] [20, 20, 256] (3 x 3 x 256) N/A                       2304 / 121 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_6 (Separable yes [20, 20, 256] [10, 10, 512] (3 x 3 x 256) N/A                       2304 / 158 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_7 (Separable yes [10, 10, 512] [10, 10, 512] (3 x 3 x 512) N/A                       4608 / 240 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_8 (Separable yes [10, 10, 512] [10, 10, 512] (3 x 3 x 512) N/A                       4608 / 242 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_9 (Separable yes [10, 10, 512] [10, 10, 512] (3 x 3 x 512) N/A                       4608 / 243 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_10 (Separabl yes [10, 10, 512] [10, 10, 512] (3 x 3 x 512) N/A                       4608 / 243 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_11 (Separabl yes [10, 10, 512] [10, 10, 512] (3 x 3 x 512) N/A                       4608 / 244 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_12 (Separabl yes [10, 10, 512] [5, 5, 1024]  (3 x 3 x 512) N/A                       4608 / 323 / 0
--------------------------------------------------------------------------------------------------------------------------
-separable_13 (Separabl yes [5, 5, 1024]  [1, 1, 1024]  (3 x 3 x 1024 N/A                       9216 / 485 / 0
--------------------------------------------------------------------------------------------------------------------------
-top_layer_separable (S yes [1, 1, 1024]  [1, 1, 1]     (3 x 3 x 1024 N/A                       9216 / 9 / 0
--------------------------------------------------------------------------------------------------------------------------
+                                          Model Summary
+__________________________________________________________________________________________________
+Layer (type)                                  Output shape   Kernel shape
+==================================================================================================
+conv_0 (InputConvolutional)                   [80, 80, 32]   (3, 3, 3, 32)
+__________________________________________________________________________________________________
+separable_1 (SeparableConvolutional)          [80, 80, 64]   (3, 3, 32, 1), (1, 1, 32, 64)
+__________________________________________________________________________________________________
+separable_2 (SeparableConvolutional)          [40, 40, 128]  (3, 3, 64, 1), (1, 1, 64, 128)
+__________________________________________________________________________________________________
+separable_3 (SeparableConvolutional)          [40, 40, 128]  (3, 3, 128, 1), (1, 1, 128, 128)
+__________________________________________________________________________________________________
+separable_4 (SeparableConvolutional)          [20, 20, 256]  (3, 3, 128, 1), (1, 1, 128, 256)
+__________________________________________________________________________________________________
+separable_5 (SeparableConvolutional)          [20, 20, 256]  (3, 3, 256, 1), (1, 1, 256, 256)
+__________________________________________________________________________________________________
+separable_6 (SeparableConvolutional)          [10, 10, 512]  (3, 3, 256, 1), (1, 1, 256, 512)
+__________________________________________________________________________________________________
+separable_7 (SeparableConvolutional)          [10, 10, 512]  (3, 3, 512, 1), (1, 1, 512, 512)
+__________________________________________________________________________________________________
+separable_8 (SeparableConvolutional)          [10, 10, 512]  (3, 3, 512, 1), (1, 1, 512, 512)
+__________________________________________________________________________________________________
+separable_9 (SeparableConvolutional)          [10, 10, 512]  (3, 3, 512, 1), (1, 1, 512, 512)
+__________________________________________________________________________________________________
+separable_10 (SeparableConvolutional)         [10, 10, 512]  (3, 3, 512, 1), (1, 1, 512, 512)
+__________________________________________________________________________________________________
+separable_11 (SeparableConvolutional)         [10, 10, 512]  (3, 3, 512, 1), (1, 1, 512, 512)
+__________________________________________________________________________________________________
+separable_12 (SeparableConvolutional)         [5, 5, 1024]   (3, 3, 512, 1), (1, 1, 512, 1024)
+__________________________________________________________________________________________________
+separable_13 (SeparableConvolutional)         [1, 1, 1024]   (3, 3, 1024, 1), (1, 1, 1024, 1024)
+__________________________________________________________________________________________________
+top_layer_separable (SeparableConvolutional)  [1, 1, 1]      (3, 3, 1024, 1), (1, 1, 1024, 1)
+__________________________________________________________________________________________________
+Input shape: 160, 160, 3
+Backend type: Software - 1.8.3
 </pre></div>
 </div>
 </div>
@@ -1050,7 +1055,7 @@ the Akida probabilities.</p></li>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 12.98 s.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2320 images took 12.10 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Classify test images with the Akida model</span>
@@ -1149,7 +1154,7 @@ the Akida probabilities.</p></li>
  98% |####################################################################### |
 100% |########################################################################|
 100% |########################################################################|
-Akida inference on 2320 images took 41.51 s.
+Akida inference on 2320 images took 37.21 s.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
@@ -1264,7 +1269,7 @@ Akida accuracy:           97.11 %  (2253 / 2320 images)
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Confusion matrix quantized Akida:
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  40.886 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  29.009 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-plot-transfer-learning-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/1a4bd0ec3b45ea55ca8f4288d600d59f/plot_transfer_learning.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_transfer_learning.py</span></code></a></p>
