@@ -20,7 +20,6 @@ CNN2SNN Toolkit API
     ===============
     .. autoclass:: WeightQuantizer
         :members:
-        :inherited-members:
 
         .. automethod:: __init__
 
@@ -28,7 +27,6 @@ CNN2SNN Toolkit API
     ===========
     .. autoclass:: WeightFloat
         :members:
-        :inherited-members:
 
         .. automethod:: __init__
 
