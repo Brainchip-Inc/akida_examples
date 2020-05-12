@@ -144,14 +144,14 @@ from akida_models.quantization_blocks import separable_conv_block
 # preprocess batches of data (one can look at the TensorFlow guide
 # `here <https://www.tensorflow.org/guide/data>`__ for more information).
 #
-# .. Note:: The ``cats_vs_dogs`` dataset version used here is 2.0.1.
+# .. Note:: The ``cats_vs_dogs`` dataset version used here is 4.0.0.
 #
 
 splits = ['train[:80%]', 'train[80%:90%]', 'train[90%:]']
 
 tfds.disable_progress_bar()
 (raw_train, raw_validation,
- raw_test), metadata = tfds.load('cats_vs_dogs:2.0.1',
+ raw_test), metadata = tfds.load('cats_vs_dogs:4.0.0',
                                  split=splits,
                                  with_info=True,
                                  as_supervised=True)
