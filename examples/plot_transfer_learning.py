@@ -147,13 +147,12 @@ from akida_models.quantization_blocks import separable_conv_block
 # .. Note:: The ``cats_vs_dogs`` dataset version used here is 2.0.1.
 #
 
-SPLIT_WEIGHTS = (8, 1, 1)
-splits = tfds.Split.TRAIN.subsplit(weighted=SPLIT_WEIGHTS)
+splits = ['train[:80%]', 'train[80%:90%]', 'train[90%:]']
 
 tfds.disable_progress_bar()
 (raw_train, raw_validation,
  raw_test), metadata = tfds.load('cats_vs_dogs:2.0.1',
-                                 split=list(splits),
+                                 split=splits,
                                  with_info=True,
                                  as_supervised=True)
 
