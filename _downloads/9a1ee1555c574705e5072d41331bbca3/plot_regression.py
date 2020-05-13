@@ -137,7 +137,7 @@ for _, stat in stats.items():
 
 # Estimate age on a random single image and display Keras and Akida outputs
 id = random.randint(0, len(y_test))
-age_keras = model_keras.predict([[x_test_keras[id]]])
+age_keras = model_keras.predict(x_test_keras[id:id + 1])
 
 plt.imshow(x_test_akida[id], interpolation='bicubic')
 plt.xticks([]), plt.yticks([])
