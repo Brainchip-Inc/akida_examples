@@ -42,13 +42,6 @@ Akida Execution Engine API
 
         .. automethod:: __init__
 
-    InputBCSpike
-    ============
-    .. autoclass:: InputBCSpike
-        :members:
-
-        .. automethod:: __init__
-
     FullyConnected
     ==============
     .. autoclass:: FullyConnected
