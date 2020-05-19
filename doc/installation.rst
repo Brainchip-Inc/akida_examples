@@ -4,9 +4,9 @@ Installation
 Requirements
 ------------
 
-* **Supported operating systems:** Windows 10, Ubuntu 16.04 and 18.04
-* **Python version:** python 3.6 to 3.7
-* **TensorFlow version:** >= 2.0.0
+* **Supported operating systems:** Windows 10, Ubuntu 16.04, 18.04 and 20.04
+* **Python version:** python 3.6 to 3.8
+* **TensorFlow version:** >= 2.2.0
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.

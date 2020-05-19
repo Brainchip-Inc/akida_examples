@@ -7,8 +7,8 @@ Documentation is based on [Sphinx](https://www.sphinx-doc.org/en/master/) and
 can be generated locally from the repository top.
 
 ## Requirements:
-* Python version: python 3.6 to 3.7
-* Tensorflow version >= 2.0.0
+* Python version: python 3.6 to 3.8
+* Tensorflow version >= 2.2.0
 * Sphinx version 2.1 or above
 
 ## Build steps
