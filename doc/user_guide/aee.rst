@@ -319,7 +319,7 @@ Using Akida Unsupervised Learning
 The Akida Unsupervised Learning is a unique feature of the Akida NSoC.
 
 In this mode, an Akida Layer will typically be compiled with specific `learning
-parameters <aee.html#id7>`_. and then undergo a period of feed-forward
+parameters <aee.html#id7>`__ and then undergo a period of feed-forward
 unsupervised or semi-supervised training by letting it process inputs generated
 by previous layers from a relevant dataset.
 
