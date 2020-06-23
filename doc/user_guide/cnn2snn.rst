@@ -56,6 +56,9 @@ levels:
 
 Only serial and feedforward arrangements can be converted\ [#fn-3]_.
 
+Please refer to the `Hardware constraints <hw_constraints.html>`__ page for full
+details.
+
 Note that our experience reveals that although existing Keras models can be
 quantized almost without loss to 8 bits, a quantization-aware training of the
 model is required for lower quantization bitwidths.
@@ -74,6 +77,12 @@ Once it is established that the overall model configuration prior to
 quantization yields a satisfactory performance on the task, proceed with
 quantization suitable for Akida architecture, changing only the quantization
 parameters.
+
+.. note::
+    There is an hardware compatibility check helper available once the model
+    has been converted to the Akida Execution engine (see `summary
+    <../api_reference/aee_apis.html#akida.Model.summary>`__ API).
+    We strongly recommend running it prior to long lasting training sessions.
 
 We recommend saving the weights of your trained non-quantized model and using
 those to initialize the quantized version; typically leading to both faster
