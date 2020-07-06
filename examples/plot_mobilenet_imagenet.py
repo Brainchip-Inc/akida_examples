@@ -34,7 +34,7 @@ import tensorflow as tf
 from timeit import default_timer as timer
 
 # ImageNet tutorial imports
-from akida_models import mobilenet_imagenet
+from akida_models import mobilenet_imagenet_pretrained
 from akida_models.imagenet import preprocessing
 
 ######################################################################
@@ -157,12 +157,7 @@ for i in range(num_images):
 #
 
 input_shape = (IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)
-model_keras = mobilenet_imagenet(input_shape=input_shape,
-                                 classes=NUM_CLASSES,
-                                 weights='imagenet',
-                                 weight_quantization=4,
-                                 activ_quantization=4,
-                                 input_weight_quantization=8)
+model_keras = mobilenet_imagenet_pretrained()
 
 model_keras.summary()
 
