@@ -41,7 +41,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import get_file
 
 # KWS model imports
-from akida_models import ds_cnn_kws
+from akida_models import ds_cnn_kws_pretrained
 
 ######################################################################
 # 2. Load the preprocessed dataset
@@ -140,12 +140,7 @@ input_scaling = (max_int_value, 0)
 #
 
 K.clear_session()
-model_keras = ds_cnn_kws(input_shape,
-                         classes=CLASSES,
-                         weights='kws',
-                         weight_quantization=4,
-                         activ_quantization=4,
-                         input_weight_quantization=8)
+model_keras = ds_cnn_kws_pretrained()
 model_keras.summary()
 
 ######################################################################
