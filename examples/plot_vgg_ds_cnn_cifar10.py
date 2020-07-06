@@ -60,7 +60,7 @@ from timeit import default_timer as timer
 from tensorflow.keras.datasets import cifar10
 
 # Akida models imports
-from akida_models import ds_cnn_cifar10, vgg_cifar10
+from akida_models import ds_cnn_cifar10_pretrained, vgg_cifar10_pretrained
 
 # CNN2SNN
 from cnn2snn import convert
@@ -158,11 +158,7 @@ x_test = (x_test - b) / a
 # documentation for flow and training steps details.
 
 # Instantiate the quantized model
-model_keras = vgg_cifar10(input_shape,
-                          weights='cifar10',
-                          weight_quantization=2,
-                          activ_quantization=2,
-                          input_weight_quantization=2)
+model_keras = vgg_cifar10_pretrained()
 model_keras.summary()
 
 ######################################################################
@@ -339,11 +335,7 @@ for _, stat in stats.items():
 # documentation for flow and training steps details.
 
 # Use a quantized model with pretrained quantized weights (93.07% accuracy)
-model_keras = ds_cnn_cifar10(input_shape,
-                             weights='cifar10',
-                             weight_quantization=4,
-                             activ_quantization=4,
-                             input_weight_quantization=8)
+model_keras = ds_cnn_cifar10_pretrained()
 model_keras.summary()
 
 ######################################################################
