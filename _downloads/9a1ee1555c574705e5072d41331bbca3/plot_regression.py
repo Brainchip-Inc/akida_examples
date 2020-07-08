@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 # Akida imports
 from cnn2snn import convert
-from akida_models import vgg_utk_face
+from akida_models import vgg_utk_face_pretrained
 from akida_models.utk_face.preprocessing import load_data
 
 ######################################################################
@@ -69,11 +69,7 @@ x_test_akida = x_test.astype('uint8')
 #   bits, then both are set to 4 bits and finally both to 2 bits. At each step
 #   weights are initialized from the previous step state.
 #
-model_keras = vgg_utk_face(input_shape,
-                           weights='utkface',
-                           weight_quantization=2,
-                           activ_quantization=2,
-                           input_weight_quantization=8)
+model_keras = vgg_utk_face_pretrained()
 model_keras.summary()
 
 ######################################################################

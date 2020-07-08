@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.4
+                Akida 1.8.5
               </div>
             
           
@@ -563,9 +563,6 @@ layer.</p></li>
 <li><p>all layers with the ‘data_format’ parameter must be ‘channels_last’</p></li>
 <li><p>all processing quantized layers and ActivationDiscreteRelu must have a
 valid quantization bitwidth</p></li>
-<li><p>a QuantizedConv2D layer must have strides of (1, 1). Exception: if the
-inputs are images, the first convolutional layer can have any value
-for strides.</p></li>
 <li><p>a QuantizedDense layer must have an input shape of (N,) or (1, 1, N)</p></li>
 <li><p>a BatchNormalization layer must have ‘axis’ set to -1 (default)</p></li>
 <li><p>a BatchNormalization layer cannot have negative gammas</p></li>
@@ -990,7 +987,7 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <h2>QuantizedDepthwiseConv2D<a class="headerlink" href="#quantizeddepthwiseconv2d" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="cnn2snn.QuantizedDepthwiseConv2D">
-<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedDepthwiseConv2D</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDepthwiseConv2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedDepthwiseConv2D</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDepthwiseConv2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>A quantization-aware Keras depthwise convolutional layer.</p>
 <p>Inherits from Keras DepthwiseConv2D layer, applying a quantization on
 weights during the forward pass.</p>
@@ -1011,12 +1008,14 @@ weights during the forward pass.</p>
 </table>
 <dl class="py method">
 <dt id="cnn2snn.QuantizedDepthwiseConv2D.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDepthwiseConv2D.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedDepthwiseConv2D.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a quantization-aware depthwise convolutional layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>kernel_size</strong> (<em>a tuple of integer</em>) – the kernel spatial dimensions.</p></li>
+<li><p><strong>strides</strong> (<em>integer</em><em>, or </em><em>tuple of integers</em><em>, </em><em>optional</em>) – strides of the
+convolution along height and width.</p></li>
 <li><p><strong>padding</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘valid’ or ‘same’.</p></li>
 <li><p><strong>use_bias</strong> (<em>boolean</em><em>, </em><em>optional</em>) – whether the layer uses a bias vector.</p></li>
 <li><p><strong>depthwise_initializer</strong> (str, or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.initializer</span></code>, optional) – initializer for the weights matrix.</p></li>
@@ -1161,7 +1160,7 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <h2>QuantizedSeparableConv2D<a class="headerlink" href="#quantizedseparableconv2d" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="cnn2snn.QuantizedSeparableConv2D">
-<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedSeparableConv2D</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedSeparableConv2D</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>A quantization-aware Keras separable convolutional layer.</p>
 <p>Inherits from Keras SeparableConv2D layer, applying a quantization on
 weights during the forward pass.</p>
@@ -1182,13 +1181,15 @@ weights during the forward pass.</p>
 </table>
 <dl class="py method">
 <dt id="cnn2snn.QuantizedSeparableConv2D.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a quantization-aware separable convolutional layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filters</strong> (<em>integer</em>) – the number of filters.</p></li>
 <li><p><strong>kernel_size</strong> (<em>tuple of integer</em>) – the kernel spatial dimensions.</p></li>
+<li><p><strong>strides</strong> (<em>integer</em><em>, or </em><em>tuple of integers</em><em>, </em><em>optional</em>) – strides of the
+convolution along height and width.</p></li>
 <li><p><strong>padding</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘valid’ or ‘same’.</p></li>
 <li><p><strong>use_bias</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Whether the layer uses a bias vector.</p></li>
 <li><p><strong>depthwise_initializer</strong> (str, or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.initializer</span></code>, optional) – initializer for the depthwise kernel.</p></li>
