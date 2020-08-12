@@ -5,6 +5,10 @@ CNN2SNN Toolkit API
 .. automodule:: cnn2snn
     :members:
 
+    quantize
+    ========
+    .. autofunction:: quantize
+
     convert
     =======
     .. autofunction:: convert
