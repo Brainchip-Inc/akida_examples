@@ -17,6 +17,11 @@ Input layer
 |InputConvolutional|1, 3          |8          |3×3, 5×5, 7×7|1, 2, 3 |Same, Valid|
 +------------------+--------------+-----------+-------------+--------+-----------+
 
+.. note::
+       Max filters depends on input channels and kernelSize.
+       * input channels 3: 192 for 3x3, 64 for 5x5, 32 for 7x7
+       * input channels 1: 512 for 3x3, 192 for 5x5, 96 for 7x7
+
 InputConvolutional embeds a pooling step with hardware constraints:
 
 +------------+------------------+------+-----------+
