@@ -18,6 +18,9 @@ Input layer
 +------------------+--------------+-----------+-------------+--------+-----------+
 
 .. note::
+       Max line width per image data block is 256 pixels.
+
+.. note::
        Max filters depends on input channels and kernelSize.
        * input channels 3: 192 for 3x3, 64 for 5x5, 32 for 7x7
        * input channels 1: 512 for 3x3, 192 for 5x5, 96 for 7x7
