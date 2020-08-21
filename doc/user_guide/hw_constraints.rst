@@ -22,6 +22,9 @@ Input layer
        * input channels 3: 192 for 3x3, 64 for 5x5, 32 for 7x7
        * input channels 1: 512 for 3x3, 192 for 5x5, 96 for 7x7
 
+.. note::
+       NsocV1 only supports stride 1 with ConvolutionMode.Valid.
+
 InputConvolutional embeds a pooling step with hardware constraints:
 
 +------------+------------------+------+-----------+
