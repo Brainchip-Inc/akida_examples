@@ -19,11 +19,11 @@ Input layer
 
 InputConvolutional embeds a pooling step with hardware constraints:
 
-+------------+-------------+------+-----------+
-|Pooling type|Kernel size  |Stride|Type       |
-+============+=============+======+===========+
-|Max         |1×2, 2×1, 2×2|2     |Same, Valid|
-+------------+-------------+------+-----------+
++------------+------------------+------+-----------+
+|Pooling type|Kernel size       |Stride|Type       |
++============+==================+======+===========+
+|Max         |1x1, 1×2, 2×1, 2×2|2     |Same, Valid|
++------------+------------------+------+-----------+
 
 Data-Processing layers
 ----------------------
