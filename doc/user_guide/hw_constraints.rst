@@ -33,6 +33,9 @@ InputConvolutional embeds a pooling step with hardware constraints:
 |Max         |1x1, 1×2, 2×1, 2×2|2     |Same, Valid|
 +------------+------------------+------+-----------+
 
+.. note::
+       Hardware supports wta_group only with neurons in ascending order.
+
 Data-Processing layers
 ----------------------
 
