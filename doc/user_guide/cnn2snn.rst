@@ -5,7 +5,7 @@ CNN2SNN toolkit
 Overview
 --------
 
-The Brainchip CNN2SNN toolkit provides a means to convert Convolutional Neural
+The Brainchip CNN2SNN toolkit provides means to convert Convolutional Neural
 Networks (CNN) that were trained using Deep Learning methods to a low-latency
 and low-power Spiking Neural Network (SNN) for use with the Akida Execution
 Engine. This document is a guide to that process.
@@ -44,8 +44,9 @@ Typical training scenario
 The first step in the conversion workflow is to train a standard Keras model.
 This trained model is the starting point for the quantization stage. Once it is
 established that the overall model configuration prior to quantization yields a
-satisfactory performance on the task, we can proceed with quantization. The
-CNN2SNN toolkit offers a turnkey solution to quantize a model:
+satisfactory performance on the task, we can proceed with quantization.
+
+The CNN2SNN toolkit offers a turnkey solution to quantize a model:
 the `quantize <../api_reference/cnn2snn_apis.html#quantize>`_ function. It
 replaces the neural Keras layers (Conv2D, SeparableConv2D and Dense) and
 the ReLU layers with custom CNN2SNN layers, which are quantization-aware
@@ -54,22 +55,24 @@ still a Keras model with a mix of CNN2SNN quantized layers (QuantizedReLU,
 QuantizedDense, etc.) and standard Keras layers (BatchNormalization, MaxPool2D,
 etc.).
 
+
 Direct quantization of a standard Keras model (also called post-training
-quantization) generally introduces a drop in performance. Our experience reveals
-that although existing Keras models can be quantized almost without loss to 8
-or 4 bits, a quantization-aware training of the model (i.e. training a
-quantized model) is required for lower quantization bitwidths.
+quantization) generally introduces a drop in performance. This drop is usually
+small for 8-bit or even 4-bit quantization of simple models, but it can be very
+significant for low quantization bitwidth and complex models.
 
 If the quantized model offers acceptable performance, it can be directly
 converted into an Akida model, ready to be loaded on the Akida NSoC (see the
-`convert <../api_reference/cnn2snn_apis.html#convert>`_ function). However,
-if the performance is not satisfactory, a quantization-aware training can cover
-the drop in performance due to quantization. Since the quantized model is a
-Keras model, it can then be trained using the Keras API.
+`convert <../api_reference/cnn2snn_apis.html#convert>`_ function).
 
-Also, it is possible to proceed with quantization in a serie of smaller steps.
-For example, it may be beneficial to train with float weights and quantized
-activations, and then, with quantized weights.
+However, if the performance drop is too high, a quantization-aware training is
+required to recover the performance prior to quantization. Since the quantized
+model is a Keras model, it can then be trained using the standard Keras API.
+
+Note that quantizing directly to the target bitwidth is not mandatory: it is
+possible to proceed with quantization in a serie of smaller steps.
+For example, it may be beneficial to keep float weights and only quantize
+activations, retrain, and then, quantize weights.
 
 
 Design compatibility constraints
@@ -80,7 +83,7 @@ distinct levels before the quantization stage:
 
 
 * Only serial and feedforward arrangements can be converted\ [#fn-2]_.
-* Supported Keras layers are listed below `below <#supported-layer-types>`_.
+* Supported Keras layers are listed `below <#supported-layer-types>`_.
 * Order of the layers is important, e.g. a BatchNormalization layer
   must be placed before the activation, and not after.
 * Some constraints are needed about layer's parameters, e.g. a MaxPool2D layer
@@ -98,7 +101,9 @@ PyPi package to easily create a compatible Keras model from scratch.
 Quantization compatibility constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Consider the following quantization compatibilities:
+
+In addition to the model design constraints, the Akida NSoC has several
+quantization constraints:
 
 * Weights of the neural layers must be quantized using
   `1, 2, 3, 4 or 8 bits <hw_constraints.html>`_.
@@ -114,39 +119,52 @@ details.
 Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A command-line interface is also supplied with the CNN2SNN toolkit to perform
-quantization and conversion to an Akida NSoC compatible model.
+In addition to the cnn2snn programming API, the CNN2SNN toolkit also provides a
+command-line interface to perform quantization and conversion to an Akida NSoC
+compatible model.
 
 Quantizing a standard Keras model or a CNN2SNN quantized model using the CLI
 makes use of the ``cnn2snn.quantize`` Python function. The same arguments, i.e.
 the quantization bitwidths for weights and activations, are required.
-To quantize a standard Keras model with 4-bit weights and activations and 8-bit
-input weights, the CLI usage is as follows:
+
+**Examples**
+
+Quantize a standard Keras model with 4-bit weights and activations and 8-bit
+input weights:
 
 .. code-block:: bash
 
     cnn2snn -m model_keras.h5 quantize -wq 4 -aq 4 -iq 8
 
 The quantized model is automatically saved to ``model_keras_iq8_wq4_aq4.h5``.
-To quantize an already quantized model with different quantization bitwidths,
-the same CLI usage is used:
+
+Quantize an already quantized model with different quantization bitwidths:
 
 .. code-block:: bash
 
     cnn2snn -m model_keras_iq8_wq4_aq4.h5 -wq 2 -aq 2
 
 A new quantized model named ``model_keras_iq2_wq2_aq2.h5`` is saved.
-Finally, converting a CNN2SNN quantized model into an Akida model using the CLI
-makes use of the ``cnn2snn.convert`` Python function. The same arguments, i.e.
+
+Converting a CNN2SNN quantized model into an Akida model using the CLI makes use
+of the ``cnn2snn.convert`` Python function. The same arguments, i.e.
 the input scaling and whether the inputs are sparse, are required.
-To convert a quantized model with input scaling of (255, 0) and with sparse
-inputs, the CLI usage is:
+
+**Examples**
+
+Convert a quantized model without input scaling and with image inputs:
+
+.. code-block:: bash
+
+    cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert
+
+An Akida .fbz model named ``model_keras_iq2_wq2_aq2.fbz`` is then saved.
+
+Convert a quantized model with input scaling of (255, 0) and with sparse inputs:
 
 .. code-block:: bash
 
     cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert -sc 255 -sh 0 -sp True
-
-An Akida .fbz model named ``model_keras_iq2_wq2_aq2.fbz`` is then saved.
 
 Layers Considerations
 ---------------------
@@ -183,13 +201,15 @@ CNN2SNN Quantization-aware layers
 
 Several articles have reported\ [#fn-5]_ that the quantization of a pre-trained
 float Keras model using 8-bit precision can be performed with a minimal loss
-of accuracy, but that for lower bitwidth a quantization-aware training of the
-model is required. This is confirmed by our own experiments.
+of accuracy for simple models, but that for lower bitwidth or complex models a
+quantization-aware re-training of the quantized model may be required.
 
 The CNN2SNN toolkit therefore includes quantization-aware versions of the base
-Keras layers. Quantizing a standard Keras model using the ``quantize`` function
-replaces the base Keras layers with these quantization-aware layers (see
-the `quantize <../api_reference/cnn2snn_apis.html#quantize>`_ function).
+Keras layers.
+
+These layers are produced when quantizing a standard Keras model using the
+``quantize`` function: it replaces the base Keras layers with their quantization-aware
+counterparts (see the `quantize <../api_reference/cnn2snn_apis.html#quantize>`_ function).
 
 Quantization-aware training simulates the effect of quantization in the forward
 pass, yet using a straight-through estimator for the quantization gradient in
