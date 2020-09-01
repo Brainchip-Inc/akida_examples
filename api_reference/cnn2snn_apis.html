@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.5
+                Akida 1.8.7
               </div>
             
           
@@ -131,21 +131,23 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/cnn2snn.html">CNN2SNN toolkit</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conversion-workflow">Conversion Workflow</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#compatibility-constraints">Compatibility Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conversion-workflow">Conversion workflow</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#typical-training-scenario">Typical training scenario</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#quantization-compatibility-constraints">Quantization compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#command-line-interface">Command-line interface</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#supported-layer-types">Supported layer types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#quantization-aware-layers">Quantization-aware layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#cnn2snn-quantization-aware-layers">CNN2SNN Quantization-aware layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#training-only-layers">Training-Only Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#first-layers">First Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id6">Final Layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#layer-blocks">Layer Blocks</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id7">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id8">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#separable-conv-block"><code class="docutils literal notranslate"><span class="pre">separable_conv_block</span></code></a></li>
@@ -187,6 +189,7 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">CNN2SNN</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quantize">quantize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#weightquantizer">WeightQuantizer</a></li>
@@ -422,6 +425,62 @@
             
   <div class="section" id="module-cnn2snn">
 <span id="cnn2snn-toolkit-api"></span><h1>CNN2SNN Toolkit API<a class="headerlink" href="#module-cnn2snn" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quantize">
+<h2>quantize<a class="headerlink" href="#quantize" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="cnn2snn.quantize">
+<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a standard sequential Keras model to a CNN2SNN Keras quantized
+model, compatible for Akida conversion.</p>
+<p>This function returns a Keras model where the standard neural layers
+(Conv2D, SeparableConv2D, Dense) and the ReLU activations are replaced with
+CNN2SNN quantized layers (QuantizedConv2D, QuantizedSeparableConv2D,
+QuantizedDense, ActivationDiscreteRelu).</p>
+<p>Several transformations are applied to the model:
+- the order of MaxPool and BatchNormalization layers are inverted so that
+BatchNormalization always happens first,
+- the batch normalization layers are folded into the previous layers.</p>
+<p>This new model can be either directly converted to akida, or first
+retrained for a few epochs to recover any accuracy loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>tf.keras.Model</em>) – a standard Keras model</p></li>
+<li><p><strong>weight_quantization</strong> (<em>int</em>) – <p>sets all weights in the model to have
+a particular quantization bitwidth except for the weights in the
+first layer.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit weights.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+<li><p><strong>activ_quantization</strong> (<em>int</em>) – <p>sets all activations in the model to have a
+particular activation quantization bitwidth.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit activations.</p></li>
+<li><p>’1’ through ‘8’ implements n-bit weights where n is from 1-8 bits.</p></li>
+</ul>
+</p></li>
+<li><p><strong>input_weight_quantization</strong> (<em>int</em>) – <p>sets weight quantization in the first
+layer. Defaults to weight_quantization value.</p>
+<ul>
+<li><p>’None’ implements the same bitwidth as the other weights.</p></li>
+<li><p>’0’ implements floating point 32-bit weights.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a quantized Keras model</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="convert">
 <h2>convert<a class="headerlink" href="#convert" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -1160,7 +1219,7 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <h2>QuantizedSeparableConv2D<a class="headerlink" href="#quantizedseparableconv2d" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="cnn2snn.QuantizedSeparableConv2D">
-<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedSeparableConv2D</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">QuantizedSeparableConv2D</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">quantizer_dw=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>A quantization-aware Keras separable convolutional layer.</p>
 <p>Inherits from Keras SeparableConv2D layer, applying a quantization on
 weights during the forward pass.</p>
@@ -1181,7 +1240,7 @@ weights during the forward pass.</p>
 </table>
 <dl class="py method">
 <dt id="cnn2snn.QuantizedSeparableConv2D.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">use_bias=True</em>, <em class="sig-param">depthwise_initializer='glorot_uniform'</em>, <em class="sig-param">pointwise_initializer='glorot_uniform'</em>, <em class="sig-param">bias_initializer='zeros'</em>, <em class="sig-param">depthwise_regularizer=None</em>, <em class="sig-param">pointwise_regularizer=None</em>, <em class="sig-param">bias_regularizer=None</em>, <em class="sig-param">depthwise_constraint=None</em>, <em class="sig-param">pointwise_constraint=None</em>, <em class="sig-param">bias_constraint=None</em>, <em class="sig-param">quantizer=&lt;cnn2snn.quantization_ops.WeightFloat object&gt;</em>, <em class="sig-param">quantizer_dw=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.QuantizedSeparableConv2D.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a quantization-aware separable convolutional layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

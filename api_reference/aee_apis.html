@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.5
+                Akida 1.8.7
               </div>
             
           
@@ -131,21 +131,23 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/cnn2snn.html">CNN2SNN toolkit</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conversion-workflow">Conversion Workflow</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#compatibility-constraints">Compatibility Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conversion-workflow">Conversion workflow</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#typical-training-scenario">Typical training scenario</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#quantization-compatibility-constraints">Quantization compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#command-line-interface">Command-line interface</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#supported-layer-types">Supported layer types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#quantization-aware-layers">Quantization-aware layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#cnn2snn-quantization-aware-layers">CNN2SNN Quantization-aware layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#training-only-layers">Training-Only Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#first-layers">First Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id6">Final Layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#layer-blocks">Layer Blocks</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id7">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id8">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#separable-conv-block"><code class="docutils literal notranslate"><span class="pre">separable_conv_block</span></code></a></li>
@@ -187,6 +189,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cnn2snn_apis.html">CNN2SNN</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn2snn_apis.html#quantize">quantize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
@@ -426,7 +429,7 @@
 <h2>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="akida.Model">
-<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">backend</span><span class="o">=</span><span class="default_value">BackendType.Software</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">backend</span><span class="o">=</span><span class="default_value">BackendType.Software</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>An Akida neural <code class="docutils literal notranslate"><span class="pre">Model</span></code>, represented as a hierarchy of layers.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">Model</span></code> class is the main interface to Akida.</p>
 <p>It provides methods to instantiate, train, test and save models.</p>
@@ -437,7 +440,7 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.add" title="akida.Model.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(self, layer)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.add" title="akida.Model.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code></a>(self, layer, inbound_layers)</p></td>
 <td><p>Add a layer to the current model.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.add_classes" title="akida.Model.add_classes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_classes</span></code></a>(num_add_classes)</p></td>
@@ -455,40 +458,37 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.forward" title="akida.Model.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(input)</p></td>
 <td><p>Forwards a set of images or events through the model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_device" title="akida.Model.get_device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_device</span></code></a>(self)</p></td>
-<td><p>Get the HWDevice object associated to the model (only works with</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_layer" title="akida.Model.get_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_layer" title="akida.Model.get_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer</span></code></a>(*args, **kwargs)</p></td>
 <td><p>Overloaded function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_layer_count" title="akida.Model.get_layer_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer_count</span></code></a>(self)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_layer_count" title="akida.Model.get_layer_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer_count</span></code></a>(self)</p></td>
 <td><p>The number of layers.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_layer_statistics" title="akida.Model.get_layer_statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer_statistics</span></code></a>(layer)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_layer_statistics" title="akida.Model.get_layer_statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer_statistics</span></code></a>(layer)</p></td>
 <td><p>Get the LayerStatistics object attached to the specified layer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_observer" title="akida.Model.get_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_observer</span></code></a>(layer)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_observer" title="akida.Model.get_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_observer</span></code></a>(layer)</p></td>
 <td><p>Get the Observer object attached to the specified layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_statistics" title="akida.Model.get_statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_statistics</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_statistics" title="akida.Model.get_statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_statistics</span></code></a>()</p></td>
 <td><p>Get statistics by layer for this network.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.pop_layer" title="akida.Model.pop_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_layer</span></code></a>(self)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.pop_layer" title="akida.Model.pop_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_layer</span></code></a>(self)</p></td>
 <td><p>Remove the last layer of the current model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.predict" title="akida.Model.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(input[, num_classes])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.predict" title="akida.Model.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(input[, num_classes])</p></td>
 <td><p>Returns the model class predictions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.register_observer" title="akida.Model.register_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_observer</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.register_observer" title="akida.Model.register_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_observer</span></code></a>(*args, **kwargs)</p></td>
 <td><p>Overloaded function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.save" title="akida.Model.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(self, model_file)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.save" title="akida.Model.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(self, model_file)</p></td>
 <td><p>Saves all the model configuration (all layers and weights) to a file on disk.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.summary" title="akida.Model.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.summary" title="akida.Model.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
 <td><p>Prints a string summary of the model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.unregister_observer" title="akida.Model.unregister_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unregister_observer</span></code></a>(self, observer_id)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.unregister_observer" title="akida.Model.unregister_observer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unregister_observer</span></code></a>(self, observer_id)</p></td>
 <td><p>Unregisters an observer method from a layer</p></td>
 </tr>
 </tbody>
@@ -513,7 +513,7 @@
 </table>
 <dl class="py method">
 <dt id="akida.Model.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">backend</span><span class="o">=</span><span class="default_value">BackendType.Software</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">backend</span><span class="o">=</span><span class="default_value">BackendType.Software</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an empty <code class="docutils literal notranslate"><span class="pre">Model</span></code>, a <code class="docutils literal notranslate"><span class="pre">Model</span></code> template from a YAML file,
 or a full <code class="docutils literal notranslate"><span class="pre">Model</span></code> from a serialized file.</p>
 <dl class="field-list simple">
@@ -521,7 +521,11 @@ or a full <code class="docutils literal notranslate"><span class="pre">Model</sp
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – path of the YAML file containing the model
 architecture, or a serialized Model.
-If None, an empty sequential model will be created.</p></li>
+If None, an empty sequential model will be created, or filled
+with the layers in the layers parameter.</p></li>
+<li><p><strong>layers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code>, optional) – list of layers that will be copied
+to the new model. If the list does not start with an input layer,
+it will be added automatically.</p></li>
 <li><p><strong>backend</strong> (<a class="reference internal" href="#akida.BackendType" title="akida.BackendType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BackendType</span></code></a>, optional) – backend to run the model on.</p></li>
 </ul>
 </dd>
@@ -530,11 +534,18 @@ If None, an empty sequential model will be created.</p></li>
 
 <dl class="py method">
 <dt id="akida.Model.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.ModelBase</em>, <em class="sig-param">layer: akida::Layer</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#akida.Model.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">self: akida.core.ModelBase</em>, <em class="sig-param">layer: akida::Layer</em>, <em class="sig-param">inbound_layers: List[akida::Layer] = []</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#akida.Model.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a layer to the current model.</p>
+<p>A list of inbound layers can optionally be specified.
+These layers must already be included in the model.
+if no inbound layer is specified, and the layer is not the first layer
+in the model, the last included layer will be used as inbound layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>layer</strong> (<em>one of the available layers</em>) – layer instance to be added to the model</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<em>one of the available layers</em>) – layer instance to be added to the model</p></li>
+<li><p><strong>inbound_layers</strong> (a list of <cite>Layer</cite>) – an optional list of inbound layers</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -710,13 +721,6 @@ numpy array.</p>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="akida.Model.get_device">
-<code class="sig-name descname">get_device</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">akida.core.ModelBase</span></em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#akida.Model.get_device" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the HWDevice object associated to the model (only works with
-hardware models)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1031,19 +1035,16 @@ them, with these details:</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.compile" title="akida.Layer.compile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile</span></code></a>(self, num_weights, num_classes, …)</p></td>
-<td><p>Prepare a Layer for training</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.get_learning_histogram" title="akida.Layer.get_learning_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_learning_histogram</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.get_learning_histogram" title="akida.Layer.get_learning_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_learning_histogram</span></code></a>()</p></td>
 <td><p>Returns an histogram of learning percentages.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.get_variable" title="akida.Layer.get_variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_variable</span></code></a>(name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.get_variable" title="akida.Layer.get_variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_variable</span></code></a>(name)</p></td>
 <td><p>Get the value of a layer variable.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.get_variable_names" title="akida.Layer.get_variable_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_variable_names</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.get_variable_names" title="akida.Layer.get_variable_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_variable_names</span></code></a>()</p></td>
 <td><p>Get the list of variable names for this layer.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.set_variable" title="akida.Layer.set_variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_variable</span></code></a>(name, values)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.set_variable" title="akida.Layer.set_variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_variable</span></code></a>(name, values)</p></td>
 <td><p>Set the value of a layer variable.</p></td>
 </tr>
 </tbody>
@@ -1075,29 +1076,6 @@ them, with these details:</p>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt id="akida.Layer.compile">
-<code class="sig-name descname">compile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">akida.core.Layer</span></em>, <em class="sig-param"><span class="n">num_weights</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">num_classes</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">initial_plasticity</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">learning_competition</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">min_plasticity</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.10000000149011612</span></em>, <em class="sig-param"><span class="n">plasticity_decay</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.25</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#akida.Layer.compile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare a Layer for training</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_weights</strong> (<em>int</em>) – number of connections for each neuron.</p></li>
-<li><p><strong>num_classes</strong> (<em>int</em><em>, </em><em>optional</em>) – number of classes when running in a
-‘labeled mode’.</p></li>
-<li><p><strong>initial_plasticity</strong> (<em>float</em><em>, </em><em>optional</em>) – defines how easily the weights
-will change when learning occurs.</p></li>
-<li><p><strong>learning_competition</strong> (<em>float</em><em>, </em><em>optional</em>) – controls competition between
-neurons.</p></li>
-<li><p><strong>min_plasticity</strong> (<em>float</em><em>, </em><em>optional</em>) – defines the minimum level to which
-plasticity will decay.</p></li>
-<li><p><strong>plasticity_decay</strong> (<em>float</em><em>, </em><em>optional</em>) – defines the decay of plasticity
-with each learning step.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt id="akida.Layer.get_learning_histogram">
 <code class="sig-name descname">get_learning_histogram</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#akida.Layer.get_learning_histogram" title="Permalink to this definition">¶</a></dt>

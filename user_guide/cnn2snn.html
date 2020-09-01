@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.5
+                Akida 1.8.7
               </div>
             
           
@@ -131,21 +131,23 @@
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">CNN2SNN toolkit</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#conversion-workflow">Conversion Workflow</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#compatibility-constraints">Compatibility Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#conversion-workflow">Conversion workflow</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#typical-training-scenario">Typical training scenario</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#design-compatibility-constraints">Design compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quantization-compatibility-constraints">Quantization compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#command-line-interface">Command-line interface</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#layers-considerations">Layers Considerations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#supported-layer-types">Supported layer types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#quantization-aware-layers">Quantization-aware layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cnn2snn-quantization-aware-layers">CNN2SNN Quantization-aware layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#training-only-layers">Training-Only Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#first-layers">First Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id6">Final Layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#layer-blocks">Layer Blocks</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id7">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#separable-conv-block"><code class="docutils literal notranslate"><span class="pre">separable_conv_block</span></code></a></li>
@@ -187,6 +189,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantize">quantize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
@@ -424,7 +427,7 @@
 <h1>CNN2SNN toolkit<a class="headerlink" href="#cnn2snn-toolkit" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The Brainchip CNN2SNN toolkit provides a means to convert Convolutional Neural
+<p>The Brainchip CNN2SNN toolkit provides means to convert Convolutional Neural
 Networks (CNN) that were trained using Deep Learning methods to a low-latency
 and low-power Spiking Neural Network (SNN) for use with the Akida Execution
 Engine. This document is a guide to that process.</p>
@@ -438,114 +441,157 @@ bitwidth “synapses” or weights of connections between neurons.</p>
 <p>Despite the apparent fundamental differences between SNNs and CNNs, the
 underlying mathematical operations performed by each may be rendered identical.
 Consequently, the trained parameters of a CNN can be converted to be
-Akida-compatible, given only a small number of constraints <a class="footnote-reference brackets" href="#fn-1" id="id1">1</a>. By careful
+Akida-compatible, given only a small number of constraints. By careful
 attention to specifics in the architecture and training of the CNN, an overly
 complex conversion step from CNN to SNN can be avoided. The CNN2SNN toolkit
 comprises a set of functions designed for the popular <a class="reference external" href="https://www.tensorflow.org/guide/keras">Tensorflow Keras</a> framework, making it easy to train a
 SNN-compatible network.</p>
 <div class="section" id="conversion-workflow">
-<h3>Conversion Workflow<a class="headerlink" href="#conversion-workflow" title="Permalink to this headline">¶</a></h3>
-<a class="reference external image-reference" href="../_images/CNN2SNN_Flow.png"><img alt="CNN2SNN Flow" src="../_images/CNN2SNN_Flow.png" /></a>
-</div>
-<div class="section" id="compatibility-constraints">
-<h3>Compatibility Constraints<a class="headerlink" href="#compatibility-constraints" title="Permalink to this headline">¶</a></h3>
-<p>When designing a model from scratch, or converting an existing model to obtain a
-final Akida-compatible model, consider compatibility at these distinct
-levels:</p>
-<ul class="simple">
-<li><p>Weights must be quantized (using <a class="reference external" href="hw_constraints.html">1, 2, 3, 4 or 8 bits</a>).</p></li>
-<li><p>Activations should be quantized too (using 1, 2 or 4 bits, with maximum spike
-value set to 15<a class="footnote-reference brackets" href="#fn-2" id="id2">2</a>). This is necessary for preparing a CNN compatible
-with the Akida SNN model. Brainchip provides easy-to-use custom functions for
-this purpose. The use of tf.keras layers is described in the next chapter.</p></li>
-<li><p>Modification or substitution of a layer will be required when a method that is
-used in the CNN is not compatible with the Akida architecture. For instance,
-this can be the case for residual connections.</p></li>
-</ul>
-<p>Only serial and feedforward arrangements can be converted<a class="footnote-reference brackets" href="#fn-3" id="id3">3</a>.</p>
-<p>Please refer to the <a class="reference external" href="hw_constraints.html">Hardware constraints</a> page for full
-details.</p>
-<p>Note that our experience reveals that although existing Keras models can be
-quantized almost without loss to 8 bits, a quantization-aware training of the
-model is required for lower quantization bitwidths.</p>
-<p>For that reason, the CNN2SNN toolkit includes quantization-aware versions of
-the base Keras layer types.</p>
+<h3>Conversion workflow<a class="headerlink" href="#conversion-workflow" title="Permalink to this headline">¶</a></h3>
+<a class="reference external image-reference" href="../_images/CNN2SNN_Flow.png"><img alt="CNN2SNN Flow" src="../_images/CNN2SNN_Flow.png" style="width: 610.8px; height: 498.59999999999997px;" /></a>
 </div>
 <div class="section" id="typical-training-scenario">
 <h3>Typical training scenario<a class="headerlink" href="#typical-training-scenario" title="Permalink to this headline">¶</a></h3>
-<p>We recommend preparing your model for the in two (or more) training episodes.
-In the first episode, train with the standard Keras versions of the weights
-and activations.</p>
-<p>Once it is established that the overall model configuration prior to
-quantization yields a satisfactory performance on the task, proceed with
-quantization suitable for Akida architecture, changing only the quantization
-parameters.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There is an hardware compatibility check helper available once the model
-has been converted to the Akida Execution engine (see <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.summary">summary</a> API).
-We strongly recommend running it prior to long lasting training sessions.</p>
+<p>The first step in the conversion workflow is to train a standard Keras model.
+This trained model is the starting point for the quantization stage. Once it is
+established that the overall model configuration prior to quantization yields a
+satisfactory performance on the task, we can proceed with quantization.</p>
+<p>The CNN2SNN toolkit offers a turnkey solution to quantize a model:
+the <a class="reference external" href="../api_reference/cnn2snn_apis.html#quantize">quantize</a> function. It
+replaces the neural Keras layers (Conv2D, SeparableConv2D and Dense) and
+the ReLU layers with custom CNN2SNN layers, which are quantization-aware
+derived versions of the base Keras layer types. The obtained quantized model is
+still a Keras model with a mix of CNN2SNN quantized layers (QuantizedReLU,
+QuantizedDense, etc.) and standard Keras layers (BatchNormalization, MaxPool2D,
+etc.).</p>
+<p>Direct quantization of a standard Keras model (also called post-training
+quantization) generally introduces a drop in performance. This drop is usually
+small for 8-bit or even 4-bit quantization of simple models, but it can be very
+significant for low quantization bitwidth and complex models.</p>
+<p>If the quantized model offers acceptable performance, it can be directly
+converted into an Akida model, ready to be loaded on the Akida NSoC (see the
+<a class="reference external" href="../api_reference/cnn2snn_apis.html#convert">convert</a> function).</p>
+<p>However, if the performance drop is too high, a quantization-aware training is
+required to recover the performance prior to quantization. Since the quantized
+model is a Keras model, it can then be trained using the standard Keras API.</p>
+<p>Note that quantizing directly to the target bitwidth is not mandatory: it is
+possible to proceed with quantization in a serie of smaller steps.
+For example, it may be beneficial to keep float weights and only quantize
+activations, retrain, and then, quantize weights.</p>
 </div>
-<p>We recommend saving the weights of your trained non-quantized model and using
-those to initialize the quantized version; typically leading to both faster
-convergence and better final performance values.
-See the provided tutorials for examples.</p>
-<p>Also, it is possible to proceed with quantization in a serie of smaller steps.
-For example, it may be beneficial to train, first with all
-standard/floating-point values, then retrain with quantized activations, and
-then, finally, with quantized weights.</p>
-<p>It is possible to subdivide even further – going step by step through the
-individual layers and even modifying the targeted network sparsity<a class="footnote-reference brackets" href="#fn-4" id="id4">4</a> to
-achieve an optimal trade-off between accuracy and speed.</p>
+<div class="section" id="design-compatibility-constraints">
+<h3>Design compatibility constraints<a class="headerlink" href="#design-compatibility-constraints" title="Permalink to this headline">¶</a></h3>
+<p>When designing a tf.keras model, consider design compatibility at these
+distinct levels before the quantization stage:</p>
+<ul class="simple">
+<li><p>Only serial and feedforward arrangements can be converted<a class="footnote-reference brackets" href="#fn-2" id="id1">2</a>.</p></li>
+<li><p>Supported Keras layers are listed <a class="reference external" href="#supported-layer-types">below</a>.</p></li>
+<li><p>Order of the layers is important, e.g. a BatchNormalization layer
+must be placed before the activation, and not after.</p></li>
+<li><p>Some constraints are needed about layer’s parameters, e.g. a MaxPool2D layer
+must have the same padding as its corresponding convolutional layer.</p></li>
+</ul>
+<p>All these design compatibility constraints are summarized in the CNN2SNN
+<a class="reference external" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a>
+function. A good practice is to check model compatibility before going through
+the training process <a class="footnote-reference brackets" href="#fn-3" id="id2">3</a>.</p>
+<p>Helpers (see <a class="reference internal" href="#layer-blocks"><span class="std std-ref">Layer Blocks</span></a>) are available in the <code class="docutils literal notranslate"><span class="pre">akida_models</span></code>
+PyPi package to easily create a compatible Keras model from scratch.</p>
+</div>
+<div class="section" id="quantization-compatibility-constraints">
+<h3>Quantization compatibility constraints<a class="headerlink" href="#quantization-compatibility-constraints" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the model design constraints, the Akida NSoC has several
+quantization constraints:</p>
+<ul class="simple">
+<li><p>Weights of the neural layers must be quantized using
+<a class="reference external" href="hw_constraints.html">1, 2, 3, 4 or 8 bits</a>.</p></li>
+<li><p>Activations should be quantized too using 1, 2 or 4 bits, with maximum spike
+value set to 15<a class="footnote-reference brackets" href="#fn-4" id="id3">4</a>.</p></li>
+<li><p>Every neural layer accepts inputs with different quantization parameters,
+e.g. a quantized Dense layer can only accept 1-bit or 2-bit inputs.</p></li>
+</ul>
+<p>Please refer to the <a class="reference external" href="hw_constraints.html">Hardware constraints</a> page for full
+details.</p>
+</div>
+<div class="section" id="command-line-interface">
+<h3>Command-line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the cnn2snn programming API, the CNN2SNN toolkit also provides a
+command-line interface to perform quantization and conversion to an Akida NSoC
+compatible model.</p>
+<p>Quantizing a standard Keras model or a CNN2SNN quantized model using the CLI
+makes use of the <code class="docutils literal notranslate"><span class="pre">cnn2snn.quantize</span></code> Python function. The same arguments, i.e.
+the quantization bitwidths for weights and activations, are required.</p>
+<p><strong>Examples</strong></p>
+<p>Quantize a standard Keras model with 4-bit weights and activations and 8-bit
+input weights:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cnn2snn -m model_keras.h5 quantize -wq <span class="m">4</span> -aq <span class="m">4</span> -iq <span class="m">8</span>
+</pre></div>
+</div>
+<p>The quantized model is automatically saved to <code class="docutils literal notranslate"><span class="pre">model_keras_iq8_wq4_aq4.h5</span></code>.</p>
+<p>Quantize an already quantized model with different quantization bitwidths:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cnn2snn -m model_keras_iq8_wq4_aq4.h5 -wq <span class="m">2</span> -aq <span class="m">2</span>
+</pre></div>
+</div>
+<p>A new quantized model named <code class="docutils literal notranslate"><span class="pre">model_keras_iq2_wq2_aq2.h5</span></code> is saved.</p>
+<p>Converting a CNN2SNN quantized model into an Akida model using the CLI makes use
+of the <code class="docutils literal notranslate"><span class="pre">cnn2snn.convert</span></code> Python function. The same arguments, i.e.
+the input scaling and whether the inputs are sparse, are required.</p>
+<p><strong>Examples</strong></p>
+<p>Convert a quantized model without input scaling and with image inputs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert
+</pre></div>
+</div>
+<p>An Akida .fbz model named <code class="docutils literal notranslate"><span class="pre">model_keras_iq2_wq2_aq2.fbz</span></code> is then saved.</p>
+<p>Convert a quantized model with input scaling of (255, 0) and with sparse inputs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert -sc <span class="m">255</span> -sh <span class="m">0</span> -sp True
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="layers-considerations">
 <h2>Layers Considerations<a class="headerlink" href="#layers-considerations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="supported-layer-types">
 <h3>Supported layer types<a class="headerlink" href="#supported-layer-types" title="Permalink to this headline">¶</a></h3>
-<p>The CNN2SNN toolkit currently supports the following layer types:</p>
+<p>The CNN2SNN toolkit provides quantization of Keras models with the following
+Keras layer types:</p>
 <ul class="simple">
 <li><p><strong>Core Neural Layers</strong>:</p>
 <ul>
-<li><p><a class="reference external" href="../api_reference/cnn2snn_apis.html#quantizeddense">QuantizedDense</a>,
-a quantization-aware child of Keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense">Dense</a></p></li>
-<li><p><a class="reference external" href="../api_reference/cnn2snn_apis.html#quantizedconv2d">QuantizedConv2D</a>,
-a quantization-aware child of Keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D">Conv2D</a></p></li>
+<li><p>tf.keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense">Dense</a></p></li>
+<li><p>tf.keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D">Conv2D</a></p></li>
 </ul>
 </li>
 <li><p><strong>Specialized Layers</strong>:</p>
 <ul>
-<li><p><a class="reference external" href="../api_reference/cnn2snn_apis.html#quantizedseparableconv2d">QuantizedSeparableConv2D</a>,
-a quantization-aware child of Keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/SeparableConv2D">SeparableConv2D</a></p></li>
+<li><p>tf.keras <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/layers/SeparableConv2D">SeparableConv2D</a></p></li>
 </ul>
 </li>
 <li><p><strong>Other Layers (from tf.keras)</strong>:</p>
 <ul>
+<li><p>ReLU</p></li>
 <li><p>BatchNormalization</p></li>
 <li><p>MaxPooling2D</p></li>
-<li><p>AveragePooling2D</p></li>
 <li><p>GlobalAveragePooling2D</p></li>
 <li><p>Dropout</p></li>
+<li><p>Flatten</p></li>
+<li><p>Reshape</p></li>
+<li><p>Input</p></li>
 </ul>
 </li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Akida <a class="reference external" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a>
-function gives an indication regarding incompatible layers before conversion.
-A good practice is to check model compatibility before going through the
-training process.</p>
 </div>
-</div>
-<div class="section" id="quantization-aware-layers">
-<h3>Quantization-aware layers<a class="headerlink" href="#quantization-aware-layers" title="Permalink to this headline">¶</a></h3>
-<p>Several articles have reported<a class="footnote-reference brackets" href="#fn-5" id="id5">5</a> that the quantization of a pre-trained
-float Keras model using 8 bits precision can be performed with a minimal loss
-of accuracy, but that for lower bitwidth a quantization-aware training of the
-model is required. This is confirmed by our own experiments.</p>
+<div class="section" id="cnn2snn-quantization-aware-layers">
+<h3>CNN2SNN Quantization-aware layers<a class="headerlink" href="#cnn2snn-quantization-aware-layers" title="Permalink to this headline">¶</a></h3>
+<p>Several articles have reported<a class="footnote-reference brackets" href="#fn-5" id="id4">5</a> that the quantization of a pre-trained
+float Keras model using 8-bit precision can be performed with a minimal loss
+of accuracy for simple models, but that for lower bitwidth or complex models a
+quantization-aware re-training of the quantized model may be required.</p>
 <p>The CNN2SNN toolkit therefore includes quantization-aware versions of the base
 Keras layers.</p>
-<p>Quantization aware training simulates the effect of quantization in the forward
+<p>These layers are produced when quantizing a standard Keras model using the
+<code class="docutils literal notranslate"><span class="pre">quantize</span></code> function: it replaces the base Keras layers with their quantization-aware
+counterparts (see the <a class="reference external" href="../api_reference/cnn2snn_apis.html#quantize">quantize</a> function).</p>
+<p>Quantization-aware training simulates the effect of quantization in the forward
 pass, yet using a straight-through estimator for the quantization gradient in
 the backward pass.
 For the stochastic gradient descent to be efficient, the weights are stored as
@@ -562,7 +608,7 @@ This ensures sufficient precision in accumulating tiny weights adjustments.</p>
 </li>
 <li><p><strong>quantized activation layers</strong>:</p>
 <ul>
-<li><p><a class="reference external" href="../api_reference/cnn2snn_apis.html#activationdiscreterelu">ActivationDiscreteRelu</a></p></li>
+<li><p><a class="reference external" href="../api_reference/cnn2snn_apis.html#quantizedrelu">QuantizedReLU</a></p></li>
 </ul>
 </li>
 </ul>
@@ -571,16 +617,7 @@ those used when defining a model using standard Keras layers. However, each of
 these layers also includes a <code class="docutils literal notranslate"><span class="pre">quantizer</span></code> parameter that specifies the
 <a class="reference external" href="../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a>
 object to use during the quantization-aware training.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><a class="reference external" href="../api_reference/cnn2snn_apis.html#quantizedconv2d">QuantizedConv2D</a>,
-supports convolutions with stride 1 only: to adapt an existing model with a
-higher convolution stride, we suggest substituting a convolution with stride
-1 followed by a pooling step of the appropriate size and stride. Only
-exception: if the first layer of the CNN model with image inputs is a
-QuantizedConv2D, a convolution stride is supported.</p>
-</div>
-<p>The quantized activation layer takes a single parameter corresponding to the
+<p>The quantized ReLU takes a single parameter corresponding to the
 bitwidth of the quantized activations.</p>
 </div>
 <div class="section" id="training-only-layers">
@@ -610,7 +647,7 @@ is however able to receive image data (8-bit grayscale or RGB). See the
 <p>The CNN2SNN toolkit supports any quantization-aware training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
-accept dense inputs, thanks to the special (<a class="reference external" href="../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a>)
+accept dense inputs, thanks to the special <a class="reference external" href="../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a>
 layer.</p>
 <div class="section" id="input-scaling">
 <h4>Input Scaling<a class="headerlink" href="#input-scaling" title="Permalink to this headline">¶</a></h4>
@@ -647,18 +684,18 @@ Akida-compatible implementations of the model, it is likely be at this step.</p>
 </div>
 </div>
 <div class="section" id="layer-blocks">
-<h2>Layer Blocks<a class="headerlink" href="#layer-blocks" title="Permalink to this headline">¶</a></h2>
-<p>Ensuring the conversion compatibility of a CNN model into an Akida model can
-be tricky. Therefore, a higher-level interface is proposed with the use of
-layer blocks. These blocks are available in the <code class="docutils literal notranslate"><span class="pre">akida_models</span></code> PyPi package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">akida_models.quantization_blocks</span>
+<span id="id7"></span><h2>Layer Blocks<a class="headerlink" href="#layer-blocks" title="Permalink to this headline">¶</a></h2>
+<p>Ensuring that the design of a Keras model is compatible for conversion into
+an Akida model can be tricky. Therefore, a higher-level interface is proposed
+with the use of layer blocks. These blocks are available in the
+<code class="docutils literal notranslate"><span class="pre">akida_models</span></code> PyPi package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">akida_models.layer_blocks</span>
 </pre></div>
 </div>
-<div class="section" id="id7">
-<h3>Overview<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Overview<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <p>In Keras, when adding a core layer type (<code class="docutils literal notranslate"><span class="pre">Dense</span></code> or <code class="docutils literal notranslate"><span class="pre">Conv2D</span></code>) to a
-model, an
-activation function is typically included:</p>
+model, an activation function is typically included:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -674,9 +711,8 @@ a normalization of values before applying the activation function:</p>
 <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This particular arrangement of layers is important during the quantization-aware
-training of Akida-compatible CNNs and is therefore reflected in the blocks
-API.</p>
+<p>This particular arrangement of layers is important for conversion and is
+therefore reflected in the blocks API.</p>
 <p>For instance, the following code snippet sets up the same trio of layers as
 those above:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -686,10 +722,8 @@ those above:</p>
 “block”.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><strong>quantization_block = QuantizedConv2D/Dense/SeparableConv2D + (Pooling)
-+ (BatchNorm) + (Activation)</strong></p>
 <p>To avoid adding the activation layer, add the parameter
-<code class="docutils literal notranslate"><span class="pre">activ_quantization</span> <span class="pre">=</span> <span class="pre">None</span></code> to the block.</p>
+<code class="docutils literal notranslate"><span class="pre">add_activation</span> <span class="pre">=</span> <span class="pre">False</span></code> to the block.</p>
 </div>
 <p>The option of including pooling, batchnorm layers or activation is directly
 built into the provided block modules.
@@ -700,18 +734,17 @@ The layer block functions provided are:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">dense_block</span></code>.</p></li>
 </ul>
 <p>Most of the parameters for these blocks are identical to those passed to the
-corresponding inner quantized processing layers.</p>
+corresponding inner processing layers, such as strides and bias.</p>
 </div>
 <div class="section" id="conv-block">
 <h3><code class="docutils literal notranslate"><span class="pre">conv_block</span></code><a class="headerlink" href="#conv-block" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
                <span class="n">filters</span><span class="p">,</span>
                <span class="n">kernel_size</span><span class="p">,</span>
-               <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-               <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </pre></div>
 </div>
@@ -720,9 +753,8 @@ corresponding inner quantized processing layers.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">dense_block</span></code><a class="headerlink" href="#dense-block" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dense_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
                 <span class="n">units</span><span class="p">,</span>
-                <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -732,11 +764,10 @@ corresponding inner quantized processing layers.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">separable_conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
                          <span class="n">filters</span><span class="p">,</span>
                          <span class="n">kernel_size</span><span class="p">,</span>
-                         <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                         <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                          <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                          <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -756,25 +787,26 @@ convolutional layers that contain smaller filters</a>.</p></li>
 </ul>
 <hr class="docutils" />
 <dl class="footnote brackets">
-<dt class="label" id="fn-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Typically, for the Akida harware – quantized weights and quantized
-activations.</p>
-</dd>
-<dt class="label" id="fn-2"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>The spike value depends on the intensity of the potential, see the
-<a class="reference external" href="aee.html">Akida documentation</a> for details on the activation.</p>
-</dd>
-<dt class="label" id="fn-3"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
-<dd><p>Parallel layers and “residual” connections are currently not
-supported.</p>
-</dd>
-<dt class="label" id="fn-4"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dt class="label" id="fn-1"><span class="brackets">1</span></dt>
 <dd><p>Sparsity refers to the fraction of both weights and activations with
 value zero.</p>
 </dd>
-<dt class="label" id="fn-5"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
-<dd><p>See for instance “Quantizing deep convolutional networks for
-efficient inference: A whitepaper” - Raghuraman Krishnamoorthi, 2018</p>
+<dt class="label" id="fn-2"><span class="brackets"><a class="fn-backref" href="#id1">2</a></span></dt>
+<dd><p>Parallel layers and “residual” connections are currently not
+supported.</p>
+</dd>
+<dt class="label" id="fn-3"><span class="brackets"><a class="fn-backref" href="#id2">3</a></span></dt>
+<dd><p>Check model compatibility must be applied on a quantized model. It
+then requires to quantize the model first.</p>
+</dd>
+<dt class="label" id="fn-4"><span class="brackets"><a class="fn-backref" href="#id3">4</a></span></dt>
+<dd><p>The spike value depends on the intensity of the potential, see the
+<a class="reference external" href="aee.html">Akida documentation</a> for details on the activation.</p>
+</dd>
+<dt class="label" id="fn-5"><span class="brackets"><a class="fn-backref" href="#id4">5</a></span></dt>
+<dd><p>See for instance <a class="reference external" href="https://arxiv.org/pdf/1806.08342.pdf">“Quantizing deep convolutional networks for
+efficient inference: A whitepaper”</a>
+- Raghuraman Krishnamoorthi, 2018</p>
 </dd>
 </dl>
 </div>
