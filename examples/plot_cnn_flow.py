@@ -216,7 +216,7 @@ print('Test accuracy after 2-2-1 quantization:', score[1])
 
 ######################################################################
 # 5. Model fine tuning (quantization-aware training)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This quantization-aware training (fine tuning) allows to cover the
 # performance drop due to the quantization step.
@@ -232,7 +232,7 @@ print('Test accuracy after fine tuning:', score[1])
 
 ######################################################################
 # 6. Model conversion
-# ~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~
 #
 # After having obtained a quantized model with satisfactory performance, it can
 # be converted to a model suitable to be used in the Akida NSoC in inference
