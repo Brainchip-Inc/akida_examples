@@ -73,3 +73,18 @@ Akida models API
     Preprocessing
     *************
     .. autofunction:: akida_models.utk_face.preprocessing.load_data
+
+    YOLO
+    ---------
+
+    .. autofunction:: akida_models.yolo_base
+    .. autofunction:: akida_models.yolo_widerface_pretrained
+    .. autofunction:: akida_models.yolo_voc_pretrained
+
+    Processing
+    ~~~~~~~~~~
+    .. autofunction:: akida_models.detection.processing.load_image
+    .. autofunction:: akida_models.detection.processing.preprocess_image
+    .. autofunction:: akida_models.detection.processing.decode_output
+    .. autoclass:: akida_models.detection.processing.BoundingBox
+        :members:
