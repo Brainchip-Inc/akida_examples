@@ -29,6 +29,8 @@ Akida models API
     ImageNet
     ~~~~~~~~~~~~~~~~~~
     .. autofunction:: akida_models.mobilenet_imagenet
+    .. autofunction:: akida_models.mobilenet_imagenet_pretrained
+    .. autofunction:: akida_models.mobilenet_cats_vs_dogs_pretrained
 
     Preprocessing
     *************
@@ -46,10 +48,12 @@ Akida models API
     CIFAR-10
     ~~~~~~~~~~~~~~~~~
     .. autofunction:: akida_models.ds_cnn_cifar10
+    .. autofunction:: akida_models.ds_cnn_cifar10_pretrained
 
     KWS
     ~~~~~~~~~~~~~
     .. autofunction:: akida_models.ds_cnn_kws
+    .. autofunction:: akida_models.ds_cnn_kws_pretrained
 
     Preprocessing
     *************
@@ -65,10 +69,12 @@ Akida models API
     CIFAR-10
     ~~~~~~~~~~~
     .. autofunction:: akida_models.vgg_cifar10
+    .. autofunction:: akida_models.vgg_cifar10_pretrained
 
     UTK Face
     ~~~~~~~~
     .. autofunction:: akida_models.vgg_utk_face
+    .. autofunction:: akida_models.vgg_utk_face_pretrained
 
     Preprocessing
     *************
