@@ -95,8 +95,10 @@ All these design compatibility constraints are summarized in the CNN2SNN
 function. A good practice is to check model compatibility before going through
 the training process [#fn-3]_.
 
-Helpers (see :ref:`layer_blocks`) are available in the ``akida_models``
-PyPi package to easily create a compatible Keras model from scratch.
+Helpers (see `Layer Blocks
+<../api_reference/akida_models_apis.html#layer-blocks>`_) are available in the
+``akida_models`` PyPi package to easily create a compatible Keras model from
+scratch.
 
 Quantization compatibility constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -309,114 +311,6 @@ the model.
 However, if there is a difference in performance between the Keras and the
 Akida-compatible implementations of the model, it is likely be at this step.
 
-.. _layer_blocks:
-
-Layer Blocks
-------------
-
-Ensuring that the design of a Keras model is compatible for conversion into
-an Akida model can be tricky. Therefore, a higher-level interface is proposed
-with the use of layer blocks. These blocks are available in the
-``akida_models`` PyPi package:
-
-.. code-block:: python
-
-   import akida_models.layer_blocks
-
-Overview
-^^^^^^^^
-
-In Keras, when adding a core layer type (\ ``Dense`` or ``Conv2D``\ ) to a
-model, an activation function is typically included:
-
-.. code-block:: python
-
-   x = Dense(64, activation='relu')(x)
-
-or the equivalent, explicitly adding the activation function separately:
-
-.. code-block:: python
-
-   x = Dense(64)(x)
-   x = Activation('relu'))(x)
-
-It is very common for other functions to be included in this arrangement, e.g.,
-a normalization of values before applying the activation function:
-
-.. code-block:: python
-
-   x = Dense(64)(x)
-   x = BatchNormalization()(x)
-   x = Activation('relu')(x)
-
-This particular arrangement of layers is important for conversion and is
-therefore reflected in the blocks API.
-
-For instance, the following code snippet sets up the same trio of layers as
-those above:
-
-.. code-block:: python
-
-   x = dense_block(x, 64, add_batchnorm=True)
-
-The ``dense_block`` function will produce a group of layers that we call a
-"block".
-
-.. note::
-    To avoid adding the activation layer, add the parameter
-    ``add_activation = False`` to the block.
-
-
-The option of including pooling, batchnorm layers or activation is directly
-built into the provided block modules.
-The layer block functions provided are:
-
-
-* ``conv_block``\ ,
-* ``separable_conv_block``\ ,
-* ``dense_block``.
-
-Most of the parameters for these blocks are identical to those passed to the
-corresponding inner processing layers, such as strides and bias.
-
-``conv_block``
-^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def conv_block(inputs,
-                  filters,
-                  kernel_size,
-                  pooling=None,
-                  pool_size=(2, 2),
-                  add_batchnorm=False,
-                  add_activation=True,
-                  **kwargs):
-
-``dense_block``
-^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def dense_block(inputs,
-                   units,
-                   add_batchnorm=False,
-                   add_activation=True,
-                   **kwargs)
-
-``separable_conv_block``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def separable_conv_block(inputs,
-                            filters,
-                            kernel_size,
-                            pooling=None,
-                            pool_size=(2, 2),
-                            add_batchnorm=False,
-                            add_activation=True,
-                            **kwargs)
 
 Tips and Tricks
 ---------------
