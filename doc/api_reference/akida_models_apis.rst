@@ -20,6 +20,21 @@ Akida models API
     -----------
     .. autofunction:: akida_models.quantization_blocks.dense_block
 
+    Layer blocks
+    ===================
+
+    conv_block
+    ----------
+    .. autofunction:: akida_models.layer_blocks.conv_block
+
+    separable_conv_block
+    --------------------
+    .. autofunction:: akida_models.layer_blocks.separable_conv_block
+
+    dense_block
+    -----------
+    .. autofunction:: akida_models.layer_blocks.dense_block
+
     Model zoo
     =========
 
