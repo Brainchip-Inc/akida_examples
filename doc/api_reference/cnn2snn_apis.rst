@@ -34,6 +34,20 @@ CNN2SNN Toolkit API
 
         .. automethod:: __init__
 
+    MaxQuantizer
+    ============
+    .. autoclass:: MaxQuantizer
+        :members:
+
+        .. automethod:: __init__
+
+    MaxPerAxisQuantizer
+    ===================
+    .. autoclass:: MaxPerAxisQuantizer
+        :members:
+
+        .. automethod:: __init__
+
     WeightFloat
     ===========
     .. autoclass:: WeightFloat
