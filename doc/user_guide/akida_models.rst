@@ -1,6 +1,6 @@
 
-Akida models toolkit
-====================
+Akida models zoo
+================
 
 Overview
 --------
@@ -21,16 +21,17 @@ that are used to define the above models.
 Command-line interface for model creation
 -----------------------------------------
 
-In addition to the programming API, the akida_models toolkit provides a
-command-line interface to instanciate and save models from the zoo.
+In addition to `the programming API <../api_reference/akida_models_apis.html>`_,
+the akida_models toolkit provides a command-line interface to instantiate and
+save models from the zoo.
 
-Instanciating models using the CLI makes use of the model definitions from the
+Instantiating models using the CLI makes use of the model definitions from the
 programming interface with default values. To quantize a given model, the
 `CNN2SNN quantize CLI <cnn2snn.html#command-line-interface>`_ should be used.
 
 **Examples**
 
-Instanciate a DS-CNN (MobileNet inspired) network for cifar10 (object
+Instantiate a DS-CNN (MobileNet inspired) network for CIFAR10 (object
 classification):
 
 .. code-block:: bash
@@ -39,7 +40,7 @@ classification):
 
 The model is automatically saved to ``ds_cnn_cifar10.h5``.
 
-Instanciate a VGG model for cifar10 and save it to a specific location:
+Instantiate a VGG model for CIFAR10 and save it to a specific location:
 
 .. code-block:: bash
 
@@ -53,19 +54,19 @@ Command-line interface for model training
 
 The package also comes with a CLI to train models from the zoo.
 
-Training models first require that a model is created and saved using the CLI
+Training models first requires that a model is created and saved using the CLI
 described above. Once a model is ready, training will use dedicated scripts
 to load and preprocess a dataset and perform training.
 
 As shown in the examples below, the training CLI should be used along with
 ``akida_models create`` and ``cnn2snn quantize``.
 
-CIFAR10 training and tunning
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CIFAR10 training and tuning
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Two different network architectures exist for CIFAR10 object classification,
-namely ``ds_cnn_cifar10`` and ``vgg_cifar10`` but both can be trained using
-``cifar10_train`` CLI.
+Two different network architectures are provided for CIFAR10 object
+classification, namely ``ds_cnn_cifar10`` and ``vgg_cifar10`` and both can be
+trained using the ``cifar10_train`` CLI.
 
 ``cifar10_train`` offers two actions:
 
@@ -73,18 +74,21 @@ namely ``ds_cnn_cifar10`` and ``vgg_cifar10`` but both can be trained using
    will generally be used for a large number of epochs on a model that has not
    been quantized yet.
  * ``tune`` has a lower learning rate and will early stop when loss reaches a
-   plateau. It is preferably used to perform re-training after quantization.
+   plateau. It is intended for re-training after quantization.
+
+See `typical training scenario <cnn2snn.html#typical-training-scenario>`_ for
+more details about quantization aware training.
 
 **Example**
 
-Apply a quantization-aware training to a VGG model for the CIFAR10 dataset by:
+Apply quantization-aware training to a VGG model for the CIFAR10 dataset by:
 
  * creating the model
- * training the float models for 100 epochs
+ * training the full-precision model for 100 epochs
  * quantizing weights and activations to 4 bits
- * tuning the 4-4-4 quantized models for 15 epochs
+ * tuning the 4-4-4 quantized model for 15 epochs
  * quantizing weights and activations to 2 bits
- * tuning the 2-2-2 quantized models for 15 epochs
+ * tuning the 2-2-2 quantized model for 15 epochs
 
 .. code-block:: bash
 
@@ -106,9 +110,9 @@ Note that the model is saved and reloaded at each step.
 Layer Blocks
 ------------
 
-Ensuring that the design of a Keras model is compatible for conversion into
-an Akida model can be tricky. Therefore, a higher-level interface is proposed
-with the use of layer blocks. These blocks are available in the package through:
+In order to ensure that the design of a Keras model is compatible for conversion
+into an Akida model, a higher-level interface is proposed with the use of layer
+blocks. These blocks are available in the package through:
 
 .. code-block:: python
 

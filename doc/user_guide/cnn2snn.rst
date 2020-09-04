@@ -97,7 +97,7 @@ the training process [#fn-3]_.
 
 Helpers (see `Layer Blocks
 <../api_reference/akida_models_apis.html#layer-blocks>`_) are available in the
-``akida_models`` PyPi package to easily create a compatible Keras model from
+``akida_models`` PyPI package to easily create a compatible Keras model from
 scratch.
 
 Quantization compatibility constraints
