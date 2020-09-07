@@ -202,6 +202,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#weightquantizer">WeightQuantizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#trainableweightquantizer">TrainableWeightQuantizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxquantizer">MaxQuantizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maxperaxisquantizer">MaxPerAxisQuantizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#weightfloat">WeightFloat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizedconv2d">QuantizedConv2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizeddepthwiseconv2d">QuantizedDepthwiseConv2D</a></li>
@@ -850,6 +852,142 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="maxquantizer">
+<h2>MaxQuantizer<a class="headerlink" href="#maxquantizer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="cnn2snn.MaxQuantizer">
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">MaxQuantizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A quantizer that relies on maximum range.</p>
+<p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
+E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
+with qstep being the quantization step. The quantization step is defined by:</p>
+<p>qstep = max_range / max_value</p>
+<dl class="simple">
+<dt>with:</dt><dd><p>max_range = max(abs(W))
+max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
+</dd>
+</dl>
+<p><strong>Methods</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.MaxQuantizer.get_config" title="cnn2snn.MaxQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cnn2snn.MaxQuantizer.quantize" title="cnn2snn.MaxQuantizer.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(w)</p></td>
+<td><p>Quantizes the specified weights Tensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cnn2snn.MaxQuantizer.scale_factor" title="cnn2snn.MaxQuantizer.scale_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_factor</span></code></a>(w)</p></td>
+<td><p>Evaluates the scale factor for the specified weights Tensor.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="cnn2snn.MaxQuantizer.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Max quantizer for the specified bitwidth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bitwidth</strong> (<em>integer</em>) – the quantizer bitwidth defining the number of
+quantized values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cnn2snn.MaxQuantizer.get_config">
+<code class="sig-name descname">get_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the config of the layer.</p>
+<p>A layer config is a Python dictionary (serializable)
+containing the configuration of a layer.
+The same layer can be reinstantiated later
+(without its trained weights) from this configuration.</p>
+<p>The config of a layer does not include connectivity
+information, nor the layer class name. These are handled
+by <cite>Network</cite> (one layer of abstraction above).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Python dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cnn2snn.MaxQuantizer.quantize">
+<code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">w</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer.quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quantizes the specified weights Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code>) – the weights Tensor to quantize.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Tensor of quantized weights.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cnn2snn.MaxQuantizer.scale_factor">
+<code class="sig-name descname">scale_factor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">w</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer.scale_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the scale factor for the specified weights Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>w</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code>) – the weights Tensor to quantize.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Tensor containing a single scalar value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="maxperaxisquantizer">
+<h2>MaxPerAxisQuantizer<a class="headerlink" href="#maxperaxisquantizer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="cnn2snn.MaxPerAxisQuantizer">
+<em class="property">class </em><code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">MaxPerAxisQuantizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxPerAxisQuantizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A quantizer that relies on maximum range per axis.</p>
+<p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
+E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
+with qstep being the quantization step. The quantization step is defined by:</p>
+<p>qstep = max_range / max_value</p>
+<dl class="simple">
+<dt>with:</dt><dd><p>max_range = max(abs(W))
+max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
+</dd>
+</dl>
+<p>This is an evolution of the MaxQuantizer that defines the max_range per
+axis.</p>
+<p>The last dimension is used as axis, meaning that the scaling factor is a
+vector with as many values as “filters”, or “neurons”.</p>
+<p>Note: for a DepthwiseConv2D layer that has a single filter, this
+quantizer is strictly equivalent to the MaxQuantizer.</p>
+<dl class="py method">
+<dt id="cnn2snn.MaxPerAxisQuantizer.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxPerAxisQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Max quantizer for the specified bitwidth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bitwidth</strong> (<em>integer</em>) – the quantizer bitwidth defining the number of
+quantized values.</p>
 </dd>
 </dl>
 </dd></dl>
