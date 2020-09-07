@@ -83,9 +83,15 @@ Akida Execution Engine API
     ===============
     .. autofunction:: dense_to_sparse
 
-    BackendType
-    ===========
+    packetize
+    =========
+    .. autofunction:: packetize
+
+    Backend
+    =======
     .. autoclass:: BackendType
+    .. autofunction:: has_backend
+    .. autofunction:: backends
 
     ConvolutionMode
     ===============
@@ -98,3 +104,9 @@ Akida Execution Engine API
     LearningType
     ============
     .. autoclass:: LearningType
+
+    Compatibility
+    =============
+    .. autofunction:: akida.compatibility.model_hardware_incompatibilities
+    .. autofunction:: akida.compatibility.create_from_model
+    .. autoclass:: NsocVersion
