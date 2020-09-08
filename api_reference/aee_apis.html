@@ -190,10 +190,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#sparse">Sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coords-to-sparse">coords_to_sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#backendtype">BackendType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#packetize">packetize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compatibility">Compatibility</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -1939,14 +1941,67 @@ input array only has three dimensions.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="backendtype">
-<h2>BackendType<a class="headerlink" href="#backendtype" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="packetize">
+<h2>packetize<a class="headerlink" href="#packetize" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="akida.packetize">
+<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">packetize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">events</span></em>, <em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">packet_size</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.packetize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a list of 3D coordinates to a 4-dimensional Sparse input.</p>
+<p>This function converts a numpy array of event coordinates to a Sparse object
+where the event coordinates are grouped according to the specified packet
+size.</p>
+<p>3D event coordinates should contain:</p>
+<ul class="simple">
+<li><p>a first spatial coordinate (typically x, the pixel column),</p></li>
+<li><p>a second spatial coordinate (typically y, the pixel line),</p></li>
+<li><p>a feature index representing the spike (starting from index zero)</p></li>
+</ul>
+<p>The output Sparse will have a shape of (n, w, h, c), where:</p>
+<ul class="simple">
+<li><p>n is the number of packets,</p></li>
+<li><p>w is the size of the first spatial dimension (typically, the width),</p></li>
+<li><p>h is the size of the second spatial dimension (typically, the height),</p></li>
+<li><p>c is the size of the last dimension (typically, the channel or feature).</p></li>
+</ul>
+<p>Event values are automatically set to 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>events</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – a (n, 3) array of input coordinates.</p></li>
+<li><p><strong>shape</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple[int]</span></code>) – the three dimensions of the input space.</p></li>
+<li><p><strong>packet_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – the number of events per packet.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the (n, w, h, c) events corresponding to the coordinates.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#akida.Sparse" title="akida.Sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sparse</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="backend">
+<h2>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="akida.BackendType">
 <em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">BackendType</code><a class="headerlink" href="#akida.BackendType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Members:</p>
 <p>Software</p>
 <p>Hardware</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida.has_backend">
+<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">has_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">akida.core.BackendType</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#akida.has_backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a given backend type is available</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida.backends">
+<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">backends</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>akida.core.BackendType<span class="p">, </span>akida.core.Backend<span class="p">]</span><a class="headerlink" href="#akida.backends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the full list of available backends</p>
 </dd></dl>
 
 </div>
@@ -1991,6 +2046,60 @@ input array only has three dimensions.</p>
 <div><p>NoLearning : Learning is disabled, inference-only mode</p>
 <p>AkidaUnsupervised : Built-in unsupervised learning rules</p>
 </div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="compatibility">
+<h2>Compatibility<a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="akida.compatibility.model_hardware_incompatibilities">
+<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">model_hardware_incompatibilities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">nsoc_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.compatibility.model_hardware_incompatibilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks a model compatibility with hardware.</p>
+<p>This method performs parameters value checking for hardware
+compatibility and returns incompatibility messages when needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>) – the Model to check hardware compatibility</p></li>
+<li><p><strong>nsoc_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">NsocVersion</span></code>, optional) – the NSoC version to check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of str containing the hardware incompatibilities of the model.
+The list is empty if the model is hardware compatible.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida.compatibility.create_from_model">
+<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">create_from_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">nsoc_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.compatibility.create_from_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to create a HW compatible model from an incompatible one</p>
+<p>Tries to create a HW compatible model from an incompatible one, using SW
+workarounds for known limitations. It returns a converted model that is not
+guaranteed to be HW compatible, depending if workaround have been found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>) – a Model object to convert</p></li>
+<li><p><strong>nsoc_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">NsocVersion</span></code>, optional) – version of the NSoC</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new Model with no guarantee that it is HW compatible.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="akida.NsocVersion">
+<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">NsocVersion</code><a class="headerlink" href="#akida.NsocVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Unknown</p>
+<p>v1</p>
 </dd></dl>
 
 </div>
