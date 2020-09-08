@@ -5,6 +5,10 @@ Akida Execution Engine API
 .. automodule:: akida
     :members:
 
+    .. attribute:: __version__
+
+        Returns the current version of the akida module.
+
     Model
     =====
     .. autoclass:: Model
