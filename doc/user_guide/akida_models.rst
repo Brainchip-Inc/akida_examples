@@ -49,6 +49,13 @@ Instantiate a VGG model for CIFAR10 and save it to a specific location:
 A model named ``my_vgg_network.h5`` is saved under the models directory
 (providing the directory exists).
 
+Current available models for creation are:
+
+ * ds_cnn_cifar10
+ * vgg_cifar10
+ * vgg_utk_face
+ * ds_cnn_kws
+
 Command-line interface for model training
 -----------------------------------------
 
