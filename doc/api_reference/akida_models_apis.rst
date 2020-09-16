@@ -102,10 +102,24 @@ Akida models API
     .. autofunction:: akida_models.yolo_widerface_pretrained
     .. autofunction:: akida_models.yolo_voc_pretrained
 
+    YOLO Toolkit
+    ~~~~~~~~~~~~
+
     Processing
-    ~~~~~~~~~~
+    **********
     .. autofunction:: akida_models.detection.processing.load_image
     .. autofunction:: akida_models.detection.processing.preprocess_image
     .. autofunction:: akida_models.detection.processing.decode_output
+    .. autofunction:: akida_models.detection.processing.parse_voc_annotations
+    .. autofunction:: akida_models.detection.processing.parse_widerface_annotations
     .. autoclass:: akida_models.detection.processing.BoundingBox
         :members:
+
+    Performances
+    ************
+    .. autoclass:: akida_models.detection.map_evaluation.MapEvaluation
+        :members:
+
+    Anchors
+    *******
+    .. autofunction:: akida_models.detection.generate_anchors.generate_anchors
