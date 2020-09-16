@@ -27,7 +27,7 @@ save models from the zoo.
 
 Instantiating models using the CLI makes use of the model definitions from the
 programming interface with default values. To quantize a given model, the
-`CNN2SNN quantize CLI <cnn2snn.html#command-line-interface>`_ should be used.
+`CNN2SNN quantize CLI <cnn2snn.html#command-line-interface>`__ should be used.
 
 **Examples**
 
@@ -117,6 +117,71 @@ Apply quantization-aware training to a VGG model for the CIFAR10 dataset by:
 
 Note that the model is saved and reloaded at each step.
 
+UTK Face training
+^^^^^^^^^^^^^^^^^
+
+UTK Face training pipeline uses the ``vgg_utk_face`` model and the
+CNN2SNN ``quantize`` CLI. Dataset loading and preprocessing is done within the
+training script called by the ``utk_face_train`` CLI.
+
+**Example**
+
+Create a VGG model for UTK Face training and perfom step-wise quantization to
+obtain a network with 2-bit weights and activations.
+
+.. code-block:: bash
+
+   akida_models create vgg_utk_face
+
+   utk_face_train -e 300 -m vgg_utk_face.h5 -s vgg_utk_face.h5
+
+   cnn2snn -m vgg_utk_face.h5 quantize -iq 8 -wq 4 -aq 4
+
+   utk_face_train -e 30 -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
+
+   cnn2snn -m vgg_utk_face_iq8_wq4_aq4.h5 quantize -iq 8 -wq 2 -aq 2
+
+   utk_face_train -e 30 -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
+
+KWS training
+^^^^^^^^^^^^
+
+KWS training pipeline uses the ``ds_cnn_kws`` model and the CNN2SNN
+``quantize`` CLI. Dataset loading and preprocessing is done within the
+training script called by the ``kws_train`` CLI.
+
+**Example**
+
+Create a DS-CNN model for KWS training and perfom step-wise quantization to
+obtain a network with 4-bit weights and activations. Note that the ``kws_train``
+script takes the ``-laq`` which defines the bitwidth of the last activation
+layer. It must be set to 1 for the last training step, since the model requires
+binary activations for edge learning.
+
+.. code-block:: bash
+
+   akida_models create -s ds_cnn_kws.h5 ds_cnn_kws
+
+   kws_train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
+
+   cnn2snn -m ds_cnn_kws.h5 quantize -iq 0 -wq 0 -aq 4
+
+   kws_train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 \
+               -e 16
+
+   cnn2snn -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 quantize -iq 8 -wq 4 -aq 4
+
+   kws_train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 \
+               -e 16
+
+   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 \
+               -e 16 -laq 3
+
+   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 \
+               -e 16 -laq 2
+
+   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 \
+               -e 16 -laq 1
 
 Layer Blocks
 ------------
