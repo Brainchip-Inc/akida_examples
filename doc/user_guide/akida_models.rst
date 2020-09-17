@@ -68,6 +68,10 @@ to load and preprocess a dataset and perform training.
 As shown in the examples below, the training CLI should be used along with
 ``akida_models create`` and ``cnn2snn quantize``.
 
+If the quantized model offers acceptable performance, it can be converted into
+an Akida model, ready to be loaded on the Akida NSoC using the
+`CNN2SNN convert CLI <cnn2snn.html#command-line-interface>`_.
+
 CIFAR10 training and tuning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
