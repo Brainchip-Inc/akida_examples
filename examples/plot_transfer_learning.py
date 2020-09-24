@@ -296,12 +296,14 @@ model_keras.summary()
 
 ######################################################################
 
-# Load pre-trained weights
-pretrained_weights = tf.keras.utils.get_file(
-    "mobilenet_cats_vs_dogs_wq4_aq4.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_wq4_aq4.h5",
+from cnn2snn import load_quantized_model
+
+# Load pre-trained model
+pretrained_model = tf.keras.utils.get_file(
+    "mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
+    "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
     cache_subdir='models/mobilenet')
-model_keras.load_weights(pretrained_weights)
+model_keras = load_quantized_model(pretrained_model)
 
 ######################################################################
 # 3.C - Convert to Akida
