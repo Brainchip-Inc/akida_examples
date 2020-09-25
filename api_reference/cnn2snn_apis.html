@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.7
+                Akida 1.8.8
               </div>
             
           
@@ -154,6 +154,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-for-model-creation">Command-line interface for model creation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-for-model-training">Command-line interface for model training</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#cifar10-training-and-tuning">CIFAR10 training and tuning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#utk-face-training">UTK Face training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#kws-training">KWS training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
@@ -649,10 +651,9 @@ otherwise it will be inputConvolutional.</p></li>
 <p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
 E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
 with qstep being the quantization step. The quantization step is defined by:</p>
-<p>qstep = threshold * std(W) / max_value</p>
-<p>with max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
-<p>All values below or above threshold * std(W) are automatically assigned to
-the min (resp max) value.</p>
+<blockquote>
+<div><p>qstep = threshold * std(W) / max_value</p>
+</div></blockquote>
 <p><strong>Methods</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -671,6 +672,9 @@ the min (resp max) value.</p>
 </tr>
 </tbody>
 </table>
+<p>with max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
+<p>All values below or above threshold * std(W) are automatically assigned to
+the min (resp max) value.</p>
 <dl class="py method">
 <dt id="cnn2snn.WeightQuantizer.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.WeightQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
@@ -751,13 +755,9 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
 E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
 with qstep being the quantization step. The quantization step is defined by:</p>
-<p>qstep = threshold * std(W) / max_value</p>
-<p>with:
-- max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.
-- threshold a trainable parameter whose initial value can be specified.</p>
-<p>All values below or above threshold * std(W) are automatically assigned to
-the min (resp max) value.</p>
-<p>This is the trainable version of the WeightQuantizer class.</p>
+<blockquote>
+<div><p>qstep = threshold * std(W) / max_value</p>
+</div></blockquote>
 <p><strong>Methods</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -776,6 +776,16 @@ the min (resp max) value.</p>
 </tr>
 </tbody>
 </table>
+<p>with:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>max_value being 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p></li>
+<li><p>threshold a trainable parameter whose initial value can be specified.</p></li>
+</ul>
+</div></blockquote>
+<p>All values below or above threshold * std(W) are automatically assigned to
+the min (resp max) value.</p>
+<p>This is the trainable version of the WeightQuantizer class.</p>
 <dl class="py method">
 <dt id="cnn2snn.TrainableWeightQuantizer.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.TrainableWeightQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
@@ -856,12 +866,9 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
 E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
 with qstep being the quantization step. The quantization step is defined by:</p>
-<p>qstep = max_range / max_value</p>
-<dl class="simple">
-<dt>with:</dt><dd><p>max_range = max(abs(W))
-max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
-</dd>
-</dl>
+<blockquote>
+<div><p>qstep = max_range / max_value</p>
+</div></blockquote>
 <p><strong>Methods</strong></p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -880,6 +887,13 @@ max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
 </tr>
 </tbody>
 </table>
+<p>with:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>max_range = max(abs(W))</p></li>
+<li><p>max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p></li>
+</ul>
+</div></blockquote>
 <dl class="py method">
 <dt id="cnn2snn.MaxQuantizer.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bitwidth</span><span class="o">=</span><span class="default_value">4</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cnn2snn.MaxQuantizer.__init__" title="Permalink to this definition">¶</a></dt>
@@ -956,12 +970,16 @@ by <cite>Network</cite> (one layer of abstraction above).</p>
 <p>Quantizes the specified weights into 2^bitwidth-1 values centered on zero.
 E.g. with bitwidth = 4, 15 quantization levels: from -7 * qstep to 7 * qstep
 with qstep being the quantization step. The quantization step is defined by:</p>
-<p>qstep = max_range / max_value</p>
-<dl class="simple">
-<dt>with:</dt><dd><p>max_range = max(abs(W))
-max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p>
-</dd>
-</dl>
+<blockquote>
+<div><p>qstep = max_range / max_value</p>
+</div></blockquote>
+<p>with:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>max_range = max(abs(W))</p></li>
+<li><p>max_value = 2^(bitwidth-1) - 1. E.g with bitwidth = 4, max_value = 7.</p></li>
+</ul>
+</div></blockquote>
 <p>This is an evolution of the MaxQuantizer that defines the max_range per
 axis.</p>
 <p>The last dimension is used as axis, meaning that the scaling factor is a

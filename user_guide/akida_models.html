@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.7
+                Akida 1.8.8
               </div>
             
           
@@ -154,6 +154,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#command-line-interface-for-model-creation">Command-line interface for model creation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line-interface-for-model-training">Command-line interface for model training</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#cifar10-training-and-tuning">CIFAR10 training and tuning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utk-face-training">UTK Face training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kws-training">KWS training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Layer Blocks</a><ul>
@@ -443,6 +445,15 @@ classification):</p>
 </div>
 <p>A model named <code class="docutils literal notranslate"><span class="pre">my_vgg_network.h5</span></code> is saved under the models directory
 (providing the directory exists).</p>
+<p>Current available models for creation are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ds_cnn_cifar10</p></li>
+<li><p>vgg_cifar10</p></li>
+<li><p>vgg_utk_face</p></li>
+<li><p>ds_cnn_kws</p></li>
+</ul>
+</div></blockquote>
 </div>
 <div class="section" id="command-line-interface-for-model-training">
 <h2>Command-line interface for model training<a class="headerlink" href="#command-line-interface-for-model-training" title="Permalink to this headline">¶</a></h2>
@@ -452,6 +463,9 @@ described above. Once a model is ready, training will use dedicated scripts
 to load and preprocess a dataset and perform training.</p>
 <p>As shown in the examples below, the training CLI should be used along with
 <code class="docutils literal notranslate"><span class="pre">akida_models</span> <span class="pre">create</span></code> and <code class="docutils literal notranslate"><span class="pre">cnn2snn</span> <span class="pre">quantize</span></code>.</p>
+<p>If the quantized model offers acceptable performance, it can be converted into
+an Akida model, ready to be loaded on the Akida NSoC using the
+<a class="reference external" href="cnn2snn.html#command-line-interface">CNN2SNN convert CLI</a>.</p>
 <div class="section" id="cifar10-training-and-tuning">
 <h3>CIFAR10 training and tuning<a class="headerlink" href="#cifar10-training-and-tuning" title="Permalink to this headline">¶</a></h3>
 <p>Two different network architectures are provided for CIFAR10 object
@@ -495,6 +509,64 @@ cifar10_train -m vgg_cifar10_iq2_wq2_aq2.h5 -s vgg_cifar10_iq2_wq2_aq2.h5 -e <sp
 </pre></div>
 </div>
 <p>Note that the model is saved and reloaded at each step.</p>
+</div>
+<div class="section" id="utk-face-training">
+<h3>UTK Face training<a class="headerlink" href="#utk-face-training" title="Permalink to this headline">¶</a></h3>
+<p>UTK Face training pipeline uses the <code class="docutils literal notranslate"><span class="pre">vgg_utk_face</span></code> model and the
+CNN2SNN <code class="docutils literal notranslate"><span class="pre">quantize</span></code> CLI. Dataset loading and preprocessing is done within the
+training script called by the <code class="docutils literal notranslate"><span class="pre">utk_face_train</span></code> CLI.</p>
+<p><strong>Example</strong></p>
+<p>Create a VGG model for UTK Face training and perfom step-wise quantization to
+obtain a network with 2-bit weights and activations.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create vgg_utk_face
+
+utk_face_train -e <span class="m">300</span> -m vgg_utk_face.h5 -s vgg_utk_face.h5
+
+cnn2snn -m vgg_utk_face.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+
+utk_face_train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
+
+cnn2snn -m vgg_utk_face_iq8_wq4_aq4.h5 quantize -iq <span class="m">8</span> -wq <span class="m">2</span> -aq <span class="m">2</span>
+
+utk_face_train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
+</pre></div>
+</div>
+</div>
+<div class="section" id="kws-training">
+<h3>KWS training<a class="headerlink" href="#kws-training" title="Permalink to this headline">¶</a></h3>
+<p>KWS training pipeline uses the <code class="docutils literal notranslate"><span class="pre">ds_cnn_kws</span></code> model and the CNN2SNN
+<code class="docutils literal notranslate"><span class="pre">quantize</span></code> CLI. Dataset loading and preprocessing is done within the
+training script called by the <code class="docutils literal notranslate"><span class="pre">kws_train</span></code> CLI.</p>
+<p><strong>Example</strong></p>
+<p>Create a DS-CNN model for KWS training and perfom step-wise quantization to
+obtain a network with 4-bit weights and activations. Note that the <code class="docutils literal notranslate"><span class="pre">kws_train</span></code>
+script takes the <code class="docutils literal notranslate"><span class="pre">-laq</span></code> which defines the bitwidth of the last activation
+layer. It must be set to 1 for the last training step, since the model requires
+binary activations for edge learning.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create -s ds_cnn_kws.h5 ds_cnn_kws
+
+kws_train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e <span class="m">16</span>
+
+cnn2snn -m ds_cnn_kws.h5 quantize -iq <span class="m">0</span> -wq <span class="m">0</span> -aq <span class="m">4</span>
+
+kws_train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 <span class="se">\</span>
+            -e <span class="m">16</span>
+
+cnn2snn -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+
+kws_train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 <span class="se">\</span>
+            -e <span class="m">16</span>
+
+kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 <span class="se">\</span>
+            -e <span class="m">16</span> -laq <span class="m">3</span>
+
+kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 <span class="se">\</span>
+            -e <span class="m">16</span> -laq <span class="m">2</span>
+
+kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 <span class="se">\</span>
+            -e <span class="m">16</span> -laq <span class="m">1</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="id1">
