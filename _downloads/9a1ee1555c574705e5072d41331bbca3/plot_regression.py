@@ -2,7 +2,7 @@
 Regression tutorial
 ==================================================
 
-This tutorial demonstrates that hardware compatible Akida models can perform
+This tutorial demonstrates that hardware-compatible Akida models can perform
 regression tasks at the same accuracy level as a native CNN network.
 
 This is illustrated through an age estimation problem using the
@@ -11,76 +11,58 @@ This is illustrated through an age estimation problem using the
 """
 
 ######################################################################
-# 1. Load dependencies
-# ~~~~~~~~~~~~~~~~~~~~
+# 1. Load the dataset
+# ~~~~~~~~~~~~~~~~~~~
 #
 
-# Various imports needed for the tutorial
-import os
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Akida imports
-from cnn2snn import convert
-from akida_models import vgg_utk_face_pretrained
 from akida_models.utk_face.preprocessing import load_data
 
-######################################################################
-# 2. Load the dataset
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-
-# Load the dataset using akida_model tool function
+# Load the dataset using akida_models preprocessing tool
 x_train, y_train, x_test, y_test = load_data()
 
-# Store the input shape that will later be used to create the model
-input_shape = x_test.shape[1:]
+# For CNN Keras training and inference, the data is normalized
+input_scaling = (127, 127)
+x_test_keras = (x_test.astype('float32') - input_scaling[1]) / input_scaling[0]
 
-# For CNN training and inference, normalize data by subtracting the mean value
-# and dividing by the standard deviation
-a = np.std(x_train)
-b = np.mean(x_train)
-input_scaling = (a, b)
-x_test_keras = (x_test.astype('float32') - b) / a
-
-# For akida training, use uint8 raw data
+# For Akida inference, use uint8 raw data
 x_test_akida = x_test.astype('uint8')
 
 ######################################################################
-# 3. Create a Keras model satisfying Akida NSoC requirements
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. Load a pre-trained native Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The model is a simplified version inspired from `VGG <https://arxiv.org/abs/1409.1556>`__
-# architecture. It consists of a succession of Convolutional and Pooling layers
-# and ends with two Dense layers at the top that output a single value
-# corresponding to the estimated age.
+# architecture. It consists of a succession of convolutional and pooling layers
+# and ends with two fully connected layers that outputs a single value
+# corresponding to the estimated age. This model architecture is compatible with
+# the `design constraints <https://doc.brainchipinc.com/user_guide/cnn2snn.html#design-compatibility-constraints>`__
+# before quantization. It is the starting point for a model runnable on the
+# Akida NSoC.
 #
-# The first convolutional layer uses 8 bit weights, but other layers are
-# quantized using 2 bit weights.
-# All activations are 2 bits.
+# The pre-trained native Keras model loaded below was trained on 300 epochs.
+# The model file is available on the BrainChip data server.
 #
-# Pre-trained weights were obtained after four training episodes:
-#
-# * the model is first trained with unconstrained float weights and
-#   activations for 30 epochs
-# * the model is then progressively retrained with quantized activations and
-#   weights during three steps: activations are set to 4 bits and weights to 8
-#   bits, then both are set to 4 bits and finally both to 2 bits. At each step
-#   weights are initialized from the previous step state.
-#
-model_keras = vgg_utk_face_pretrained()
+# The performance of the model is evaluated using the "Mean Absolute Error"
+# (MAE). The MAE, used as a metric in regression problem, is calculated as an
+# average of absolute differences between the target values and the predictions.
+# The MAE is a linear score, i.e. all the individual differences are equally
+# weighted in the average.
+
+from tensorflow.keras.utils import get_file
+from tensorflow.keras.models import load_model
+
+# Retrieve the model file from the BrainChip data server
+model_file = get_file("vgg_utk_face.h5",
+                      "http://data.brainchip.com/models/vgg/vgg_utk_face.h5",
+                      cache_subdir='models')
+
+# Load the native Keras pre-trained model
+model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# 4. Check performance
-# ~~~~~~~~~~~~~~~~~~~~
 
-# Compile Keras model, use the mean absolute error (MAE) as a metric.
-# MAE is calculated as an average of absolute differences between the target
-# values and the predictions. The MAE is a linear score which means that all the
-# individual differences are weighted equally in the average.
-
+# Compile the native Keras model (required to evaluate the MAE)
 model_keras.compile(optimizer='Adam', loss='mae')
 
 # Check Keras model performance
@@ -89,24 +71,74 @@ mae_keras = model_keras.evaluate(x_test_keras, y_test, verbose=0)
 print("Keras MAE: {0:.4f}".format(mae_keras))
 
 ######################################################################
-# 5. Conversion to Akida
+# 3. Load a pre-trained quantized Keras model satisfying Akida NSoC requirements
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The above native Keras model is quantized and fine-tuned to get a quantized
+# Keras model satisfying the
+# `Akida NSoC requirements <https://doc.brainchipinc.com/user_guide/hw_constraints.html>`__.
+# The first convolutional layer of our model uses 8-bit weights and other
+# layers are quantized using 2-bit weights. All activations are 2 bits.
+#
+# The pre-trained model was obtained after two fine-tuning episodes:
+#
+# * the model is first quantized and fine-tuned with 4-bit weights and
+#   activations (first convolutional weights are 8 bits)
+# * the model is then quantized and fine-tuned with 2-bit weights and
+#   activations (first convolutional weights are still 8 bits).
+#
+# The table below summarizes the "Mean Absolute Error" (MAE) results obtained
+# after every training episode.
+#
+# +---------+----------------+---------------+------+--------+
+# | Episode | Weights Quant. | Activ. Quant. | MAE  | Epochs |
+# +=========+================+===============+======+========+
+# | 1       | N/A            | N/A           | 5.80 | 300    |
+# +---------+----------------+---------------+------+--------+
+# | 2       | 8/4 bits       | 4 bits        | 5.79 | 30     |
+# +---------+----------------+---------------+------+--------+
+# | 3       | 8/2 bits       | 2 bits        | 6.15 | 30     |
+# +---------+----------------+---------------+------+--------+
+#
+# Here, we directly load the pre-trained quantized Keras model using the
+# akida_models helper.
+
+from akida_models import vgg_utk_face_pretrained
+
+# Load the pre-trained quantized model
+model_quantized_keras = vgg_utk_face_pretrained()
+model_quantized_keras.summary()
+
+######################################################################
+
+# Compile the quantized Keras model (required to evaluate the MAE)
+model_quantized_keras.compile(optimizer='Adam', loss='mae')
+
+# Check Keras model performance
+mae_quant = model_quantized_keras.evaluate(x_test_keras, y_test, verbose=0)
+
+print("Keras MAE: {0:.4f}".format(mae_quant))
+
+######################################################################
+# 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# 5.1 Convert the trained Keras model to Akida
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The quantized Keras model is now converted into an Akida model.
+# After conversion, we evaluate the performance on the UTKFace dataset.
 #
-# We convert the model to Akida and verify that it is compatible with the
-# Akida NSoC (**HW** column in summary).
-#
+# Since activations sparsity has a great impact on Akida inference time, we
+# also have a look at the average input and output sparsity of each layer on
+# a subset of the dataset.
+
+from cnn2snn import convert
 
 # Convert the model
-model_akida = convert(model_keras, input_scaling=input_scaling)
+model_akida = convert(model_quantized_keras, input_scaling=input_scaling)
 model_akida.summary()
 
 #####################################################################
-# 5.2 Check Akida model accuracy
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
+
+import numpy as np
 
 # Check Akida model performance
 y_akida = model_akida.evaluate(x_test_akida)
@@ -128,11 +160,27 @@ for _, stat in stats.items():
     print(stat)
 
 ######################################################################
-# 6. Estimate age on a single image
+# Let's summarize the MAE performance for the native Keras, the quantized Keras
+# and the Akida model.
+#
+# +-----------------+------+
+# | Model           | MAE  |
+# +=================+======+
+# | native Keras    | 5.80 |
+# +-----------------+------+
+# | quantized Keras | 6.15 |
+# +-----------------+------+
+# | Akida           | 6.21 |
+# +-----------------+------+
+
+######################################################################
+# 4. Estimate age on a single image
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import matplotlib.pyplot as plt
+
 # Estimate age on a random single image and display Keras and Akida outputs
-id = random.randint(0, len(y_test))
+id = np.random.randint(0, len(y_test) + 1)
 age_keras = model_keras.predict(x_test_keras[id:id + 1])
 
 plt.imshow(x_test_akida[id], interpolation='bicubic')
