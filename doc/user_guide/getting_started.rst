@@ -54,14 +54,14 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
 
    # Instantiate xor model
    xor = Model()
-   layer_input = InputData("input",
+   layer_input = InputData(name="input",
                            input_height=1,
                            input_width=1,
                            input_channels=2)
    xor.add(layer_input)
-   layer_hidden = FullyConnected("hidden", num_neurons=2, weights_bits=1)
+   layer_hidden = FullyConnected(name="hidden", num_neurons=2, weights_bits=1)
    xor.add(layer_hidden)
-   layer_output = FullyConnected("output", num_neurons=1, weights_bits=2)
+   layer_output = FullyConnected(name="output", num_neurons=1, weights_bits=2)
    xor.add(layer_output)
 
    # Display model structure and parameters

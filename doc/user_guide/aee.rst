@@ -182,8 +182,11 @@ Example of sequential definition of a model:
 
    from akida import Model, InputData, FullyConnected, LearningType
    model = Model()
-   model.add(InputData("input", input_width=32, input_height=32, input_features=1))
-   model.add(FullyConnected("fully",
+   model.add(InputData(name="input",
+                       input_width=32,
+                       input_height=32,
+                       input_features=1))
+   model.add(FullyConnected(name="fully",
                             num_neurons=32,
                             threshold_fire=40))
 
