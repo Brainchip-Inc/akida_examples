@@ -174,7 +174,7 @@ for _, stat in stats.items():
 # +-----------------+------+
 
 ######################################################################
-# 4. Estimate age on a single image
+# 5. Estimate age on a single image
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import matplotlib.pyplot as plt
