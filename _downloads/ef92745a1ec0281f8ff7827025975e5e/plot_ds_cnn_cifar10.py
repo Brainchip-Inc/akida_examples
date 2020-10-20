@@ -50,17 +50,10 @@ x_test = (x_test - b) / a
 #            unconstrained float weights and activations for 1000 epochs
 #
 
-from tensorflow.keras.utils import get_file
-from akida_models import ds_cnn_cifar10
+from akida_models import ds_cnn_cifar10_pretrained
 
-# Retrieve model file from Brainchip data server
-weights_file = get_file(
-    "ds_cnn_cifar10.h5",
-    "http://data.brainchip.com/models/ds_cnn/ds_cnn_cifar10.h5",
-    cache_subdir='models/ds_cnn_cifar10')
-
-# Instantiate the model and load pretrained weights
-model_keras = ds_cnn_cifar10(weights=weights_file)
+# Instantiate the pretrained model
+model_keras = ds_cnn_cifar10_pretrained()
 model_keras.summary()
 
 ######################################################################
