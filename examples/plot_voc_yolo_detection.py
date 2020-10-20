@@ -231,6 +231,11 @@ from akida_models.detection.map_evaluation import MapEvaluation
 # Load the pretrained model along with anchors
 model_keras, anchors = yolo_voc_pretrained()
 
+# Define the final reshape and build the model
+output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),
+                 name="YOLO_output")(model_keras.output)
+model_keras = Model(model_keras.input, output)
+
 # Create the mAP evaluator object
 num_images = 100
 
