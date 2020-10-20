@@ -94,6 +94,7 @@ Current available models for creation are:
  * ds_cnn_kws
  * mobilenet_imagenet
  * mobilenet_imagenet_edge
+ * yolo_base
 
 Command-line interface for model training
 -----------------------------------------
@@ -221,6 +222,40 @@ binary activations for edge learning.
 
    kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 \
                -e 16 -laq 1
+
+YOLO training
+^^^^^^^^^^^^^
+
+YOLO training pipeline uses the ``yolo_base`` model and the CNN2SNN
+``quantize`` CLI. Dataset preprocessing must be done beforehand using the
+`processing toolbox <api_reference/akida_models_apis.html#processing>`__.
+
+**Example**
+
+Create a YOLO model for VOC car/person training, use transfer learning from
+MobileNet weights trained on ImageNet and perform step-wise quantization to
+obtain a network with 4-bit weights and activations.
+
+.. code-block:: bash
+
+wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5
+
+akida_models create -s yolo_voc.h5 yolo_base -c 2 \
+                                             -bw 'mobilenet_imagenet_alpha_50.h5'
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 \
+            -f True -s yolo_voc.h5 train
+
+cnn2snn -m yolo_voc.h5 quantize -iq 8 -wq 8 -aq 8
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 \
+            -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5 train
+
+cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq 8 -wq 4 -aq 4
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 \
+            -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5 tune
+
 
 Layer Blocks
 ------------
