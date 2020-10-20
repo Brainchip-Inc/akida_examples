@@ -55,6 +55,8 @@ Current available models for creation are:
  * vgg_cifar10
  * vgg_utk_face
  * ds_cnn_kws
+ * mobilenet_imagenet
+ * mobilenet_imagenet_edge
 
 Command-line interface for model training
 -----------------------------------------
