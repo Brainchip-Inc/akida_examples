@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                Akida 1.8.8
+                Akida 1.8.9
               </div>
             
           
@@ -202,6 +202,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantize">quantize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantize-layer">quantize_layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
@@ -312,24 +313,22 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Transfer learning with MobileNet for cats vs. dogs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#transfer-learning-process">1. Transfer learning process</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#load-and-preprocess-data">2. Load and preprocess data</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#a-load-and-split-data">2.A - Load and split data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#b-preprocess-the-test-set">2.B - Preprocess the test set</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#c-get-labels">2.C - Get labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transfer-learning-process">Transfer learning process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#load-and-preprocess-data">1. Load and preprocess data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#a-load-and-split-data">1.A - Load and split data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#b-preprocess-the-test-set">1.B - Preprocess the test set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#c-get-labels">1.C - Get labels</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#convert-a-quantized-keras-model-to-akida">3. Convert a quantized Keras model to Akida</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#a-instantiate-a-keras-base-model">3.A - Instantiate a Keras base model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#b-modify-the-network-and-load-pre-trained-weights">3.B - Modify the network and load pre-trained weights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#c-convert-to-akida">3.C - Convert to Akida</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modify-a-pre-trained-base-keras-model">2. Modify a pre-trained base Keras model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#a-instantiate-a-keras-base-model">2.A - Instantiate a Keras base model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#b-modify-the-network-for-the-new-task">2.B - Modify the network for the new task</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#classify-test-images">4. Classify test images</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#a-classify-test-images">4.A Classify test images</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#b-compare-results">4.B Compare results</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#train-the-transferred-model-for-the-new-task">3. Train the transferred model for the new task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantize-the-top-layer">4 Quantize the top layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-to-akida">5. Convert to Akida</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plot-confusion-matrix">6. Plot confusion matrix</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="plot_mobilenet_imagenet.html">MobileNet/ImageNet inference</a><ul>
@@ -427,8 +426,8 @@
 </div>
 <div class="sphx-glr-example-title section" id="transfer-learning-with-mobilenet-for-cats-vs-dogs">
 <span id="sphx-glr-examples-plot-transfer-learning-py"></span><h1>Transfer learning with MobileNet for cats vs. dogs<a class="headerlink" href="#transfer-learning-with-mobilenet-for-cats-vs-dogs" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial presents a demonstration of transfer learning and the
-conversion to an Akida model of a quantized Keras network.</p>
+<p>This tutorial presents a demonstration of how transfer learning is applied
+with our quantized models to get an Akida model.</p>
 <p>The transfer learning example is derived from the <a class="reference external" href="https://www.tensorflow.org/tutorials/images/transfer_learning">Tensorflow
 tutorial</a>:</p>
 <blockquote>
@@ -448,13 +447,13 @@ model and its conversion to an Akida network. A textual explanation
 of the training is given below.</p>
 </div>
 <div class="section" id="transfer-learning-process">
-<h2>1. Transfer learning process<a class="headerlink" href="#transfer-learning-process" title="Permalink to this headline">¶</a></h2>
+<h2>Transfer learning process<a class="headerlink" href="#transfer-learning-process" title="Permalink to this headline">¶</a></h2>
 <div class="figure align-center">
 <a class="reference external image-reference" href="https://s2.qwant.com/thumbr/0x380/7/0/7b7386531ea24ab1294fdf9b8698b008a51e38a3c57e81427fbef626ff226c/1*6ACbDsBMeDZcLg9W8CFT_Q.png?u=https%3A%2F%2Fcdn-images-1.medium.com%2Fmax%2F1600%2F1%2A6ACbDsBMeDZcLg9W8CFT_Q.png&amp;q=0&amp;b=1&amp;p=0&amp;a=1"><img alt="transfer_learning_image" src="https://s2.qwant.com/thumbr/0x380/7/0/7b7386531ea24ab1294fdf9b8698b008a51e38a3c57e81427fbef626ff226c/1*6ACbDsBMeDZcLg9W8CFT_Q.png?u=https%3A%2F%2Fcdn-images-1.medium.com%2Fmax%2F1600%2F1%2A6ACbDsBMeDZcLg9W8CFT_Q.png&amp;q=0&amp;b=1&amp;p=0&amp;a=1" /></a>
 </div>
 <p>Transfer learning allows to classify on a specific task by using a
 pre-trained base model. For an introduction to transfer learning, please
-refer to the <a class="reference external" href="https://www.tensorflow.org/tutorials/images/transfer_learning">Tensorflow
+refer to the <a class="reference external" href="https://www.tensorflow.org/tutorials/images/transfer_learning">Tensorflow transfer learning
 tutorial</a>
 before exploring this tutorial. Here, we focus on how to quantize the
 Keras model in order to convert it to an Akida one.</p>
@@ -467,127 +466,50 @@ Keras model in order to convert it to an Akida one.</p>
 </ul>
 </div></blockquote>
 <p><strong>Base model</strong></p>
-<p>The base model is an Akida-compatible version of MobileNet v1. This
+<p>The base model is a quantized version of MobileNet v1. This
 model was trained and quantized using the ImageNet dataset. Please refer
 to the corresponding <a class="reference external" href="plot_mobilenet_imagenet.html">example</a> for
 more information. The layers have 4-bit weights (except for the first
 layer having 8-bit weights) and the activations are quantized to 4 bits.
-This base model ends with a global average pooling whose output is (1,
-1, 1024).</p>
+This base model ends with a classification layer for 1000 classes. To
+classify cats and dogs, the feature extractor is preserved but the
+classification layer must be removed to be replaced by a new top layer
+focusing on the new task.</p>
 <p>In our transfer learning process, the base model is frozen, i.e., the
 weights are not updated during training. Pre-trained weights for the
-quantized model are provided on
-<a class="reference external" href="http://data.brainchip.com/models/mobilenet/">http://data.brainchip.com/models/mobilenet/</a>. These are
-loaded in our frozen base model.</p>
+frozen quantized model are provided on our
+<a class="reference external" href="http://data.brainchip.com/models/mobilenet/">data server</a>.</p>
 <p><strong>Top layer</strong></p>
-<p>While the Tensorflow tutorial uses a fully-connected top layer with one
-output neuron, the only Akida layer supporting 4-bit weights is a separable
-convolutional layer (see <a class="reference external" href="../user_guide/hw_constraints.html">hardware compatibility</a>).</p>
-<p>We thus decided to use a separable convolutional layer with one output
-neuron for the top layer of our model.</p>
-<p><strong>Final activation</strong></p>
-<p>ReLU6 is the only activation function that can be converted into an Akida SNN
-equivalent. The converted Akida model doesn’t therefore include the ‘sigmoid’
-activation, and we must instead apply it explicitly on the raw values returned
-by the model Top layer.</p>
-<p><strong>Training steps</strong></p>
-<p>The transfer learning process consists in two training phases:</p>
+<p>While a fully-connected top layer is added in the Tensorflow tutorial, we
+decided to use a separable convolutional layer with one output neuron for the
+top layer of our model. The reason is that the separable convolutional layer
+is the only Akida layer supporting 4-bit weights (see <a class="reference external" href="../user_guide/hw_constraints.html">hardware compatibility</a>).</p>
+<p><strong>Training process</strong></p>
+<p>The transfer learning process for quantized models can be handled in different
+ways:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p><strong>Float top layer training</strong>: The base model is quantized using 4-bit
-weights and activations. Pre-trained 4-bit weights of MobileNet/ImageNet
-are loaded. Then a top layer is added with float weights. The base model
-is frozen and the training is only applied on the top layer. After 10
-epochs, the weights are saved. Note that the weights of the layers of
-the frozen base model haven’t changed; only those of the top layer are
-updated.</p></li>
-<li><p><strong>4-bit top layer training</strong>: The base model is still
-quantized using 4-bit weights and activations. The added top layer is
-now quantized (4-bit weights). The weights saved at step 1 are used as
-initialization. The base model is frozen and the training is only
-applied on the top layer. After 10 epochs, the new quantized weights are
-saved. This final weights are those used in the inference below.</p></li>
+<li><p><strong>From a quantized base model</strong>, the new transferred model is composed
+of a frozen base model and a float top layer. The top layer is trained.
+Then, the top layer is quantized and fine-tuned. If necessary, the base
+model can be unfrozen to be slightly trained to improve accuracy.</p></li>
+<li><p><strong>From a float base model</strong>, the new transferred model is also composed
+of a frozen base model (with float weights/activations) and a float top
+layer. The top layer is trained. Then the full model is quantized,
+unfrozen and fine-tuned. This option requires longer training
+operations since we don’t take advantage of an already quantized base
+model. Option 2 can be used alternatively if option 1 doesn’t give
+suitable performance.</p></li>
 </ol>
 </div></blockquote>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 29%" />
-<col style="width: 18%" />
-<col style="width: 14%" />
-<col style="width: 18%" />
-<col style="width: 6%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Training
-step</p></th>
-<th class="head"><p>Frozen base model</p></th>
-<th class="head"><p>Init.
-weights
-base model</p></th>
-<th class="head"><p>Top
-layer</p></th>
-<th class="head"><p>Init.
-weights
-top layer</p></th>
-<th class="head"><p>E
-p
-o
-c
-h
-s</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>step 1</p></td>
-<td><p>4-bit weights /
-activations</p></td>
-<td><p>pre-trained
-4-bit</p></td>
-<td><p>float
-weights</p></td>
-<td><p>random</p></td>
-<td><p>10</p></td>
-</tr>
-<tr class="row-odd"><td><p>step 2</p></td>
-<td><p>4-bit weights /
-activations</p></td>
-<td><p>pre-trained
-4-bit</p></td>
-<td><p>4-bit
-weights</p></td>
-<td><p>saved from
-step 1</p></td>
-<td><p>10</p></td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">tensorflow_datasets</span> <span class="k">as</span> <span class="nn">tfds</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">mobilenet_imagenet</span>
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
-<span class="kn">from</span> <span class="nn">akida_models.quantization_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span>
-</pre></div>
-</div>
+<p>In this example, option 1 is chosen. The training steps are described below.</p>
 </div>
 <div class="section" id="load-and-preprocess-data">
-<h2>2. Load and preprocess data<a class="headerlink" href="#load-and-preprocess-data" title="Permalink to this headline">¶</a></h2>
-<p>In this section, we will load the ‘cats_vs_dogs’ dataset preprocess
-the data to match the required model’s inputs:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>2.A - Load and split data</strong>: we only keep the test set which represents
-10% of the dataset.</p></li>
-<li><p><strong>2.B - Preprocess the test set</strong> by resizing and rescaling the images.</p></li>
-<li><p><strong>2.C - Get labels</strong></p></li>
-</ul>
-</div></blockquote>
+<h2>1. Load and preprocess data<a class="headerlink" href="#load-and-preprocess-data" title="Permalink to this headline">¶</a></h2>
+<p>In this section, we will load and preprocess the ‘cats_vs_dogs’ dataset
+to match the required model’s inputs.</p>
 <div class="section" id="a-load-and-split-data">
-<h3>2.A - Load and split data<a class="headerlink" href="#a-load-and-split-data" title="Permalink to this headline">¶</a></h3>
+<h3>1.A - Load and split data<a class="headerlink" href="#a-load-and-split-data" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code>
 <a class="reference external" href="https://www.tensorflow.org/datasets/catalog/cats_vs_dogs">dataset</a>
 is loaded and split into train, validation and test sets. The train and
@@ -599,7 +521,9 @@ preprocess batches of data (one can look at the TensorFlow guide
 <p class="admonition-title">Note</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code> dataset version used here is 4.0.0.</p>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">splits</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train[:80%]&#39;</span><span class="p">,</span> <span class="s1">&#39;train[80%:90%]&#39;</span><span class="p">,</span> <span class="s1">&#39;train[90%:]&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow_datasets</span> <span class="k">as</span> <span class="nn">tfds</span>
+
+<span class="n">splits</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;train[:80%]&#39;</span><span class="p">,</span> <span class="s1">&#39;train[80%:90%]&#39;</span><span class="p">,</span> <span class="s1">&#39;train[90%:]&#39;</span><span class="p">]</span>
 
 <span class="n">tfds</span><span class="o">.</span><span class="n">disable_progress_bar</span><span class="p">()</span>
 <span class="p">(</span><span class="n">raw_train</span><span class="p">,</span> <span class="n">raw_validation</span><span class="p">,</span>
@@ -614,13 +538,13 @@ preprocess batches of data (one can look at the TensorFlow guide
 /usr/local/lib/python3.7/site-packages/urllib3/connectionpool.py:986: InsecureRequestWarning: Unverified HTTPS request is being made to host &#39;download.microsoft.com&#39;. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
   InsecureRequestWarning,
 WARNING:absl:1738 images were corrupted and were skipped
-Shuffling and writing examples to /root/tensorflow_datasets/cats_vs_dogs/4.0.0.incompleteYSRCPP/cats_vs_dogs-train.tfrecord
+Shuffling and writing examples to /root/tensorflow_datasets/cats_vs_dogs/4.0.0.incompletePYJJHP/cats_vs_dogs-train.tfrecord
 [1mDataset cats_vs_dogs downloaded and prepared to /root/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.[0m
 </pre></div>
 </div>
 </div>
 <div class="section" id="b-preprocess-the-test-set">
-<h3>2.B - Preprocess the test set<a class="headerlink" href="#b-preprocess-the-test-set" title="Permalink to this headline">¶</a></h3>
+<h3>1.B - Preprocess the test set<a class="headerlink" href="#b-preprocess-the-test-set" title="Permalink to this headline">¶</a></h3>
 <p>We must apply the same preprocessing as for training: rescaling and
 resizing. Since Akida models directly accept integer-valued images, we
 also define a preprocessing function for Akida:</p>
@@ -634,7 +558,9 @@ also define a preprocessing function for Akida:</p>
 We must then create batches of images to feed the model. For inference,
 the batch size is not relevant; you can set it such that the batch of
 images can be loaded in memory depending on your CPU/GPU.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IMG_SIZE</span> <span class="o">=</span> <span class="mi">160</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">IMG_SIZE</span> <span class="o">=</span> <span class="mi">160</span>
 <span class="n">input_scaling</span> <span class="o">=</span> <span class="p">(</span><span class="mf">127.5</span><span class="p">,</span> <span class="mf">127.5</span><span class="p">)</span>
 
 
@@ -658,14 +584,15 @@ images can be loaded in memory depending on your CPU/GPU.</p>
 </div>
 </div>
 <div class="section" id="c-get-labels">
-<h3>2.C - Get labels<a class="headerlink" href="#c-get-labels" title="Permalink to this headline">¶</a></h3>
+<h3>1.C - Get labels<a class="headerlink" href="#c-get-labels" title="Permalink to this headline">¶</a></h3>
 <p>Labels are contained in the test set as ‘0’ for cats and ‘1’ for dogs.
 We read through the batches to extract the labels.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">label_batch</span> <span class="ow">in</span> <span class="n">test_batches_keras</span><span class="p">:</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">labels</span><span class="p">,</span> <span class="n">label_batch</span><span class="p">))</span>
 
-<span class="n">get_label_name</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">int2str</span>
 <span class="n">num_images</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test set composed of </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s2"> images: &quot;</span>
@@ -679,22 +606,12 @@ We read through the batches to extract the labels.</p>
 </div>
 </div>
 </div>
-<div class="section" id="convert-a-quantized-keras-model-to-akida">
-<h2>3. Convert a quantized Keras model to Akida<a class="headerlink" href="#convert-a-quantized-keras-model-to-akida" title="Permalink to this headline">¶</a></h2>
-<p>In this section, we will instantiate a quantized Keras model based on
-MobileNet and modify the last layers to specify the classification for
-<code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code>. After loading the pre-trained weights, we will convert
-the Keras model to Akida.</p>
-<p>This section goes as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>3.A - Instantiate a Keras base model</strong></p></li>
-<li><p><strong>3.B - Modify the network and load pre-trained weights</strong></p></li>
-<li><p><strong>3.C - Convert to Akida</strong></p></li>
-</ul>
-</div></blockquote>
+<div class="section" id="modify-a-pre-trained-base-keras-model">
+<h2>2. Modify a pre-trained base Keras model<a class="headerlink" href="#modify-a-pre-trained-base-keras-model" title="Permalink to this headline">¶</a></h2>
+<p>In this section, we will describe how to modify a base model to specify
+the classification for <code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code>.</p>
 <div class="section" id="a-instantiate-a-keras-base-model">
-<h3>3.A - Instantiate a Keras base model<a class="headerlink" href="#a-instantiate-a-keras-base-model" title="Permalink to this headline">¶</a></h3>
+<h3>2.A - Instantiate a Keras base model<a class="headerlink" href="#a-instantiate-a-keras-base-model" title="Permalink to this headline">¶</a></h3>
 <p>Here, we instantiate a quantized Keras model based on a MobileNet model.
 This base model was previously trained using the 1000 classes of the
 ImageNet dataset. For more information, please see the <a class="reference external" href="plot_mobilenet_imagenet.html">ImageNet
@@ -709,49 +626,313 @@ convolutional layer has 8-bit weights.</p></li>
 <li><p>The activations are quantized with 4 bits.</p></li>
 </ul>
 </div></blockquote>
-<p>Using the provided quantized MobileNet model, we create an instance
-without the top classification layer (‘include_top=False’).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">base_model_keras</span> <span class="o">=</span> <span class="n">mobilenet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="n">IMG_SIZE</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                                      <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                      <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;avg&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">mobilenet_imagenet</span>
+
+<span class="c1"># Instantiate a quantized MobileNet model</span>
+<span class="n">base_model_keras</span> <span class="o">=</span> <span class="n">mobilenet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="n">IMG_SIZE</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                                       <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                                       <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                                       <span class="n">input_weight_quantization</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+<span class="c1"># Load pre-trained weights for the base model</span>
+<span class="n">pretrained_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+    <span class="s2">&quot;mobilenet_imagenet_iq8_wq4_aq4.h5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_iq8_wq4_aq4.h5&quot;</span><span class="p">,</span>
+    <span class="n">file_hash</span><span class="o">=</span><span class="s2">&quot;07780D7B6A12B764AF1372D792BDF032301508FB997BFD044C397CA2C8AD5747&quot;</span><span class="p">,</span>
+    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/mobilenet&#39;</span><span class="p">)</span>
+<span class="n">base_model_keras</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">pretrained_weights</span><span class="p">)</span>
+
+<span class="n">base_model_keras</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>WARNING: Keyword argument &#39;strides&#39; is not supported in conv_block except for the first layer.
+Downloading data from http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_iq8_wq4_aq4.h5
+
+    8192/33988120 [..............................] - ETA: 1:07
+   73728/33988120 [..............................] - ETA: 31s 
+  270336/33988120 [..............................] - ETA: 15s
+  466944/33988120 [..............................] - ETA: 12s
+  663552/33988120 [..............................] - ETA: 11s
+  860160/33988120 [..............................] - ETA: 10s
+ 1056768/33988120 [..............................] - ETA: 10s
+ 1253376/33988120 [&gt;.............................] - ETA: 10s
+ 1449984/33988120 [&gt;.............................] - ETA: 9s 
+ 1646592/33988120 [&gt;.............................] - ETA: 9s
+ 1843200/33988120 [&gt;.............................] - ETA: 9s
+ 2039808/33988120 [&gt;.............................] - ETA: 9s
+ 2236416/33988120 [&gt;.............................] - ETA: 9s
+ 2433024/33988120 [=&gt;............................] - ETA: 9s
+ 2629632/33988120 [=&gt;............................] - ETA: 9s
+ 2826240/33988120 [=&gt;............................] - ETA: 8s
+ 3022848/33988120 [=&gt;............................] - ETA: 8s
+ 3219456/33988120 [=&gt;............................] - ETA: 8s
+ 3416064/33988120 [==&gt;...........................] - ETA: 8s
+ 3612672/33988120 [==&gt;...........................] - ETA: 8s
+ 3809280/33988120 [==&gt;...........................] - ETA: 8s
+ 4005888/33988120 [==&gt;...........................] - ETA: 8s
+ 4202496/33988120 [==&gt;...........................] - ETA: 8s
+ 4399104/33988120 [==&gt;...........................] - ETA: 8s
+ 4595712/33988120 [===&gt;..........................] - ETA: 8s
+ 4792320/33988120 [===&gt;..........................] - ETA: 8s
+ 4988928/33988120 [===&gt;..........................] - ETA: 8s
+ 5185536/33988120 [===&gt;..........................] - ETA: 8s
+ 5382144/33988120 [===&gt;..........................] - ETA: 7s
+ 5578752/33988120 [===&gt;..........................] - ETA: 7s
+ 5775360/33988120 [====&gt;.........................] - ETA: 7s
+ 5971968/33988120 [====&gt;.........................] - ETA: 7s
+ 6168576/33988120 [====&gt;.........................] - ETA: 7s
+ 6365184/33988120 [====&gt;.........................] - ETA: 7s
+ 6561792/33988120 [====&gt;.........................] - ETA: 7s
+ 6758400/33988120 [====&gt;.........................] - ETA: 7s
+ 6955008/33988120 [=====&gt;........................] - ETA: 7s
+ 7151616/33988120 [=====&gt;........................] - ETA: 7s
+ 7348224/33988120 [=====&gt;........................] - ETA: 7s
+ 7544832/33988120 [=====&gt;........................] - ETA: 7s
+ 7741440/33988120 [=====&gt;........................] - ETA: 7s
+ 7938048/33988120 [======&gt;.......................] - ETA: 7s
+ 8134656/33988120 [======&gt;.......................] - ETA: 7s
+ 8331264/33988120 [======&gt;.......................] - ETA: 7s
+ 8527872/33988120 [======&gt;.......................] - ETA: 7s
+ 8724480/33988120 [======&gt;.......................] - ETA: 6s
+ 8921088/33988120 [======&gt;.......................] - ETA: 6s
+ 9117696/33988120 [=======&gt;......................] - ETA: 6s
+ 9314304/33988120 [=======&gt;......................] - ETA: 6s
+ 9510912/33988120 [=======&gt;......................] - ETA: 6s
+ 9707520/33988120 [=======&gt;......................] - ETA: 6s
+ 9904128/33988120 [=======&gt;......................] - ETA: 6s
+10100736/33988120 [=======&gt;......................] - ETA: 6s
+10297344/33988120 [========&gt;.....................] - ETA: 6s
+10493952/33988120 [========&gt;.....................] - ETA: 6s
+10690560/33988120 [========&gt;.....................] - ETA: 6s
+10887168/33988120 [========&gt;.....................] - ETA: 6s
+11083776/33988120 [========&gt;.....................] - ETA: 6s
+11280384/33988120 [========&gt;.....................] - ETA: 6s
+11476992/33988120 [=========&gt;....................] - ETA: 6s
+11673600/33988120 [=========&gt;....................] - ETA: 6s
+11870208/33988120 [=========&gt;....................] - ETA: 6s
+12066816/33988120 [=========&gt;....................] - ETA: 6s
+12263424/33988120 [=========&gt;....................] - ETA: 5s
+12460032/33988120 [=========&gt;....................] - ETA: 5s
+12656640/33988120 [==========&gt;...................] - ETA: 5s
+12853248/33988120 [==========&gt;...................] - ETA: 5s
+13049856/33988120 [==========&gt;...................] - ETA: 5s
+13246464/33988120 [==========&gt;...................] - ETA: 5s
+13443072/33988120 [==========&gt;...................] - ETA: 5s
+13639680/33988120 [===========&gt;..................] - ETA: 5s
+13836288/33988120 [===========&gt;..................] - ETA: 5s
+14032896/33988120 [===========&gt;..................] - ETA: 5s
+14229504/33988120 [===========&gt;..................] - ETA: 5s
+14426112/33988120 [===========&gt;..................] - ETA: 5s
+14622720/33988120 [===========&gt;..................] - ETA: 5s
+14819328/33988120 [============&gt;.................] - ETA: 5s
+15015936/33988120 [============&gt;.................] - ETA: 5s
+15212544/33988120 [============&gt;.................] - ETA: 5s
+15409152/33988120 [============&gt;.................] - ETA: 5s
+15605760/33988120 [============&gt;.................] - ETA: 5s
+15802368/33988120 [============&gt;.................] - ETA: 4s
+15998976/33988120 [=============&gt;................] - ETA: 4s
+16195584/33988120 [=============&gt;................] - ETA: 4s
+16392192/33988120 [=============&gt;................] - ETA: 4s
+16588800/33988120 [=============&gt;................] - ETA: 4s
+16785408/33988120 [=============&gt;................] - ETA: 4s
+16982016/33988120 [=============&gt;................] - ETA: 4s
+17178624/33988120 [==============&gt;...............] - ETA: 4s
+17375232/33988120 [==============&gt;...............] - ETA: 4s
+17571840/33988120 [==============&gt;...............] - ETA: 4s
+17768448/33988120 [==============&gt;...............] - ETA: 4s
+17965056/33988120 [==============&gt;...............] - ETA: 4s
+18161664/33988120 [===============&gt;..............] - ETA: 4s
+18358272/33988120 [===============&gt;..............] - ETA: 4s
+18554880/33988120 [===============&gt;..............] - ETA: 4s
+18751488/33988120 [===============&gt;..............] - ETA: 4s
+18948096/33988120 [===============&gt;..............] - ETA: 4s
+19144704/33988120 [===============&gt;..............] - ETA: 4s
+19341312/33988120 [================&gt;.............] - ETA: 4s
+19537920/33988120 [================&gt;.............] - ETA: 3s
+19734528/33988120 [================&gt;.............] - ETA: 3s
+19931136/33988120 [================&gt;.............] - ETA: 3s
+20127744/33988120 [================&gt;.............] - ETA: 3s
+20324352/33988120 [================&gt;.............] - ETA: 3s
+20520960/33988120 [=================&gt;............] - ETA: 3s
+20717568/33988120 [=================&gt;............] - ETA: 3s
+20914176/33988120 [=================&gt;............] - ETA: 3s
+21110784/33988120 [=================&gt;............] - ETA: 3s
+21307392/33988120 [=================&gt;............] - ETA: 3s
+21504000/33988120 [=================&gt;............] - ETA: 3s
+21700608/33988120 [==================&gt;...........] - ETA: 3s
+21897216/33988120 [==================&gt;...........] - ETA: 3s
+22093824/33988120 [==================&gt;...........] - ETA: 3s
+22290432/33988120 [==================&gt;...........] - ETA: 3s
+22487040/33988120 [==================&gt;...........] - ETA: 3s
+22683648/33988120 [===================&gt;..........] - ETA: 3s
+22880256/33988120 [===================&gt;..........] - ETA: 3s
+23076864/33988120 [===================&gt;..........] - ETA: 2s
+23273472/33988120 [===================&gt;..........] - ETA: 2s
+23470080/33988120 [===================&gt;..........] - ETA: 2s
+23666688/33988120 [===================&gt;..........] - ETA: 2s
+23863296/33988120 [====================&gt;.........] - ETA: 2s
+24059904/33988120 [====================&gt;.........] - ETA: 2s
+24256512/33988120 [====================&gt;.........] - ETA: 2s
+24453120/33988120 [====================&gt;.........] - ETA: 2s
+24649728/33988120 [====================&gt;.........] - ETA: 2s
+24846336/33988120 [====================&gt;.........] - ETA: 2s
+25042944/33988120 [=====================&gt;........] - ETA: 2s
+25239552/33988120 [=====================&gt;........] - ETA: 2s
+25436160/33988120 [=====================&gt;........] - ETA: 2s
+25632768/33988120 [=====================&gt;........] - ETA: 2s
+25829376/33988120 [=====================&gt;........] - ETA: 2s
+26025984/33988120 [=====================&gt;........] - ETA: 2s
+26222592/33988120 [======================&gt;.......] - ETA: 2s
+26419200/33988120 [======================&gt;.......] - ETA: 2s
+26615808/33988120 [======================&gt;.......] - ETA: 2s
+26812416/33988120 [======================&gt;.......] - ETA: 1s
+27009024/33988120 [======================&gt;.......] - ETA: 1s
+27205632/33988120 [=======================&gt;......] - ETA: 1s
+27402240/33988120 [=======================&gt;......] - ETA: 1s
+27598848/33988120 [=======================&gt;......] - ETA: 1s
+27795456/33988120 [=======================&gt;......] - ETA: 1s
+27992064/33988120 [=======================&gt;......] - ETA: 1s
+28188672/33988120 [=======================&gt;......] - ETA: 1s
+28385280/33988120 [========================&gt;.....] - ETA: 1s
+28581888/33988120 [========================&gt;.....] - ETA: 1s
+28778496/33988120 [========================&gt;.....] - ETA: 1s
+28975104/33988120 [========================&gt;.....] - ETA: 1s
+29171712/33988120 [========================&gt;.....] - ETA: 1s
+29368320/33988120 [========================&gt;.....] - ETA: 1s
+29564928/33988120 [=========================&gt;....] - ETA: 1s
+29761536/33988120 [=========================&gt;....] - ETA: 1s
+29958144/33988120 [=========================&gt;....] - ETA: 1s
+30154752/33988120 [=========================&gt;....] - ETA: 1s
+30351360/33988120 [=========================&gt;....] - ETA: 0s
+30547968/33988120 [=========================&gt;....] - ETA: 0s
+30744576/33988120 [==========================&gt;...] - ETA: 0s
+30941184/33988120 [==========================&gt;...] - ETA: 0s
+31137792/33988120 [==========================&gt;...] - ETA: 0s
+31334400/33988120 [==========================&gt;...] - ETA: 0s
+31531008/33988120 [==========================&gt;...] - ETA: 0s
+31727616/33988120 [===========================&gt;..] - ETA: 0s
+31924224/33988120 [===========================&gt;..] - ETA: 0s
+32120832/33988120 [===========================&gt;..] - ETA: 0s
+32317440/33988120 [===========================&gt;..] - ETA: 0s
+32514048/33988120 [===========================&gt;..] - ETA: 0s
+32710656/33988120 [===========================&gt;..] - ETA: 0s
+32907264/33988120 [============================&gt;.] - ETA: 0s
+33103872/33988120 [============================&gt;.] - ETA: 0s
+33300480/33988120 [============================&gt;.] - ETA: 0s
+33497088/33988120 [============================&gt;.] - ETA: 0s
+33693696/33988120 [============================&gt;.] - ETA: 0s
+33890304/33988120 [============================&gt;.] - ETA: 0s
+33988608/33988120 [==============================] - 9s 0us/step
+Model: &quot;model_5&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_14 (InputLayer)        [(None, 160, 160, 3)]     0
+_________________________________________________________________
+conv_0 (QuantizedConv2D)     (None, 80, 80, 32)        896
+_________________________________________________________________
+conv_0_relu (ActivationDiscr (None, 80, 80, 32)        0
+_________________________________________________________________
+separable_1 (QuantizedSepara (None, 80, 80, 64)        2400
+_________________________________________________________________
+separable_1_relu (Activation (None, 80, 80, 64)        0
+_________________________________________________________________
+separable_2 (QuantizedSepara (None, 80, 80, 128)       8896
+_________________________________________________________________
+separable_2_maxpool (MaxPool (None, 40, 40, 128)       0
+_________________________________________________________________
+separable_2_relu (Activation (None, 40, 40, 128)       0
+_________________________________________________________________
+separable_3 (QuantizedSepara (None, 40, 40, 128)       17664
+_________________________________________________________________
+separable_3_relu (Activation (None, 40, 40, 128)       0
+_________________________________________________________________
+separable_4 (QuantizedSepara (None, 40, 40, 256)       34176
+_________________________________________________________________
+separable_4_maxpool (MaxPool (None, 20, 20, 256)       0
+_________________________________________________________________
+separable_4_relu (Activation (None, 20, 20, 256)       0
+_________________________________________________________________
+separable_5 (QuantizedSepara (None, 20, 20, 256)       68096
+_________________________________________________________________
+separable_5_relu (Activation (None, 20, 20, 256)       0
+_________________________________________________________________
+separable_6 (QuantizedSepara (None, 20, 20, 512)       133888
+_________________________________________________________________
+separable_6_maxpool (MaxPool (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_6_relu (Activation (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_7 (QuantizedSepara (None, 10, 10, 512)       267264
+_________________________________________________________________
+separable_7_relu (Activation (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_8 (QuantizedSepara (None, 10, 10, 512)       267264
+_________________________________________________________________
+separable_8_relu (Activation (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_9 (QuantizedSepara (None, 10, 10, 512)       267264
+_________________________________________________________________
+separable_9_relu (Activation (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_10 (QuantizedSepar (None, 10, 10, 512)       267264
+_________________________________________________________________
+separable_10_relu (Activatio (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_11 (QuantizedSepar (None, 10, 10, 512)       267264
+_________________________________________________________________
+separable_11_relu (Activatio (None, 10, 10, 512)       0
+_________________________________________________________________
+separable_12 (QuantizedSepar (None, 10, 10, 1024)      529920
+_________________________________________________________________
+separable_12_maxpool (MaxPoo (None, 5, 5, 1024)        0
+_________________________________________________________________
+separable_12_relu (Activatio (None, 5, 5, 1024)        0
+_________________________________________________________________
+separable_13 (QuantizedSepar (None, 5, 5, 1024)        1058816
+_________________________________________________________________
+separable_13_global_avg (Glo (None, 1024)              0
+_________________________________________________________________
+separable_13_relu (Activatio (None, 1024)              0
+_________________________________________________________________
+reshape_1 (Reshape)          (None, 1, 1, 1024)        0
+_________________________________________________________________
+dropout (Dropout)            (None, 1, 1, 1024)        0
+_________________________________________________________________
+separable_14 (QuantizedSepar (None, 1, 1, 1000)        1033216
+_________________________________________________________________
+act_softmax (Activation)     (None, 1, 1, 1000)        0
+_________________________________________________________________
+reshape_2 (Reshape)          (None, 1000)              0
+=================================================================
+Total params: 4,224,288
+Trainable params: 4,224,288
+Non-trainable params: 0
+_________________________________________________________________
 </pre></div>
 </div>
 </div>
-<div class="section" id="b-modify-the-network-and-load-pre-trained-weights">
-<h3>3.B - Modify the network and load pre-trained weights<a class="headerlink" href="#b-modify-the-network-and-load-pre-trained-weights" title="Permalink to this headline">¶</a></h3>
-<p>As explained in <a class="reference external" href="plot_cats_vs_dogs_cnn2akida_demo.html#transfer-learning-process">section 1</a>,
-we add a separable convolutional layer as top layer with one output neuron.
+<div class="section" id="b-modify-the-network-for-the-new-task">
+<h3>2.B - Modify the network for the new task<a class="headerlink" href="#b-modify-the-network-for-the-new-task" title="Permalink to this headline">¶</a></h3>
+<p>As explained in <a class="reference external" href="#transfer-learning-process">section 1</a>,
+we replace the 1000-class top layer with a separable convolutional layer with
+one output neuron.
 The new model is now appropriate for the <code class="docutils literal notranslate"><span class="pre">cats_vs_dogs</span></code> dataset and is
 Akida-compatible. Note that a sigmoid activation is added at the end of
 the model: the output neuron returns a probability between 0 and 1 that
 the input image is a dog.</p>
-<p>The transfer learning process has been run internally and the weights have
-been saved. In this tutorial, the pre-trained weights are loaded for inference
-and conversion.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The pre-trained weights which are loaded corresponds to the
-quantization parameters described as above. If you want to modify
-these parameters, you must re-train the model and save weights.</p>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add a top layer for classification</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">base_model_keras</span><span class="o">.</span><span class="n">output</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models.layer_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span>
+
+<span class="c1"># Add a top layer for &quot;cats_vs_dogs&quot; classification</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">base_model_keras</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">output</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                          <span class="n">filters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                          <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;top_layer_separable&#39;</span><span class="p">,</span>
-                         <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                         <span class="n">activ_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                         <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;top_layer_separable&#39;</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">preds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_2&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">model_keras</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model_keras</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
@@ -770,73 +951,73 @@ input_14 (InputLayer)        [(None, 160, 160, 3)]     0
 _________________________________________________________________
 conv_0 (QuantizedConv2D)     (None, 80, 80, 32)        896
 _________________________________________________________________
-activation_discrete_relu_14  (None, 80, 80, 32)        0
+conv_0_relu (ActivationDiscr (None, 80, 80, 32)        0
 _________________________________________________________________
 separable_1 (QuantizedSepara (None, 80, 80, 64)        2400
 _________________________________________________________________
-activation_discrete_relu_15  (None, 80, 80, 64)        0
+separable_1_relu (Activation (None, 80, 80, 64)        0
 _________________________________________________________________
 separable_2 (QuantizedSepara (None, 80, 80, 128)       8896
 _________________________________________________________________
 separable_2_maxpool (MaxPool (None, 40, 40, 128)       0
 _________________________________________________________________
-activation_discrete_relu_16  (None, 40, 40, 128)       0
+separable_2_relu (Activation (None, 40, 40, 128)       0
 _________________________________________________________________
 separable_3 (QuantizedSepara (None, 40, 40, 128)       17664
 _________________________________________________________________
-activation_discrete_relu_17  (None, 40, 40, 128)       0
+separable_3_relu (Activation (None, 40, 40, 128)       0
 _________________________________________________________________
 separable_4 (QuantizedSepara (None, 40, 40, 256)       34176
 _________________________________________________________________
 separable_4_maxpool (MaxPool (None, 20, 20, 256)       0
 _________________________________________________________________
-activation_discrete_relu_18  (None, 20, 20, 256)       0
+separable_4_relu (Activation (None, 20, 20, 256)       0
 _________________________________________________________________
 separable_5 (QuantizedSepara (None, 20, 20, 256)       68096
 _________________________________________________________________
-activation_discrete_relu_19  (None, 20, 20, 256)       0
+separable_5_relu (Activation (None, 20, 20, 256)       0
 _________________________________________________________________
 separable_6 (QuantizedSepara (None, 20, 20, 512)       133888
 _________________________________________________________________
 separable_6_maxpool (MaxPool (None, 10, 10, 512)       0
 _________________________________________________________________
-activation_discrete_relu_20  (None, 10, 10, 512)       0
+separable_6_relu (Activation (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_7 (QuantizedSepara (None, 10, 10, 512)       267264
 _________________________________________________________________
-activation_discrete_relu_21  (None, 10, 10, 512)       0
+separable_7_relu (Activation (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_8 (QuantizedSepara (None, 10, 10, 512)       267264
 _________________________________________________________________
-activation_discrete_relu_22  (None, 10, 10, 512)       0
+separable_8_relu (Activation (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_9 (QuantizedSepara (None, 10, 10, 512)       267264
 _________________________________________________________________
-activation_discrete_relu_23  (None, 10, 10, 512)       0
+separable_9_relu (Activation (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_10 (QuantizedSepar (None, 10, 10, 512)       267264
 _________________________________________________________________
-activation_discrete_relu_24  (None, 10, 10, 512)       0
+separable_10_relu (Activatio (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_11 (QuantizedSepar (None, 10, 10, 512)       267264
 _________________________________________________________________
-activation_discrete_relu_25  (None, 10, 10, 512)       0
+separable_11_relu (Activatio (None, 10, 10, 512)       0
 _________________________________________________________________
 separable_12 (QuantizedSepar (None, 10, 10, 1024)      529920
 _________________________________________________________________
 separable_12_maxpool (MaxPoo (None, 5, 5, 1024)        0
 _________________________________________________________________
-activation_discrete_relu_26  (None, 5, 5, 1024)        0
+separable_12_relu (Activatio (None, 5, 5, 1024)        0
 _________________________________________________________________
 separable_13 (QuantizedSepar (None, 5, 5, 1024)        1058816
 _________________________________________________________________
 separable_13_global_avg (Glo (None, 1024)              0
 _________________________________________________________________
-activation_discrete_relu_27  (None, 1024)              0
+separable_13_relu (Activatio (None, 1024)              0
 _________________________________________________________________
 reshape_1 (Reshape)          (None, 1, 1, 1024)        0
 _________________________________________________________________
-top_layer_separable (Quantiz (None, 1, 1, 1)           10240
+top_layer_separable (Separab (None, 1, 1, 1)           10240
 _________________________________________________________________
 activation (Activation)      (None, 1, 1, 1)           0
 _________________________________________________________________
@@ -848,99 +1029,315 @@ Non-trainable params: 0
 _________________________________________________________________
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span>
+</div>
+</div>
+<div class="section" id="train-the-transferred-model-for-the-new-task">
+<h2>3. Train the transferred model for the new task<a class="headerlink" href="#train-the-transferred-model-for-the-new-task" title="Permalink to this headline">¶</a></h2>
+<p>The transferred model must be trained to learn how to classify cats and dogs.
+The quantized base model is frozen: only the float top layer will effectively
+be trained. One can take a look at the
+<a class="reference external" href="https://www.tensorflow.org/tutorials/images/transfer_learning#compile_the_model">training section</a>
+of the corresponding TensorFlow tutorial to reproduce the training stage.</p>
+<p>The float top layer is trained for 20 epochs. We don’t illustrate the training
+phase in this tutorial; instead we directly load the pre-trained weights
+obtained after the 20 epochs.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Freeze the base model part of the new model</span>
+<span class="n">base_model_keras</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="c1"># Load pre-trained model</span>
-<span class="n">pretrained_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+<span class="c1"># Load pre-trained weights</span>
+<span class="n">pretrained_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
     <span class="s2">&quot;mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5&quot;</span><span class="p">,</span>
     <span class="s2">&quot;http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5&quot;</span><span class="p">,</span>
-    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/mobilenet&#39;</span><span class="p">)</span>
-<span class="n">model_keras</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">pretrained_model</span><span class="p">)</span>
+    <span class="n">file_hash</span><span class="o">=</span><span class="s2">&quot;85a169b78b426647a7cff3c4d6caf902dcfcb56ea41d5ea50455d7ae466bfdd3&quot;</span><span class="p">,</span>
+    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+<span class="n">model_keras</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">pretrained_weights</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5
 
     8192/12905160 [..............................] - ETA: 25s
-   65536/12905160 [..............................] - ETA: 13s
-  139264/12905160 [..............................] - ETA: 10s
-  335872/12905160 [..............................] - ETA: 6s 
-  532480/12905160 [&gt;.............................] - ETA: 5s
-  729088/12905160 [&gt;.............................] - ETA: 4s
-  925696/12905160 [=&gt;............................] - ETA: 4s
- 1122304/12905160 [=&gt;............................] - ETA: 4s
- 1318912/12905160 [==&gt;...........................] - ETA: 3s
- 1515520/12905160 [==&gt;...........................] - ETA: 3s
- 1712128/12905160 [==&gt;...........................] - ETA: 3s
- 1908736/12905160 [===&gt;..........................] - ETA: 3s
- 2105344/12905160 [===&gt;..........................] - ETA: 3s
- 2301952/12905160 [====&gt;.........................] - ETA: 3s
- 2498560/12905160 [====&gt;.........................] - ETA: 3s
- 2695168/12905160 [=====&gt;........................] - ETA: 3s
- 2891776/12905160 [=====&gt;........................] - ETA: 2s
- 3088384/12905160 [======&gt;.......................] - ETA: 2s
- 3284992/12905160 [======&gt;.......................] - ETA: 2s
- 3481600/12905160 [=======&gt;......................] - ETA: 2s
- 3678208/12905160 [=======&gt;......................] - ETA: 2s
- 3874816/12905160 [========&gt;.....................] - ETA: 2s
- 4071424/12905160 [========&gt;.....................] - ETA: 2s
- 4268032/12905160 [========&gt;.....................] - ETA: 2s
- 4464640/12905160 [=========&gt;....................] - ETA: 2s
- 4661248/12905160 [=========&gt;....................] - ETA: 2s
- 4857856/12905160 [==========&gt;...................] - ETA: 2s
- 5054464/12905160 [==========&gt;...................] - ETA: 2s
- 5251072/12905160 [===========&gt;..................] - ETA: 2s
- 5447680/12905160 [===========&gt;..................] - ETA: 2s
- 5644288/12905160 [============&gt;.................] - ETA: 2s
- 5840896/12905160 [============&gt;.................] - ETA: 2s
- 6037504/12905160 [=============&gt;................] - ETA: 1s
- 6234112/12905160 [=============&gt;................] - ETA: 1s
- 6430720/12905160 [=============&gt;................] - ETA: 1s
- 6627328/12905160 [==============&gt;...............] - ETA: 1s
- 6823936/12905160 [==============&gt;...............] - ETA: 1s
- 7020544/12905160 [===============&gt;..............] - ETA: 1s
- 7217152/12905160 [===============&gt;..............] - ETA: 1s
- 7413760/12905160 [================&gt;.............] - ETA: 1s
- 7610368/12905160 [================&gt;.............] - ETA: 1s
- 7806976/12905160 [=================&gt;............] - ETA: 1s
- 8003584/12905160 [=================&gt;............] - ETA: 1s
- 8200192/12905160 [==================&gt;...........] - ETA: 1s
- 8396800/12905160 [==================&gt;...........] - ETA: 1s
- 8593408/12905160 [==================&gt;...........] - ETA: 1s
- 8790016/12905160 [===================&gt;..........] - ETA: 1s
- 8986624/12905160 [===================&gt;..........] - ETA: 1s
- 9183232/12905160 [====================&gt;.........] - ETA: 1s
- 9379840/12905160 [====================&gt;.........] - ETA: 0s
- 9576448/12905160 [=====================&gt;........] - ETA: 0s
- 9773056/12905160 [=====================&gt;........] - ETA: 0s
- 9969664/12905160 [======================&gt;.......] - ETA: 0s
-10166272/12905160 [======================&gt;.......] - ETA: 0s
-10362880/12905160 [=======================&gt;......] - ETA: 0s
-10559488/12905160 [=======================&gt;......] - ETA: 0s
-10756096/12905160 [========================&gt;.....] - ETA: 0s
-10952704/12905160 [========================&gt;.....] - ETA: 0s
-11149312/12905160 [========================&gt;.....] - ETA: 0s
-11345920/12905160 [=========================&gt;....] - ETA: 0s
-11542528/12905160 [=========================&gt;....] - ETA: 0s
-11739136/12905160 [==========================&gt;...] - ETA: 0s
-11935744/12905160 [==========================&gt;...] - ETA: 0s
-12132352/12905160 [===========================&gt;..] - ETA: 0s
-12328960/12905160 [===========================&gt;..] - ETA: 0s
-12525568/12905160 [============================&gt;.] - ETA: 0s
-12722176/12905160 [============================&gt;.] - ETA: 0s
+   73728/12905160 [..............................] - ETA: 11s
+  270336/12905160 [..............................] - ETA: 5s 
+  466944/12905160 [&gt;.............................] - ETA: 4s
+  663552/12905160 [&gt;.............................] - ETA: 4s
+  860160/12905160 [&gt;.............................] - ETA: 3s
+ 1056768/12905160 [=&gt;............................] - ETA: 3s
+ 1253376/12905160 [=&gt;............................] - ETA: 3s
+ 1449984/12905160 [==&gt;...........................] - ETA: 3s
+ 1646592/12905160 [==&gt;...........................] - ETA: 3s
+ 1843200/12905160 [===&gt;..........................] - ETA: 3s
+ 2039808/12905160 [===&gt;..........................] - ETA: 3s
+ 2236416/12905160 [====&gt;.........................] - ETA: 3s
+ 2433024/12905160 [====&gt;.........................] - ETA: 3s
+ 2629632/12905160 [=====&gt;........................] - ETA: 2s
+ 2826240/12905160 [=====&gt;........................] - ETA: 2s
+ 3022848/12905160 [======&gt;.......................] - ETA: 2s
+ 3219456/12905160 [======&gt;.......................] - ETA: 2s
+ 3416064/12905160 [======&gt;.......................] - ETA: 2s
+ 3612672/12905160 [=======&gt;......................] - ETA: 2s
+ 3809280/12905160 [=======&gt;......................] - ETA: 2s
+ 4005888/12905160 [========&gt;.....................] - ETA: 2s
+ 4202496/12905160 [========&gt;.....................] - ETA: 2s
+ 4399104/12905160 [=========&gt;....................] - ETA: 2s
+ 4595712/12905160 [=========&gt;....................] - ETA: 2s
+ 4792320/12905160 [==========&gt;...................] - ETA: 2s
+ 4988928/12905160 [==========&gt;...................] - ETA: 2s
+ 5185536/12905160 [===========&gt;..................] - ETA: 2s
+ 5382144/12905160 [===========&gt;..................] - ETA: 2s
+ 5578752/12905160 [===========&gt;..................] - ETA: 2s
+ 5775360/12905160 [============&gt;.................] - ETA: 1s
+ 5971968/12905160 [============&gt;.................] - ETA: 1s
+ 6168576/12905160 [=============&gt;................] - ETA: 1s
+ 6365184/12905160 [=============&gt;................] - ETA: 1s
+ 6561792/12905160 [==============&gt;...............] - ETA: 1s
+ 6758400/12905160 [==============&gt;...............] - ETA: 1s
+ 6955008/12905160 [===============&gt;..............] - ETA: 1s
+ 7151616/12905160 [===============&gt;..............] - ETA: 1s
+ 7348224/12905160 [================&gt;.............] - ETA: 1s
+ 7544832/12905160 [================&gt;.............] - ETA: 1s
+ 7741440/12905160 [================&gt;.............] - ETA: 1s
+ 7938048/12905160 [=================&gt;............] - ETA: 1s
+ 8134656/12905160 [=================&gt;............] - ETA: 1s
+ 8331264/12905160 [==================&gt;...........] - ETA: 1s
+ 8527872/12905160 [==================&gt;...........] - ETA: 1s
+ 8724480/12905160 [===================&gt;..........] - ETA: 1s
+ 8921088/12905160 [===================&gt;..........] - ETA: 1s
+ 9117696/12905160 [====================&gt;.........] - ETA: 1s
+ 9314304/12905160 [====================&gt;.........] - ETA: 0s
+ 9510912/12905160 [=====================&gt;........] - ETA: 0s
+ 9707520/12905160 [=====================&gt;........] - ETA: 0s
+ 9904128/12905160 [======================&gt;.......] - ETA: 0s
+10100736/12905160 [======================&gt;.......] - ETA: 0s
+10297344/12905160 [======================&gt;.......] - ETA: 0s
+10493952/12905160 [=======================&gt;......] - ETA: 0s
+10690560/12905160 [=======================&gt;......] - ETA: 0s
+10887168/12905160 [========================&gt;.....] - ETA: 0s
+11083776/12905160 [========================&gt;.....] - ETA: 0s
+11280384/12905160 [=========================&gt;....] - ETA: 0s
+11476992/12905160 [=========================&gt;....] - ETA: 0s
+11673600/12905160 [==========================&gt;...] - ETA: 0s
+11870208/12905160 [==========================&gt;...] - ETA: 0s
+12066816/12905160 [===========================&gt;..] - ETA: 0s
+12263424/12905160 [===========================&gt;..] - ETA: 0s
+12460032/12905160 [===========================&gt;..] - ETA: 0s
+12656640/12905160 [============================&gt;.] - ETA: 0s
+12853248/12905160 [============================&gt;.] - ETA: 0s
 12910592/12905160 [==============================] - 4s 0us/step
 </pre></div>
 </div>
-</div>
-<div class="section" id="c-convert-to-akida">
-<h3>3.C - Convert to Akida<a class="headerlink" href="#c-convert-to-akida" title="Permalink to this headline">¶</a></h3>
-<p>The new Keras model with pre-trained weights is now converted to an
-Akida model. It only requires the quantized Keras model and the inputs
-scaling used during training.
-Note: the ‘sigmoid’ activation has no SNN equivalent and will be simply
-ignored during the conversion.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check performance on the test set</span>
+<span class="n">model_keras</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">keras_accuracy</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_batches_keras</span><span class="p">)</span>
 
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keras accuracy (float top layer): </span><span class="si">{</span><span class="n">keras_accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span> 1/73 [..............................] - ETA: 0s - loss: 0.0000e+00 - accuracy: 1.0000
+ 2/73 [..............................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 1.0000
+ 3/73 [&gt;.............................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9792
+ 4/73 [&gt;.............................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9844
+ 5/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9750
+ 6/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9740
+ 7/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9777
+ 8/73 [==&gt;...........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9727
+ 9/73 [==&gt;...........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9722
+10/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9750
+11/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9773
+12/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9766
+13/73 [====&gt;.........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9760
+14/73 [====&gt;.........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9754
+15/73 [=====&gt;........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9750
+16/73 [=====&gt;........................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9766
+17/73 [=====&gt;........................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9761
+18/73 [======&gt;.......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9757
+19/73 [======&gt;.......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9737
+20/73 [=======&gt;......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9703
+21/73 [=======&gt;......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9717
+22/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9688
+23/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9647
+24/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9648
+25/73 [=========&gt;....................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9663
+26/73 [=========&gt;....................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9663
+27/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9653
+28/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9665
+29/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9666
+30/73 [===========&gt;..................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9677
+31/73 [===========&gt;..................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9688
+32/73 [============&gt;.................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9688
+33/73 [============&gt;.................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9697
+34/73 [============&gt;.................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9706
+35/73 [=============&gt;................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9705
+36/73 [=============&gt;................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9714
+37/73 [==============&gt;...............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9713
+38/73 [==============&gt;...............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9720
+39/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9728
+40/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9719
+41/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9718
+42/73 [================&gt;.............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9717
+43/73 [================&gt;.............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9709
+44/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9716
+45/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9708
+46/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9708
+47/73 [==================&gt;...........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9707
+48/73 [==================&gt;...........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9714
+49/73 [===================&gt;..........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9719
+50/73 [===================&gt;..........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9725
+51/73 [===================&gt;..........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9730
+52/73 [====================&gt;.........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9736
+53/73 [====================&gt;.........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9735
+54/73 [=====================&gt;........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9740
+55/73 [=====================&gt;........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9739
+56/73 [======================&gt;.......] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9738
+57/73 [======================&gt;.......] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9737
+58/73 [======================&gt;.......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9736
+59/73 [=======================&gt;......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9740
+60/73 [=======================&gt;......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9740
+61/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9739
+62/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9733
+63/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9737
+64/73 [=========================&gt;....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9741
+65/73 [=========================&gt;....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9740
+66/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9740
+67/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9739
+68/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9743
+69/73 [===========================&gt;..] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9737
+70/73 [===========================&gt;..] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9741
+71/73 [============================&gt;.] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9745
+72/73 [============================&gt;.] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9748
+73/73 [==============================] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9751
+73/73 [==============================] - 9s 126ms/step - loss: 0.0000e+00 - accuracy: 0.9751
+Keras accuracy (float top layer): 97.51 %
+</pre></div>
+</div>
+</div>
+<div class="section" id="quantize-the-top-layer">
+<h2>4 Quantize the top layer<a class="headerlink" href="#quantize-the-top-layer" title="Permalink to this headline">¶</a></h2>
+<p>To get an Akida-compatible model, the float top layer must be quantized.
+We decide to quantize its weights to 4 bits. The performance of the
+new quantized model is then assessed.</p>
+<p>Here, the quantized model gives suitable performance compared to the model
+with the float top layer. If that had not been the case, a fine-tuning step
+would have been necessary to recover the drop in accuracy.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize_layer</span>
+
+<span class="c1"># Quantize the top layer to 4 bits</span>
+<span class="n">model_keras</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="s1">&#39;top_layer_separable&#39;</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="c1"># Check performance for the quantized Keras model</span>
+<span class="n">model_keras</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">keras_accuracy</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_batches_keras</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantized Keras accuracy: </span><span class="si">{</span><span class="n">keras_accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span> 1/73 [..............................] - ETA: 0s - loss: 0.0000e+00 - accuracy: 1.0000
+ 2/73 [..............................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 1.0000
+ 3/73 [&gt;.............................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9792
+ 4/73 [&gt;.............................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9844
+ 5/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9750
+ 6/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9740
+ 7/73 [=&gt;............................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9777
+ 8/73 [==&gt;...........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9727
+ 9/73 [==&gt;...........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9722
+10/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9750
+11/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9773
+12/73 [===&gt;..........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9766
+13/73 [====&gt;.........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9760
+14/73 [====&gt;.........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9754
+15/73 [=====&gt;........................] - ETA: 7s - loss: 0.0000e+00 - accuracy: 0.9729
+16/73 [=====&gt;........................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9746
+17/73 [=====&gt;........................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9743
+18/73 [======&gt;.......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9740
+19/73 [======&gt;.......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9720
+20/73 [=======&gt;......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9688
+21/73 [=======&gt;......................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9702
+22/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9673
+23/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9633
+24/73 [========&gt;.....................] - ETA: 6s - loss: 0.0000e+00 - accuracy: 0.9635
+25/73 [=========&gt;....................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9650
+26/73 [=========&gt;....................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9651
+27/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9641
+28/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9654
+29/73 [==========&gt;...................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9655
+30/73 [===========&gt;..................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9667
+31/73 [===========&gt;..................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9677
+32/73 [============&gt;.................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9678
+33/73 [============&gt;.................] - ETA: 5s - loss: 0.0000e+00 - accuracy: 0.9688
+34/73 [============&gt;.................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9697
+35/73 [=============&gt;................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9696
+36/73 [=============&gt;................] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9705
+37/73 [==============&gt;...............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9704
+38/73 [==============&gt;...............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9712
+39/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9720
+40/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9711
+41/73 [===============&gt;..............] - ETA: 4s - loss: 0.0000e+00 - accuracy: 0.9710
+42/73 [================&gt;.............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9702
+43/73 [================&gt;.............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9695
+44/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9702
+45/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9694
+46/73 [=================&gt;............] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9701
+47/73 [==================&gt;...........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9701
+48/73 [==================&gt;...........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9707
+49/73 [===================&gt;..........] - ETA: 3s - loss: 0.0000e+00 - accuracy: 0.9713
+50/73 [===================&gt;..........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9719
+51/73 [===================&gt;..........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9724
+52/73 [====================&gt;.........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9730
+53/73 [====================&gt;.........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9729
+54/73 [=====================&gt;........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9734
+55/73 [=====================&gt;........] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9733
+56/73 [======================&gt;.......] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9732
+57/73 [======================&gt;.......] - ETA: 2s - loss: 0.0000e+00 - accuracy: 0.9731
+58/73 [======================&gt;.......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9731
+59/73 [=======================&gt;......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9735
+60/73 [=======================&gt;......] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9734
+61/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9734
+62/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9723
+63/73 [========================&gt;.....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9727
+64/73 [=========================&gt;....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9731
+65/73 [=========================&gt;....] - ETA: 1s - loss: 0.0000e+00 - accuracy: 0.9731
+66/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9730
+67/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9729
+68/73 [==========================&gt;...] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9733
+69/73 [===========================&gt;..] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9733
+70/73 [===========================&gt;..] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9737
+71/73 [============================&gt;.] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9740
+72/73 [============================&gt;.] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9744
+73/73 [==============================] - ETA: 0s - loss: 0.0000e+00 - accuracy: 0.9746
+73/73 [==============================] - 9s 127ms/step - loss: 0.0000e+00 - accuracy: 0.9746
+Quantized Keras accuracy: 97.46 %
+</pre></div>
+</div>
+</div>
+<div class="section" id="convert-to-akida">
+<h2>5. Convert to Akida<a class="headerlink" href="#convert-to-akida" title="Permalink to this headline">¶</a></h2>
+<p>The new quantized Keras model is now converted to an Akida model. The
+‘sigmoid’ final activation has no SNN equivalent and will be simply ignored
+during the conversion.</p>
+<p>Performance of the Akida model is then computed. Compared to Keras inference,
+remember that:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Input images in Akida are uint8 and not scaled like Keras inputs. But
+remember that the conversion process needs to know what scaling was
+applied during Keras training, in order to compensate (see
+<a class="reference external" href="../user_guide/cnn2snn.html#input-scaling">CNN2SNN guide</a>)</p></li>
+<li><p>The Akida <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.evaluate">evaluate</a>
+function takes a NumPy array containing the images and returns potentials
+before the sigmoid activation. We must therefore explicitly apply the
+‘sigmoid’ activation on the model outputs to obtain the Akida
+probabilities.</p></li>
+</ul>
+</div></blockquote>
+<p>Since activations sparsity has a great impact on Akida inference time, we
+also have a look at the average input and output sparsity of each layer on
+one batch of the test set.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+
+<span class="c1"># Convert the model</span>
+<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -981,67 +1378,20 @@ ________________________________________________________________________________
 top_layer_separable (SeparableConvolutional)  [1, 1, 1]      (3, 3, 1024, 1), (1, 1, 1024, 1)
 __________________________________________________________________________________________________
 Input shape: 160, 160, 3
-Backend type: Software - 1.8.8
+Backend type: Software - 1.8.9
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="classify-test-images">
-<h2>4. Classify test images<a class="headerlink" href="#classify-test-images" title="Permalink to this headline">¶</a></h2>
-<p>This section gives a comparison of the results between the quantized
-Keras and the Akida models. It goes as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>4.A - Classify test images</strong> with the quantized Keras and the Akida
-models</p></li>
-<li><p><strong>4.B - Compare results</strong></p></li>
-</ul>
-</div></blockquote>
-<div class="section" id="a-classify-test-images">
-<h3>4.A Classify test images<a class="headerlink" href="#a-classify-test-images" title="Permalink to this headline">¶</a></h3>
-<p>Here, we will predict the classes of the test images using the quantized
-Keras model and the converted Akida model. Remember that:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Input images in Keras and Akida are not scaled in the same range, be
-careful to use the correct inputs: uint8 images for Akida and float
-rescaled images for Keras.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">predict</span></code> function of tf.keras can take a <code class="docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code>
-object as argument. However, the Akida <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.evaluate">evaluate</a>
-function takes a NumPy array containing the images. Though the Akida
-<a class="reference external" href="../api_reference/aee_apis.html#akida.Model.predict">predict</a>
-function exists, it outputs a class label and not the raw predictions.</p></li>
-<li><p>The Keras <code class="docutils literal notranslate"><span class="pre">predict</span></code> function returns the probability to be a dog:
-if the output is greater than 0.5, the model predicts a ‘dog’. However,
-the Akida <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.evaluate">evaluate</a>
-function directly returns the potential before the ‘sigmoid’ activation, which has
-no SNN equivalent. We must therefore apply it explicitly on the model outputs to obtain
-the Akida probabilities.</p></li>
-</ul>
-</div></blockquote>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Classify test images with the quantized Keras model</span>
-<span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
-
-<span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-<span class="n">pots_keras</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_batches_keras</span><span class="p">)</span>
-<span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-
-<span class="n">preds_keras</span> <span class="o">=</span> <span class="n">pots_keras</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keras inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s2"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> s.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 2326 images took 9.68 s.
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Classify test images with the Akida model</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
 <span class="kn">from</span> <span class="nn">progressbar</span> <span class="kn">import</span> <span class="n">ProgressBar</span>
+
+<span class="c1"># Run inference with Akida model</span>
 <span class="n">n_batches</span> <span class="o">=</span> <span class="n">num_images</span> <span class="o">//</span> <span class="n">BATCH_SIZE</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">pots_akida</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
 <span class="n">pbar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">maxval</span><span class="o">=</span><span class="n">n_batches</span><span class="p">)</span>
-<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">pbar</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 <span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-<span class="n">pots_akida</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">test_batches_akida</span><span class="p">:</span>
     <span class="n">pots_batch_akida</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
     <span class="n">pots_akida</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">pots_akida</span><span class="p">,</span> <span class="n">pots_batch_akida</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()))</span>
@@ -1049,9 +1399,15 @@ the Akida probabilities.</p></li>
     <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
 <span class="n">pbar</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
 <span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-
-<span class="n">preds_akida</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">)(</span><span class="n">pots_akida</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s2"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> s.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Compute predictions and accuracy</span>
+<span class="n">preds_akida</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">)(</span><span class="n">pots_akida</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+<span class="n">akida_accuracy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">preds_akida</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida accuracy: </span><span class="si">{</span><span class="n">akida_accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+
+<span class="c1"># For non-regression purpose</span>
+<span class="k">assert</span> <span class="n">akida_accuracy</span> <span class="o">&gt;</span> <span class="mf">0.97</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
@@ -1130,14 +1486,17 @@ the Akida probabilities.</p></li>
  98% |####################################################################### |
 100% |########################################################################|
 100% |########################################################################|
-Akida inference on 2326 images took 41.49 s.
+Akida inference on 2326 images took 45.05 s.
+
+Akida accuracy: 97.55 %
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
 <span class="n">stats</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">()</span>
 <span class="n">batch</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">test_batches_akida</span><span class="p">)</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
 </pre></div>
@@ -1176,36 +1535,33 @@ Layer (type)                  input sparsity      output sparsity     ops
 top_layer_separable (Separabl 0.63                0.00                6788
 </pre></div>
 </div>
+<p>Let’s summarize the accuracy for the quantized Keras and the Akida model.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 63%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Accuracy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>quantized Keras</p></td>
+<td><p>97.46 %</p></td>
+</tr>
+<tr class="row-odd"><td><p>Akida</p></td>
+<td><p>97.55 %</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="section" id="b-compare-results">
-<h3>4.B Compare results<a class="headerlink" href="#b-compare-results" title="Permalink to this headline">¶</a></h3>
-<p>The Keras and Akida accuracies are compared and the Akida confusion
-matrix is given (the quantized Keras confusion matrix is almost
-identical to the Akida one). Note that there is no exact equivalence
-between the quantized Keras and the Akida models. However, the
-accuracies are highly similar.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compute accuracies</span>
-<span class="n">n_good_preds_keras</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">preds_keras</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
-<span class="n">n_good_preds_akida</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">preds_akida</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+<div class="section" id="plot-confusion-matrix">
+<h2>6. Plot confusion matrix<a class="headerlink" href="#plot-confusion-matrix" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">keras_accuracy</span> <span class="o">=</span> <span class="n">n_good_preds_keras</span> <span class="o">/</span> <span class="n">num_images</span>
-<span class="n">akida_accuracy</span> <span class="o">=</span> <span class="n">n_good_preds_akida</span> <span class="o">/</span> <span class="n">num_images</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantized Keras accuracy: </span><span class="si">{</span><span class="n">keras_accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %  &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">n_good_preds_keras</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s2"> images)&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida accuracy:           </span><span class="si">{</span><span class="n">akida_accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %  &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">n_good_preds_akida</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s2"> images)&quot;</span><span class="p">)</span>
-
-<span class="c1"># For non-regression purpose</span>
-<span class="k">assert</span> <span class="n">akida_accuracy</span> <span class="o">&gt;</span> <span class="mf">0.97</span>
-</pre></div>
-</div>
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Quantized Keras accuracy: 97.55 %  (2269 / 2326 images)
-Akida accuracy:           97.51 %  (2268 / 2326 images)
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">confusion_matrix_2classes</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">confusion_matrix_2classes</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>
     <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">labels</span> <span class="o">+</span> <span class="n">predictions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">tn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">labels</span> <span class="o">+</span> <span class="n">predictions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">fp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">predictions</span> <span class="o">-</span> <span class="n">labels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
@@ -1235,17 +1591,12 @@ Akida accuracy:           97.51 %  (2268 / 2326 images)
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot confusion matrix for Akida</span>
 <span class="n">cm_akida</span> <span class="o">=</span> <span class="n">confusion_matrix_2classes</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">preds_akida</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Confusion matrix quantized Akida:&quot;</span><span class="p">)</span>
 <span class="n">plot_confusion_matrix_2classes</span><span class="p">(</span><span class="n">cm_akida</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="../_images/sphx_glr_plot_transfer_learning_001.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_transfer_learning_001.png" />
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Confusion matrix quantized Akida:
-</pre></div>
-</div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  41.462 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  7.608 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-plot-transfer-learning-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/1a4bd0ec3b45ea55ca8f4288d600d59f/plot_transfer_learning.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_transfer_learning.py</span></code></a></p>
@@ -1255,7 +1606,6 @@ Akida accuracy:           97.51 %  (2268 / 2326 images)
 </div>
 </div>
 <p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
-</div>
 </div>
 </div>
 
