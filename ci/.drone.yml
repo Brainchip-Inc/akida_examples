@@ -13,7 +13,7 @@ platform:
 
 steps:
 - name: yapf
-  image: bender:5000/doc_build:python37_tf220
+  image: bender:5000/doc_build:akida-gpu_tf220
   commands:
   - pip install -U yapf
   - yapf --style="{based_on_style:google}" -dr examples/
@@ -33,21 +33,13 @@ platform:
 
 steps:
 - name: build
-  image: bender:5000/doc_build:python37_tf220
-  volumes:
-  - name: docs
-    path: /tmp/docs
+  image: bender:5000/doc_build:akida-gpu_tf220
   commands:
   - pip install -r requirements.txt
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
-  - rm -rf /tmp/docs/*
-  - cp -R build/* /tmp/docs
 
 - name: update_gh_pages
   image: bender:5000/drone/git:linux
-  volumes:
-  - name: docs
-    path: /tmp/docs
   when:
     ref:
       exclude:
@@ -55,22 +47,18 @@ steps:
   commands:
   - git fetch
   - git checkout gh-pages
-  - git clean -xdf
+  - git clean -xf
   - rm -rf _* examples/ api_reference/ user_guide/
   - rm *.html *.inv *.js
-  - cp -R /tmp/docs/* .
+  - cp -R ./build/* .
+  - rm -Rf doc/ build/
   - rm -rf _sources/
   - git add .
   - git diff --quiet && git diff --staged --quiet || git commit -am "Automated tutorials push"
   - git push origin gh-pages
 
 node:
-  rigel: ktsiknos
-
-volumes:
-- name: docs
-  host:
-    path: /home/ktsiknos/nightly_doc
+  hw: gpu
 
 depends_on:
   - check-style
@@ -92,7 +80,7 @@ platform:
 
 steps:
 - name: build
-  image: bender:5000/doc_build:python37_tf220
+  image: bender:5000/doc_build:akida-gpu_tf220
   commands:
   - pip install -r requirements.txt
   - pip install --index-url http://172.17.0.39:81/ --trusted-host 172.17.0.39 --pre -U cnn2snn
@@ -100,4 +88,4 @@ steps:
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
 
 node:
-  rigel: ktsiknos
+  hw: gpu
