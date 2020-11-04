@@ -50,10 +50,15 @@ x_test = (x_test - b) / a
 #            unconstrained float weights and activations for 1000 epochs
 #
 
-from akida_models import ds_cnn_cifar10_pretrained
+from tensorflow.keras.utils import get_file
+from cnn2snn import load_quantized_model
 
-# Instantiate the pretrained model
-model_keras = ds_cnn_cifar10_pretrained()
+# Retrieve the float model with pretrained weights and load it
+model_file = get_file(
+    "ds_cnn_cifar10.h5",
+    "http://data.brainchip.com/models/ds_cnn/ds_cnn_cifar10.h5",
+    cache_subdir='models/ds_cnn_cifar10')
+model_keras = load_quantized_model(model_file)
 model_keras.summary()
 
 ######################################################################
@@ -68,7 +73,7 @@ model_keras.summary()
 # +---------+----------+
 # | 1000    |  94.30 % |
 # +---------+----------+
-# | 10000   |  93.66 % |
+# | 10000   |  93.60 % |
 # +---------+----------+
 #
 # .. Note:: Depending on your hardware setup, the processing time may vary.
@@ -139,11 +144,11 @@ check_model_performances(model_keras_quantized, x_test)
 # +---------+----------------+--------------------+--------------+
 # | #Images | Float accuracy | Quantized accuracy | After tuning |
 # +=========+================+====================+==============+
-# | 100     |     96.00 %    |       96.00 %      |    95.00 %   |
+# | 100     |     96.00 %    |       96.00 %      |    97.00 %   |
 # +---------+----------------+--------------------+--------------+
-# | 1000    |     94.30 %    |       92.60 %      |    93.10 %   |
+# | 1000    |     94.30 %    |       92.60 %      |    94.20 %   |
 # +---------+----------------+--------------------+--------------+
-# | 10000   |     93.66 %    |       92.58 %      |    93.26 %   |
+# | 10000   |     93.66 %    |       92.58 %      |    93.08 %   |
 # +---------+----------------+--------------------+--------------+
 #
 
@@ -197,9 +202,9 @@ model_akida.summary()
 # +---------+----------------+----------------+
 # | #Images | Keras accuracy | Akida accuracy |
 # +=========+================+================+
-# | 100     |     96.00 %    |     94.00 %    |
+# | 100     |     96.00 %    |     97.00 %    |
 # +---------+----------------+----------------+
-# | 1000    |     94.30 %    |     93.10 %    |
+# | 1000    |     94.30 %    |     94.00 %    |
 # +---------+----------------+----------------+
 # | 10000   |     93.66 %    |     93.04 %    |
 # +---------+----------------+----------------+
@@ -225,7 +230,7 @@ print(f'Akida inference on {num_images} images took {end-start:.2f} s.\n')
 
 # For non-regression purpose
 if num_images == 1000:
-    assert accuracy == 0.931
+    assert accuracy == 0.94
 
 ######################################################################
 # Activations sparsity has a great impact on akida inference time. One can have
