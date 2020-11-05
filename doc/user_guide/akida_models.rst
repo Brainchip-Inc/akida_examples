@@ -49,6 +49,43 @@ Instantiate a VGG model for CIFAR10 and save it to a specific location:
 A model named ``my_vgg_network.h5`` is saved under the models directory
 (providing the directory exists).
 
+Some models come with additional parameters that allow a deeper configuration.
+That is the case for the MobileNet, Mobilenet edge and YOLO models. Examples
+are given below.
+
+To build a MobileNet model with a 64x64 input size, alpha parameter (model
+width) equal to 0.35 and 250 classes:
+
+.. code-block:: bash
+
+    akida_models create mobilenet_imagenet -i 64 -a 0.35 -c 250
+
+To create a YOLO model with 20 classes, 5 anchors and a model width of 0.5:
+
+.. code-block:: bash
+
+    akida_models create yolo_base -c 20 -na 5 -a 0.5
+
+The full parameter list with description can be obtained using the  ``-h`` or
+``--help`` argument for each model:
+
+.. code-block:: bash
+
+    akida_models create mobilenet_imagenet -h
+
+    usage: akida_models create mobilenet_imagenet [-h]
+                                              [-i {32,64,96,128,160,192,224}]
+                                              [-a ALPHA] [-c CLASSES]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i {32,64,96,128,160,192,224}, --image_size {32,64,96,128,160,192,224}
+                            The square input image size
+      -a ALPHA, --alpha ALPHA
+                            The width of the model
+      -c CLASSES, --classes CLASSES
+                            The number of classes
+
 Current available models for creation are:
 
  * ds_cnn_cifar10
