@@ -158,6 +158,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#cifar10-training-and-tuning">CIFAR10 training and tuning</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#utk-face-training">UTK Face training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#kws-training">KWS training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#yolo-training">YOLO training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Layer Blocks</a><ul>
@@ -496,6 +497,7 @@ optional arguments:
 <li><p>ds_cnn_kws</p></li>
 <li><p>mobilenet_imagenet</p></li>
 <li><p>mobilenet_imagenet_edge</p></li>
+<li><p>yolo_base</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -611,6 +613,36 @@ kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 <s
             -e <span class="m">16</span> -laq <span class="m">1</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="yolo-training">
+<h3>YOLO training<a class="headerlink" href="#yolo-training" title="Permalink to this headline">¶</a></h3>
+<p>YOLO training pipeline uses the <code class="docutils literal notranslate"><span class="pre">yolo_base</span></code> model and the CNN2SNN
+<code class="docutils literal notranslate"><span class="pre">quantize</span></code> CLI. Dataset preprocessing must be done beforehand using the
+<a class="reference external" href="api_reference/akida_models_apis.html#processing">processing toolbox</a>.</p>
+<p><strong>Example</strong></p>
+<p>Create a YOLO model for VOC car/person training, use transfer learning from
+MobileNet weights trained on ImageNet and perform step-wise quantization to
+obtain a network with 4-bit weights and activations.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<p>wget <a class="reference external" href="http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5">http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5</a></p>
+<dl class="simple">
+<dt>akida_models create -s yolo_voc.h5 yolo_base -c 2 </dt><dd><p>-bw ‘mobilenet_imagenet_alpha_50.h5’</p>
+</dd>
+<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 </dt><dd><p>-f True -s yolo_voc.h5 train</p>
+</dd>
+</dl>
+<p>cnn2snn -m yolo_voc.h5 quantize -iq 8 -wq 8 -aq 8</p>
+<dl class="simple">
+<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 </dt><dd><p>-ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5 train</p>
+</dd>
+</dl>
+<p>cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq 8 -wq 4 -aq 4</p>
+<dl class="simple">
+<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 </dt><dd><p>-ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5 tune</p>
+</dd>
+</dl>
 </div>
 </div>
 <div class="section" id="id1">

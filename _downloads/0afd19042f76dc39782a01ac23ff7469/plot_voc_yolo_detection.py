@@ -4,7 +4,7 @@ YOLO/PASCAL-VOC detection tutorial
 
 This tutorial demonstrates that Akida can perform object detection using a
 state-of-the-art model architecture. This is illustrated using a subset of the
-`PASCAL-VOC 2012 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2012/>`__
+`PASCAL-VOC 2007 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2007/htmldoc/index.html>`__
 with "car" and "person" classes only. The YOLOv2 architecture from
 `Redmon et al (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
 tackle this object detection problem.
@@ -70,7 +70,7 @@ tackle this object detection problem.
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # As this example focuses on car and person detection only, a subset of VOC has
-# been prepared with validation images from VOC2012 that contains at least one
+# been prepared with test images from VOC2007 that contains at least one
 # of the occurence of the two classes. Just like the VOC dataset, the subset
 # contains an image folder, an annotation folder and a text file listing the
 # file names of interest.
@@ -90,19 +90,19 @@ from akida_models.detection.processing import parse_voc_annotations
 
 # Download validation set from Brainchip data server
 data_path = get_file(
-    "voc_val_car_person.tar.gz",
-    "http://data.brainchip.com/dataset-mirror/voc/voc_val_car_person.tar.gz",
+    "voc_test_car_person.tar.gz",
+    "http://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
     cache_subdir='datasets/voc',
     extract=True)
 
 data_dir = os.path.dirname(data_path)
-gt_folder = os.path.join(data_dir, 'voc_val_car_person', 'annotations')
-image_folder = os.path.join(data_dir, 'voc_val_car_person', 'images')
-file_path = os.path.join(data_dir, 'voc_val_car_person', 'val_car_person.txt')
+gt_folder = os.path.join(data_dir, 'voc_test_car_person', 'Annotations')
+image_folder = os.path.join(data_dir, 'voc_test_car_person', 'JPEGImages')
+file_path = os.path.join(data_dir, 'voc_test_car_person', 'test_car_person.txt')
 labels = ['car', 'person']
 
 val_data = parse_voc_annotations(gt_folder, image_folder, file_path, labels)
-print("Loaded VOC2012 validation data for car and person classes: "
+print("Loaded VOC2007 test data for car and person classes: "
       f"{len(val_data)} images.")
 
 ######################################################################
@@ -221,7 +221,7 @@ full_model.output
 # +------------+-----------+-------------+-------------+
 # |            |   Float   | 8-bit/8-bit | 4-bit/4-bit |
 # +============+===========+=============+=============+
-# | Global mAP |  76.86 %  |   75.15 %   |   68.75 %   |
+# | Global mAP |  42.99 %  |   42.13 %   |   35.54 %   |
 # +------------+-----------+-------------+-------------+
 
 from timeit import default_timer as timer
@@ -230,6 +230,11 @@ from akida_models.detection.map_evaluation import MapEvaluation
 
 # Load the pretrained model along with anchors
 model_keras, anchors = yolo_voc_pretrained()
+
+# Define the final reshape and build the model
+output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),
+                 name="YOLO_output")(model_keras.output)
+model_keras = Model(model_keras.input, output)
 
 # Create the mAP evaluator object
 num_images = 100
@@ -294,11 +299,11 @@ model_akida.summary()
 # +---------+-----------+-----------+
 # | #Images | Keras mAP | Akida mAP |
 # +=========+===========+===========+
-# | 100     |  74.80 %  |  77.29 %  |
+# | 100     |  26.70 %  |  29.87 %  |
 # +---------+-----------+-----------+
-# | 1000    |  70.06 %  |  72.46 %  |
+# | 1000    |  32.95 %  |  33.47 %  |
 # +---------+-----------+-----------+
-# | 2442    |  68.75 %  |  69.17 %  |
+# | 2500    |  35.54 %  |  31.65 %  |
 # +---------+-----------+-----------+
 #
 
