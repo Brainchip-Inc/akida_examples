@@ -98,7 +98,7 @@ model_keras = keras.models.Sequential([
     keras.layers.MaxPool2D(),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
-    keras.layers.Conv2D(filters=64, kernel_size=3, padding='same'),
+    keras.layers.SeparableConv2D(filters=64, kernel_size=3, padding='same'),
     keras.layers.MaxPool2D(padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
