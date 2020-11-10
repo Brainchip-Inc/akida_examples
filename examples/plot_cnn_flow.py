@@ -119,6 +119,16 @@ model_keras.summary()
 # * BatchNormalization must always happen before activations.
 # * Convolutional blocks can optionally be followed by a MaxPooling.
 #
+# The CNN2SNN toolkit provides the
+# `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
+# function to ensure that the model can be converted into an Akida model. If
+# the model is not fully compatible, substitutes will be needed for the
+# relevant layers/operations (guidelines included in the documentation).
+
+from cnn2snn import check_model_compatibility
+
+print("Model compatible for Akida conversion:",
+      check_model_compatibility(model_keras))
 
 ######################################################################
 # 3. Model training
@@ -162,24 +172,14 @@ print('Test accuracy:', score[1])
 # .. Note:: The ``quantize`` function folds the batch normalization layers into
 #           the corresponding neural layer. The new weights are computed
 #           according to this folding operation.
-#
-# .. Note:: The CNN2SNN toolkit provides the
-#           `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
-#           function to ensure that the quantized model is compatible with the
-#           Akida NSoC. If the model is not fully compatible, substitutes will
-#           be needed for the relevant layers/operations (guidelines included
-#           in the documentation).
 
-from cnn2snn import quantize, check_model_compatibility
+from cnn2snn import quantize
 
 model_quantized = quantize(model_keras,
                            input_weight_quantization=8,
                            weight_quantization=4,
                            activ_quantization=4)
 model_quantized.summary()
-
-print("Model compatible for Akida conversion:",
-      check_model_compatibility(model_quantized, input_is_sparse=False))
 
 ######################################################################
 # Check the quantized model accuracy.
