@@ -197,11 +197,18 @@ print('Test accuracy after 8-4-4 quantization:', score[1])
 # accuracy of the quantized model is equivalent to the one of the base model,
 # but for lower bitwidth, the quantization  usually introduces a performance drop.
 #
-# Let's try this time with 2-bit for weights and 1-bit for activations.
+# Let's try to quantize specific layers to a lower bitwidth. The CNN2SNN
+# toolkit provides the
+# `quantize_layer <../api_reference/cnn2snn_apis.html#quantize_layer>`__
+# function: each layer can be individually quantized.
+#
+# Here, we quantize the "re_lu_1" layer to binary activations (bitwidth=1)
+# and the "dense" layer with 2-bit weights.
 
-model_quantized = quantize(model_keras,
-                           weight_quantization=2,
-                           activ_quantization=1)
+from cnn2snn import quantize_layer
+
+model_quantized = quantize_layer(model_quantized, "re_lu_1", bitwidth=1)
+model_quantized = quantize_layer(model_quantized, "dense", bitwidth=2)
 
 model_quantized.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -209,7 +216,7 @@ model_quantized.compile(
     metrics=['accuracy'])
 
 score = model_quantized.evaluate(x_test, y_test, verbose=0)
-print('Test accuracy after 2-2-1 quantization:', score[1])
+print('Test accuracy after low bitwidth quantization:', score[1])
 
 # To recover the original model accuracy, a quantization-aware training phase
 # is required.
