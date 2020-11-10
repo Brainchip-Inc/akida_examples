@@ -8,10 +8,10 @@ CNN2SNN Toolkit API
     quantize
     ========
     .. autofunction:: quantize
-    
+
     quantize_layer
     ==============
-    ..autofunction:: quantize_layer
+    .. autofunction:: quantize_layer
 
     convert
     =======
