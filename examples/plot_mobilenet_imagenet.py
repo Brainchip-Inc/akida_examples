@@ -2,70 +2,34 @@
 MobileNet/ImageNet inference
 ============================
 
-.. Note:: Please refer to `CNN2SNN Conversion Tutorial (MNIST)
-          <plot_mnist_cnn2akida_demo.html>`__ notebook
-          and/or the `CNN2SNN documentation
-          <../user_guide/cnn2snn.html>`__ for flow and steps details of
-          the CNN2SNN conversion.
-
 This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
-model into Akida. As ImageNet images are not publicly available, performances
+model into Akida.
+
+As ImageNet images are not publicly available, performances
 are assessed using a set of 10 copyright free images that were found on Google
 using ImageNet class names.
 
 """
 
 ######################################################################
-# 1. Load CNN2SNN tool dependencies
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 1. Dataset preparation
+# ~~~~~~~~~~~~~~~~~~~~~~
 #
+# Test images all have at least 256 pixels in the smallest dimension. They must
+# be preprocessed to fit in the model. The
+# ``imagenet.preprocessing.resize_and_crop`` function decodes, crops and
+# extracts a square 224x224x3 patch from an input image.
+#
+# .. Note:: Input size is here set to 224x224x3 as this is what is used by the
+#           model presented in the next section.
 
-# System imports
 import os
 import numpy as np
-import pickle
-import csv
-import imageio
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.lines as lines
-import tensorflow as tf
 
-from timeit import default_timer as timer
+from tensorflow.io import read_file
+from tensorflow.keras.utils import get_file
 
-# ImageNet tutorial imports
-from akida_models import mobilenet_imagenet_pretrained
 from akida_models.imagenet import preprocessing
-
-######################################################################
-# 2. Load test images from ImageNet
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# The inputs in the Keras MobileNet model must respect two requirements:
-#
-# * the input image size must be 224x224x3,
-# * the input image values must be between -1 and 1.
-#
-# This section goes as follows:
-#
-# * **Load and preprocess images.** The test images all have at least 256 pixels
-#   in the smallest dimension. They must be preprocessed to fit in the model.
-#   The ``imagenet.preprocessing.resize_and_crop`` function decodes, crops and
-#   extracts a square 224x224x3 patch from an input image.
-# * **Load corresponding labels.** The labels for test images are stored in the
-#   akida_models package. The matching between names (*string*) and labels
-#   (*integer*) is given through ``imagenet.preprocessing.index_to_label``
-#   method.
-#
-# .. Note:: Akida Execution Engine is configured to take 8-bit inputs
-#           without rescaling. For conversion, rescaling values used for
-#           training the Keras model are needed.
-#
-
-######################################################################
-# 2.1 Load test images and preprocess test images
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
@@ -74,7 +38,8 @@ NUM_CLASSES = 1000
 
 num_images = 10
 
-file_path = tf.keras.utils.get_file(
+# Retrieve dataset file from Brainchip data server
+file_path = get_file(
     "imagenet_like.zip",
     "http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
     cache_subdir='datasets/imagenet_like',
@@ -88,7 +53,7 @@ for id in range(num_images):
     test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
     x_test_files.append(test_file)
     img_path = os.path.join(data_folder, test_file)
-    base_image = tf.io.read_file(img_path)
+    base_image = read_file(img_path)
     image = preprocessing.resize_and_crop(image_buffer=base_image,
                                           output_width=IMAGE_SIZE,
                                           output_height=IMAGE_SIZE,
@@ -97,18 +62,26 @@ for id in range(num_images):
 
 # Rescale images for Keras model (normalization between -1 and 1)
 # Assume rescaling format of (x - b)/a
-a = 127.5
-b = 127.5
+a = 128
+b = 128
 input_scaling = (a, b)
 x_test_preprocess = (x_test.astype('float32') - b) / a
 
 print(f'{num_images} images loaded and preprocessed.')
 
 ######################################################################
-# 2.2 Load labels
-# ^^^^^^^^^^^^^^^
+# .. Note:: Akida Execution Engine is configured to take 8-bit inputs
+#           without rescaling. For conversion, rescaling values used for
+#           training the Keras model are needed.
 #
+#
+# Labels for test images are stored in the akida_models package. The matching
+# between names (*string*) and labels (*integer*) is given through the
+# ``imagenet.preprocessing.index_to_label`` method.
 
+import csv
+
+# Parse labels file
 fname = os.path.join(data_folder, 'labels_validation.txt')
 validation_labels = dict()
 with open(fname, newline='') as csvfile:
@@ -122,97 +95,156 @@ for i in range(num_images):
     labels_test[i] = int(validation_labels[x_test_files[i]])
 
 ######################################################################
-# 3. Create a quantized Keras model
+# 2. Create a Keras MobileNet model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A Keras model based on a MobileNet model is instantiated with quantized
-# weights and activations. This model satisfies the Akida NSoC
-# requirements:
-#
-# * all the convolutional layers have 4-bit weights, except for the first
-#   layer,
-# * the first layer has 8-bit weights,
-# * all the convolutional layers have 4-bit activations.
-#
-# This section goes as follows:
-#
-# * **Instantiate a quantized Keras model** according to above specifications.
-# * **Load pre-trained weights** that performs a 65 % accuracy on the test
-#   dataset.
-# * **Check performance** on the test set. According to the number of test
-#   images, the inference could last for several minutes.
-#
+# The MobileNet architecture is available in the Akida model zoo as
+# `mobilenet_imagenet <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_.
 
-######################################################################
-# 3.1 Instantiate Keras model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# The `mobilenet_imagenet <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`__
-# method included in akida_models package offers a way to easily instantiate a
-# MobileNet model based on Keras with quantized weights and activations.
-#
-# .. Note:: The pre-trained weights which are loaded correspond to the
-#    parameters in the next cell. If you want to modify some of these
-#    parameters, you must re-train the model and save the weights.
-#
+from cnn2snn import load_quantized_model
 
-input_shape = (IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)
-model_keras = mobilenet_imagenet_pretrained()
-
+# Retrieve the float model with pretrained weights and load it
+model_file = get_file(
+    "mobilenet_imagenet.h5",
+    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet.h5",
+    cache_subdir='models/mobilenet_imagenet')
+model_keras = load_quantized_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# 3.2 Check performance of the Keras model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
+# Top-1 accuracy on the actual ImageNet is 71.93%, the perfomance given below
+# uses the 10 images subset.
 
-print(f'Predicting with Keras model on {num_images} images ...')
+from timeit import default_timer as timer
 
-start = timer()
-potentials_keras = model_keras.predict(x_test_preprocess, batch_size=100)
-end = timer()
-print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 
-preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
-accuracy_keras = np.sum(np.equal(preds_keras, labels_test)) / num_images
+# Check model performance
+def check_model_performances(model,
+                             x_test=x_test_preprocess,
+                             labels_test=labels_test):
+    num_images = len(x_test)
 
-print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
+    start = timer()
+    potentials_keras = model.predict(x_test, batch_size=100)
+    end = timer()
+    print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
+
+    preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
+    accuracy_keras = np.sum(np.equal(preds_keras, labels_test)) / num_images
+
+    print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
+
+
+check_model_performances(model_keras)
 
 ######################################################################
-# 4. Convert Keras model for Akida NSoC
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Quantized model
+# ~~~~~~~~~~~~~~~~~~
+#
+# Quantizing a model is done using `CNN2SNN quantize
+# <../api_reference/cnn2snn_apis.html#quantize>`_.
+#
+# The quantized model satisfies the Akida NSoC requirements:
+#
+#  * the first layer has 8-bit weights,
+#  * all other convolutional layers have 4-bit weights,
+#  * all convolutional layers have 4-bit activations.
+#
+# However, this model will suffer from a drop in accuracy due to quantization
+# as shown in the table below for ImageNet and in the next cell for the 10
+# images set.
+#
+# +----------------+--------------------+
+# | Float accuracy | Quantized accuracy |
+# +================+====================+
+# |     71.93 %    |        9.52 %      |
+# +----------------+--------------------+
+#
+
+from cnn2snn import quantize
+
+# Quantize the model to 4-bit weights and activations, 8-bit weights for the
+# first convolutional layer
+model_keras_quantized = quantize(model_keras, 4, 4, 8)
+
+# Check Model performance
+check_model_performances(model_keras_quantized)
+
+######################################################################
+# 4. Pretrained quantized model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The Akida models zoo also contains a `pretrained quantized helper
+# <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained>`_
+# that was obtained after fine tuning the model for 30 epochs.
+#
+# Tuning the model, that is training with a lowered learning rate, allows to
+# recover performances up to the initial floating point accuracy.
+#
+# Performances on the full ImageNet dataset are:
+#
+# +----------------+--------------------+--------------------+
+# | Float accuracy | Quantized accuracy |     After tuning   |
+# +================+====================+====================+
+# |     71.93 %    |       9.52 %       |       69.63 %      |
+# +----------------+--------------------+--------------------+
+
+from akida_models import mobilenet_imagenet_pretrained
+
+# Use a quantized model with pretrained quantized weights
+model_keras_quantized_pretrained = mobilenet_imagenet_pretrained()
+model_keras_quantized_pretrained.summary()
+
+######################################################################
+
+# Check model performance
+check_model_performances(model_keras_quantized_pretrained)
+
+######################################################################
+# 5. Conversion to Akida
+# ~~~~~~~~~~~~~~~~~~~~~~
+
+######################################################################
+# 5.1 Convert to Akida model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here, the Keras quantized model is converted into a suitable version for
 # the Akida NSoC. The `cnn2snn.convert <../api_reference/cnn2snn_apis.html#convert>`__
 # function needs as arguments the Keras model and the input scaling parameters.
-#
-# This section goes as follows:
-#
-# * **Convert the Keras MobileNet model** to an Akida model compatible for
-#   Akida NSoC. Print a summary of the model.
-# * **Test performance** of the Akida model (this can take minutes).
-# * **Show predictions** for some test images.
-#
 
-######################################################################
-# 4.1 Convert Keras model to an Akida compatible model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-
-# Convert to Akida
 from cnn2snn import convert
 
-print("Converting Keras model for Akida NSoC...")
-model_akida = convert(model_keras, input_scaling=input_scaling)
+model_akida = convert(model_keras_quantized_pretrained,
+                      input_scaling=input_scaling)
+
+######################################################################
+# 5.2 Check hardware compliancy
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The `Model.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
+# method provides a detailed description of the Model layers.
+#
+# It also indicates hardware incompatibilities if there are any. Hardware
+# compatibility can also be checked manually using
+# `model_hardware_incompatibilities
+# <../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
+
 model_akida.summary()
 
 ######################################################################
-# 4.2 Test performance of the Akida model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 5.3 Check performance
+# ^^^^^^^^^^^^^^^^^^^^^
 #
+# While we compute accuracy for the 10 images set in the next cell, the
+# following table summarizes results obtained on ImageNet.
+#
+# +----------------+----------------+
+# | Keras accuracy | Akida accuracy |
+# +================+================+
+# |     69.63 %    |     69.18 %    |
+# +----------------+----------------+
 
-print(f'Predicting with Akida model on {num_images} images ...')
-
+# Check Model performance
 start = timer()
 preds_akida = model_akida.predict(x_test)
 end = timer()
@@ -225,6 +257,8 @@ print(f"Accuracy: {accuracy_akida*100:.2f} %")
 # For non-regression purpose
 assert accuracy_akida >= 0.9
 
+######################################################################
+
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
@@ -233,12 +267,11 @@ for _, stat in stats.items():
     print(stat)
 
 ######################################################################
-# 4.3 Show predictions for a random test image
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# For a random test image, we predict the top 5 classes and display the
-# results on a bar chart.
-#
+# 5.4 Show predictions for a random image
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+import matplotlib.pyplot as plt
+import matplotlib.lines as lines
 
 
 # Functions used to display the top5 results
