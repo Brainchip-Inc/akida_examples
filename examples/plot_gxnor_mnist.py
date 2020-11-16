@@ -128,7 +128,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "% / " + "F1 score: " +
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
-# performance of around 99% (99.35% if you run all 10000 samples).
+# performance of around 99% (99.07% if you run all 10000 samples).
 #
 # Note that classification here is done simply by identifying the neuron
 # with the highest activation level. Slightly higher performance is
