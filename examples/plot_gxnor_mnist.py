@@ -16,23 +16,9 @@ MNIST dataset.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# Various imports needed for the tutorial
-import os
 import numpy as np
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import warnings
-from tensorflow.keras.utils import get_file
+
 from tensorflow.keras.datasets import mnist
-from sklearn.metrics import f1_score, accuracy_score
-
-# Filter warnings
-warnings.filterwarnings("ignore", module="matplotlib")
-
-# Akida specific imports
-from akida import Model
-
-######################################################################
 
 # Retrieve MNIST dataset
 (train_set, train_label), (test_set, test_label) = mnist.load_data()
@@ -45,6 +31,9 @@ test_set = np.expand_dims(test_set, -1)
 # 2. Look at some images from the test dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 # Display a few images from the test set
 f, axarr = plt.subplots(1, 4)
@@ -61,6 +50,10 @@ plt.show()
 # `Brainchip data server <http://data.brainchip.com/models/gxnor/>`_
 # You only need to pass this .fbz file to the Akida Execution Engine in order
 # to instantiate the model.
+
+from akida import Model
+
+from tensorflow.keras.utils import get_file
 
 # Load provided model configuration file
 model_file = get_file("gxnor_mnist.fbz",
@@ -116,6 +109,8 @@ print(outputs.squeeze())
 # We've included a utility to test performance across a large number of
 # samples. You can run this below.
 #
+
+from sklearn.metrics import f1_score, accuracy_score
 
 # Check performance against num_samples samples
 num_samples = 10000
