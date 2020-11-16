@@ -12,11 +12,14 @@ MNIST dataset.
 """
 
 ######################################################################
-# 1. Loading the MNIST dataset
+# 1. Dataset preparation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 import numpy as np
+
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 from tensorflow.keras.datasets import mnist
 
@@ -27,14 +30,6 @@ from tensorflow.keras.datasets import mnist
 train_set = np.expand_dims(train_set, -1)
 test_set = np.expand_dims(test_set, -1)
 
-######################################################################
-# 2. Look at some images from the test dataset
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-
 # Display a few images from the test set
 f, axarr = plt.subplots(1, 4)
 for i in range(0, 4):
@@ -43,7 +38,7 @@ for i in range(0, 4):
 plt.show()
 
 ######################################################################
-# 3. Load the pre-trained Akida model
+# 2. Load the pre-trained Akida model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The pre-trained neural network model is available on
@@ -63,8 +58,8 @@ model_akida = Model(model_file)
 model_akida.summary()
 
 ######################################################################
-# 4. Classify a single image
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Show predictions for a single image
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Now try processing a single image, say, the first image in the dataset
 # that we looked at above:
@@ -103,12 +98,8 @@ print(outputs.squeeze())
 #
 
 ######################################################################
-# 5. Check performance across a number of samples
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# We've included a utility to test performance across a large number of
-# samples. You can run this below.
-#
+# 4. Check performance
+# ~~~~~~~~~~~~~~~~~~~~
 
 from sklearn.metrics import f1_score, accuracy_score
 
