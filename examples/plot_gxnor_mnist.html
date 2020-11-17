@@ -247,11 +247,10 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">GXNOR/MNIST inference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#loading-the-mnist-dataset">1. Loading the MNIST dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#look-at-some-images-from-the-test-dataset">2. Look at some images from the test dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#load-the-pre-trained-akida-model">3. Load the pre-trained Akida model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#classify-a-single-image">4. Classify a single image</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#check-performance-across-a-number-of-samples">5. Check performance across a number of samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataset-preparation">1. Dataset preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#load-the-pre-trained-akida-model">2. Load the pre-trained Akida model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#show-predictions-for-a-single-image">3. Show predictions for a single image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#check-performance">4. Check performance</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="plot_regression.html">Regression tutorial</a><ul>
@@ -435,48 +434,23 @@ set of 60,000 samples, and a test set of 10,000 samples. Each sample
 comprises a 28x28 pixel image and an associated label.</p>
 <p>This tutorial illustrates how to use a pre-trained Akida model to process the
 MNIST dataset.</p>
-<div class="section" id="loading-the-mnist-dataset">
-<h2>1. Loading the MNIST dataset<a class="headerlink" href="#loading-the-mnist-dataset" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Various imports needed for the tutorial</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="section" id="dataset-preparation">
+<h2>1. Dataset preparation<a class="headerlink" href="#dataset-preparation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+
 <span class="kn">from</span> <span class="nn">tensorflow.keras.datasets</span> <span class="kn">import</span> <span class="n">mnist</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">accuracy_score</span>
 
-<span class="c1"># Filter warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-
-<span class="c1"># Akida specific imports</span>
-<span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve MNIST dataset</span>
+<span class="c1"># Retrieve MNIST dataset</span>
 <span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_label</span><span class="p">),</span> <span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
 
 <span class="c1"># Add a dimension to images sets as akida expects 4 dimensions inputs</span>
 <span class="n">train_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">test_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
 
-    8192/11490434 [..............................] - ETA: 0s
-  581632/11490434 [&gt;.............................] - ETA: 0s
- 3809280/11490434 [========&gt;.....................] - ETA: 0s
- 6684672/11490434 [================&gt;.............] - ETA: 0s
- 9904128/11490434 [========================&gt;.....] - ETA: 0s
-11493376/11490434 [==============================] - 0s 0us/step
-</pre></div>
-</div>
-</div>
-<div class="section" id="look-at-some-images-from-the-test-dataset">
-<h2>2. Look at some images from the test dataset<a class="headerlink" href="#look-at-some-images-from-the-test-dataset" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Display a few images from the test set</span>
+<span class="c1"># Display a few images from the test set</span>
 <span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
     <span class="n">axarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">test_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">Greys_r</span><span class="p">)</span>
@@ -485,14 +459,29 @@ MNIST dataset.</p>
 </pre></div>
 </div>
 <img alt="Class 7, Class 2, Class 1, Class 0" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_gxnor_mnist_001.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+
+    8192/11490434 [..............................] - ETA: 0s
+  425984/11490434 [&gt;.............................] - ETA: 1s
+ 1933312/11490434 [====&gt;.........................] - ETA: 0s
+ 6356992/11490434 [===============&gt;..............] - ETA: 0s
+ 9134080/11490434 [======================&gt;.......] - ETA: 0s
+11493376/11490434 [==============================] - 0s 0us/step
+</pre></div>
+</div>
 </div>
 <div class="section" id="load-the-pre-trained-akida-model">
-<h2>3. Load the pre-trained Akida model<a class="headerlink" href="#load-the-pre-trained-akida-model" title="Permalink to this headline">¶</a></h2>
+<h2>2. Load the pre-trained Akida model<a class="headerlink" href="#load-the-pre-trained-akida-model" title="Permalink to this headline">¶</a></h2>
 <p>The pre-trained neural network model is available on
 <a class="reference external" href="http://data.brainchip.com/models/gxnor/">Brainchip data server</a>
 You only need to pass this .fbz file to the Akida Execution Engine in order
 to instantiate the model.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load provided model configuration file</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span>
+
+<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+
+<span class="c1"># Load provided model configuration file</span>
 <span class="n">model_file</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="s2">&quot;gxnor_mnist.fbz&quot;</span><span class="p">,</span>
                       <span class="s2">&quot;http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz&quot;</span><span class="p">,</span>
                       <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/gxnor&#39;</span><span class="p">)</span>
@@ -504,9 +493,8 @@ to instantiate the model.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz
 
   8192/373501 [..............................] - ETA: 0s
- 65536/373501 [====&gt;.........................] - ETA: 0s
-139264/373501 [==========&gt;...................] - ETA: 0s
-335872/373501 [=========================&gt;....] - ETA: 0s
+ 73728/373501 [====&gt;.........................] - ETA: 0s
+204800/373501 [===============&gt;..............] - ETA: 0s
 376832/373501 [==============================] - 0s 0us/step
                         Model Summary
 ______________________________________________________________
@@ -527,8 +515,8 @@ Backend type: Software - 1.8.9
 </pre></div>
 </div>
 </div>
-<div class="section" id="classify-a-single-image">
-<h2>4. Classify a single image<a class="headerlink" href="#classify-a-single-image" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="show-predictions-for-a-single-image">
+<h2>3. Show predictions for a single image<a class="headerlink" href="#show-predictions-for-a-single-image" title="Permalink to this headline">¶</a></h2>
 <p>Now try processing a single image, say, the first image in the dataset
 that we looked at above:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test a single example</span>
@@ -566,11 +554,11 @@ others. The first sample is indeed a number 7.</p>
 <p>Check this for some of the other samples by editing the value of
 sample_image in the script above (anything from 0 to 9999).</p>
 </div>
-<div class="section" id="check-performance-across-a-number-of-samples">
-<h2>5. Check performance across a number of samples<a class="headerlink" href="#check-performance-across-a-number-of-samples" title="Permalink to this headline">¶</a></h2>
-<p>We’ve included a utility to test performance across a large number of
-samples. You can run this below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check performance against num_samples samples</span>
+<div class="section" id="check-performance">
+<h2>4. Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">accuracy_score</span>
+
+<span class="c1"># Check performance against num_samples samples</span>
 <span class="n">num_samples</span> <span class="o">=</span> <span class="mi">10000</span>
 
 <span class="n">results</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_set</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)],</span> <span class="mi">10</span><span class="p">)</span>
@@ -610,7 +598,7 @@ Accuracy: 99.07% / F1 score: 0.99
 </pre></div>
 </div>
 <p>Depending on the number of samples you run, you should find a
-performance of around 99% (99.35% if you run all 10000 samples).</p>
+performance of around 99% (99.07% if you run all 10000 samples).</p>
 <p>Note that classification here is done simply by identifying the neuron
 with the highest activation level. Slightly higher performance is
 actually possible for this model implementation (~99.1 %) if a very
@@ -618,7 +606,7 @@ slightly more complex final classification is applied (with a single
 additional integer subtraction per neuron), but for simplicity we leave
 those details aside here. See the cnn2snn training framework for a full
 description.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  5.847 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  5.879 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-plot-gxnor-mnist-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/2312b8e60e960e9aef21b0c45fd375f6/plot_gxnor_mnist.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_gxnor_mnist.py</span></code></a></p>
