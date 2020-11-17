@@ -101,14 +101,14 @@ for i in range(num_images):
 # The MobileNet architecture is available in the Akida model zoo as
 # `mobilenet_imagenet <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_.
 
-from cnn2snn import load_quantized_model
+from tensorflow.keras.models import load_model
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "mobilenet_imagenet.h5",
     "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet.h5",
     cache_subdir='models/mobilenet_imagenet')
-model_keras = load_quantized_model(model_file)
+model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################

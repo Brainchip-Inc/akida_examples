@@ -51,14 +51,14 @@ x_test = (x_test - b) / a
 #
 
 from tensorflow.keras.utils import get_file
-from cnn2snn import load_quantized_model
+from tensorflow.keras.models import load_model
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "ds_cnn_cifar10.h5",
     "http://data.brainchip.com/models/ds_cnn/ds_cnn_cifar10.h5",
     cache_subdir='models/ds_cnn_cifar10')
-model_keras = load_quantized_model(model_file)
+model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
