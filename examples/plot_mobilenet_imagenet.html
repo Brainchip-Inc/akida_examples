@@ -334,21 +334,15 @@
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">MobileNet/ImageNet inference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#load-cnn2snn-tool-dependencies">1. Load CNN2SNN tool dependencies</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#load-test-images-from-imagenet">2. Load test images from ImageNet</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#load-test-images-and-preprocess-test-images">2.1 Load test images and preprocess test images</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#load-labels">2.2 Load labels</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#create-a-quantized-keras-model">3. Create a quantized Keras model</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#instantiate-keras-model">3.1 Instantiate Keras model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#check-performance-of-the-keras-model">3.2 Check performance of the Keras model</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#convert-keras-model-for-akida-nsoc">4. Convert Keras model for Akida NSoC</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#convert-keras-model-to-an-akida-compatible-model">4.1 Convert Keras model to an Akida compatible model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#test-performance-of-the-akida-model">4.2 Test performance of the Akida model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#show-predictions-for-a-random-test-image">4.3 Show predictions for a random test image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataset-preparation">1. Dataset preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-keras-mobilenet-model">2. Create a Keras MobileNet model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantized-model">3. Quantized model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pretrained-quantized-model">4. Pretrained quantized model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conversion-to-akida">5. Conversion to Akida</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#convert-to-akida-model">5.1 Convert to Akida model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#check-hardware-compliancy">5.2 Check hardware compliancy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#check-performance">5.3 Check performance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#show-predictions-for-a-random-image">5.4 Show predictions for a random image</a></li>
 </ul>
 </li>
 </ul>
@@ -429,71 +423,39 @@
 </div>
 <div class="sphx-glr-example-title section" id="mobilenet-imagenet-inference">
 <span id="sphx-glr-examples-plot-mobilenet-imagenet-py"></span><h1>MobileNet/ImageNet inference<a class="headerlink" href="#mobilenet-imagenet-inference" title="Permalink to this headline">¶</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please refer to <a class="reference external" href="plot_mnist_cnn2akida_demo.html">CNN2SNN Conversion Tutorial (MNIST)</a> notebook
-and/or the <a class="reference external" href="../user_guide/cnn2snn.html">CNN2SNN documentation</a> for flow and steps details of
-the CNN2SNN conversion.</p>
-</div>
 <p>This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
-model into Akida. As ImageNet images are not publicly available, performances
+model into Akida.</p>
+<p>As ImageNet images are not publicly available, performances
 are assessed using a set of 10 copyright free images that were found on Google
 using ImageNet class names.</p>
-<div class="section" id="load-cnn2snn-tool-dependencies">
-<h2>1. Load CNN2SNN tool dependencies<a class="headerlink" href="#load-cnn2snn-tool-dependencies" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># System imports</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">import</span> <span class="nn">csv</span>
-<span class="kn">import</span> <span class="nn">imageio</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
-<span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">lines</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-
-<span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
-
-<span class="c1"># ImageNet tutorial imports</span>
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">mobilenet_imagenet_pretrained</span>
-<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">preprocessing</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="load-test-images-from-imagenet">
-<h2>2. Load test images from ImageNet<a class="headerlink" href="#load-test-images-from-imagenet" title="Permalink to this headline">¶</a></h2>
-<p>The inputs in the Keras MobileNet model must respect two requirements:</p>
-<ul class="simple">
-<li><p>the input image size must be 224x224x3,</p></li>
-<li><p>the input image values must be between -1 and 1.</p></li>
-</ul>
-<p>This section goes as follows:</p>
-<ul class="simple">
-<li><p><strong>Load and preprocess images.</strong> The test images all have at least 256 pixels
-in the smallest dimension. They must be preprocessed to fit in the model.
-The <code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.resize_and_crop</span></code> function decodes, crops and
-extracts a square 224x224x3 patch from an input image.</p></li>
-<li><p><strong>Load corresponding labels.</strong> The labels for test images are stored in the
-akida_models package. The matching between names (<em>string</em>) and labels
-(<em>integer</em>) is given through <code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.index_to_label</span></code>
-method.</p></li>
-</ul>
+<div class="section" id="dataset-preparation">
+<h2>1. Dataset preparation<a class="headerlink" href="#dataset-preparation" title="Permalink to this headline">¶</a></h2>
+<p>Test images all have at least 256 pixels in the smallest dimension. They must
+be preprocessed to fit in the model. The
+<code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.resize_and_crop</span></code> function decodes, crops and
+extracts a square 224x224x3 patch from an input image.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Akida Execution Engine is configured to take 8-bit inputs
-without rescaling. For conversion, rescaling values used for
-training the Keras model are needed.</p>
+<p>Input size is here set to 224x224x3 as this is what is used by the
+model presented in the next section.</p>
 </div>
-<div class="section" id="load-test-images-and-preprocess-test-images">
-<h3>2.1 Load test images and preprocess test images<a class="headerlink" href="#load-test-images-and-preprocess-test-images" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Model specification and hyperparameters</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">tensorflow.io</span> <span class="kn">import</span> <span class="n">read_file</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+
+<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+
+<span class="c1"># Model specification and hyperparameters</span>
 <span class="n">NUM_CHANNELS</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">IMAGE_SIZE</span> <span class="o">=</span> <span class="mi">224</span>
 <span class="n">NUM_CLASSES</span> <span class="o">=</span> <span class="mi">1000</span>
 
 <span class="n">num_images</span> <span class="o">=</span> <span class="mi">10</span>
 
-<span class="n">file_path</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+<span class="c1"># Retrieve dataset file from Brainchip data server</span>
+<span class="n">file_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span>
     <span class="s2">&quot;imagenet_like.zip&quot;</span><span class="p">,</span>
     <span class="s2">&quot;http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip&quot;</span><span class="p">,</span>
     <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/imagenet_like&#39;</span><span class="p">,</span>
@@ -507,7 +469,7 @@ training the Keras model are needed.</p>
     <span class="n">test_file</span> <span class="o">=</span> <span class="s1">&#39;image_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.jpg&#39;</span>
     <span class="n">x_test_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_file</span><span class="p">)</span>
     <span class="n">img_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
-    <span class="n">base_image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+    <span class="n">base_image</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">resize_and_crop</span><span class="p">(</span><span class="n">image_buffer</span><span class="o">=</span><span class="n">base_image</span><span class="p">,</span>
                                           <span class="n">output_width</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">,</span>
                                           <span class="n">output_height</span><span class="o">=</span><span class="n">IMAGE_SIZE</span><span class="p">,</span>
@@ -516,8 +478,8 @@ training the Keras model are needed.</p>
 
 <span class="c1"># Rescale images for Keras model (normalization between -1 and 1)</span>
 <span class="c1"># Assume rescaling format of (x - b)/a</span>
-<span class="n">a</span> <span class="o">=</span> <span class="mf">127.5</span>
-<span class="n">b</span> <span class="o">=</span> <span class="mf">127.5</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">128</span>
 <span class="n">input_scaling</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 <span class="n">x_test_preprocess</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_test</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">a</span>
 
@@ -527,66 +489,66 @@ training the Keras model are needed.</p>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip
 
-    8192/20418307 [..............................] - ETA: 1:33
-   73728/20418307 [..............................] - ETA: 27s 
-  270336/20418307 [..............................] - ETA: 12s
-  466944/20418307 [..............................] - ETA: 9s 
-  663552/20418307 [..............................] - ETA: 8s
-  860160/20418307 [&gt;.............................] - ETA: 8s
- 1056768/20418307 [&gt;.............................] - ETA: 7s
- 1253376/20418307 [&gt;.............................] - ETA: 7s
- 1449984/20418307 [=&gt;............................] - ETA: 7s
- 1646592/20418307 [=&gt;............................] - ETA: 7s
- 1843200/20418307 [=&gt;............................] - ETA: 6s
- 2039808/20418307 [=&gt;............................] - ETA: 6s
- 2236416/20418307 [==&gt;...........................] - ETA: 6s
- 2433024/20418307 [==&gt;...........................] - ETA: 6s
- 2629632/20418307 [==&gt;...........................] - ETA: 6s
- 2826240/20418307 [===&gt;..........................] - ETA: 6s
- 3022848/20418307 [===&gt;..........................] - ETA: 6s
- 3219456/20418307 [===&gt;..........................] - ETA: 6s
- 3416064/20418307 [====&gt;.........................] - ETA: 6s
- 3612672/20418307 [====&gt;.........................] - ETA: 5s
- 3809280/20418307 [====&gt;.........................] - ETA: 5s
- 4005888/20418307 [====&gt;.........................] - ETA: 5s
- 4202496/20418307 [=====&gt;........................] - ETA: 5s
- 4399104/20418307 [=====&gt;........................] - ETA: 5s
- 4595712/20418307 [=====&gt;........................] - ETA: 5s
- 4792320/20418307 [======&gt;.......................] - ETA: 5s
- 4988928/20418307 [======&gt;.......................] - ETA: 5s
- 5185536/20418307 [======&gt;.......................] - ETA: 5s
- 5382144/20418307 [======&gt;.......................] - ETA: 5s
- 5578752/20418307 [=======&gt;......................] - ETA: 5s
- 5775360/20418307 [=======&gt;......................] - ETA: 5s
- 5971968/20418307 [=======&gt;......................] - ETA: 5s
- 6168576/20418307 [========&gt;.....................] - ETA: 4s
- 6365184/20418307 [========&gt;.....................] - ETA: 4s
- 6561792/20418307 [========&gt;.....................] - ETA: 4s
- 6758400/20418307 [========&gt;.....................] - ETA: 4s
- 6955008/20418307 [=========&gt;....................] - ETA: 4s
- 7151616/20418307 [=========&gt;....................] - ETA: 4s
- 7348224/20418307 [=========&gt;....................] - ETA: 4s
- 7544832/20418307 [==========&gt;...................] - ETA: 4s
- 7741440/20418307 [==========&gt;...................] - ETA: 4s
- 7938048/20418307 [==========&gt;...................] - ETA: 4s
- 8134656/20418307 [==========&gt;...................] - ETA: 4s
- 8331264/20418307 [===========&gt;..................] - ETA: 4s
- 8527872/20418307 [===========&gt;..................] - ETA: 4s
+    8192/20418307 [..............................] - ETA: 57s
+   73728/20418307 [..............................] - ETA: 20s
+  270336/20418307 [..............................] - ETA: 9s 
+  466944/20418307 [..............................] - ETA: 7s
+  663552/20418307 [..............................] - ETA: 6s
+  860160/20418307 [&gt;.............................] - ETA: 6s
+ 1056768/20418307 [&gt;.............................] - ETA: 6s
+ 1253376/20418307 [&gt;.............................] - ETA: 6s
+ 1449984/20418307 [=&gt;............................] - ETA: 5s
+ 1646592/20418307 [=&gt;............................] - ETA: 5s
+ 1843200/20418307 [=&gt;............................] - ETA: 5s
+ 2039808/20418307 [=&gt;............................] - ETA: 5s
+ 2236416/20418307 [==&gt;...........................] - ETA: 5s
+ 2433024/20418307 [==&gt;...........................] - ETA: 5s
+ 2629632/20418307 [==&gt;...........................] - ETA: 5s
+ 2826240/20418307 [===&gt;..........................] - ETA: 5s
+ 3022848/20418307 [===&gt;..........................] - ETA: 5s
+ 3219456/20418307 [===&gt;..........................] - ETA: 4s
+ 3416064/20418307 [====&gt;.........................] - ETA: 4s
+ 3612672/20418307 [====&gt;.........................] - ETA: 4s
+ 3809280/20418307 [====&gt;.........................] - ETA: 4s
+ 4005888/20418307 [====&gt;.........................] - ETA: 4s
+ 4202496/20418307 [=====&gt;........................] - ETA: 4s
+ 4399104/20418307 [=====&gt;........................] - ETA: 4s
+ 4595712/20418307 [=====&gt;........................] - ETA: 4s
+ 4792320/20418307 [======&gt;.......................] - ETA: 4s
+ 4988928/20418307 [======&gt;.......................] - ETA: 4s
+ 5185536/20418307 [======&gt;.......................] - ETA: 4s
+ 5382144/20418307 [======&gt;.......................] - ETA: 4s
+ 5578752/20418307 [=======&gt;......................] - ETA: 4s
+ 5775360/20418307 [=======&gt;......................] - ETA: 4s
+ 5971968/20418307 [=======&gt;......................] - ETA: 4s
+ 6168576/20418307 [========&gt;.....................] - ETA: 3s
+ 6365184/20418307 [========&gt;.....................] - ETA: 3s
+ 6561792/20418307 [========&gt;.....................] - ETA: 3s
+ 6758400/20418307 [========&gt;.....................] - ETA: 3s
+ 6955008/20418307 [=========&gt;....................] - ETA: 3s
+ 7151616/20418307 [=========&gt;....................] - ETA: 3s
+ 7348224/20418307 [=========&gt;....................] - ETA: 3s
+ 7544832/20418307 [==========&gt;...................] - ETA: 3s
+ 7741440/20418307 [==========&gt;...................] - ETA: 3s
+ 7938048/20418307 [==========&gt;...................] - ETA: 3s
+ 8134656/20418307 [==========&gt;...................] - ETA: 3s
+ 8331264/20418307 [===========&gt;..................] - ETA: 3s
+ 8527872/20418307 [===========&gt;..................] - ETA: 3s
  8724480/20418307 [===========&gt;..................] - ETA: 3s
  8921088/20418307 [============&gt;.................] - ETA: 3s
  9117696/20418307 [============&gt;.................] - ETA: 3s
  9314304/20418307 [============&gt;.................] - ETA: 3s
  9510912/20418307 [============&gt;.................] - ETA: 3s
- 9707520/20418307 [=============&gt;................] - ETA: 3s
- 9904128/20418307 [=============&gt;................] - ETA: 3s
-10100736/20418307 [=============&gt;................] - ETA: 3s
-10297344/20418307 [==============&gt;...............] - ETA: 3s
-10493952/20418307 [==============&gt;...............] - ETA: 3s
-10690560/20418307 [==============&gt;...............] - ETA: 3s
-10887168/20418307 [==============&gt;...............] - ETA: 3s
-11083776/20418307 [===============&gt;..............] - ETA: 3s
-11280384/20418307 [===============&gt;..............] - ETA: 3s
-11476992/20418307 [===============&gt;..............] - ETA: 3s
+ 9707520/20418307 [=============&gt;................] - ETA: 2s
+ 9904128/20418307 [=============&gt;................] - ETA: 2s
+10100736/20418307 [=============&gt;................] - ETA: 2s
+10297344/20418307 [==============&gt;...............] - ETA: 2s
+10493952/20418307 [==============&gt;...............] - ETA: 2s
+10690560/20418307 [==============&gt;...............] - ETA: 2s
+10887168/20418307 [==============&gt;...............] - ETA: 2s
+11083776/20418307 [===============&gt;..............] - ETA: 2s
+11280384/20418307 [===============&gt;..............] - ETA: 2s
+11476992/20418307 [===============&gt;..............] - ETA: 2s
 11673600/20418307 [================&gt;.............] - ETA: 2s
 11870208/20418307 [================&gt;.............] - ETA: 2s
 12066816/20418307 [================&gt;.............] - ETA: 2s
@@ -595,51 +557,60 @@ training the Keras model are needed.</p>
 12656640/20418307 [=================&gt;............] - ETA: 2s
 12853248/20418307 [=================&gt;............] - ETA: 2s
 13049856/20418307 [==================&gt;...........] - ETA: 2s
-13246464/20418307 [==================&gt;...........] - ETA: 2s
-13377536/20418307 [==================&gt;...........] - ETA: 2s
-13574144/20418307 [==================&gt;...........] - ETA: 2s
-13770752/20418307 [===================&gt;..........] - ETA: 2s
-13967360/20418307 [===================&gt;..........] - ETA: 2s
-14163968/20418307 [===================&gt;..........] - ETA: 2s
-14360576/20418307 [====================&gt;.........] - ETA: 2s
-14557184/20418307 [====================&gt;.........] - ETA: 1s
-14753792/20418307 [====================&gt;.........] - ETA: 1s
-14950400/20418307 [====================&gt;.........] - ETA: 1s
-15147008/20418307 [=====================&gt;........] - ETA: 1s
-15343616/20418307 [=====================&gt;........] - ETA: 1s
-15540224/20418307 [=====================&gt;........] - ETA: 1s
-15736832/20418307 [======================&gt;.......] - ETA: 1s
-15933440/20418307 [======================&gt;.......] - ETA: 1s
-16130048/20418307 [======================&gt;.......] - ETA: 1s
-16326656/20418307 [======================&gt;.......] - ETA: 1s
-16523264/20418307 [=======================&gt;......] - ETA: 1s
-16719872/20418307 [=======================&gt;......] - ETA: 1s
-16916480/20418307 [=======================&gt;......] - ETA: 1s
-17113088/20418307 [========================&gt;.....] - ETA: 1s
-17309696/20418307 [========================&gt;.....] - ETA: 1s
-17506304/20418307 [========================&gt;.....] - ETA: 0s
-17702912/20418307 [=========================&gt;....] - ETA: 0s
-17899520/20418307 [=========================&gt;....] - ETA: 0s
-18096128/20418307 [=========================&gt;....] - ETA: 0s
-18292736/20418307 [=========================&gt;....] - ETA: 0s
-18489344/20418307 [==========================&gt;...] - ETA: 0s
-18685952/20418307 [==========================&gt;...] - ETA: 0s
-18882560/20418307 [==========================&gt;...] - ETA: 0s
-19079168/20418307 [===========================&gt;..] - ETA: 0s
-19275776/20418307 [===========================&gt;..] - ETA: 0s
-19472384/20418307 [===========================&gt;..] - ETA: 0s
-19668992/20418307 [===========================&gt;..] - ETA: 0s
-19865600/20418307 [============================&gt;.] - ETA: 0s
-20062208/20418307 [============================&gt;.] - ETA: 0s
-20258816/20418307 [============================&gt;.] - ETA: 0s
-20422656/20418307 [==============================] - 7s 0us/step
+13246464/20418307 [==================&gt;...........] - ETA: 1s
+13443072/20418307 [==================&gt;...........] - ETA: 1s
+13639680/20418307 [===================&gt;..........] - ETA: 1s
+13836288/20418307 [===================&gt;..........] - ETA: 1s
+14032896/20418307 [===================&gt;..........] - ETA: 1s
+14229504/20418307 [===================&gt;..........] - ETA: 1s
+14426112/20418307 [====================&gt;.........] - ETA: 1s
+14622720/20418307 [====================&gt;.........] - ETA: 1s
+14819328/20418307 [====================&gt;.........] - ETA: 1s
+15015936/20418307 [=====================&gt;........] - ETA: 1s
+15212544/20418307 [=====================&gt;........] - ETA: 1s
+15409152/20418307 [=====================&gt;........] - ETA: 1s
+15605760/20418307 [=====================&gt;........] - ETA: 1s
+15802368/20418307 [======================&gt;.......] - ETA: 1s
+15998976/20418307 [======================&gt;.......] - ETA: 1s
+16195584/20418307 [======================&gt;.......] - ETA: 1s
+16392192/20418307 [=======================&gt;......] - ETA: 1s
+16588800/20418307 [=======================&gt;......] - ETA: 1s
+16785408/20418307 [=======================&gt;......] - ETA: 0s
+16982016/20418307 [=======================&gt;......] - ETA: 0s
+17178624/20418307 [========================&gt;.....] - ETA: 0s
+17375232/20418307 [========================&gt;.....] - ETA: 0s
+17571840/20418307 [========================&gt;.....] - ETA: 0s
+17768448/20418307 [=========================&gt;....] - ETA: 0s
+17965056/20418307 [=========================&gt;....] - ETA: 0s
+18161664/20418307 [=========================&gt;....] - ETA: 0s
+18358272/20418307 [=========================&gt;....] - ETA: 0s
+18554880/20418307 [==========================&gt;...] - ETA: 0s
+18751488/20418307 [==========================&gt;...] - ETA: 0s
+18948096/20418307 [==========================&gt;...] - ETA: 0s
+19144704/20418307 [===========================&gt;..] - ETA: 0s
+19341312/20418307 [===========================&gt;..] - ETA: 0s
+19537920/20418307 [===========================&gt;..] - ETA: 0s
+19734528/20418307 [===========================&gt;..] - ETA: 0s
+19931136/20418307 [============================&gt;.] - ETA: 0s
+20127744/20418307 [============================&gt;.] - ETA: 0s
+20324352/20418307 [============================&gt;.] - ETA: 0s
+20422656/20418307 [==============================] - 6s 0us/step
 10 images loaded and preprocessed.
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Akida Execution Engine is configured to take 8-bit inputs
+without rescaling. For conversion, rescaling values used for
+training the Keras model are needed.</p>
 </div>
-<div class="section" id="load-labels">
-<h3>2.2 Load labels<a class="headerlink" href="#load-labels" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s1">&#39;labels_validation.txt&#39;</span><span class="p">)</span>
+<p>Labels for test images are stored in the akida_models package. The matching
+between names (<em>string</em>) and labels (<em>integer</em>) is given through the
+<code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.index_to_label</span></code> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="c1"># Parse labels file</span>
+<span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s1">&#39;labels_validation.txt&#39;</span><span class="p">)</span>
 <span class="n">validation_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
     <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
@@ -653,175 +624,473 @@ training the Keras model are needed.</p>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="create-a-quantized-keras-model">
-<h2>3. Create a quantized Keras model<a class="headerlink" href="#create-a-quantized-keras-model" title="Permalink to this headline">¶</a></h2>
-<p>A Keras model based on a MobileNet model is instantiated with quantized
-weights and activations. This model satisfies the Akida NSoC
-requirements:</p>
-<ul class="simple">
-<li><p>all the convolutional layers have 4-bit weights, except for the first
-layer,</p></li>
-<li><p>the first layer has 8-bit weights,</p></li>
-<li><p>all the convolutional layers have 4-bit activations.</p></li>
-</ul>
-<p>This section goes as follows:</p>
-<ul class="simple">
-<li><p><strong>Instantiate a quantized Keras model</strong> according to above specifications.</p></li>
-<li><p><strong>Load pre-trained weights</strong> that performs a 65 % accuracy on the test
-dataset.</p></li>
-<li><p><strong>Check performance</strong> on the test set. According to the number of test
-images, the inference could last for several minutes.</p></li>
-</ul>
-<div class="section" id="instantiate-keras-model">
-<h3>3.1 Instantiate Keras model<a class="headerlink" href="#instantiate-keras-model" title="Permalink to this headline">¶</a></h3>
-<p>The <a class="reference external" href="../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet">mobilenet_imagenet</a>
-method included in akida_models package offers a way to easily instantiate a
-MobileNet model based on Keras with quantized weights and activations.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The pre-trained weights which are loaded correspond to the
-parameters in the next cell. If you want to modify some of these
-parameters, you must re-train the model and save the weights.</p>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">NUM_CHANNELS</span><span class="p">)</span>
-<span class="n">model_keras</span> <span class="o">=</span> <span class="n">mobilenet_imagenet_pretrained</span><span class="p">()</span>
+<div class="section" id="create-a-keras-mobilenet-model">
+<h2>2. Create a Keras MobileNet model<a class="headerlink" href="#create-a-keras-mobilenet-model" title="Permalink to this headline">¶</a></h2>
+<p>The MobileNet architecture is available in the Akida model zoo as
+<a class="reference external" href="../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet">mobilenet_imagenet</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
 
+<span class="c1"># Retrieve the float model with pretrained weights and load it</span>
+<span class="n">model_file</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span>
+    <span class="s2">&quot;mobilenet_imagenet.h5&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://data.brainchip.com/models/mobilenet/mobilenet_imagenet.h5&quot;</span><span class="p">,</span>
+    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/mobilenet_imagenet&#39;</span><span class="p">)</span>
+<span class="n">model_keras</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_file</span><span class="p">)</span>
 <span class="n">model_keras</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/mobilenet/mobilenet_imagenet.h5
+
+    8192/17121320 [..............................] - ETA: 1:34
+   73728/17121320 [..............................] - ETA: 22s 
+  270336/17121320 [..............................] - ETA: 9s 
+  466944/17121320 [..............................] - ETA: 7s
+  663552/17121320 [&gt;.............................] - ETA: 6s
+  860160/17121320 [&gt;.............................] - ETA: 5s
+ 1056768/17121320 [&gt;.............................] - ETA: 5s
+ 1253376/17121320 [=&gt;............................] - ETA: 5s
+ 1449984/17121320 [=&gt;............................] - ETA: 5s
+ 1646592/17121320 [=&gt;............................] - ETA: 4s
+ 1843200/17121320 [==&gt;...........................] - ETA: 4s
+ 2039808/17121320 [==&gt;...........................] - ETA: 4s
+ 2236416/17121320 [==&gt;...........................] - ETA: 4s
+ 2433024/17121320 [===&gt;..........................] - ETA: 4s
+ 2629632/17121320 [===&gt;..........................] - ETA: 4s
+ 2826240/17121320 [===&gt;..........................] - ETA: 4s
+ 3022848/17121320 [====&gt;.........................] - ETA: 4s
+ 3219456/17121320 [====&gt;.........................] - ETA: 4s
+ 3416064/17121320 [====&gt;.........................] - ETA: 4s
+ 3612672/17121320 [=====&gt;........................] - ETA: 3s
+ 3809280/17121320 [=====&gt;........................] - ETA: 3s
+ 4005888/17121320 [======&gt;.......................] - ETA: 3s
+ 4202496/17121320 [======&gt;.......................] - ETA: 3s
+ 4399104/17121320 [======&gt;.......................] - ETA: 3s
+ 4595712/17121320 [=======&gt;......................] - ETA: 3s
+ 4792320/17121320 [=======&gt;......................] - ETA: 3s
+ 4988928/17121320 [=======&gt;......................] - ETA: 3s
+ 5185536/17121320 [========&gt;.....................] - ETA: 3s
+ 5382144/17121320 [========&gt;.....................] - ETA: 3s
+ 5578752/17121320 [========&gt;.....................] - ETA: 3s
+ 5775360/17121320 [=========&gt;....................] - ETA: 3s
+ 5971968/17121320 [=========&gt;....................] - ETA: 3s
+ 6168576/17121320 [=========&gt;....................] - ETA: 3s
+ 6365184/17121320 [==========&gt;...................] - ETA: 3s
+ 6561792/17121320 [==========&gt;...................] - ETA: 2s
+ 6758400/17121320 [==========&gt;...................] - ETA: 2s
+ 6955008/17121320 [===========&gt;..................] - ETA: 2s
+ 7151616/17121320 [===========&gt;..................] - ETA: 2s
+ 7348224/17121320 [===========&gt;..................] - ETA: 2s
+ 7544832/17121320 [============&gt;.................] - ETA: 2s
+ 7741440/17121320 [============&gt;.................] - ETA: 2s
+ 7938048/17121320 [============&gt;.................] - ETA: 2s
+ 8134656/17121320 [=============&gt;................] - ETA: 2s
+ 8331264/17121320 [=============&gt;................] - ETA: 2s
+ 8527872/17121320 [=============&gt;................] - ETA: 2s
+ 8724480/17121320 [==============&gt;...............] - ETA: 2s
+ 8921088/17121320 [==============&gt;...............] - ETA: 2s
+ 9117696/17121320 [==============&gt;...............] - ETA: 2s
+ 9314304/17121320 [===============&gt;..............] - ETA: 2s
+ 9510912/17121320 [===============&gt;..............] - ETA: 2s
+ 9707520/17121320 [================&gt;.............] - ETA: 2s
+ 9904128/17121320 [================&gt;.............] - ETA: 2s
+10100736/17121320 [================&gt;.............] - ETA: 1s
+10297344/17121320 [=================&gt;............] - ETA: 1s
+10493952/17121320 [=================&gt;............] - ETA: 1s
+10690560/17121320 [=================&gt;............] - ETA: 1s
+10887168/17121320 [==================&gt;...........] - ETA: 1s
+11083776/17121320 [==================&gt;...........] - ETA: 1s
+11280384/17121320 [==================&gt;...........] - ETA: 1s
+11476992/17121320 [===================&gt;..........] - ETA: 1s
+11673600/17121320 [===================&gt;..........] - ETA: 1s
+11870208/17121320 [===================&gt;..........] - ETA: 1s
+12066816/17121320 [====================&gt;.........] - ETA: 1s
+12263424/17121320 [====================&gt;.........] - ETA: 1s
+12460032/17121320 [====================&gt;.........] - ETA: 1s
+12656640/17121320 [=====================&gt;........] - ETA: 1s
+12853248/17121320 [=====================&gt;........] - ETA: 1s
+13049856/17121320 [=====================&gt;........] - ETA: 1s
+13246464/17121320 [======================&gt;.......] - ETA: 1s
+13443072/17121320 [======================&gt;.......] - ETA: 1s
+13639680/17121320 [======================&gt;.......] - ETA: 0s
+13836288/17121320 [=======================&gt;......] - ETA: 0s
+14032896/17121320 [=======================&gt;......] - ETA: 0s
+14229504/17121320 [=======================&gt;......] - ETA: 0s
+14426112/17121320 [========================&gt;.....] - ETA: 0s
+14622720/17121320 [========================&gt;.....] - ETA: 0s
+14819328/17121320 [========================&gt;.....] - ETA: 0s
+15015936/17121320 [=========================&gt;....] - ETA: 0s
+15212544/17121320 [=========================&gt;....] - ETA: 0s
+15409152/17121320 [=========================&gt;....] - ETA: 0s
+15605760/17121320 [==========================&gt;...] - ETA: 0s
+15802368/17121320 [==========================&gt;...] - ETA: 0s
+15998976/17121320 [===========================&gt;..] - ETA: 0s
+16195584/17121320 [===========================&gt;..] - ETA: 0s
+16392192/17121320 [===========================&gt;..] - ETA: 0s
+16588800/17121320 [============================&gt;.] - ETA: 0s
+16785408/17121320 [============================&gt;.] - ETA: 0s
+16982016/17121320 [============================&gt;.] - ETA: 0s
+17129472/17121320 [==============================] - 5s 0us/step
+Model: &quot;mobilenet_1.00_224&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_27 (InputLayer)        [(None, 224, 224, 3)]     0
+_________________________________________________________________
+conv_0 (Conv2D)              (None, 112, 112, 32)      864
+_________________________________________________________________
+conv_0_BN (BatchNormalizatio (None, 112, 112, 32)      128
+_________________________________________________________________
+conv_0_relu (ReLU)           (None, 112, 112, 32)      0
+_________________________________________________________________
+separable_1 (SeparableConv2D (None, 112, 112, 64)      2336
+_________________________________________________________________
+separable_1_BN (BatchNormali (None, 112, 112, 64)      256
+_________________________________________________________________
+separable_1_relu (ReLU)      (None, 112, 112, 64)      0
+_________________________________________________________________
+separable_2 (SeparableConv2D (None, 112, 112, 128)     8768
+_________________________________________________________________
+separable_2_maxpool (MaxPool (None, 56, 56, 128)       0
+_________________________________________________________________
+separable_2_BN (BatchNormali (None, 56, 56, 128)       512
+_________________________________________________________________
+separable_2_relu (ReLU)      (None, 56, 56, 128)       0
+_________________________________________________________________
+separable_3 (SeparableConv2D (None, 56, 56, 128)       17536
+_________________________________________________________________
+separable_3_BN (BatchNormali (None, 56, 56, 128)       512
+_________________________________________________________________
+separable_3_relu (ReLU)      (None, 56, 56, 128)       0
+_________________________________________________________________
+separable_4 (SeparableConv2D (None, 56, 56, 256)       33920
+_________________________________________________________________
+separable_4_maxpool (MaxPool (None, 28, 28, 256)       0
+_________________________________________________________________
+separable_4_BN (BatchNormali (None, 28, 28, 256)       1024
+_________________________________________________________________
+separable_4_relu (ReLU)      (None, 28, 28, 256)       0
+_________________________________________________________________
+separable_5 (SeparableConv2D (None, 28, 28, 256)       67840
+_________________________________________________________________
+separable_5_BN (BatchNormali (None, 28, 28, 256)       1024
+_________________________________________________________________
+separable_5_relu (ReLU)      (None, 28, 28, 256)       0
+_________________________________________________________________
+separable_6 (SeparableConv2D (None, 28, 28, 512)       133376
+_________________________________________________________________
+separable_6_maxpool (MaxPool (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_6_BN (BatchNormali (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_6_relu (ReLU)      (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_7 (SeparableConv2D (None, 14, 14, 512)       266752
+_________________________________________________________________
+separable_7_BN (BatchNormali (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_7_relu (ReLU)      (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_8 (SeparableConv2D (None, 14, 14, 512)       266752
+_________________________________________________________________
+separable_8_BN (BatchNormali (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_8_relu (ReLU)      (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_9 (SeparableConv2D (None, 14, 14, 512)       266752
+_________________________________________________________________
+separable_9_BN (BatchNormali (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_9_relu (ReLU)      (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_10 (SeparableConv2 (None, 14, 14, 512)       266752
+_________________________________________________________________
+separable_10_BN (BatchNormal (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_10_relu (ReLU)     (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_11 (SeparableConv2 (None, 14, 14, 512)       266752
+_________________________________________________________________
+separable_11_BN (BatchNormal (None, 14, 14, 512)       2048
+_________________________________________________________________
+separable_11_relu (ReLU)     (None, 14, 14, 512)       0
+_________________________________________________________________
+separable_12 (SeparableConv2 (None, 14, 14, 1024)      528896
+_________________________________________________________________
+separable_12_maxpool (MaxPoo (None, 7, 7, 1024)        0
+_________________________________________________________________
+separable_12_BN (BatchNormal (None, 7, 7, 1024)        4096
+_________________________________________________________________
+separable_12_relu (ReLU)     (None, 7, 7, 1024)        0
+_________________________________________________________________
+separable_13 (SeparableConv2 (None, 7, 7, 1024)        1057792
+_________________________________________________________________
+separable_13_global_avg (Glo (None, 1024)              0
+_________________________________________________________________
+separable_13_BN (BatchNormal (None, 1024)              4096
+_________________________________________________________________
+separable_13_relu (ReLU)     (None, 1024)              0
+_________________________________________________________________
+reshape_1 (Reshape)          (None, 1, 1, 1024)        0
+_________________________________________________________________
+dropout (Dropout)            (None, 1, 1, 1024)        0
+_________________________________________________________________
+separable_14 (SeparableConv2 (None, 1, 1, 1000)        1033216
+_________________________________________________________________
+act_softmax (Activation)     (None, 1, 1, 1000)        0
+_________________________________________________________________
+reshape_2 (Reshape)          (None, 1000)              0
+=================================================================
+Total params: 4,242,240
+Trainable params: 4,230,272
+Non-trainable params: 11,968
+_________________________________________________________________
+</pre></div>
+</div>
+<p>Top-1 accuracy on the actual ImageNet is 71.93%, the perfomance given below
+uses the 10 images subset.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
+
+
+<span class="c1"># Check model performance</span>
+<span class="k">def</span> <span class="nf">check_model_performances</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                             <span class="n">x_test</span><span class="o">=</span><span class="n">x_test_preprocess</span><span class="p">,</span>
+                             <span class="n">labels_test</span><span class="o">=</span><span class="n">labels_test</span><span class="p">):</span>
+    <span class="n">num_images</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+    <span class="n">potentials_keras</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Keras inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">preds_keras</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">potentials_keras</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">accuracy_keras</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">preds_keras</span><span class="p">,</span> <span class="n">labels_test</span><span class="p">))</span> <span class="o">/</span> <span class="n">num_images</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keras accuracy: </span><span class="si">{</span><span class="n">accuracy_keras</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+
+
+<span class="n">check_model_performances</span><span class="p">(</span><span class="n">model_keras</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 10 images took 0.47 s.
+
+Keras accuracy: 100.00 %
+</pre></div>
+</div>
+</div>
+<div class="section" id="quantized-model">
+<h2>3. Quantized model<a class="headerlink" href="#quantized-model" title="Permalink to this headline">¶</a></h2>
+<p>Quantizing a model is done using <a class="reference external" href="../api_reference/cnn2snn_apis.html#quantize">CNN2SNN quantize</a>.</p>
+<p>The quantized model satisfies the Akida NSoC requirements:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the first layer has 8-bit weights,</p></li>
+<li><p>all other convolutional layers have 4-bit weights,</p></li>
+<li><p>all convolutional layers have 4-bit activations.</p></li>
+</ul>
+</div></blockquote>
+<p>However, this model will suffer from a drop in accuracy due to quantization
+as shown in the table below for ImageNet and in the next cell for the 10
+images set.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Float accuracy</p></th>
+<th class="head"><p>Quantized accuracy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>71.93 %</p></td>
+<td><p>9.52 %</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span>
+
+<span class="c1"># Quantize the model to 4-bit weights and activations, 8-bit weights for the</span>
+<span class="c1"># first convolutional layer</span>
+<span class="n">model_keras_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+
+<span class="c1"># Check Model performance</span>
+<span class="n">check_model_performances</span><span class="p">(</span><span class="n">model_keras_quantized</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 10 images took 0.57 s.
+
+Keras accuracy: 30.00 %
+</pre></div>
+</div>
+</div>
+<div class="section" id="pretrained-quantized-model">
+<h2>4. Pretrained quantized model<a class="headerlink" href="#pretrained-quantized-model" title="Permalink to this headline">¶</a></h2>
+<p>The Akida models zoo also contains a <a class="reference external" href="../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">pretrained quantized helper</a>
+that was obtained after fine tuning the model for 30 epochs.</p>
+<p>Tuning the model, that is training with a lowered learning rate, allows to
+recover performances up to the initial floating point accuracy.</p>
+<p>Performances on the full ImageNet dataset are:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Float accuracy</p></th>
+<th class="head"><p>Quantized accuracy</p></th>
+<th class="head"><p>After tuning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>71.93 %</p></td>
+<td><p>9.52 %</p></td>
+<td><p>69.63 %</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">mobilenet_imagenet_pretrained</span>
+
+<span class="c1"># Use a quantized model with pretrained quantized weights</span>
+<span class="n">model_keras_quantized_pretrained</span> <span class="o">=</span> <span class="n">mobilenet_imagenet_pretrained</span><span class="p">()</span>
+<span class="n">model_keras_quantized_pretrained</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_iq8_wq4_aq4.h5
 
-    8192/33988120 [..............................] - ETA: 1:26
-   73728/33988120 [..............................] - ETA: 38s 
-  204800/33988120 [..............................] - ETA: 24s
-  401408/33988120 [..............................] - ETA: 17s
-  598016/33988120 [..............................] - ETA: 15s
-  794624/33988120 [..............................] - ETA: 14s
-  991232/33988120 [..............................] - ETA: 13s
- 1187840/33988120 [&gt;.............................] - ETA: 13s
- 1384448/33988120 [&gt;.............................] - ETA: 12s
- 1581056/33988120 [&gt;.............................] - ETA: 12s
- 1777664/33988120 [&gt;.............................] - ETA: 12s
- 1974272/33988120 [&gt;.............................] - ETA: 11s
- 2170880/33988120 [&gt;.............................] - ETA: 11s
- 2367488/33988120 [=&gt;............................] - ETA: 11s
- 2564096/33988120 [=&gt;............................] - ETA: 11s
- 2760704/33988120 [=&gt;............................] - ETA: 11s
- 2957312/33988120 [=&gt;............................] - ETA: 11s
- 3153920/33988120 [=&gt;............................] - ETA: 11s
- 3350528/33988120 [=&gt;............................] - ETA: 10s
- 3547136/33988120 [==&gt;...........................] - ETA: 10s
- 3743744/33988120 [==&gt;...........................] - ETA: 10s
- 3940352/33988120 [==&gt;...........................] - ETA: 10s
- 4136960/33988120 [==&gt;...........................] - ETA: 10s
- 4333568/33988120 [==&gt;...........................] - ETA: 10s
- 4530176/33988120 [==&gt;...........................] - ETA: 10s
- 4726784/33988120 [===&gt;..........................] - ETA: 10s
- 4923392/33988120 [===&gt;..........................] - ETA: 10s
- 5120000/33988120 [===&gt;..........................] - ETA: 10s
- 5316608/33988120 [===&gt;..........................] - ETA: 9s 
- 5513216/33988120 [===&gt;..........................] - ETA: 9s
- 5709824/33988120 [====&gt;.........................] - ETA: 9s
- 5906432/33988120 [====&gt;.........................] - ETA: 9s
- 6103040/33988120 [====&gt;.........................] - ETA: 9s
- 6299648/33988120 [====&gt;.........................] - ETA: 9s
- 6496256/33988120 [====&gt;.........................] - ETA: 9s
- 6692864/33988120 [====&gt;.........................] - ETA: 9s
- 6889472/33988120 [=====&gt;........................] - ETA: 9s
- 7086080/33988120 [=====&gt;........................] - ETA: 9s
- 7282688/33988120 [=====&gt;........................] - ETA: 9s
- 7479296/33988120 [=====&gt;........................] - ETA: 9s
- 7675904/33988120 [=====&gt;........................] - ETA: 9s
- 7872512/33988120 [=====&gt;........................] - ETA: 8s
- 8069120/33988120 [======&gt;.......................] - ETA: 8s
- 8265728/33988120 [======&gt;.......................] - ETA: 8s
- 8462336/33988120 [======&gt;.......................] - ETA: 8s
- 8658944/33988120 [======&gt;.......................] - ETA: 8s
- 8855552/33988120 [======&gt;.......................] - ETA: 8s
- 9052160/33988120 [======&gt;.......................] - ETA: 8s
- 9248768/33988120 [=======&gt;......................] - ETA: 8s
- 9445376/33988120 [=======&gt;......................] - ETA: 8s
- 9641984/33988120 [=======&gt;......................] - ETA: 8s
- 9838592/33988120 [=======&gt;......................] - ETA: 8s
-10035200/33988120 [=======&gt;......................] - ETA: 8s
-10231808/33988120 [========&gt;.....................] - ETA: 8s
-10428416/33988120 [========&gt;.....................] - ETA: 8s
-10625024/33988120 [========&gt;.....................] - ETA: 7s
-10821632/33988120 [========&gt;.....................] - ETA: 7s
-11018240/33988120 [========&gt;.....................] - ETA: 7s
-11214848/33988120 [========&gt;.....................] - ETA: 7s
-11411456/33988120 [=========&gt;....................] - ETA: 7s
-11608064/33988120 [=========&gt;....................] - ETA: 7s
-11804672/33988120 [=========&gt;....................] - ETA: 7s
-12001280/33988120 [=========&gt;....................] - ETA: 7s
-12197888/33988120 [=========&gt;....................] - ETA: 7s
-12394496/33988120 [=========&gt;....................] - ETA: 7s
-12591104/33988120 [==========&gt;...................] - ETA: 7s
-12787712/33988120 [==========&gt;...................] - ETA: 7s
-12984320/33988120 [==========&gt;...................] - ETA: 7s
-13180928/33988120 [==========&gt;...................] - ETA: 7s
-13377536/33988120 [==========&gt;...................] - ETA: 7s
-13574144/33988120 [==========&gt;...................] - ETA: 6s
-13770752/33988120 [===========&gt;..................] - ETA: 6s
-13967360/33988120 [===========&gt;..................] - ETA: 6s
-14163968/33988120 [===========&gt;..................] - ETA: 6s
-14360576/33988120 [===========&gt;..................] - ETA: 6s
-14557184/33988120 [===========&gt;..................] - ETA: 6s
-14753792/33988120 [============&gt;.................] - ETA: 6s
-14950400/33988120 [============&gt;.................] - ETA: 6s
-15147008/33988120 [============&gt;.................] - ETA: 6s
-15343616/33988120 [============&gt;.................] - ETA: 6s
-15540224/33988120 [============&gt;.................] - ETA: 6s
-15736832/33988120 [============&gt;.................] - ETA: 6s
-15933440/33988120 [=============&gt;................] - ETA: 6s
-16130048/33988120 [=============&gt;................] - ETA: 6s
-16326656/33988120 [=============&gt;................] - ETA: 5s
-16523264/33988120 [=============&gt;................] - ETA: 5s
-16719872/33988120 [=============&gt;................] - ETA: 5s
-16916480/33988120 [=============&gt;................] - ETA: 5s
-17113088/33988120 [==============&gt;...............] - ETA: 5s
-17309696/33988120 [==============&gt;...............] - ETA: 5s
-17506304/33988120 [==============&gt;...............] - ETA: 5s
-17702912/33988120 [==============&gt;...............] - ETA: 5s
-17899520/33988120 [==============&gt;...............] - ETA: 5s
-18096128/33988120 [==============&gt;...............] - ETA: 5s
-18292736/33988120 [===============&gt;..............] - ETA: 5s
-18489344/33988120 [===============&gt;..............] - ETA: 5s
-18685952/33988120 [===============&gt;..............] - ETA: 5s
-18882560/33988120 [===============&gt;..............] - ETA: 5s
-19079168/33988120 [===============&gt;..............] - ETA: 5s
+    8192/33988120 [..............................] - ETA: 1:08
+   73728/33988120 [..............................] - ETA: 31s 
+  204800/33988120 [..............................] - ETA: 19s
+  401408/33988120 [..............................] - ETA: 14s
+  598016/33988120 [..............................] - ETA: 12s
+  794624/33988120 [..............................] - ETA: 11s
+  991232/33988120 [..............................] - ETA: 11s
+ 1187840/33988120 [&gt;.............................] - ETA: 10s
+ 1384448/33988120 [&gt;.............................] - ETA: 10s
+ 1581056/33988120 [&gt;.............................] - ETA: 10s
+ 1777664/33988120 [&gt;.............................] - ETA: 9s 
+ 1974272/33988120 [&gt;.............................] - ETA: 9s
+ 2170880/33988120 [&gt;.............................] - ETA: 9s
+ 2367488/33988120 [=&gt;............................] - ETA: 9s
+ 2564096/33988120 [=&gt;............................] - ETA: 9s
+ 2760704/33988120 [=&gt;............................] - ETA: 9s
+ 2957312/33988120 [=&gt;............................] - ETA: 9s
+ 3153920/33988120 [=&gt;............................] - ETA: 8s
+ 3350528/33988120 [=&gt;............................] - ETA: 8s
+ 3547136/33988120 [==&gt;...........................] - ETA: 8s
+ 3743744/33988120 [==&gt;...........................] - ETA: 8s
+ 3940352/33988120 [==&gt;...........................] - ETA: 8s
+ 4136960/33988120 [==&gt;...........................] - ETA: 8s
+ 4333568/33988120 [==&gt;...........................] - ETA: 8s
+ 4530176/33988120 [==&gt;...........................] - ETA: 8s
+ 4726784/33988120 [===&gt;..........................] - ETA: 8s
+ 4923392/33988120 [===&gt;..........................] - ETA: 8s
+ 5120000/33988120 [===&gt;..........................] - ETA: 8s
+ 5316608/33988120 [===&gt;..........................] - ETA: 8s
+ 5513216/33988120 [===&gt;..........................] - ETA: 8s
+ 5709824/33988120 [====&gt;.........................] - ETA: 7s
+ 5906432/33988120 [====&gt;.........................] - ETA: 7s
+ 6103040/33988120 [====&gt;.........................] - ETA: 7s
+ 6299648/33988120 [====&gt;.........................] - ETA: 7s
+ 6496256/33988120 [====&gt;.........................] - ETA: 7s
+ 6692864/33988120 [====&gt;.........................] - ETA: 7s
+ 6889472/33988120 [=====&gt;........................] - ETA: 7s
+ 7086080/33988120 [=====&gt;........................] - ETA: 7s
+ 7282688/33988120 [=====&gt;........................] - ETA: 7s
+ 7479296/33988120 [=====&gt;........................] - ETA: 7s
+ 7675904/33988120 [=====&gt;........................] - ETA: 7s
+ 7872512/33988120 [=====&gt;........................] - ETA: 7s
+ 8069120/33988120 [======&gt;.......................] - ETA: 7s
+ 8265728/33988120 [======&gt;.......................] - ETA: 7s
+ 8462336/33988120 [======&gt;.......................] - ETA: 7s
+ 8658944/33988120 [======&gt;.......................] - ETA: 7s
+ 8855552/33988120 [======&gt;.......................] - ETA: 7s
+ 9052160/33988120 [======&gt;.......................] - ETA: 6s
+ 9248768/33988120 [=======&gt;......................] - ETA: 6s
+ 9445376/33988120 [=======&gt;......................] - ETA: 6s
+ 9641984/33988120 [=======&gt;......................] - ETA: 6s
+ 9838592/33988120 [=======&gt;......................] - ETA: 6s
+10035200/33988120 [=======&gt;......................] - ETA: 6s
+10231808/33988120 [========&gt;.....................] - ETA: 6s
+10428416/33988120 [========&gt;.....................] - ETA: 6s
+10625024/33988120 [========&gt;.....................] - ETA: 6s
+10821632/33988120 [========&gt;.....................] - ETA: 6s
+11018240/33988120 [========&gt;.....................] - ETA: 6s
+11214848/33988120 [========&gt;.....................] - ETA: 6s
+11411456/33988120 [=========&gt;....................] - ETA: 6s
+11608064/33988120 [=========&gt;....................] - ETA: 6s
+11804672/33988120 [=========&gt;....................] - ETA: 6s
+12001280/33988120 [=========&gt;....................] - ETA: 6s
+12197888/33988120 [=========&gt;....................] - ETA: 6s
+12394496/33988120 [=========&gt;....................] - ETA: 5s
+12591104/33988120 [==========&gt;...................] - ETA: 5s
+12787712/33988120 [==========&gt;...................] - ETA: 5s
+12984320/33988120 [==========&gt;...................] - ETA: 5s
+13180928/33988120 [==========&gt;...................] - ETA: 5s
+13377536/33988120 [==========&gt;...................] - ETA: 5s
+13574144/33988120 [==========&gt;...................] - ETA: 5s
+13770752/33988120 [===========&gt;..................] - ETA: 5s
+13967360/33988120 [===========&gt;..................] - ETA: 5s
+14163968/33988120 [===========&gt;..................] - ETA: 5s
+14360576/33988120 [===========&gt;..................] - ETA: 5s
+14557184/33988120 [===========&gt;..................] - ETA: 5s
+14753792/33988120 [============&gt;.................] - ETA: 5s
+14950400/33988120 [============&gt;.................] - ETA: 5s
+15147008/33988120 [============&gt;.................] - ETA: 5s
+15343616/33988120 [============&gt;.................] - ETA: 5s
+15540224/33988120 [============&gt;.................] - ETA: 5s
+15736832/33988120 [============&gt;.................] - ETA: 5s
+15933440/33988120 [=============&gt;................] - ETA: 4s
+16130048/33988120 [=============&gt;................] - ETA: 4s
+16326656/33988120 [=============&gt;................] - ETA: 4s
+16523264/33988120 [=============&gt;................] - ETA: 4s
+16719872/33988120 [=============&gt;................] - ETA: 4s
+16916480/33988120 [=============&gt;................] - ETA: 4s
+17113088/33988120 [==============&gt;...............] - ETA: 4s
+17309696/33988120 [==============&gt;...............] - ETA: 4s
+17506304/33988120 [==============&gt;...............] - ETA: 4s
+17702912/33988120 [==============&gt;...............] - ETA: 4s
+17899520/33988120 [==============&gt;...............] - ETA: 4s
+18096128/33988120 [==============&gt;...............] - ETA: 4s
+18292736/33988120 [===============&gt;..............] - ETA: 4s
+18489344/33988120 [===============&gt;..............] - ETA: 4s
+18685952/33988120 [===============&gt;..............] - ETA: 4s
+18882560/33988120 [===============&gt;..............] - ETA: 4s
+19079168/33988120 [===============&gt;..............] - ETA: 4s
 19275776/33988120 [================&gt;.............] - ETA: 4s
-19472384/33988120 [================&gt;.............] - ETA: 4s
-19668992/33988120 [================&gt;.............] - ETA: 4s
-19865600/33988120 [================&gt;.............] - ETA: 4s
-20062208/33988120 [================&gt;.............] - ETA: 4s
-20258816/33988120 [================&gt;.............] - ETA: 4s
-20455424/33988120 [=================&gt;............] - ETA: 4s
-20652032/33988120 [=================&gt;............] - ETA: 4s
-20848640/33988120 [=================&gt;............] - ETA: 4s
-21045248/33988120 [=================&gt;............] - ETA: 4s
-21241856/33988120 [=================&gt;............] - ETA: 4s
-21438464/33988120 [=================&gt;............] - ETA: 4s
-21635072/33988120 [==================&gt;...........] - ETA: 4s
-21831680/33988120 [==================&gt;...........] - ETA: 4s
-22028288/33988120 [==================&gt;...........] - ETA: 4s
+19472384/33988120 [================&gt;.............] - ETA: 3s
+19668992/33988120 [================&gt;.............] - ETA: 3s
+19865600/33988120 [================&gt;.............] - ETA: 3s
+20062208/33988120 [================&gt;.............] - ETA: 3s
+20258816/33988120 [================&gt;.............] - ETA: 3s
+20455424/33988120 [=================&gt;............] - ETA: 3s
+20652032/33988120 [=================&gt;............] - ETA: 3s
+20848640/33988120 [=================&gt;............] - ETA: 3s
+21045248/33988120 [=================&gt;............] - ETA: 3s
+21241856/33988120 [=================&gt;............] - ETA: 3s
+21438464/33988120 [=================&gt;............] - ETA: 3s
+21635072/33988120 [==================&gt;...........] - ETA: 3s
+21831680/33988120 [==================&gt;...........] - ETA: 3s
+22028288/33988120 [==================&gt;...........] - ETA: 3s
 22224896/33988120 [==================&gt;...........] - ETA: 3s
 22421504/33988120 [==================&gt;...........] - ETA: 3s
 22618112/33988120 [==================&gt;...........] - ETA: 3s
 22814720/33988120 [===================&gt;..........] - ETA: 3s
 23011328/33988120 [===================&gt;..........] - ETA: 3s
-23207936/33988120 [===================&gt;..........] - ETA: 3s
-23404544/33988120 [===================&gt;..........] - ETA: 3s
-23601152/33988120 [===================&gt;..........] - ETA: 3s
-23797760/33988120 [====================&gt;.........] - ETA: 3s
-23994368/33988120 [====================&gt;.........] - ETA: 3s
-24190976/33988120 [====================&gt;.........] - ETA: 3s
-24387584/33988120 [====================&gt;.........] - ETA: 3s
-24584192/33988120 [====================&gt;.........] - ETA: 3s
-24780800/33988120 [====================&gt;.........] - ETA: 3s
-24977408/33988120 [=====================&gt;........] - ETA: 3s
+23207936/33988120 [===================&gt;..........] - ETA: 2s
+23404544/33988120 [===================&gt;..........] - ETA: 2s
+23601152/33988120 [===================&gt;..........] - ETA: 2s
+23797760/33988120 [====================&gt;.........] - ETA: 2s
+23994368/33988120 [====================&gt;.........] - ETA: 2s
+24190976/33988120 [====================&gt;.........] - ETA: 2s
+24387584/33988120 [====================&gt;.........] - ETA: 2s
+24584192/33988120 [====================&gt;.........] - ETA: 2s
+24780800/33988120 [====================&gt;.........] - ETA: 2s
+24977408/33988120 [=====================&gt;........] - ETA: 2s
 25174016/33988120 [=====================&gt;........] - ETA: 2s
 25370624/33988120 [=====================&gt;........] - ETA: 2s
 25567232/33988120 [=====================&gt;........] - ETA: 2s
@@ -830,13 +1099,13 @@ parameters, you must re-train the model and save the weights.</p>
 26157056/33988120 [======================&gt;.......] - ETA: 2s
 26353664/33988120 [======================&gt;.......] - ETA: 2s
 26550272/33988120 [======================&gt;.......] - ETA: 2s
-26746880/33988120 [======================&gt;.......] - ETA: 2s
-26943488/33988120 [======================&gt;.......] - ETA: 2s
-27140096/33988120 [======================&gt;.......] - ETA: 2s
-27336704/33988120 [=======================&gt;......] - ETA: 2s
-27533312/33988120 [=======================&gt;......] - ETA: 2s
-27729920/33988120 [=======================&gt;......] - ETA: 2s
-27926528/33988120 [=======================&gt;......] - ETA: 2s
+26746880/33988120 [======================&gt;.......] - ETA: 1s
+26943488/33988120 [======================&gt;.......] - ETA: 1s
+27140096/33988120 [======================&gt;.......] - ETA: 1s
+27336704/33988120 [=======================&gt;......] - ETA: 1s
+27533312/33988120 [=======================&gt;......] - ETA: 1s
+27729920/33988120 [=======================&gt;......] - ETA: 1s
+27926528/33988120 [=======================&gt;......] - ETA: 1s
 28123136/33988120 [=======================&gt;......] - ETA: 1s
 28319744/33988120 [=======================&gt;......] - ETA: 1s
 28516352/33988120 [========================&gt;.....] - ETA: 1s
@@ -849,9 +1118,9 @@ parameters, you must re-train the model and save the weights.</p>
 29892608/33988120 [=========================&gt;....] - ETA: 1s
 30089216/33988120 [=========================&gt;....] - ETA: 1s
 30285824/33988120 [=========================&gt;....] - ETA: 1s
-30482432/33988120 [=========================&gt;....] - ETA: 1s
-30679040/33988120 [==========================&gt;...] - ETA: 1s
-30875648/33988120 [==========================&gt;...] - ETA: 1s
+30482432/33988120 [=========================&gt;....] - ETA: 0s
+30679040/33988120 [==========================&gt;...] - ETA: 0s
+30875648/33988120 [==========================&gt;...] - ETA: 0s
 31072256/33988120 [==========================&gt;...] - ETA: 0s
 31268864/33988120 [==========================&gt;...] - ETA: 0s
 31465472/33988120 [==========================&gt;...] - ETA: 0s
@@ -867,7 +1136,7 @@ parameters, you must re-train the model and save the weights.</p>
 33431552/33988120 [============================&gt;.] - ETA: 0s
 33628160/33988120 [============================&gt;.] - ETA: 0s
 33824768/33988120 [============================&gt;.] - ETA: 0s
-33988608/33988120 [==============================] - 11s 0us/step
+33988608/33988120 [==============================] - 9s 0us/step
 Model: &quot;model&quot;
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #
@@ -956,57 +1225,47 @@ Non-trainable params: 0
 _________________________________________________________________
 </pre></div>
 </div>
-</div>
-<div class="section" id="check-performance-of-the-keras-model">
-<h3>3.2 Check performance of the Keras model<a class="headerlink" href="#check-performance-of-the-keras-model" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Predicting with Keras model on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images ...&#39;</span><span class="p">)</span>
-
-<span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-<span class="n">potentials_keras</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test_preprocess</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Keras inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-<span class="n">preds_keras</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">potentials_keras</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">accuracy_keras</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">preds_keras</span><span class="p">,</span> <span class="n">labels_test</span><span class="p">))</span> <span class="o">/</span> <span class="n">num_images</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keras accuracy: </span><span class="si">{</span><span class="n">accuracy_keras</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check model performance</span>
+<span class="n">check_model_performances</span><span class="p">(</span><span class="n">model_keras_quantized_pretrained</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Predicting with Keras model on 10 images ...
-Keras inference on 10 images took 0.85 s.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras inference on 10 images took 0.57 s.
 
 Keras accuracy: 90.00 %
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="convert-keras-model-for-akida-nsoc">
-<h2>4. Convert Keras model for Akida NSoC<a class="headerlink" href="#convert-keras-model-for-akida-nsoc" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="conversion-to-akida">
+<h2>5. Conversion to Akida<a class="headerlink" href="#conversion-to-akida" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convert-to-akida-model">
+<h3>5.1 Convert to Akida model<a class="headerlink" href="#convert-to-akida-model" title="Permalink to this headline">¶</a></h3>
 <p>Here, the Keras quantized model is converted into a suitable version for
 the Akida NSoC. The <a class="reference external" href="../api_reference/cnn2snn_apis.html#convert">cnn2snn.convert</a>
 function needs as arguments the Keras model and the input scaling parameters.</p>
-<p>This section goes as follows:</p>
-<ul class="simple">
-<li><p><strong>Convert the Keras MobileNet model</strong> to an Akida model compatible for
-Akida NSoC. Print a summary of the model.</p></li>
-<li><p><strong>Test performance</strong> of the Akida model (this can take minutes).</p></li>
-<li><p><strong>Show predictions</strong> for some test images.</p></li>
-</ul>
-<div class="section" id="convert-keras-model-to-an-akida-compatible-model">
-<h3>4.1 Convert Keras model to an Akida compatible model<a class="headerlink" href="#convert-keras-model-to-an-akida-compatible-model" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert to Akida</span>
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Converting Keras model for Akida NSoC...&quot;</span><span class="p">)</span>
-<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
-<span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_keras_quantized_pretrained</span><span class="p">,</span>
+                      <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Converting Keras model for Akida NSoC...
-Warning: the activation layer &#39;act_softmax&#39; will be discarded at conversion. The outputs of the Akida model will be the potentials before this activation layer.
-                                       Model Summary
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Warning: the activation layer &#39;act_softmax&#39; will be discarded at conversion. The outputs of the Akida model will be the potentials before this activation layer.
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-hardware-compliancy">
+<h3>5.2 Check hardware compliancy<a class="headerlink" href="#check-hardware-compliancy" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.summary">Model.summary()</a>
+method provides a detailed description of the Model layers.</p>
+<p>It also indicates hardware incompatibilities if there are any. Hardware
+compatibility can also be checked manually using
+<a class="reference external" href="../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities">model_hardware_incompatibilities</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>                                       Model Summary
 ____________________________________________________________________________________________
 Layer (type)                           Output shape    Kernel shape
 ============================================================================================
@@ -1045,10 +1304,27 @@ Backend type: Software - 1.8.9
 </pre></div>
 </div>
 </div>
-<div class="section" id="test-performance-of-the-akida-model">
-<h3>4.2 Test performance of the Akida model<a class="headerlink" href="#test-performance-of-the-akida-model" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Predicting with Akida model on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images ...&#39;</span><span class="p">)</span>
-
+<div class="section" id="check-performance">
+<h3>5.3 Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline">¶</a></h3>
+<p>While we compute accuracy for the 10 images set in the next cell, the
+following table summarizes results obtained on ImageNet.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Keras accuracy</p></th>
+<th class="head"><p>Akida accuracy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>69.63 %</p></td>
+<td><p>69.18 %</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check Model performance</span>
 <span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
 <span class="n">preds_akida</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
 <span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
@@ -1060,8 +1336,15 @@ Backend type: Software - 1.8.9
 
 <span class="c1"># For non-regression purpose</span>
 <span class="k">assert</span> <span class="n">accuracy_akida</span> <span class="o">&gt;=</span> <span class="mf">0.9</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Inference on 10 images took 1.06 s.
 
-<span class="c1"># Print model statistics</span>
+Accuracy: 90.00 %
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
 <span class="n">stats</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">()</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">[:</span><span class="mi">20</span><span class="p">])</span>
@@ -1070,49 +1353,47 @@ Backend type: Software - 1.8.9
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Predicting with Akida model on 10 images ...
-Inference on 10 images took 1.05 s.
-
-Accuracy: 100.00 %
-Model statistics
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Model statistics
 Layer (type)                  output sparsity
 conv_0 (InputConvolutional)   0.39
 Layer (type)                  input sparsity      output sparsity     ops
-separable_1 (SeparableConvolu 0.39                0.41                142879875
+separable_1 (SeparableConvolu 0.39                0.41                142915793
 Layer (type)                  input sparsity      output sparsity     ops
-separable_2 (SeparableConvolu 0.41                0.35                548973406
+separable_2 (SeparableConvolu 0.41                0.35                549372551
 Layer (type)                  input sparsity      output sparsity     ops
-separable_3 (SeparableConvolu 0.35                0.39                302097540
+separable_3 (SeparableConvolu 0.35                0.39                302190301
 Layer (type)                  input sparsity      output sparsity     ops
-separable_4 (SeparableConvolu 0.39                0.57                563015665
+separable_4 (SeparableConvolu 0.39                0.57                563392449
 Layer (type)                  input sparsity      output sparsity     ops
-separable_5 (SeparableConvolu 0.57                0.39                200022461
+separable_5 (SeparableConvolu 0.57                0.39                200000024
 Layer (type)                  input sparsity      output sparsity     ops
-separable_6 (SeparableConvolu 0.39                0.63                566527608
+separable_6 (SeparableConvolu 0.39                0.63                566831393
 Layer (type)                  input sparsity      output sparsity     ops
-separable_7 (SeparableConvolu 0.63                0.61                171354411
+separable_7 (SeparableConvolu 0.63                0.61                171272692
 Layer (type)                  input sparsity      output sparsity     ops
-separable_8 (SeparableConvolu 0.61                0.69                181661409
+separable_8 (SeparableConvolu 0.61                0.69                181659101
 Layer (type)                  input sparsity      output sparsity     ops
-separable_9 (SeparableConvolu 0.69                0.75                143237350
+separable_9 (SeparableConvolu 0.69                0.75                143253039
 Layer (type)                  input sparsity      output sparsity     ops
-separable_10 (SeparableConvol 0.75                0.73                115426380
+separable_10 (SeparableConvol 0.75                0.73                115399609
 Layer (type)                  input sparsity      output sparsity     ops
-separable_11 (SeparableConvol 0.73                0.72                122813583
+separable_11 (SeparableConvol 0.73                0.72                122782189
 Layer (type)                  input sparsity      output sparsity     ops
-separable_12 (SeparableConvol 0.72                0.91                259680985
+separable_12 (SeparableConvol 0.72                0.91                260061973
 Layer (type)                  input sparsity      output sparsity     ops
-separable_13 (SeparableConvol 0.91                0.64                42695141
+separable_13 (SeparableConvol 0.91                0.64                42696992
 Layer (type)                  input sparsity      output sparsity     ops
-separable_14 (SeparableConvol 0.64                0.00                3343240
+separable_14 (SeparableConvol 0.64                0.00                3316213
 </pre></div>
 </div>
 </div>
-<div class="section" id="show-predictions-for-a-random-test-image">
-<h3>4.3 Show predictions for a random test image<a class="headerlink" href="#show-predictions-for-a-random-test-image" title="Permalink to this headline">¶</a></h3>
-<p>For a random test image, we predict the top 5 classes and display the
-results on a bar chart.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Functions used to display the top5 results</span>
+<div class="section" id="show-predictions-for-a-random-image">
+<h3>5.4 Show predictions for a random image<a class="headerlink" href="#show-predictions-for-a-random-image" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">lines</span>
+
+
+<span class="c1"># Functions used to display the top5 results</span>
 <span class="k">def</span> <span class="nf">get_top5</span><span class="p">(</span><span class="n">potentials</span><span class="p">,</span> <span class="n">true_label</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the top 5 classes from the output potentials</span>
@@ -1241,7 +1522,7 @@ results on a bar chart.</p>
 </pre></div>
 </div>
 <img alt="plot mobilenet imagenet" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_mobilenet_imagenet_001.png" />
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  23.565 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  27.538 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-plot-mobilenet-imagenet-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/75f34a64c459559fa13063982751d08c/plot_mobilenet_imagenet.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_mobilenet_imagenet.py</span></code></a></p>
