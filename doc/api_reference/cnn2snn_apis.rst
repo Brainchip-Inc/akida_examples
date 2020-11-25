@@ -29,14 +29,28 @@ CNN2SNN Toolkit API
 
     WeightQuantizer
     ===============
-    .. autoclass:: WeightQuantizer
+    .. autoclass:: cnn2snn.quantization_ops.WeightQuantizer
         :members:
 
         .. automethod:: __init__
 
-    TrainableWeightQuantizer
-    ========================
-    .. autoclass:: TrainableWeightQuantizer
+    LinearWeightQuantizer
+    =====================
+    .. autoclass:: cnn2snn.quantization_ops.LinearWeightQuantizer
+        :members:
+
+        .. automethod:: __init__
+
+    StdWeightQuantizer
+    ==================
+    .. autoclass:: StdWeightQuantizer
+        :members:
+
+        .. automethod:: __init__
+
+    TrainableStdWeightQuantizer
+    ===========================
+    .. autoclass:: TrainableStdWeightQuantizer
         :members:
 
         .. automethod:: __init__
@@ -90,13 +104,19 @@ CNN2SNN Toolkit API
 
         .. automethod:: __init__
 
+    QuantizedActivation
+    ===================
+    .. autoclass:: QuantizedActivation
+        :members:
+
+        .. automethod:: __init__
+
     ActivationDiscreteRelu
     ======================
     .. autoclass:: ActivationDiscreteRelu
         :members:
 
         .. automethod:: __init__
-
 
     QuantizedReLU
     =============
