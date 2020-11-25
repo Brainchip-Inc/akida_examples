@@ -7,3 +7,4 @@ User guide
    cnn2snn.rst
    akida_models.rst
    hw_constraints.rst
+   compatibility.rst
