@@ -3,7 +3,6 @@ CNN2SNN Toolkit API
 ===================
 
 .. automodule:: cnn2snn
-    :members:
 
     quantize
     ========
@@ -23,6 +22,10 @@ CNN2SNN Toolkit API
     check_model_compatibility
     =========================
     .. autofunction:: check_model_compatibility
+
+    load_quantized_model
+    ====================
+    .. autofunction:: load_quantized_model
 
     WeightQuantizer
     ===============
