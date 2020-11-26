@@ -98,7 +98,7 @@ model_keras = keras.models.Sequential([
     keras.layers.MaxPool2D(),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
-    keras.layers.Conv2D(filters=64, kernel_size=3, padding='same'),
+    keras.layers.SeparableConv2D(filters=64, kernel_size=3, padding='same'),
     keras.layers.MaxPool2D(padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
@@ -119,6 +119,16 @@ model_keras.summary()
 # * BatchNormalization must always happen before activations.
 # * Convolutional blocks can optionally be followed by a MaxPooling.
 #
+# The CNN2SNN toolkit provides the
+# `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
+# function to ensure that the model can be converted into an Akida model. If
+# the model is not fully compatible, substitutes will be needed for the
+# relevant layers/operations (guidelines included in the documentation).
+
+from cnn2snn import check_model_compatibility
+
+print("Model compatible for Akida conversion:",
+      check_model_compatibility(model_keras))
 
 ######################################################################
 # 3. Model training
@@ -162,24 +172,14 @@ print('Test accuracy:', score[1])
 # .. Note:: The ``quantize`` function folds the batch normalization layers into
 #           the corresponding neural layer. The new weights are computed
 #           according to this folding operation.
-#
-# .. Note:: The CNN2SNN toolkit provides the
-#           `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
-#           function to ensure that the quantized model is compatible with the
-#           Akida NSoC. If the model is not fully compatible, substitutes will
-#           be needed for the relevant layers/operations (guidelines included
-#           in the documentation).
 
-from cnn2snn import quantize, check_model_compatibility
+from cnn2snn import quantize
 
 model_quantized = quantize(model_keras,
                            input_weight_quantization=8,
                            weight_quantization=4,
                            activ_quantization=4)
 model_quantized.summary()
-
-print("Model compatible for Akida conversion:",
-      check_model_compatibility(model_quantized, input_is_sparse=False))
 
 ######################################################################
 # Check the quantized model accuracy.
@@ -197,11 +197,18 @@ print('Test accuracy after 8-4-4 quantization:', score[1])
 # accuracy of the quantized model is equivalent to the one of the base model,
 # but for lower bitwidth, the quantization  usually introduces a performance drop.
 #
-# Let's try this time with 2-bit for weights and 1-bit for activations.
+# Let's try to quantize specific layers to a lower bitwidth. The CNN2SNN
+# toolkit provides the
+# `quantize_layer <../api_reference/cnn2snn_apis.html#quantize_layer>`__
+# function: each layer can be individually quantized.
+#
+# Here, we quantize the "re_lu_1" layer to binary activations (bitwidth=1)
+# and the "dense" layer with 2-bit weights.
 
-model_quantized = quantize(model_keras,
-                           weight_quantization=2,
-                           activ_quantization=1)
+from cnn2snn import quantize_layer
+
+model_quantized = quantize_layer(model_quantized, "re_lu_1", bitwidth=1)
+model_quantized = quantize_layer(model_quantized, "dense", bitwidth=2)
 
 model_quantized.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -209,7 +216,7 @@ model_quantized.compile(
     metrics=['accuracy'])
 
 score = model_quantized.evaluate(x_test, y_test, verbose=0)
-print('Test accuracy after 2-2-1 quantization:', score[1])
+print('Test accuracy after low bitwidth quantization:', score[1])
 
 # To recover the original model accuracy, a quantization-aware training phase
 # is required.
