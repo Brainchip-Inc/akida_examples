@@ -27,6 +27,10 @@ CNN2SNN Toolkit API
     ====================
     .. autofunction:: load_quantized_model
 
+    load_partial_weights
+    ====================
+    .. autofunction:: load_partial_weights
+
     WeightQuantizer
     ===============
     .. autoclass:: cnn2snn.quantization_ops.WeightQuantizer
