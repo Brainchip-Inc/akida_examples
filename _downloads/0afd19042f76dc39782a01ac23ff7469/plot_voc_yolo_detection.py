@@ -138,7 +138,6 @@ classes = 2
 model = yolo_base(input_shape=(224, 224, 3),
                   classes=classes,
                   nb_box=num_anchors,
-                  grid_size=grid_size,
                   alpha=0.5)
 model.summary()
 
