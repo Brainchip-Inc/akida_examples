@@ -2,21 +2,23 @@
 Akida edge learning for keyword spotting
 ========================================
 
-This tutorial demonstrates the Akida NSoc **edge learning**
-capabilities using its built-in learning algorithm.
-It focuses on a keyword spotting (KWS) example, where an
-existing Akida network is re-trained to be able to classify new audio keywords.
+This tutorial demonstrates the Akida NSoC **edge learning** capabilities using
+its built-in learning algorithm.
+
+It focuses on a keyword spotting (KWS) example, where an existing Akida network
+is re-trained to be able to classify new audio keywords.
+
 Just a few samples (few-shot learning) of the new words are sufficient to
 augment the Akida model with extra classes, while preserving high accuracy.
 """
 
 ##############################################################################
 # 1. Edge learning process
-# ------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# By "edge learning", we mean the process of network learning in an edge
-# device. Aside from technical requirements imposed by the device (low power,
-# latency, etc.), the task itself will often present particular challenges:
+# By "edge learning", we mean the process of network learning in an edge device.
+# Aside from technical requirements imposed by the device (low power, latency,
+# etc.), the task itself will often present particular challenges:
 #
 # 1. The application cannot know which, or indeed, how many classes it will
 #    be trained on ultimately, so it must be possible to **add new classes**
@@ -33,7 +35,7 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # To achieve this using the Akida NSoC, learning occurs in 3 stages:
 #
 # 1. The Akida model preparation: an Akida model must meet specific conditions
-#    to be compatible for `Akida learning <https://doc.brainchipinc.com/user_guide/aee.html#id5>`__.
+#    to be compatible for `Akida learning <../user_guide/aee.html#id5>`__.
 # 2. The "offline" Akida learning: the last layer of the Akida model is trained
 #    from scratch with a large dataset. In this KWS case, the model is trained
 #    with 32 keywords from the Google "Speech Commands dataset".
@@ -42,7 +44,7 @@ augment the Akida model with extra classes, while preserving high accuracy.
 #
 #
 # 1.1 Akida model preparation
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The Akida NSoC embeds a native learning algorithm allowing training of the
 # last layer of an Akida model. The overall model can then be seen as the
@@ -71,13 +73,13 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # Like any training process, hyper-parameters must be set appropriately.
 # The only mandatory parameter is the number of weights (i.e. number of
 # connections for each neuron) which must be correlated to the number of spikes
-# at the end of the feature extractor. Other parameters, such as min_plasticity
-# or learning competition, are optional and mainly used for model fine-tuning:
-# one can set them to default for a first try.
+# at the end of the feature extractor. Other parameters, such as
+# ``min_plasticity`` or ``learning_competition``, are optional and mainly used
+# for model fine-tuning: one can set them to default for a first try.
 #
 #
 # 1.2 "Offline" Akida learning
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The model is ready for training. Remember that the feature extractor has
 # already been trained in stage 1. Here, only the last Akida layer is
@@ -99,7 +101,7 @@ augment the Akida model with extra classes, while preserving high accuracy.
 #
 #
 # 1.3 "Online" edge learning
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # "Online" edge learning consists in adding and learning new classes to a
 # former pre-trained model. This stage is meant to be performed on a chip with
@@ -114,17 +116,13 @@ augment the Akida model with extra classes, while preserving high accuracy.
 #
 # In this KWS example, 3 new keywords are learned using 4 samples per word from
 # a single user. Applying data augmentation on these samples adds variability
-# to improve generalization. After edge learning, the model is able
-# to classify the 3 new classes with similar accuracy to the 33 existing
-# classes (and performance on the existing classes is unaffected).
+# to improve generalization. After edge learning, the model is able to classify
+# the 3 new classes with similar accuracy to the 33 existing classes (and
+# performance on the existing classes is unaffected).
 
 ##############################################################################
-#
-# ########################
-
-##############################################################################
-# 2. Load datasets
-# ----------------
+# 2. Dataset preparation
+# ~~~~~~~~~~~~~~~~~~~~~~
 #
 # The data comes from the Google "Speech Commands" dataset containing audio
 # files for 35 keywords. The number of utterances for each word varies from
@@ -159,20 +157,9 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # The pre-processed utility methods to generate these MFCC data are available in
 # the ``akida_models`` package.
 
-# Import required modules
-from math import ceil
-import numpy as np
-import os
 import pickle
-from tempfile import TemporaryDirectory
+
 from tensorflow.keras.utils import get_file
-from time import time
-
-# Import Akida modules
-from cnn2snn import convert, load_quantized_model
-from akida import FullyConnected, Model
-
-########################
 
 # Fetch pre-processed data for 32 keywords
 fname = get_file(
@@ -201,7 +188,7 @@ print("New words:\n", word_to_index_new)
 
 ##############################################################################
 # 3. Prepare Akida model for learning
-# -----------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # As explained above, to be compatible with Akida:
 #
@@ -227,30 +214,27 @@ print("New words:\n", word_to_index_new)
 # good starting point for this hyper-parameter. Here, we estimate this number
 # of output spikes using 10% of the training set, which is enough to have a
 # reasonable estimation.
-#
-# To summarize, we will:
-#
-# 1. load a pre-trained quantized Keras model whose feature extractor
-#    returns binary spikes
-# 2. convert it to an Akida model
-# 3. replace the last layer with an untrained classification layer with binary
-#    weights
-# 4. estimate the number of spikes at the end of the feature extractor
 
-# 1. Instantiate a quantized model with pretrained quantized weights
-model_path = get_file(
-    fname='ds_cnn_kws_iq8_wq4_aq4_laq1.h5',
-    origin=
-    'http://data.brainchip.com/models/ds_cnn/ds_cnn_kws_iq8_wq4_aq4_laq1.h5',
-    cache_subdir='models')
-model = load_quantized_model(model_path)
+from akida_models import ds_cnn_kws_pretrained
+
+# Instantiate a quantized model with pretrained quantized weights
+model = ds_cnn_kws_pretrained()
 model.summary()
 
-########################
+######################################################################
 
-# 2. Convert to an Akida model
+import numpy as np
+
+from math import ceil
+
+from cnn2snn import convert
+
+#  Convert to an Akida model
 input_scaling = (255, 0)
 model_ak = convert(model, input_scaling=input_scaling)
+model_ak.summary()
+
+######################################################################
 
 # Measure Akida accuracy on validation set
 batch_size = 1000
@@ -263,9 +247,14 @@ for i in range(num_batches_val):
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
-########################
+# For non-regression purpose
+assert acc_val_ak > 0.89
 
-# 3. Replace the last layer by a classification layer with binary weights
+######################################################################
+
+from akida import FullyConnected
+
+# Replace the last layer by a classification layer with binary weights
 # Here, we choose to set 15 neurons per class.
 num_classes = 33
 num_neurons_per_class = 15
@@ -276,9 +265,9 @@ layer_fc = FullyConnected(name='akida_edge_layer',
                           activations_enabled=False)
 model_ak.add(layer_fc)
 
-########################
+######################################################################
 
-# 4. Estimate the number of spikes at the end of the feature extractor.
+# Estimate the number of spikes at the end of the feature extractor.
 
 # Get the Observer of the feature extractor output (layer before last)
 last_layer_feature_extractor = model_ak.get_layer('separable_6')
@@ -309,7 +298,7 @@ plt.show()
 
 ##############################################################################
 # 4. Learn with Akida using the training set
-# ------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This stage shows how to train the Akida model using the built-in learning
 # algorithm in an "offline" stage, i.e. training the classification layer
@@ -317,18 +306,21 @@ plt.show()
 # The dataset containing the 33 classes (32 keywords + "silence") is used.
 #
 # Now that the Akida model is ready for training, the hyper-parameters
-# must be set using the ``compile`` method of the last layer. Compiling a layer
-# means that this layer is configured for training and ready to be trained. For
-# more information about the learning hyper-parameters, check the
-# `user guide <https://doc.brainchipinc.com/user_guide/aee.html#id5>`__. Note
-# that we set the ``learning_competition`` to 0.1, which gives a little
+# must be set using the `compile <../api_reference/aee_apis.html#akida.Model.compile>`__
+# method of the last layer. Compiling a layer means that this layer is
+# configured for training and ready to be trained. For more information about
+# the learning hyper-parameters, check the `user guide <../user_guide/aee.html#id5>`__.
+# Note that we set the `learning_competition` to 0.1, which gives a little
 # competition between neurons to prevent learning similar features.
 #
-# Once the last layer is compiled, the ``fit`` method is used to pass the
-# dataset for training. This call is similar to the ``fit`` method in tf.keras.
+# Once the last layer is compiled, the
+# `fit <../api_reference/aee_apis.html#akida.Model.fit>`_ method is used to
+# pass the dataset for training. This call is similar to the `fit` method in
+# tf.keras.
 #
-# After training, the model is assessed on the validation set using the ``predict``
-# method. It returns the estimated labels for the validation samples.
+# After training, the model is assessed on the validation set using the
+# `predict <../api_reference/aee_apis.html#akida.Model.predict>`_ method. It
+# returns the estimated labels for the validation samples.
 # The model is then saved to a ``.fbz`` file.
 #
 # Note that in this specific case, the same dataset was used to train the
@@ -342,12 +334,13 @@ model_ak.compile(num_weights=num_weights,
                  learning_competition=0.1)
 model_ak.summary()
 
-########################
+##############################################################################
+
+from time import time
 
 # Train the last layer using Akida `fit` method
-print(
-    f"Akida learning with {num_classes} classes... (this step can take a few minutes)"
-)
+print(f"Akida learning with {num_classes} classes... \
+        (this step can take a few minutes)")
 num_batches = ceil(x_train_ak.shape[0] / batch_size)
 start = time()
 for i in range(num_batches):
@@ -357,7 +350,7 @@ end = time()
 
 print(f"Elapsed time for Akida training: {end-start:.2f} s")
 
-########################
+##############################################################################
 
 # Measure Akida accuracy on validation set
 preds_val_ak = np.zeros(y_val.shape[0])
@@ -368,7 +361,11 @@ for i in range(num_batches_val):
 acc_val_ak = np.sum(preds_val_ak == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy: {100 * acc_val_ak:.2f} %")
 
-########################
+##############################################################################
+
+import os
+
+from tempfile import TemporaryDirectory
 
 # Save Akida model
 temp_dir = TemporaryDirectory(prefix='edge_learning_kws')
@@ -378,20 +375,21 @@ del model_ak
 
 ##############################################################################
 # 4. Edge learning
-# ----------------
+# ~~~~~~~~~~~~~~~~
 #
 # After the "offline" training stage, we emulate the use case where the
 # pre-trained Akida model is loaded on an Akida chip, ready to learn new
-# classes. Our previously saved Akida model has 33 output classes
-# with learned weights.
-# We now add 3 classes to the existing model and learn the 3 new keywords
-# without changing the already learned weights.
+# classes. Our previously saved Akida model has 33 output classes with learned
+# weights.
+# We now add 3 classes to the existing model using the
+# `add_classes <../api_reference/aee_apis.html#akida.Model.add_classes>`_ method
+# and learn the 3 new keywords without changing the already learned weights.
 #
 # There is no need to compile the final layer again; the new neurons were
 # initialized along with the old ones, based on the learning hyper-parameters
-# given in the ``compile`` call. The edge learning then uses the same scheme as
-# for the "offline" Akida learning - only the number of samples used is much
-# more restricted.
+# given in the `compile <../api_reference/aee_apis.html#akida.Model.compile>`_
+# call. The edge learning then uses the same scheme as for the "offline" Akida
+# learning - only the number of samples used is much more restricted.
 #
 # Here, each new class is trained using 160 samples, stored in the second
 # dataset: 4 utterances per word from a single speaker, augmented 40 times each.
@@ -407,7 +405,9 @@ for word, label in word_to_index_new.items():
 y_train_new += num_classes
 y_val_new += num_classes
 
-########################
+##############################################################################
+
+from akida import Model
 
 # Load the pre-trained model (no need to compile it again)
 model_edge = Model(model_file)
@@ -420,14 +420,13 @@ model_edge.fit(x_train_new_ak, y_train_new.astype(np.int32))
 end = time()
 print(f"Elapsed time for Akida edge learning: {end-start:.2f} s")
 
-########################
+##############################################################################
 
 # Predict on the new validation set
 preds_ak_new = model_edge.predict(x_val_new_ak, num_classes=num_classes + 3)
 good_preds_val_new_ak = np.sum(preds_ak_new == y_val_new)
-print(
-    f"Akida validation set accuracy on 3 new keywords: {good_preds_val_new_ak}/{y_val_new.shape[0]}"
-)
+print(f"Akida validation set accuracy on 3 new keywords: \
+        {good_preds_val_new_ak}/{y_val_new.shape[0]}")
 
 # Predict on the old validation set. Edge learning of the 3 new keywords barely
 # affects the accuracy of the old classes.
@@ -438,6 +437,8 @@ for i in range(num_batches_val):
                                          num_classes=num_classes + 3)
 
 acc_val_old_ak = np.sum(preds_ak_old == y_val) / y_val.shape[0]
-print(
-    f"Akida validation set accuracy on 33 old classes: {100 * acc_val_old_ak:.2f} %"
-)
+print(f"Akida validation set accuracy on 33 old classes: \
+        {100 * acc_val_old_ak:.2f} %")
+
+# For non-regression purpose
+assert acc_val_old_ak > 0.89
