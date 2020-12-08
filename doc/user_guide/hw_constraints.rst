@@ -3,85 +3,216 @@ Hardware constraints
 ====================
 
 While working with CNN2SNN and the Akida simulator, only few limitations are
-imposed. When mapping a model to the FPGA emulator or to the Akida hardware,
-more constraints have to be taken into account.
+imposed. When mapping a model to the Akida hardware, not all Model and Layer
+configurations are supported.
 
-The tables below summarizes the hardware limitations for Akida layers.
+Akida NSoC (Pre-production)
+---------------------------
 
-Input layer
------------
+InputConvolutional
+^^^^^^^^^^^^^^^^^^
 
-+------------------+--------------+-----------+-------------+--------+-----------+
-|Type              |input channels|weightsBits|kernelSize   |stride  |type       |
-+==================+==============+===========+=============+========+===========+
-|InputConvolutional|1, 3          |8          |3×3, 5×5, 7×7|1, 2, 3 |Same, Valid|
-+------------------+--------------+-----------+-------------+--------+-----------+
+The InputConvolutional layer type is not supported.
 
-.. note::
-       Max line width per image data block is 256 pixels.
+Convolutional
+^^^^^^^^^^^^^
 
-.. note::
-       Max filters depends on input channels and kernelSize.
-       * input channels 3: 192 for 3x3, 64 for 5x5, 32 for 7x7
-       * input channels 1: 512 for 3x3, 192 for 5x5, 96 for 7x7
++----------------+------------------+----------+--------+
+|**Convolutions**|**Kernel Size**   |**Stride**|**Type**|
++----------------+------------------+----------+--------+
+|**Parameters**  |1x1, 3×3, 5×5, 7×7|1         |Same    |
++----------------+------------------+----------+--------+
 
-.. note::
-       NsocV1 only supports stride 1 with ConvolutionMode.Valid.
-
-InputConvolutional embeds a pooling step with hardware constraints:
-
-+------------+------------------+------+-----------+
-|Pooling type|Kernel size       |Stride|Type       |
-+============+==================+======+===========+
-|Max         |1x1, 1×2, 2×1, 2×2|2     |Same, Valid|
-+------------+------------------+------+-----------+
++---------------+-------------+----------+
+|**Max Pooling**|**Size**     |**Stride**|
++---------------+-------------+----------+
+|**Parameters** |1x1, 2×2, 3x3|1, 2, 3   |
++---------------+-------------+----------+
 
 .. note::
-       Hardware supports wta_group only with neurons in ascending order.
+       * pooling stride cannot be greater than pooling size.
+       * pooling size cannot be greater than input dimensions.
+       * with max pooling, kernel size cannot be greater than input dimensions.
+       * a layer with max pooling must be followed by another Convolutional or
+         SeparableConvolutional layer.
 
-Data-Processing layers
-----------------------
++-------------------+-------------+-------------+
+|**Average Pooling**|**Width**    |**Height**   |
++-------------------+-------------+-------------+
+|**Dimensions**     |8, 16, 24, 32|multiple of 8|
++-------------------+-------------+-------------+
 
-Convolutional layer
-^^^^^^^^^^^^^^^^^^^
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2, 4  |1, 2       |1, 2, 4       |
++----------------+---------+-----------+--------------+
 
-+----------------------+-----------+------------------+------+------+
-|Type                  |weightsBits|kernelSize        |stride|type  |
-+======================+===========+==================+======+======+
-|Convolutional         |1, 2       |1×1, 3×3, 5×5, 7×7|1     |Same  |
-+----------------------+-----------+------------------+------+------+
-|SeparableConvolutional|2, 4       |3×3, 5×5, 7×7     |1     |Same  |
-+----------------------+-----------+------------------+------+------+
+SeparableConvolutional
+^^^^^^^^^^^^^^^^^^^^^^
 
-All convolutional layers embed a pooling step. Those steps can be active or
-inactive and have got some limitations.
++----------------+---------------+----------+--------+
+|**Convolutions**|**Kernel Size**|**Stride**|**Type**|
++----------------+---------------+----------+--------+
+|**Parameters**  |3×3, 5×5, 7×7  |1         |Same    |
++----------------+---------------+----------+--------+
 
-+---------------+---------------+-----------------+------+
-|Pooling type   |kernelSize     |stride           |type  |
-+===============+===============+=================+======+
-|Max            |2×2            |1, 2             |Same  |
-|               |               |                 |      |
-|               |3x3            |1, 2, 3          |      |
-+---------------+---------------+-----------------+------+
-|Global Average |               |                 |Same  |
-+---------------+---------------+-----------------+------+
-
-.. note::
-       Global average pooling kernel size mustn't exceed 20 bits.
-
-Fully connected layer
-^^^^^^^^^^^^^^^^^^^^^
-
-+--------------+------------+-----------+
-|Layer type    |input spikes|weightsBits|
-+==============+============+===========+
-|FullyConnected|1, 2        |1, 2, 3, 4 |
-+--------------+------------+-----------+
++---------------+-------------+----------+
+|**Max Pooling**|**Size**     |**Stride**|
++---------------+-------------+----------+
+|**Parameters** |1x1, 2×2, 3x3|1, 2, 3   |
++---------------+-------------+----------+
 
 .. note::
-       The layer placed before a FullyConnected layer must have a
-       ``threshold_fire_bits`` set to 1 or 2.
+       * pooling stride cannot be greater than pooling size.
+       * pooling size cannot be greater than input dimensions.
+       * with max pooling, kernel size cannot be greater than input dimensions.
+       * a layer with max pooling must be followed by another Convolutional or
+         SeparableConvolutional layer.
+
++-------------------+-------------+-------------+
+|**Average Pooling**|**Width**    |**Height**   |
++-------------------+-------------+-------------+
+|**Dimensions**     |8, 16, 24, 32|multiple of 8|
++-------------------+-------------+-------------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2, 4  |2, 4       |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
+FullyConnected
+^^^^^^^^^^^^^^
+
++--------------+---------+----------+------------+
+|**Input**     |**Width**|**Height**|**Channels**|
++--------------+---------+----------+------------+
+|**Dimensions**|1        |1         |81920       |
++--------------+---------+----------+------------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2     |1, 2       |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
+Akida NSoC (Production)
+-----------------------
+
+InputConvolutional
+^^^^^^^^^^^^^^^^^^
+
++--------------+---------+----------+------------+
+|**Input**     |**Width**|**Height**|**Channels**|
++--------------+---------+----------+------------+
+|**Dimensions**|[5:256]  |>= 5      |1, 3        |
++--------------+---------+----------+------------+
+
++----------------+---------------+----------+-----------+
+|**Convolutions**|**Kernel Size**|**Stride**|**Type**   |
++----------------+---------------+----------+-----------+
+|**Parameters**  |3×3, 5×5, 7×7  |1, 2, 3   |Same, Valid|
++----------------+---------------+----------+-----------+
+
++-------------+-------+-------+-------+
+|**Filters**  |**3x3**|**5x5**|**7x7**|
++-------------+-------+-------+-------+
+|**Max(1 ch)**|512    |192    |96     +
++-------------+-------+-------+-------+
+|**Max(3 ch)**|192    |64     |32     +
++-------------+-------+-------+-------+
+
++---------------+------------------+----------+
+|**Max Pooling**|**Size**          |**Stride**|
++---------------+------------------+----------+
+|**Parameters** |1x1, 1×2, 2×1, 2×2|2         |
++---------------+------------------+----------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |8        |[1:8]      |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
+Convolutional
+^^^^^^^^^^^^^
+
++----------------+------------------+----------+--------+
+|**Convolutions**|**Kernel Size**   |**Stride**|**Type**|
++----------------+------------------+----------+--------+
+|**Parameters**  |1x1, 3×3, 5×5, 7×7|1, 2      |Same    |
++----------------+------------------+----------+--------+
 
 .. note::
-       FullyConnected layers cannot be placed after a layer with max pooling
-       enabled.
+       * stride 2 is only supported with 3x3 kernels
+
++---------------+-------------+----------+
+|**Max Pooling**|**Size**     |**Stride**|
++---------------+-------------+----------+
+|**Parameters** |1x1, 2×2, 3x3|1, 2, 3   |
++---------------+-------------+----------+
+
+.. note::
+       * pooling stride cannot be greater than pooling size.
+
++-------------------+---------+
+|**Average Pooling**|**Width**|
++-------------------+---------+
+|**Dimensions**     |[1:32]   |
++-------------------+---------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
+SeparableConvolutional
+^^^^^^^^^^^^^^^^^^^^^^
+
++----------------+---------------+----------+--------+
+|**Convolutions**|**Kernel Size**|**Stride**|**Type**|
++----------------+---------------+----------+--------+
+|**Parameters**  |3×3, 5×5, 7×7  |1, 2      |Same    |
++----------------+---------------+----------+--------+
+
+.. note::
+       * stride 2 is only supported with 3x3 kernels
+
++---------------+-------------+----------+
+|**Max Pooling**|**Size**     |**Stride**|
++---------------+-------------+----------+
+|**Parameters** |1x1, 2×2, 3x3|1, 2, 3   |
++---------------+-------------+----------+
+
+.. note::
+       * pooling stride cannot be greater than pooling size.
+
++-------------------+---------+
+|**Average Pooling**|**Width**|
++-------------------+---------+
+|**Dimensions**     |[1:32]   |
++-------------------+---------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2, 4  |2, 4       |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
+FullyConnected
+^^^^^^^^^^^^^^
+
++--------------+---------+----------+---------+
+|**Input**     |**Width**|**Height**|**WxHxC**|
++--------------+---------+----------+---------+
+|**Dimensions**|1        |1         |81920    |
++--------------+---------+----------+---------+
+
++----------------+---------+-----------+--------------+
+|**Quantization**|**Input**|**Weights**|**Activation**|
++----------------+---------+-----------+--------------+
+|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
++----------------+---------+-----------+--------------+
+
