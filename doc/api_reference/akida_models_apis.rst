@@ -5,21 +5,6 @@ Akida models API
 .. automodule:: akida_models
     :members:
 
-    Quantization blocks
-    ===================
-
-    conv_block
-    ----------
-    .. autofunction:: akida_models.quantization_blocks.conv_block
-
-    separable_conv_block
-    --------------------
-    .. autofunction:: akida_models.quantization_blocks.separable_conv_block
-
-    dense_block
-    -----------
-    .. autofunction:: akida_models.quantization_blocks.dense_block
-
     Layer blocks
     ===================
 
