@@ -248,7 +248,7 @@ acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
 # For non-regression purpose
-assert acc_val_ak > 0.89
+assert acc_val_ak > 0.88
 
 ######################################################################
 
@@ -441,4 +441,4 @@ print(f"Akida validation set accuracy on 33 old classes: \
         {100 * acc_val_old_ak:.2f} %")
 
 # For non-regression purpose
-assert acc_val_old_ak > 0.89
+assert acc_val_old_ak > 0.88
