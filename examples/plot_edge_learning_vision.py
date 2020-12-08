@@ -123,4 +123,4 @@ mean_accuracy = stat.mean(accuracy)
 print(f'Mean accuracy: {mean_accuracy:.2f}%')
 
 # For non-regression purpose
-assert mean_accuracy > 99
+assert mean_accuracy > 98
