@@ -3,11 +3,12 @@ Tips to set Akida learning parameters
 =====================================
 
 This tutorial gives details about the Akida learning parameters and tips to
-set their values in a first try. The KWS dataset and the DS-CNN-edge model are
-used as a classification example to showcase the handy tips.
+set their values in a first try in an edge learning application. The KWS dataset
+and the DS-CNN-edge model are used as a classification example to showcase the
+handy tips.
 
-One can consult the KWS edge learning tutorial for a first approach about Akida
-learning.
+One can consult the `KWS edge learning tutorial <plot_edge_learning_kws.html>`_
+for a first approach about Akida learning.
 
 .. Note:: The hints given in this tutorial are not a promise to get the best
           performance. They can be seen as an initialization, before
@@ -17,7 +18,7 @@ learning.
 
 ##############################################################################
 # 1. Akida learning parameters
-# ----------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # To be ready for learning, an Akida model must be composed of:
 #
@@ -35,9 +36,9 @@ learning.
 # In the next sections, details about these hyper-parameters are given with
 # handy tips to give a first estimation.
 
-######################################################################
+##############################################################################
 # 2. Create Akida model
-# ---------------------
+# ~~~~~~~~~~~~~~~~~~~~~
 #
 # In a first stage, we will create the Akida feature extractor returning
 # binary spikes. From then, we will be able to estimate the parameters for
@@ -47,16 +48,9 @@ learning.
 # convert it to an Akida model. We then remove the last layer to get the
 # feature extractor.
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pickle
+
 from tensorflow.keras.utils import get_file
-from time import time
-
-from cnn2snn import convert, load_quantized_model
-from akida import Model, InputData, FullyConnected, dense_to_sparse
-
-########################
 
 # Fetch pre-processed data for 32 keywords
 fname = get_file(
@@ -67,15 +61,13 @@ fname = get_file(
 with open(fname, 'rb') as f:
     [x_train_ak, y_train, _, _, _, _, word_to_index, _] = pickle.load(f)
 
-########################
+##############################################################################
+
+from cnn2snn import convert
+from akida_models import ds_cnn_kws_pretrained
 
 # Instantiate a quantized model with pretrained quantized weights
-model_path = get_file(
-    fname='ds_cnn_kws_iq8_wq4_aq4_laq1.h5',
-    origin=
-    'http://data.brainchip.com/models/ds_cnn/ds_cnn_kws_iq8_wq4_aq4_laq1.h5',
-    cache_subdir='models')
-model = load_quantized_model(model_path)
+model = ds_cnn_kws_pretrained()
 
 # Convert to an Akida model
 input_scaling = (255, 0)
@@ -85,31 +77,32 @@ model_ak = convert(model, input_scaling=input_scaling)
 model_ak.pop_layer()
 model_ak.summary()
 
-######################################################################
+##############################################################################
 # 3. Estimate the required number of weights of the trainable layer
-# -----------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The number of weights corresponds to the number of connections for each
 # neuron. The smaller the number of weights, the less specific the neurons will
 # be. Setting this parameter correctly is important.
 #
 # Although the last trainable layer hasn't been created yet, we can already
-# estimate the number of weights. This estimation is based on the
-# statistics of the output spikes from the feature extractor. Intuitively,
-# a sample producing N spikes at the end of the feature extractor could be
-# perfectly represented with a neuron with N weights. We then use the
-# median of the number of output spikes for all samples.
+# estimate the number of weights. This estimation is based on the statistics of
+# the output spikes from the feature extractor. Intuitively, a sample producing
+# N spikes at the end of the feature extractor could be perfectly represented
+# with a neuron with N weights. We then use the median of the number of output
+# spikes for all samples.
 #
 # To reduce computing time, using only a subset of the whole dataset may be
 # sufficient to get an estimation of the number of spikes. We then set the
-# number of weights to a value sligthly higher than the median of the number
-# of spikes: we generally choose 1.2 x median of number of spikes, which
-# seems to give good results.
+# number of weights to a value sligthly higher than the median of the number of
+# spikes: we generally choose 1.2 x median of number of spikes, which seems to
+# give good results.
 #
 # For a deeper analysis of the output spikes from the feature extractor, one
-# could look at the distribution of the number of spikes, either for all
-# samples or for samples of each class separately. This analysis is not
-# shown here.
+# could look at the distribution of the number of spikes, either for all samples
+# or for samples of each class separately. This analysis is not shown here.
+
+import numpy as np
 
 # Forward samples to get the number of output spikes
 # Here, 10% of the training set is sufficient for a good estimation
@@ -124,27 +117,26 @@ print(f"Median of number of spikes: {median_spikes}")
 num_weights = int(1.2 * median_spikes)
 print(f"The number of weights is then set to: {num_weights}")
 
-######################################################################
+##############################################################################
 # 4. Estimate the number of neurons per class
-# -------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Unlike a standard CNN network where each class is represented by a single
 # output neuron, an Akida native training requires several neurons for each
-# class to better represent the class variability. Choosing the right
-# number of neurons per class is a trade-off between enough neurons to
-# represent the classes' variabilities, but not too many neurons implying more
-# memory and computing time. This is similar to clustering algorithms where
-# the clusters represent the distribution of the data. Note that, like
-# clustering algorithms, this analysis requires to have more samples per class
-# than the number of neurons per class: only one neuron can learn per sample.
-# Having more neurons than samples, the extra neurons are guaranteed to be
-# wasted.
+# class to better represent the class variability. Choosing the right number of
+# neurons per class is a trade-off between enough neurons to represent the
+# classes' variabilities, but not too many neurons implying more memory and
+# computing time. This is similar to clustering algorithms where the clusters
+# represent the distribution of the data. Note that, like clustering algorithms,
+# this analysis requires to have more samples per class than the number of
+# neurons per class: only one neuron can learn per sample. Having more neurons
+# than samples, the extra neurons are guaranteed to be wasted.
 #
 # One direct option is to train the classification layer using the whole dataset
-# with different values of number of neurons per class. Looking at the validation
-# accuracy, it should increase with more neurons per class, then reach a plateau
-# where adding more neurons has very small effect. Choosing the value where the
-# accuracy begins to flatten is a good estimation.
+# with different values of number of neurons per class. Looking at the
+# validation accuracy, it should increase with more neurons per class, then
+# reach a plateau where adding more neurons has very small effect. Choosing the
+# value where the accuracy begins to flatten is a good estimation.
 #
 # However, this method is very time consuming since it requires multiple
 # trainings using the whole dataset. Another option is to only train on a few
@@ -158,12 +150,14 @@ print(f"The number of weights is then set to: {num_weights}")
 # - The error between the sample and the neuron is 180 - 153 = 27.
 # - Compute the loss being the sum of the errors for all samples of a class.
 #
-# Visualizing the loss for a given class as a function of the number of
-# neurons gives hints to have a first estimation of the number of neurons
-# per class. Visualizing the number of neurons that have learned as a function
-# of the number of neurons per class provides a similar analysis.
+# Visualizing the loss for a given class as a function of the number of neurons
+# gives hints to have a first estimation of the number of neurons per class.
+# Visualizing the number of neurons that have learned as a function of the
+# number of neurons per class provides a similar analysis.
 #
 # In this tutorial, we only present this analysis for one class (word 'six').
+
+from akida import Model, InputData, FullyConnected, dense_to_sparse
 
 
 def compute_losses(model,
@@ -231,7 +225,7 @@ def compute_losses(model,
     return losses.min(axis=1) / len(spikes), num_learned_neurons.min(axis=1)
 
 
-########################
+##############################################################################
 
 # Choose a word to analyze and the values for the number of neurons
 word = 'six'
@@ -246,7 +240,9 @@ x_train_word = x_train_ak[idx_samples]
 losses, num_learned_neurons = compute_losses(model_ak, x_train_word,
                                              neurons_per_class, num_weights)
 
-########################
+##############################################################################
+
+import matplotlib.pyplot as plt
 
 plt.plot(np.array(neurons_per_class), losses)
 plt.xlabel("Number of neurons per class")
@@ -255,7 +251,7 @@ plt.title(f"Losses for samples of class '{word}'")
 plt.grid(linestyle='--')
 plt.show()
 
-########################
+##############################################################################
 
 plt.plot(np.array(neurons_per_class), num_learned_neurons)
 plt.xlabel("Number of neurons per class")
@@ -264,22 +260,21 @@ plt.title(f"Nb of neurons that have learned for samples of class '{word}'")
 plt.grid(linestyle='--')
 plt.show()
 
-######################################################################
+##############################################################################
 # From the figures above, we can see that the point of inflection occured with
 # about 300 neurons. Setting the number of neurons per class to this value is a
 # good starting point: we expect a very good accuracy after training. Adding
 # more neurons won't improve the acccuracy and will increase the computing time.
 #
-# However, one could gradually reduce the number of neurons per
-# class to see its influence on the accuracy of a complete training. In the
-# KWS edge tutorial, we finally set this value to 50 because it is a good
-# trade-off between computing time and our target accuracy. The table below
-# presents the validation accuracy after training for different numbers of
-# neurons. We can see that there is no increase for a number of neurons per
-# class higher than 300. Note that in this use case, the validation accuracy
-# remains very high even for a small number of neurons per class: one should
-# be aware that this small decrease in accuracy cannot be generalized for
-# all use cases.
+# However, one could gradually reduce the number of neurons per class to see its
+# influence on the accuracy of a complete training. In the KWS edge tutorial, we
+# finally set this value to 50 because it is a good trade-off between computing
+# time and our target accuracy. The table below presents the validation accuracy
+# after training for different numbers of neurons. We can see that there is no
+# increase for a number of neurons per class higher than 300. Note that in this
+# use case, the validation accuracy remains very high even for a small number of
+# neurons per class: one should be aware that this small decrease in accuracy
+# cannot be generalized for all use cases.
 #
 # +-------------+----------+-------------+
 # | Nb. neurons | Accuracy | Time ratio  |
