@@ -46,7 +46,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # The base model is a quantized version of MobileNet v1. This
 # model was trained and quantized using the ImageNet dataset. Please refer
-# to the corresponding `example <plot_mobilenet_imagenet.html>`__ for
+# to the corresponding `example <plot_2_mobilenet_imagenet.html>`__ for
 # more information. The layers have 4-bit weights (except for the first
 # layer having 8-bit weights) and the activations are quantized to 4 bits.
 # This base model ends with a classification layer for 1000 classes. To
@@ -65,7 +65,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 # decided to use a separable convolutional layer with one output neuron for the
 # top layer of our model. The reason is that the separable convolutional layer
 # is the only Akida layer supporting 4-bit weights (see `hardware compatibility
-# <../user_guide/hw_constraints.html>`__).
+# <../../user_guide/hw_constraints.html>`__).
 #
 # **Training process**
 #
@@ -193,7 +193,7 @@ print(f"Test set composed of {num_images} images: "
 # Here, we instantiate a quantized Keras model based on a MobileNet model.
 # This base model was previously trained using the 1000 classes of the
 # ImageNet dataset. For more information, please see the `ImageNet
-# tutorial <plot_mobilenet_imagenet.html>`__.
+# tutorial <plot_2_mobilenet_imagenet.html>`__.
 #
 # The quantized MobileNet model satisfies the Akida NSoC requirements:
 #
@@ -322,8 +322,8 @@ print(f"Quantized Keras accuracy: {keras_accuracy*100:.2f} %")
 #   * Input images in Akida are uint8 and not scaled like Keras inputs. But
 #     remember that the conversion process needs to know what scaling was
 #     applied during Keras training, in order to compensate (see
-#     `CNN2SNN guide <../user_guide/cnn2snn.html#input-scaling>`__)
-#   * The Akida `evaluate <../api_reference/aee_apis.html#akida.Model.evaluate>`__
+#     `CNN2SNN guide <../../user_guide/cnn2snn.html#input-scaling>`__)
+#   * The Akida `evaluate <../../api_reference/aee_apis.html#akida.Model.evaluate>`__
 #     function takes a NumPy array containing the images and returns potentials
 #     before the sigmoid activation. We must therefore explicitly apply the
 #     'sigmoid' activation on the model outputs to obtain the Akida

@@ -43,7 +43,7 @@ x_test = (x_test - b) / a
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The DS-CNN architecture is available in the `Akida models zoo
-# <../api_reference/akida_models_apis.html#cifar-10>`_ along with pretrained
+# <../../api_reference/akida_models_apis.html#cifar-10>`_ along with pretrained
 # weights.
 #
 #  .. Note:: The pre-trained weights were obtained after training the model with
@@ -103,8 +103,8 @@ check_model_performances(model_keras, x_test)
 # 3. Quantized model
 # ~~~~~~~~~~~~~~~~~~
 #
-# Quantizing a model is done using `CNN2SNN quantize
-# <../api_reference/cnn2snn_apis.html#quantize>`_. After the call, all the
+# Quantizing a model is done using `cnn2snn.quantize
+# <../../api_reference/cnn2snn_apis.html#quantize>`_. After the call, all the
 # layers will have 4-bit weights and 4-bit activations.
 #
 # This model will therefore satisfy the Akida NSoC requirements but will suffer
@@ -134,8 +134,8 @@ check_model_performances(model_keras_quantized, x_test)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The Akida models zoo also contains a `pretrained quantized helper
-# <../api_reference/akida_models_apis.html#akida_models.ds_cnn_cifar10_pretrained>`_
-# that was obtained using the `tune <../user_guide/akida_models.html#cifar10-training-and-tuning>`_
+# <../../api_reference/akida_models_apis.html#akida_models.ds_cnn_cifar10_pretrained>`_
+# that was obtained using the `tune <../../user_guide/akida_models.html#cifar10-training-and-tuning>`_
 # action of ``akida_models`` CLI on the quantized model for 100 epochs.
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
@@ -169,8 +169,8 @@ check_model_performances(model_keras_quantized_pretrained, x_test)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # When converting to an Akida model, we just need to pass the Keras model
-# and the input scaling that was used during training to `CNN2SNN convert
-# <../api_reference/cnn2snn_apis.html#convert>`_.
+# and the input scaling that was used during training to `cnn2snn.convert
+# <../../api_reference/cnn2snn_apis.html#convert>`_.
 
 from cnn2snn import convert
 
@@ -180,13 +180,13 @@ model_akida = convert(model_keras_quantized_pretrained, input_scaling=(a, b))
 # 5.2 Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 #
 # It also indicates hardware-incompatibilities if there are any. Hardware
 # compatibility can also be checked manually using
 # `model_hardware_incompatibilities
-# <../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
+# <../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
 
 model_akida.summary()
 
@@ -235,7 +235,7 @@ if num_images == 1000:
 ######################################################################
 # Activations sparsity has a great impact on akida inference time. One can have
 # a look at the average input and output sparsity of each layer using
-# `Model.get_statistics() <../api_reference/aee_apis.html#akida.Model.get_statistics>`_
+# `Model.get_statistics() <../../api_reference/aee_apis.html#akida.Model.get_statistics>`_
 # For convenience, it is called here on a subset of the dataset.
 #
 

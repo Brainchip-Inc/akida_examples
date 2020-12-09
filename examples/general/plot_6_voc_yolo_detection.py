@@ -22,8 +22,8 @@ tackle this object detection problem.
 # Object detection is a computer vision task that combines two elemental tasks:
 #
 #  - object classification that consists in assigning a class label to an image
-#    like shown in the `DS-CNN CIFAR10 <plot_ds_cnn_cifar10.html>`_ or the `MobileNet
-#    ImageNet <plot_mobilenet_imagenet.html>`_ example
+#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the `MobileNet
+#    ImageNet <plot_2_mobilenet_imagenet.html>`_ example
 #  - object localization that consists in drawing a bounding box around one or
 #    several objects in an image
 #
@@ -60,7 +60,7 @@ tackle this object detection problem.
 # Additional information about YOLO can be found on the `Darknet website
 # <https://pjreddie.com/darknet/yolov2/>`_ and source code for the preprocessing
 # and postprocessing functions that are included in akida_models package (see
-# the `processing section <../api_reference/akida_models_apis.html#processing>`_
+# the `processing section <../../api_reference/akida_models_apis.html#processing>`_
 # in the model zoo) is largely inspired from
 # `experiencor github <https://github.com/experiencor/keras-yolo2>`_.
 #
@@ -75,11 +75,11 @@ tackle this object detection problem.
 # contains an image folder, an annotation folder and a text file listing the
 # file names of interest.
 #
-# The `YOLO toolkit <../api_reference/akida_models_apis.html#yolo-toolkit>`_
+# The `YOLO toolkit <../../api_reference/akida_models_apis.html#yolo-toolkit>`_
 # offers several methods to prepare data for processing, see
-# `load_image <../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image>`_,
-# `preprocess_image <../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
-# or `parse_voc_annotations <../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_voc_annotations>`_.
+# `load_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image>`_,
+# `preprocess_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
+# or `parse_voc_annotations <../../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_voc_annotations>`_.
 #
 #
 
@@ -121,9 +121,9 @@ anchors_example = generate_anchors(val_data, num_anchors, grid_size)
 # 3. Model architecture
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The `model zoo <../api_reference/akida_models_apis.html#yolo>`_ contains a
+# The `model zoo <../../api_reference/akida_models_apis.html#yolo>`_ contains a
 # YOLO model that is built upon the `MobileNet architecture
-# <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_
+# <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_
 # and 3 separable convolutional layers at the top for bounding box and class
 # estimation followed by a final separable convolutional which is the detection
 # layer. Note that for efficiency, the alpha parameter in MobileNet (network
@@ -151,7 +151,7 @@ model.summary()
 # other words, the output channels are actually grouped by anchor boxes, and in
 # each group one channel provides either a coordinate, a global confidence score
 # or a class confidence score. This process is done automatically in the
-# `decode_output <../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
+# `decode_output <../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
 # function.
 
 from tensorflow.keras import Model
@@ -172,7 +172,7 @@ full_model.output
 # As the YOLO model relies on Brainchip MobileNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
 # training a YOLO model. See the `cats vs. dogs transfer learning example
-# <plot_transfer_learning.html>`_ for a detail explanation on transfer learning
+# <plot_5_transfer_learning.html>`_ for a detail explanation on transfer learning
 # principles.
 #
 # When using transfer learning for YOLO training, we advise to proceed in
@@ -188,10 +188,10 @@ full_model.output
 # Even if transfer learning should be the preferred way to train a YOLO model, it
 # has been observed that for some datasets training all layers from scratch
 # gives better results. That is the case for our `YOLO WiderFace model
-# <../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained>`_
+# <../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained>`_
 # to detect faces. In such a case, the training pipeline to follow is described
 # in the `typical training scenario
-# <../user_guide/cnn2snn.html#typical-training-scenario>`_.
+# <../../user_guide/cnn2snn.html#typical-training-scenario>`_.
 #
 
 ######################################################################
@@ -199,7 +199,7 @@ full_model.output
 # ~~~~~~~~~~~~~~
 #
 # The model zoo also contains an `helper method
-# <../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained>`_
+# <../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained>`_
 # that allows to create a YOLO model for VOC and load pretrained weights for the
 # car and person detection task and the corresponding anchors. The anchors are
 # used to interpret the model outputs.
@@ -210,9 +210,9 @@ full_model.output
 # 0.5 meaning that a detection is considered valid if the intersection over
 # union ratio with its ground truth equivalent is above 0.5.
 #
-#  .. Note:: A call to `evaluate_map <../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map>`_
+#  .. Note:: A call to `evaluate_map <../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map>`_
 #            will preprocess the images, make the call to ``Model.predict`` and
-#            use `decode_output <../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
+#            use `decode_output <../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
 #            before computing precision for all classes.
 #
 # Reported performanced for all training steps are as follows:
@@ -275,9 +275,9 @@ compatible_model = Model(model_keras.input, model_keras.layers[-2].output)
 
 ######################################################################
 # When converting to an Akida model, we just need to pass the Keras model
-# and the input scaling that was used during training to `CNN2SNN convert
-# <../api_reference/cnn2snn_apis.html#convert>`_. In YOLO
-# `preprocess_image <../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
+# and the input scaling that was used during training to `cnn2snn.convert
+# <../../api_reference/cnn2snn_apis.html#convert>`_. In YOLO
+# `preprocess_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
 # function, images are zero centered and normalized between [-1, 1] hence the
 # scaling values.
 #

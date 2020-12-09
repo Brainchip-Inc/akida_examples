@@ -99,7 +99,7 @@ for i in range(num_images):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The MobileNet architecture is available in the Akida model zoo as
-# `mobilenet_imagenet <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_.
+# `mobilenet_imagenet <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_.
 
 from tensorflow.keras.models import load_model
 
@@ -141,8 +141,8 @@ check_model_performances(model_keras)
 # 3. Quantized model
 # ~~~~~~~~~~~~~~~~~~
 #
-# Quantizing a model is done using `CNN2SNN quantize
-# <../api_reference/cnn2snn_apis.html#quantize>`_.
+# Quantizing a model is done using `cnn2snn.quantize
+# <../../api_reference/cnn2snn_apis.html#quantize>`_.
 #
 # The quantized model satisfies the Akida NSoC requirements:
 #
@@ -175,7 +175,7 @@ check_model_performances(model_keras_quantized)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The Akida models zoo also contains a `pretrained quantized helper
-# <../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained>`_
+# <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained>`_
 # that was obtained after fine tuning the model for 30 epochs.
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
@@ -209,7 +209,7 @@ check_model_performances(model_keras_quantized_pretrained)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here, the Keras quantized model is converted into a suitable version for
-# the Akida NSoC. The `cnn2snn.convert <../api_reference/cnn2snn_apis.html#convert>`__
+# the Akida NSoC. The `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`__
 # function needs as arguments the Keras model and the input scaling parameters.
 
 from cnn2snn import convert
@@ -221,13 +221,13 @@ model_akida = convert(model_keras_quantized_pretrained,
 # 5.2 Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 #
 # It also indicates hardware incompatibilities if there are any. Hardware
 # compatibility can also be checked manually using
 # `model_hardware_incompatibilities
-# <../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
+# <../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
 
 model_akida.summary()
 

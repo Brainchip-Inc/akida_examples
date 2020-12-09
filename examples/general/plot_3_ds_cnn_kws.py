@@ -6,7 +6,7 @@ This tutorial illustrates how to build a basic speech recognition
 Akida network that recognizes thirty-two different words.
 
 The model will be first defined as a CNN and trained in Keras, then
-converted using the `CNN2SNN toolkit <../user_guide/cnn2snn.html>`__.
+converted using the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__.
 
 This example uses a Keyword Spotting Dataset prepared using
 **TensorFlow** `audio recognition
@@ -96,7 +96,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 #
 # The above native Keras model is quantized and fine-tuned to get a quantized
 # Keras model satisfying the `Akida NSoC requirements
-# <https://doc.brainchipinc.com/user_guide/hw_constraints.html>`__.
+# <../../user_guide/hw_constraints.html>`__.
 # The first convolutional layer uses 8 bits weights, but other layers use
 # 4 bits weights.
 #

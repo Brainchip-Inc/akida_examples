@@ -35,7 +35,7 @@ x_test_akida = x_test.astype('uint8')
 # architecture. It consists of a succession of convolutional and pooling layers
 # and ends with two fully connected layers that outputs a single value
 # corresponding to the estimated age. This model architecture is compatible with
-# the `design constraints <https://doc.brainchipinc.com/user_guide/cnn2snn.html#design-compatibility-constraints>`__
+# the `design constraints <../../user_guide/cnn2snn.html#design-compatibility-constraints>`__
 # before quantization. It is the starting point for a model runnable on the
 # Akida NSoC.
 #
@@ -76,7 +76,7 @@ print("Keras MAE: {0:.4f}".format(mae_keras))
 #
 # The above native Keras model is quantized and fine-tuned to get a quantized
 # Keras model satisfying the
-# `Akida NSoC requirements <https://doc.brainchipinc.com/user_guide/hw_constraints.html>`__.
+# `Akida NSoC requirements <../../user_guide/hw_constraints.html>`__.
 # The first convolutional layer of our model uses 8-bit weights and other
 # layers are quantized using 2-bit weights. All activations are 2 bits.
 #
