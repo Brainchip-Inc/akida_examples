@@ -4,14 +4,14 @@ Advanced CNN2SNN tutorial
 
 This tutorial gives insights about CNN2SNN for users who want to go deeper
 into the quantization possibilities of Keras models. We recommend first looking
-at the `user guide <../user_guide/cnn2snn.html>`__  and the
-`CNN2SNN conversion flow tutorial <plot_cnn_flow.html>`__ to get started with
+at the `user guide <../../user_guide/cnn2snn.html>`__  and the
+`CNN2SNN conversion flow tutorial <plot_0_cnn_flow.html>`__ to get started with
 CNN2SNN.
 
 The CNN2SNN toolkit offers an easy-to-use set of functions to get a quantized
 model from a native Keras model and to convert it to an Akida model compatible
-with the Akida NSoC. The `quantize <../api_reference/cnn2snn_apis.html#quantize>`__
-and `quantize_layer <../api_reference/cnn2snn_apis.html#quantize_layer>`__
+with the Akida NSoC. The `quantize <../../api_reference/cnn2snn_apis.html#quantize>`__
+and `quantize_layer <../../api_reference/cnn2snn_apis.html#quantize-layer>`__
 high-level functions replace native Keras layers into custom CNN2SNN quantized
 layers which are derived from their Keras equivalents. However, these functions
 are not designed to choose how the weights and activations are quantized. This
@@ -91,9 +91,9 @@ customizable quantization of weights and activations.
 # .. Note:: The ``quantize`` function is a high-level helper that automatically
 #           replaces the neural layers with their corresponding quantized
 #           counterparts, using
-#           `MaxPerAxisQuantizer <../api_reference/cnn2snn_apis.html#maxperaxisquantizer>`__.
+#           `MaxPerAxisQuantizer <../../api_reference/cnn2snn_apis.html#maxperaxisquantizer>`__.
 #           The ReLU layers are substituted by
-#           `ActivationDiscreteRelu <../api_reference/cnn2snn_apis.html#activationdiscreterelu>`__
+#           `ActivationDiscreteRelu <../../api_reference/cnn2snn_apis.html#activationdiscreterelu>`__
 #           layers.
 #
 # Load pre-trained weights from a native Keras model
@@ -225,7 +225,7 @@ load_partial_weights(model_quantized, model_keras)
 #   The maximum discrete value *7/sf* is equal to *lim*, the limit of the range
 #   (see figure below).
 #
-# .. image:: ../img/custom_quantizer.jpg
+# .. image:: ../../img/custom_quantizer.jpg
 #   :scale: 70 %
 #
 # When training, the weight quantization is applied during the forward pass:
@@ -339,7 +339,7 @@ plot_discretized_weights(w, wq)
 # In this tutorial, instead of directly using the *StdWeightQuantizer*, we
 # present how to create a quantizer. The custom quantizer created below is a
 # simplified version of the *StdWeightQuantizer*. It is derived from the
-# `LinearWeightQuantizer <../api_reference/cnn2snn_apis.html#linearweightquantizer>`__.
+# `LinearWeightQuantizer <../../api_reference/cnn2snn_apis.html#linearweightquantizer>`__.
 # As mentioned above, the ``quantize`` function is already implemented in
 # *LinearWeightQuantizer*. Only the ``scale_factor`` function must be
 # overridden.
@@ -413,7 +413,7 @@ plot_discretized_weights(w, wq)
 # line in the graph).
 #
 #
-# .. image:: ../img/custom_activation.jpg
+# .. image:: ../../img/custom_activation.jpg
 #   :scale: 75 %
 #
 # During training, the ceiling quantization is performed in the forward pass:

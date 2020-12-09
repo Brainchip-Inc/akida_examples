@@ -5,7 +5,7 @@ CNN conversion flow tutorial
 This tutorial illustrates how to use the CNN2SNN toolkit to **convert CNN
 networks to SNN networks** compatible with the **Akida NSoC** in a few steps.
 You can refer to our `CNN2SNN toolkit user guide
-<https://doc.brainchipinc.com/user_guide/cnn2snn.html>`__ for further
+<../../user_guide/cnn2snn.html>`__ for further
 explanation.
 
 The CNN2SNN tool is based on Keras, TensorFlow high-level API for building and
@@ -21,7 +21,7 @@ training deep learning models.
           <https://www.tensorflow.org/install/gpu>`__ to run the CNN2SNN
           tool.
 
-.. image:: ../img/cnn2snn_flow_small.jpg
+.. image:: ../../img/cnn2snn_flow_small.jpg
    :scale: 35 %
 
 """
@@ -111,7 +111,7 @@ model_keras.summary()
 ######################################################################
 # The model defined above is compatible for conversion into an Akida model, i.e.
 # the model doesn't include any layers or operations that aren't Akida-compatible
-# (please refer to the `CNN2SNN toolkit <../user_guide/cnn2snn.html>`__ documentation for full
+# (please refer to the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__ documentation for full
 # details):
 #
 # * Standard Conv2D and Dense layers are supported
@@ -120,7 +120,7 @@ model_keras.summary()
 # * Convolutional blocks can optionally be followed by a MaxPooling.
 #
 # The CNN2SNN toolkit provides the
-# `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
+# `check_model_compatibility <../../api_reference/cnn2snn_apis.html#check-model-compatibility>`__
 # function to ensure that the model can be converted into an Akida model. If
 # the model is not fully compatible, substitutes will be needed for the
 # relevant layers/operations (guidelines included in the documentation).
@@ -159,7 +159,7 @@ print('Test accuracy:', score[1])
 # implementation in the Akida NSoC.
 #
 # For this, we just have to quantize the Keras model using the
-# `quantize <../api_reference/cnn2snn_apis.html#quantize>`_
+# `quantize <../../api_reference/cnn2snn_apis.html#quantize>`_
 # function. Here, we decide to quantize to the maximum allowed bitwidths for
 # the first layer weights (8-bit), the subsequent layer weights (4-bit) and the
 # activations (4-bit).
@@ -199,7 +199,7 @@ print('Test accuracy after 8-4-4 quantization:', score[1])
 #
 # Let's try to quantize specific layers to a lower bitwidth. The CNN2SNN
 # toolkit provides the
-# `quantize_layer <../api_reference/cnn2snn_apis.html#quantize_layer>`__
+# `quantize_layer <../../api_reference/cnn2snn_apis.html#quantize-layer>`__
 # function: each layer can be individually quantized.
 #
 # Here, we quantize the "re_lu_1" layer to binary activations (bitwidth=1)
@@ -243,7 +243,7 @@ print('Test accuracy after fine tuning:', score[1])
 #
 # After having obtained a quantized model with satisfactory performance, it can
 # be converted to a model suitable to be used in the Akida NSoC in inference
-# mode. The `convert <../api_reference/cnn2snn_apis.html#convert>`__
+# mode. The `convert <../../api_reference/cnn2snn_apis.html#convert>`__
 # function returns a model in Akida format, ready for the Akida NSoC or the
 # Akida Execution Engine.
 #
