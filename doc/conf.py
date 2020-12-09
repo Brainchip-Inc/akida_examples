@@ -33,7 +33,7 @@ source_suffix = ['.rst']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-from sphinx_gallery.sorting import ExplicitOrder
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 sphinx_gallery_conf = {
     'default_thumb_file': 'doc/img/brn.png',
@@ -43,7 +43,8 @@ sphinx_gallery_conf = {
     'first_notebook_cell': ("%matplotlib notebook"),
     'subsection_order': ExplicitOrder(['../examples/general',
                                        '../examples/cnn2snn',
-                                       '../examples/edge'])
+                                       '../examples/edge']),
+    'within_subsection_order': FileNameSortKey
 }
 
 # Sphinx gallery will raise a Matplotlib agg warning that can only be silenced
