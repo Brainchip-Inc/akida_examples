@@ -23,16 +23,16 @@ import tensorflow_datasets as tfds
 
 # Retrieve TensorFlow `coil100 <https://www.tensorflow.org/datasets/catalog/coil100>`__
 # dataset
-ds, ds_info = tfds.load('coil100:1.*.*', split='train', with_info=True)
+ds, ds_info = tfds.load('coil100:2.*.*', split='train', with_info=True)
 print(ds_info.description)
 
 ##############################################################################
 
 # Select the 5 cup objects that will be used as new classes
-object_ids = ['obj10', 'obj16', 'obj18', 'obj25', 'obj43']
+object_ids = [9, 15, 17, 24, 42]
 object_dict = {k: [] for k in object_ids}
 for data in ds:
-    object_id = data['object_id'].numpy().decode('utf-8')
+    object_id = data['object_id'].numpy()
     if object_id in object_dict.keys():
         object_dict[object_id].append(data['image'].numpy())
 
@@ -123,4 +123,4 @@ mean_accuracy = stat.mean(accuracy)
 print(f'Mean accuracy: {mean_accuracy:.2f}%')
 
 # For non-regression purpose
-assert mean_accuracy > 98
+assert mean_accuracy > 96
