@@ -79,13 +79,6 @@ CNN2SNN Toolkit API
 
         .. automethod:: __init__
 
-    WeightFloat
-    -----------
-    .. autoclass:: WeightFloat
-        :members:
-
-        .. automethod:: __init__
-
     Quantized layers
     ================
 
