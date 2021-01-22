@@ -194,7 +194,8 @@ def compute_losses(model,
             InputData(name="input",
                       input_width=1,
                       input_height=1,
-                      input_channels=spikes.shape[-1]))
+                      input_channels=spikes.shape[-1],
+                      input_bits=1))
         layer_fc = FullyConnected(name='akida_edge_layer',
                                   num_neurons=num_neurons,
                                   activations_enabled=False)
