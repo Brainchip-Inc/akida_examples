@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Akida models zoo &mdash; Akida Examples  documentation</title>
   
@@ -16,12 +16,16 @@
   <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery-binder.css" type="text/css" />
   <link rel="stylesheet" href="../_static/gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/gallery-rendered-html.css" type="text/css" />
 
   
   
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
   
+
   
+  
+
   
 
   
@@ -34,7 +38,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -69,7 +72,7 @@
             
             
               <div class="version">
-                Akida 1.8.10
+                Akida 1.8.11
               </div>
             
           
@@ -232,7 +235,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#trainablestdweightquantizer">TrainableStdWeightQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#maxquantizer">MaxQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#maxperaxisquantizer">MaxPerAxisQuantizer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#weightfloat">WeightFloat</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/cnn2snn_apis.html#quantized-layers">Quantized layers</a><ul>
@@ -412,6 +414,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -425,7 +429,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
         
       </li>
     
@@ -636,26 +640,25 @@ kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 <s
 <p>Create a YOLO model for VOC car/person training, use transfer learning from
 MobileNet weights trained on ImageNet and perform step-wise quantization to
 obtain a network with 4-bit weights and activations.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5
+
+akida_models create -s yolo_voc.h5 yolo_base -c <span class="m">2</span> <span class="se">\</span>
+                                             -bw <span class="s1">&#39;mobilenet_imagenet_alpha_50.h5&#39;</span>
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e <span class="m">25</span> <span class="se">\</span>
+            -f True -s yolo_voc.h5 train
+
+cnn2snn -m yolo_voc.h5 quantize -iq <span class="m">8</span> -wq <span class="m">8</span> -aq <span class="m">8</span>
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 <span class="se">\</span>
+            -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq8_aq8.h5 train
+
+cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+
+yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 <span class="se">\</span>
+            -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq4_aq4.h5 tune
 </pre></div>
 </div>
-<p>wget <a class="reference external" href="http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5">http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5</a></p>
-<dl class="simple">
-<dt>akida_models create -s yolo_voc.h5 yolo_base -c 2 </dt><dd><p>-bw ‘mobilenet_imagenet_alpha_50.h5’</p>
-</dd>
-<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 </dt><dd><p>-f True -s yolo_voc.h5 train</p>
-</dd>
-</dl>
-<p>cnn2snn -m yolo_voc.h5 quantize -iq 8 -wq 8 -aq 8</p>
-<dl class="simple">
-<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 </dt><dd><p>-ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5 train</p>
-</dd>
-</dl>
-<p>cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq 8 -wq 4 -aq 4</p>
-<dl class="simple">
-<dt>yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 </dt><dd><p>-ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5 tune</p>
-</dd>
-</dl>
 </div>
 </div>
 <div class="section" id="id1">
@@ -751,29 +754,21 @@ corresponding inner processing layers, such as strides and bias.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="hw_constraints.html" class="btn btn-neutral float-right" title="Hardware constraints" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="cnn2snn.html" class="btn btn-neutral float-left" title="CNN2SNN toolkit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="hw_constraints.html" class="btn btn-neutral float-right" title="Hardware constraints" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cnn2snn.html" class="btn btn-neutral float-left" title="CNN2SNN toolkit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright Copyright 2020, BrainChip Holdings Ltd. All Rights Reserved.
+        &#169; Copyright Copyright 2020, BrainChip Holdings Ltd. All Rights Reserved..
 
     </p>
   </div> 
 
 </footer>
-
         </div>
       </div>
 
