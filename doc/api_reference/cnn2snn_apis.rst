@@ -41,31 +41,37 @@ CNN2SNN Toolkit API
     ---------------
     .. autoclass:: cnn2snn.quantization_ops.WeightQuantizer
         :members:
+        :show-inheritance:
 
     LinearWeightQuantizer
     ---------------------
     .. autoclass:: cnn2snn.quantization_ops.LinearWeightQuantizer
         :members:
+        :show-inheritance:
 
     StdWeightQuantizer
     ------------------
     .. autoclass:: StdWeightQuantizer
         :members:
+        :show-inheritance:
 
     TrainableStdWeightQuantizer
     ---------------------------
     .. autoclass:: TrainableStdWeightQuantizer
         :members:
+        :show-inheritance:
 
     MaxQuantizer
     ------------
     .. autoclass:: MaxQuantizer
         :members:
+        :show-inheritance:
 
     MaxPerAxisQuantizer
     -------------------
     .. autoclass:: MaxPerAxisQuantizer
         :members:
+        :show-inheritance:
 
     Quantized layers
     ================
@@ -74,33 +80,40 @@ CNN2SNN Toolkit API
     ---------------
     .. autoclass:: QuantizedConv2D
         :members:
+        :show-inheritance:
 
     QuantizedDepthwiseConv2D
     ------------------------
     .. autoclass:: QuantizedDepthwiseConv2D
         :members:
+        :show-inheritance:
 
     QuantizedDense
     --------------
     .. autoclass:: QuantizedDense
         :members:
+        :show-inheritance:
 
     QuantizedSeparableConv2D
     ------------------------
     .. autoclass:: QuantizedSeparableConv2D
         :members:
+        :show-inheritance:
 
     QuantizedActivation
     -------------------
     .. autoclass:: QuantizedActivation
         :members:
+        :show-inheritance:
 
     ActivationDiscreteRelu
     ----------------------
     .. autoclass:: ActivationDiscreteRelu
         :members:
+        :show-inheritance:
 
     QuantizedReLU
     -------------
     .. autoclass:: QuantizedReLU
         :members:
+        :show-inheritance:
