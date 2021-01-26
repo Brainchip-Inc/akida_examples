@@ -42,42 +42,30 @@ CNN2SNN Toolkit API
     .. autoclass:: cnn2snn.quantization_ops.WeightQuantizer
         :members:
 
-        .. automethod:: __init__
-
     LinearWeightQuantizer
     ---------------------
     .. autoclass:: cnn2snn.quantization_ops.LinearWeightQuantizer
         :members:
-
-        .. automethod:: __init__
 
     StdWeightQuantizer
     ------------------
     .. autoclass:: StdWeightQuantizer
         :members:
 
-        .. automethod:: __init__
-
     TrainableStdWeightQuantizer
     ---------------------------
     .. autoclass:: TrainableStdWeightQuantizer
         :members:
-
-        .. automethod:: __init__
 
     MaxQuantizer
     ------------
     .. autoclass:: MaxQuantizer
         :members:
 
-        .. automethod:: __init__
-
     MaxPerAxisQuantizer
     -------------------
     .. autoclass:: MaxPerAxisQuantizer
         :members:
-
-        .. automethod:: __init__
 
     Quantized layers
     ================
@@ -87,46 +75,32 @@ CNN2SNN Toolkit API
     .. autoclass:: QuantizedConv2D
         :members:
 
-        .. automethod:: __init__
-
     QuantizedDepthwiseConv2D
     ------------------------
     .. autoclass:: QuantizedDepthwiseConv2D
         :members:
-
-        .. automethod:: __init__
 
     QuantizedDense
     --------------
     .. autoclass:: QuantizedDense
         :members:
 
-        .. automethod:: __init__
-
     QuantizedSeparableConv2D
     ------------------------
     .. autoclass:: QuantizedSeparableConv2D
         :members:
-
-        .. automethod:: __init__
 
     QuantizedActivation
     -------------------
     .. autoclass:: QuantizedActivation
         :members:
 
-        .. automethod:: __init__
-
     ActivationDiscreteRelu
     ----------------------
     .. autoclass:: ActivationDiscreteRelu
         :members:
 
-        .. automethod:: __init__
-
     QuantizedReLU
     -------------
     .. autoclass:: QuantizedReLU
         :members:
-
-        .. automethod:: __init__

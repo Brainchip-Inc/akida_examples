@@ -15,8 +15,6 @@ Akida Execution Engine API
         :members:
         :inherited-members:
 
-        .. automethod:: __init__
-
     Layer
     =====
     .. autoclass:: Layer
@@ -37,35 +35,25 @@ Akida Execution Engine API
     .. autoclass:: InputData
         :members:
 
-        .. automethod:: __init__
-
     InputConvolutional
     ==================
     .. autoclass:: InputConvolutional
         :members:
-
-        .. automethod:: __init__
 
     FullyConnected
     ==============
     .. autoclass:: FullyConnected
         :members:
 
-        .. automethod:: __init__
-
     Convolutional
     =============
     .. autoclass:: Convolutional
         :members:
 
-        .. automethod:: __init__
-
     SeparableConvolutional
     ======================
     .. autoclass:: SeparableConvolutional
         :members:
-
-        .. automethod:: __init__
 
     Dense
     ======
