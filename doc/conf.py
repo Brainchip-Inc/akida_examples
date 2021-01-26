@@ -22,7 +22,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx_gallery.gen_gallery',
-    'autodocsumm'
+    'autodocsumm',
+    'sphinx.ext.viewcode'
 ]
 
 # The suffix(es) of source filenames.
