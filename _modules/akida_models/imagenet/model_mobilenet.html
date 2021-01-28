@@ -455,6 +455,8 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MobileNet model definition for ImageNet classification.</span>
+
 <span class="sd">MobileNet V1 is a general architecture and can be used for multiple use cases.</span>
 
 <span class="sd">This specific version includes parameter options to generate a mobilenet version</span>
@@ -468,7 +470,7 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="c1"># Tensorflow/Keras Imports</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span>
 
@@ -592,6 +594,10 @@
     <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
 
+    <span class="c1"># Define weight regularization, will apply to the first convolutional layer</span>
+    <span class="c1"># and to all pointwise weights of separable convolutional layers.</span>
+    <span class="n">weight_regularizer</span> <span class="o">=</span> <span class="n">regularizers</span><span class="o">.</span><span class="n">l2</span><span class="p">(</span><span class="mf">4e-5</span><span class="p">)</span>
+
     <span class="c1"># Determine proper input shape and default size.</span>
     <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">default_size</span> <span class="o">=</span> <span class="mi">224</span>
@@ -622,7 +628,8 @@
                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -631,7 +638,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -641,7 +649,8 @@
                              <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -650,7 +659,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">256</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -660,7 +670,8 @@
                              <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">256</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -669,7 +680,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -679,7 +691,8 @@
                              <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -688,7 +701,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -697,7 +711,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -706,7 +721,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -715,7 +731,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">512</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -724,7 +741,8 @@
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -734,7 +752,8 @@
                              <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="c1"># Last separable layer with global pooling</span>
     <span class="n">layer_pooling</span> <span class="o">=</span> <span class="s1">&#39;global_avg&#39;</span> <span class="k">if</span> <span class="n">include_top</span> <span class="ow">or</span> <span class="n">pooling</span> <span class="o">==</span> <span class="s1">&#39;avg&#39;</span> <span class="k">else</span> <span class="kc">None</span>
@@ -746,7 +765,8 @@
                              <span class="n">pooling</span><span class="o">=</span><span class="n">layer_pooling</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">))</span>
@@ -761,8 +781,10 @@
                                  <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                                  <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                  <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                 <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;act_softmax&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+                                 <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
+        <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">classes</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_2&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="c1"># Create model.</span>
@@ -774,8 +796,7 @@
         <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
         <span class="k">return</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weight_quantization</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">,</span>
                         <span class="n">input_weight_quantization</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">model</span></div>
+    <span class="k">return</span> <span class="n">model</span></div>
 
 
 <div class="viewcode-block" id="mobilenet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
@@ -791,14 +812,14 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;07780D7B6A12B764AF1372D792BDF032301508FB997BFD044C397CA2C8AD5747&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;d9eabb514a7db6d823ab108b0fbc64fe2872ad1113bd6c04c9a3329b6a41e135&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;7370A0DAA39143280F2CFF55F750162BC6025B2EE1FFC6361347AB295A22818A&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;68cbbb4cf08d3ca6401695fc126a2efad381ae932d5e4661eea91077619dbe61&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;906CB111AAAEB9979D8394D4A33756C439329EDE405041B0BEDD789C570D50B5&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;c094be674a71ed4787694be7240fd97f36ee9526675b9974c0342e9db561c9c8&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
@@ -820,7 +841,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;85a169b78b426647a7cff3c4d6caf902dcfcb56ea41d5ea50455d7ae466bfdd3&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;b021fccaba676de9549430336ff27875a85b2aea7ca767a5e70a76185362fa4b&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

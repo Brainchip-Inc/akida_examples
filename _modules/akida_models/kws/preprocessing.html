@@ -452,11 +452,13 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ==============================================================================</span>
-<span class="sd">&quot;&quot;&quot;Model definitions for simple speech recognition.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Model definitions for simple speech recognition.</span>
 
 <span class="sd">Brainchip information:</span>
 <span class="sd">        - Original file: https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/speech_commands</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
@@ -465,12 +467,12 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">tarfile</span>
 <span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">gen_audio_ops</span> <span class="k">as</span> <span class="n">audio_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">gen_audio_ops</span> <span class="k">as</span> <span class="n">audio_ops</span>  <span class="c1"># pylint: disable=no-name-in-module</span>
 
 <span class="n">MAX_NUM_WAVS_PER_CLASS</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">27</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># ~134M</span>
 <span class="n">SILENCE_LABEL</span> <span class="o">=</span> <span class="s1">&#39;_silence_&#39;</span>
@@ -580,7 +582,7 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 
-<div class="viewcode-block" id="AudioProcessor"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor">[docs]</a><span class="k">class</span> <span class="nc">AudioProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="AudioProcessor"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor">[docs]</a><span class="k">class</span> <span class="nc">AudioProcessor</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Handles loading, partitioning, and preparing audio training data.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -612,7 +614,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_background_data</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prepare_processing_graph</span><span class="p">()</span>
 
-<div class="viewcode-block" id="AudioProcessor.maybe_download_and_extract_dataset"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor.maybe_download_and_extract_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_download_and_extract_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_url</span><span class="p">,</span> <span class="n">dest_directory</span><span class="p">):</span>
+<div class="viewcode-block" id="AudioProcessor.maybe_download_and_extract_dataset"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor.maybe_download_and_extract_dataset">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">maybe_download_and_extract_dataset</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="n">dest_directory</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Download and extract data set tar file.</span>
 
 <span class="sd">    If the data set we&#39;re using doesn&#39;t already exist, this function</span>
@@ -642,11 +645,11 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">filepath</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span>
                     <span class="n">data_url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">_progress</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Failed to download URL: </span><span class="si">{</span><span class="n">data_url</span><span class="si">}</span><span class="s2"> to folder: &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="se">\n</span><span class="s2">Please make sure you have enough free&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot; space and an internet connection&quot;</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot; space and an internet connection&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
             <span class="nb">print</span><span class="p">()</span>
             <span class="n">statinfo</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span>
@@ -693,15 +696,16 @@
         <span class="k">for</span> <span class="n">wav_path</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">search_path</span><span class="p">):</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">word</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">wav_path</span><span class="p">))</span>
             <span class="n">word</span> <span class="o">=</span> <span class="n">word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="c1"># Treat the &#39;_background_noise_&#39; folder as a special case, since we expect</span>
-            <span class="c1"># it to contain long audio samples we mix in to improve training.</span>
+            <span class="c1"># Treat the &#39;_background_noise_&#39; folder as a special case, since we</span>
+            <span class="c1"># expect it to contain long audio samples we mix in to improve</span>
+            <span class="c1"># training.</span>
             <span class="k">if</span> <span class="n">word</span> <span class="o">==</span> <span class="n">BACKGROUND_NOISE_DIR_NAME</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">all_words</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">set_index</span> <span class="o">=</span> <span class="n">which_set</span><span class="p">(</span><span class="n">wav_path</span><span class="p">,</span> <span class="n">validation_percentage</span><span class="p">,</span>
                                   <span class="n">testing_percentage</span><span class="p">)</span>
-            <span class="c1"># If it&#39;s a known class, store its detail, otherwise add it to the list</span>
-            <span class="c1"># we&#39;ll use to train the unknown label.</span>
+            <span class="c1"># If it&#39;s a known class, store its detail, otherwise add it to the</span>
+            <span class="c1"># list we&#39;ll use to train the unknown label.</span>
             <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wanted_words_index</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_index</span><span class="p">[</span><span class="n">set_index</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                     <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">word</span><span class="p">,</span>
@@ -719,8 +723,8 @@
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Expected to find &#39;</span> <span class="o">+</span> <span class="n">wanted_word</span> <span class="o">+</span>
                                 <span class="s1">&#39; in labels but only found &#39;</span> <span class="o">+</span>
                                 <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_words</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-        <span class="c1"># We need an arbitrary file to load as the input for the silence samples.</span>
-        <span class="c1"># It&#39;s multiplied by zero later, so the content doesn&#39;t matter.</span>
+        <span class="c1"># We need an arbitrary file to load as the input for the silence</span>
+        <span class="c1"># samples. It&#39;s multiplied by zero later, so the content doesn&#39;t matter.</span>
         <span class="n">silence_wav_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_index</span><span class="p">[</span><span class="s1">&#39;training&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">set_index</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="s1">&#39;training&#39;</span><span class="p">]:</span>
             <span class="n">set_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_index</span><span class="p">[</span><span class="n">set_index</span><span class="p">])</span>
@@ -749,7 +753,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">word_to_index</span><span class="p">[</span><span class="n">SILENCE_LABEL</span><span class="p">]</span> <span class="o">=</span> <span class="n">SILENCE_INDEX</span></div>
 
 <div class="viewcode-block" id="AudioProcessor.prepare_background_data"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor.prepare_background_data">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_background_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Searches a folder for background noise audio, and loads it into memory.</span>
+        <span class="sd">&quot;&quot;&quot;Searches a folder for background noise audio, and loads it into</span>
+<span class="sd">         memory.</span>
 
 <span class="sd">    It&#39;s expected that the background audio samples will be in a subdirectory</span>
 <span class="sd">    named &#39;_background_noise_&#39; inside the &#39;data_dir&#39; folder, as .wavs that match</span>
@@ -780,7 +785,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wav_data</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No background wav files were found in &#39;</span> <span class="o">+</span>
-                            <span class="n">search_path</span><span class="p">)</span></div>
+                            <span class="n">search_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
 
 <div class="viewcode-block" id="AudioProcessor.prepare_processing_graph"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor.prepare_processing_graph">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_processing_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds a TensorFlow graph to apply the input distortions.</span>
@@ -804,29 +810,33 @@
             <span class="n">scaled_foreground</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">wav_decoder</span><span class="o">.</span><span class="n">audio</span><span class="p">,</span>
                                             <span class="n">foreground_volume</span><span class="p">)</span>
             <span class="c1"># Shift the sample&#39;s start position, and pad any gaps with zeros.</span>
-            <span class="n">padded_foreground</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">scaled_foreground</span><span class="p">,</span>
-                                       <span class="n">paddings</span><span class="o">=</span><span class="n">time_shift_padding</span><span class="p">,</span>
-                                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;CONSTANT&#39;</span><span class="p">)</span>
+            <span class="c1"># pylint must be disabled here as it incorrectly identifies tf API</span>
+            <span class="c1"># as explained in</span>
+            <span class="c1"># https://github.com/tensorflow/tensorflow/issues/43038.</span>
+            <span class="c1"># pylint: disable=no-value-for-parameter</span>
+            <span class="n">padded_foreground</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">scaled_foreground</span><span class="p">,</span> <span class="n">time_shift_padding</span><span class="p">)</span>
             <span class="n">sliced_foreground</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">padded_foreground</span><span class="p">,</span> <span class="n">time_shift_offset</span><span class="p">,</span>
                                          <span class="p">[</span><span class="n">desired_samples</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="c1"># Mix in background noise.</span>
             <span class="n">background_mul</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">background_data</span><span class="p">,</span> <span class="n">background_volume</span><span class="p">)</span>
             <span class="n">background_add</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">background_mul</span><span class="p">,</span> <span class="n">sliced_foreground</span><span class="p">)</span>
             <span class="n">background_clamp</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">background_add</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-            <span class="c1"># Run the spectrogram and MFCC ops to get a 2D &#39;fingerprint&#39; of the audio.</span>
+            <span class="c1"># Run the spectrogram and MFCC ops to get a 2D &#39;fingerprint&#39; of the</span>
+            <span class="c1"># audio.</span>
             <span class="n">spectrogram</span> <span class="o">=</span> <span class="n">audio_ops</span><span class="o">.</span><span class="n">audio_spectrogram</span><span class="p">(</span>
                 <span class="n">background_clamp</span><span class="p">,</span>
                 <span class="n">window_size</span><span class="o">=</span><span class="n">model_settings</span><span class="p">[</span><span class="s1">&#39;window_size_samples&#39;</span><span class="p">],</span>
                 <span class="n">stride</span><span class="o">=</span><span class="n">model_settings</span><span class="p">[</span><span class="s1">&#39;window_stride_samples&#39;</span><span class="p">],</span>
                 <span class="n">magnitude_squared</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="c1"># The number of buckets in each FFT row in the spectrogram will depend on</span>
-            <span class="c1"># how many input samples there are in each window. This can be quite</span>
-            <span class="c1"># large, with a 160 sample window producing 127 buckets for example. We</span>
-            <span class="c1"># don&#39;t need this level of detail for classification, so we often want to</span>
-            <span class="c1"># shrink them down to produce a smaller result. That&#39;s what this section</span>
-            <span class="c1"># implements. One method is to use average pooling to merge adjacent</span>
-            <span class="c1"># buckets, but a more sophisticated approach is to apply the MFCC</span>
-            <span class="c1"># algorithm to shrink the representation.</span>
+            <span class="c1"># The number of buckets in each FFT row in the spectrogram will</span>
+            <span class="c1"># depend on how many input samples there are in each window. This</span>
+            <span class="c1"># can be quite large, with a 160 sample window producing 127 buckets</span>
+            <span class="c1"># for example. We don&#39;t need this level of detail for</span>
+            <span class="c1"># classification, so we often want to shrink them down to produce a</span>
+            <span class="c1"># smaller result. That&#39;s what this section implements. One method is</span>
+            <span class="c1"># to use average pooling to merge adjacent buckets, but a more</span>
+            <span class="c1"># sophisticated approach is to apply the MFCC algorithm to shrink</span>
+            <span class="c1"># the representation.</span>
             <span class="n">output</span> <span class="o">=</span> <span class="n">audio_ops</span><span class="o">.</span><span class="n">mfcc</span><span class="p">(</span>
                 <span class="n">spectrogram</span><span class="p">,</span>
                 <span class="n">wav_decoder</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">,</span>
@@ -878,8 +888,8 @@
         <span class="n">desired_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_settings</span><span class="p">[</span><span class="s1">&#39;desired_samples&#39;</span><span class="p">]</span>
         <span class="n">use_background</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
         <span class="n">pick_deterministically</span> <span class="o">=</span> <span class="p">(</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;training&#39;</span><span class="p">)</span>
-        <span class="c1"># Use the processing graph we created earlier to repeatedly to generate the</span>
-        <span class="c1"># final output sample data we&#39;ll use in training.</span>
+        <span class="c1"># Use the processing graph we created earlier to repeatedly to generate</span>
+        <span class="c1"># the final output sample data we&#39;ll use in training.</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">sample_count</span><span class="p">):</span>
             <span class="c1"># Pick which audio sample to use.</span>
             <span class="k">if</span> <span class="n">how_many</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">pick_deterministically</span><span class="p">:</span>
@@ -936,7 +946,8 @@
                                                         <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
             <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;background_volume&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">background_volume</span><span class="p">,</span>
                                                           <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="c1"># If we want silence, mute out the main sample but leave the background.</span>
+            <span class="c1"># If we want silence, mute out the main sample but leave the</span>
+            <span class="c1"># background.</span>
             <span class="k">if</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">SILENCE_LABEL</span><span class="p">:</span>
                 <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;foreground_volume&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -988,8 +999,8 @@
                                    <span class="n">background_volume_range</span><span class="p">,</span>
                                    <span class="n">time_shift</span><span class="p">,</span>
                                    <span class="n">num_augmented_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Applies the feature transformation process to a wav audio file, adding</span>
-<span class="sd">    data augmentation (background noise and time shifting).</span>
+        <span class="sd">&quot;&quot;&quot;Applies the feature transformation process to a wav audio file,</span>
+<span class="sd">         adding data augmentation (background noise and time shifting).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">      wav_filename (str): The path to the input audio file.</span>

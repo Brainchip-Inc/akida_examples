@@ -214,8 +214,8 @@ base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 # Load pre-trained weights for the base model
 pretrained_weights = tf.keras.utils.get_file(
     "mobilenet_imagenet_iq8_wq4_aq4.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_iq8_wq4_aq4.h5",
-    file_hash="07780D7B6A12B764AF1372D792BDF032301508FB997BFD044C397CA2C8AD5747",
+    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5",
+    file_hash="d9eabb514a7db6d823ab108b0fbc64fe2872ad1113bd6c04c9a3329b6a41e135",
     cache_subdir='models/mobilenet')
 base_model_keras.load_weights(pretrained_weights)
 
@@ -273,7 +273,7 @@ base_model_keras.trainable = False
 pretrained_weights = tf.keras.utils.get_file(
     "mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
     "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
-    file_hash="85a169b78b426647a7cff3c4d6caf902dcfcb56ea41d5ea50455d7ae466bfdd3",
+    file_hash="b021fccaba676de9549430336ff27875a85b2aea7ca767a5e70a76185362fa4b",
     cache_subdir='models')
 model_keras.load_weights(pretrained_weights)
 
@@ -386,9 +386,9 @@ for _, stat in stats.items():
 # +-----------------+----------+
 # | Model           | Accuracy |
 # +=================+==========+
-# | quantized Keras | 97.46 %  |
+# | quantized Keras | 98.28 %  |
 # +-----------------+----------+
-# | Akida           | 97.55 %  |
+# | Akida           | 98.32 %  |
 # +-----------------+----------+
 
 ######################################################################

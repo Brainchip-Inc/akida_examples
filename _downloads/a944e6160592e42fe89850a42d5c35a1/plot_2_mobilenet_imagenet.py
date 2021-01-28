@@ -106,13 +106,13 @@ from tensorflow.keras.models import load_model
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "mobilenet_imagenet.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet.h5",
+    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224.h5",
     cache_subdir='models/mobilenet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# Top-1 accuracy on the actual ImageNet is 71.93%, the perfomance given below
+# Top-1 accuracy on the actual ImageNet is 71.89%, the perfomance given below
 # uses the 10 images subset.
 
 from timeit import default_timer as timer
@@ -157,7 +157,7 @@ check_model_performances(model_keras)
 # +----------------+--------------------+
 # | Float accuracy | Quantized accuracy |
 # +================+====================+
-# |     71.93 %    |        9.52 %      |
+# |     71.89 %    |        2.70 %      |
 # +----------------+--------------------+
 #
 
@@ -186,7 +186,7 @@ check_model_performances(model_keras_quantized)
 # +----------------+--------------------+--------------------+
 # | Float accuracy | Quantized accuracy |     After tuning   |
 # +================+====================+====================+
-# |     71.93 %    |       9.52 %       |       69.63 %      |
+# |     71.89 %    |       2.70 %       |       69.62 %      |
 # +----------------+--------------------+--------------------+
 
 from akida_models import mobilenet_imagenet_pretrained
@@ -241,7 +241,7 @@ model_akida.summary()
 # +----------------+----------------+
 # | Keras accuracy | Akida accuracy |
 # +================+================+
-# |     69.63 %    |     69.18 %    |
+# |     69.62 %    |     69.53 %    |
 # +----------------+----------------+
 
 # Check Model performance

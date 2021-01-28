@@ -452,7 +452,8 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ==============================================================================</span>
-<span class="sd">&quot;&quot;&quot;Provides utilities to preprocess images.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides utilities to preprocess images.</span>
 
 <span class="sd">Training images are sampled using the provided bounding boxes, and subsequently</span>
 <span class="sd">cropped to the sampled bounding box. Images are additionally flipped randomly,</span>
@@ -473,7 +474,8 @@
 <span class="sd">        - Original file: https://github.com/tensorflow/models/blob/master/official/vision/image_classification/imagenet_preprocessing.py</span>
 <span class="sd">        - Update preprocess_image() return value for Akida compatibility</span>
 <span class="sd">        - Change cycle_length &#39;parallelization&#39; parameter</span>
-<span class="sd">        - Add _distort_color, _apply_with_random_selector, and _random_distort_color methods</span>
+<span class="sd">        - Add _distort_color, _apply_with_random_selector, and</span>
+<span class="sd">          _random_distort_color methods</span>
 <span class="sd">          from https://github.com/tensorflow/models/blob/master/research/slim/preprocessing/inception_preprocessing.py</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -484,10 +486,9 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">absl</span> <span class="kn">import</span> <span class="n">logging</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">control_flow_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">control_flow_ops</span>  <span class="c1"># pylint: disable=no-name-in-module</span>
 <span class="kn">from</span> <span class="nn">.imagenet_labels2names</span> <span class="kn">import</span> <span class="n">imagenet_labels</span>
 
 <span class="n">NUM_CHANNELS</span> <span class="o">=</span> <span class="mi">3</span>
@@ -513,7 +514,6 @@
                            <span class="n">im_size</span><span class="p">,</span>
                            <span class="n">shuffle_buffer</span><span class="p">,</span>
                            <span class="n">parse_record_fn</span><span class="p">,</span>
-                           <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                            <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
                            <span class="n">datasets_num_private_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                            <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -562,12 +562,12 @@
         <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="n">drop_remainder</span><span class="p">)</span>
 
-    <span class="c1"># Operations between the final prefetch and the get_next call to the iterator</span>
-    <span class="c1"># will happen synchronously during run time. We prefetch here again to</span>
-    <span class="c1"># background all of the above processing work and keep it out of the</span>
-    <span class="c1"># critical training path. Setting buffer_size to tf.data.experimental.AUTOTUNE</span>
-    <span class="c1"># allows DistributionStrategies to adjust how many batches to fetch based</span>
-    <span class="c1"># on how many devices are present.</span>
+    <span class="c1"># Operations between the final prefetch and the get_next call to the</span>
+    <span class="c1"># iterator will happen synchronously during run time. We prefetch here again</span>
+    <span class="c1"># to background all of the above processing work and keep it out of the</span>
+    <span class="c1"># critical training path. Setting buffer_size to</span>
+    <span class="c1"># tf.data.experimental.AUTOTUNE allows DistributionStrategies to adjust how</span>
+    <span class="c1"># many batches to fetch based on how many devices are present.</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">prefetch</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
 
     <span class="n">options</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Options</span><span class="p">()</span>
@@ -584,11 +584,10 @@
             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;train-</span><span class="si">%05d</span><span class="s1">-of-01024&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_NUM_TRAIN_FILES</span><span class="p">)</span>
         <span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;validation-</span><span class="si">%05d</span><span class="s1">-of-00128&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-        <span class="p">]</span></div>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;validation-</span><span class="si">%05d</span><span class="s1">-of-00128&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="p">]</span></div>
 
 
 <span class="k">def</span> <span class="nf">_parse_example_proto</span><span class="p">(</span><span class="n">example_serialized</span><span class="p">):</span>
@@ -645,7 +644,7 @@
 
     <span class="n">features</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">parse_single_example</span><span class="p">(</span><span class="n">serialized</span><span class="o">=</span><span class="n">example_serialized</span><span class="p">,</span>
                                           <span class="n">features</span><span class="o">=</span><span class="n">feature_map</span><span class="p">)</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="s1">&#39;image/class/label&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="s1">&#39;image/class/label&#39;</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
     <span class="n">xmin</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="s1">&#39;image/object/bbox/xmin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">ymin</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="s1">&#39;image/object/bbox/ymin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -690,8 +689,8 @@
 
     <span class="c1"># Subtract one so that labels are in [0, 1000), and cast to float32 for</span>
     <span class="c1"># Keras model.</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span></div>
 
 
@@ -712,9 +711,9 @@
     <span class="n">filenames</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
     <span class="c1"># Convert to individual records.</span>
-    <span class="c1"># cycle_length = 10 means that up to 10 files will be read and deserialized in</span>
-    <span class="c1"># parallel. You may want to increase this number if you have a large number of</span>
-    <span class="c1"># CPU cores.</span>
+    <span class="c1"># cycle_length = 10 means that up to 10 files will be read and deserialized</span>
+    <span class="c1"># in parallel. You may want to increase this number if you have a large</span>
+    <span class="c1"># number of CPU cores.</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span>
         <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">TFRecordDataset</span><span class="p">,</span>
         <span class="n">cycle_length</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">,</span>
@@ -726,7 +725,6 @@
                                   <span class="n">im_size</span><span class="o">=</span><span class="n">im_size</span><span class="p">,</span>
                                   <span class="n">shuffle_buffer</span><span class="o">=</span><span class="n">_SHUFFLE_BUFFER</span><span class="p">,</span>
                                   <span class="n">parse_record_fn</span><span class="o">=</span><span class="n">preprocessing_fn</span><span class="p">,</span>
-                                  <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                                   <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
                                   <span class="n">datasets_num_private_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                   <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -737,7 +735,6 @@
              <span class="n">data_dir</span><span class="p">,</span>
              <span class="n">batch_size</span><span class="p">,</span>
              <span class="n">im_size</span><span class="p">,</span>
-             <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
              <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
              <span class="n">datasets_num_private_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">parse_record_fn</span><span class="o">=</span><span class="n">parse_record</span><span class="p">,</span>
@@ -783,17 +780,17 @@
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="n">_NUM_TRAIN_FILES</span><span class="p">)</span>
 
     <span class="c1"># Convert to individual records.</span>
-    <span class="c1"># cycle_length = 10 means that up to 10 files will be read and deserialized in</span>
-    <span class="c1"># parallel. You may want to increase this number if you have a large number of</span>
-    <span class="c1"># CPU cores.</span>
+    <span class="c1"># cycle_length = 10 means that up to 10 files will be read and deserialized</span>
+    <span class="c1"># in parallel. You may want to increase this number if you have a large</span>
+    <span class="c1"># number of CPU cores.</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">interleave</span><span class="p">(</span>
         <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">TFRecordDataset</span><span class="p">,</span>
         <span class="n">cycle_length</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">,</span>
         <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">is_training</span> <span class="ow">and</span> <span class="n">training_dataset_cache</span><span class="p">:</span>
-        <span class="c1"># Improve training performance when training data is in remote storage and</span>
-        <span class="c1"># can fit into worker memory.</span>
+        <span class="c1"># Improve training performance when training data is in remote storage</span>
+        <span class="c1"># and can fit into worker memory.</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">process_record_dataset</span><span class="p">(</span>
@@ -803,7 +800,6 @@
         <span class="n">im_size</span><span class="o">=</span><span class="n">im_size</span><span class="p">,</span>
         <span class="n">shuffle_buffer</span><span class="o">=</span><span class="n">_SHUFFLE_BUFFER</span><span class="p">,</span>
         <span class="n">parse_record_fn</span><span class="o">=</span><span class="n">parse_record_fn</span><span class="p">,</span>
-        <span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
         <span class="n">datasets_num_private_threads</span><span class="o">=</span><span class="n">datasets_num_private_threads</span><span class="p">,</span>
         <span class="n">drop_remainder</span><span class="o">=</span><span class="n">drop_remainder</span><span class="p">,</span>
@@ -851,7 +847,8 @@
     <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">bbox_size</span><span class="p">)</span>
     <span class="n">crop_window</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">offset_y</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">])</span>
 
-    <span class="c1"># Use the fused decode and crop op here, which is faster than each in series.</span>
+    <span class="c1"># Use the fused decode and crop op here, which is faster than each in</span>
+    <span class="c1"># series.</span>
     <span class="n">cropped</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_and_crop_jpeg</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span>
                                             <span class="n">crop_window</span><span class="p">,</span>
                                             <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
@@ -993,10 +990,10 @@
 <span class="k">def</span> <span class="nf">_random_distort_color</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;randomly distort the color of a Tensor image.</span>
 
-<span class="sd">      Each color distortion is non-commutative and thus ordering of the color ops</span>
-<span class="sd">      matters. Ideally we would randomly permute the ordering of the color ops.</span>
-<span class="sd">      Rather then adding that level of complication, we select a distinct ordering</span>
-<span class="sd">      of color ops for each preprocessing thread.</span>
+<span class="sd">      Each color distortion is non-commutative and thus ordering of the color</span>
+<span class="sd">      ops matters. Ideally we would randomly permute the ordering of the color</span>
+<span class="sd">      ops. Rather then adding that level of complication, we select a distinct</span>
+<span class="sd">      ordering of color ops for each preprocessing thread.</span>
 
 <span class="sd">      Args:</span>
 <span class="sd">        image: 3-D Tensor containing single image in [0, 255].</span>
@@ -1009,10 +1006,9 @@
     <span class="n">num_distort_cases</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="c1"># scale image from 0 to 255 to 0 to 1 to use distort color</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">scalar_mul</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
-    <span class="n">distorted_image</span> <span class="o">=</span> <span class="n">_apply_with_random_selector</span><span class="p">(</span>
-        <span class="n">image</span><span class="p">,</span>
-        <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">ordering</span><span class="p">:</span> <span class="n">_distort_color</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ordering</span><span class="p">),</span>
-        <span class="n">num_cases</span><span class="o">=</span><span class="n">num_distort_cases</span><span class="p">)</span>
+    <span class="n">distorted_image</span> <span class="o">=</span> <span class="n">_apply_with_random_selector</span><span class="p">(</span><span class="n">image</span><span class="p">,</span>
+                                                  <span class="n">_distort_color</span><span class="p">,</span>
+                                                  <span class="n">num_cases</span><span class="o">=</span><span class="n">num_distort_cases</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">distorted_image</span>
 
 
@@ -1029,6 +1025,9 @@
 <span class="sd">        The result of func(x, sel), where func receives the value of the</span>
 <span class="sd">        selector as a python integer, but sel is sampled dynamically.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint must be disabled here as it incorrectly identifies tf API as</span>
+    <span class="c1"># explained in https://github.com/tensorflow/tensorflow/issues/43038.</span>
+    <span class="c1"># pylint: disable=unexpected-keyword-arg</span>
     <span class="n">sel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">([],</span> <span class="n">maxval</span><span class="o">=</span><span class="n">num_cases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
     <span class="c1"># Pass the real x only to one of the func calls.</span>
     <span class="k">return</span> <span class="n">control_flow_ops</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span>
@@ -1041,10 +1040,10 @@
 <span class="k">def</span> <span class="nf">_distort_color</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">color_ordering</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Distort the color of a Tensor image.</span>
 
-<span class="sd">      Each color distortion is non-commutative and thus ordering of the color ops</span>
-<span class="sd">      matters. Ideally we would randomly permute the ordering of the color ops.</span>
-<span class="sd">      Rather then adding that level of complication, we select a distinct ordering</span>
-<span class="sd">      of color ops for each preprocessing thread.</span>
+<span class="sd">      Each color distortion is non-commutative and thus ordering of the color</span>
+<span class="sd">      ops matters. Ideally we would randomly permute the ordering of the color</span>
+<span class="sd">      ops. Rather then adding that level of complication, we select a distinct</span>
+<span class="sd">      ordering of color ops for each preprocessing thread.</span>
 
 <span class="sd">      Args:</span>
 <span class="sd">        image: 3-D Tensor containing single image in [0, 1].</span>
