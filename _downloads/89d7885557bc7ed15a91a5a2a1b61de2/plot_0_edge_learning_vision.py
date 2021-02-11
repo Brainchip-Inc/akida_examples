@@ -5,7 +5,7 @@ Akida vision edge learning
 This tutorial demonstrates the Akida NSoC **edge learning** capabilities using
 its built-in learning algorithm.
 It focuses on an image classification example, where an existing Akida network
-is re-trained to be able to classify images from 5 new classes.
+is re-trained to be able to classify images from 4 new classes.
 
 Just a few samples (few-shot learning) of the new classes are sufficient
 to augment the Akida model with extra classes, while preserving high accuracy.
@@ -28,8 +28,8 @@ print(ds_info.description)
 
 ##############################################################################
 
-# Select the 5 cup objects that will be used as new classes
-object_ids = [9, 15, 17, 24, 42]
+# Select the 4 cup objects that will be used as new classes
+object_ids = [15, 17, 24, 42]
 object_dict = {k: [] for k in object_ids}
 for data in ds:
     object_id = data['object_id'].numpy()
