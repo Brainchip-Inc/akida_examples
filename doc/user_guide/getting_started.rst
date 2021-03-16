@@ -50,7 +50,7 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
 .. code-block::
 
    import numpy as np
-   from akida import Model, InputData, FullyConnected, coords_to_sparse
+   from akida import Model, InputData, FullyConnected
 
    # Instantiate xor model
    xor = Model()
@@ -100,19 +100,16 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
    # Not even evaluated since we don't have input spikes
 
    # 0, 1 -> spikes
-   in_coords = np.array([[0,0,1]])
-   in_spikes = coords_to_sparse(in_coords, (1,1,2))
+   in_spikes = np.array([[[[0, 1]]]], dtype=np.uint8)
    out_spikes = xor.forward(in_spikes)
    assert (np.count_nonzero(out_spikes) == 1)
 
    # 1, 0 -> spikes
-   in_coords = np.array([[0,0,0]])
-   in_spikes = coords_to_sparse(in_coords, (1,1,2))
+   in_spikes = np.array([[[[1, 0]]]], dtype=np.uint8)
    out_spikes = xor.forward(in_spikes)
    assert (np.count_nonzero(out_spikes) == 1)
 
    # 1, 1 -> no spikes
-   in_coords = np.array([[0,0,0],[0,0,1]])
-   in_spikes = coords_to_sparse(in_coords, (1,1,2))
+   in_spikes = np.array([[[[1, 1]]]], dtype=np.uint8)
    out_spikes = xor.forward(in_spikes)
    assert (np.count_nonzero(out_spikes) == 0)
