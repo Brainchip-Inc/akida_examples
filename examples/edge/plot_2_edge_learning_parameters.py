@@ -157,7 +157,7 @@ print(f"The number of weights is then set to: {num_weights}")
 #
 # In this tutorial, we only present this analysis for one class (word 'six').
 
-from akida import Model, InputData, FullyConnected, dense_to_sparse
+from akida import Model, InputData, FullyConnected
 
 
 def compute_losses(model,
@@ -211,7 +211,7 @@ def compute_losses(model,
             model_fc = create_one_fc_model(num_neurons=n)
 
             # Train model
-            permut_spikes = dense_to_sparse(np.random.permutation(spikes))
+            permut_spikes = np.random.permutation(spikes)
             model_fc.fit(permut_spikes)
 
             # Get max potentials
