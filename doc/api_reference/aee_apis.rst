@@ -25,11 +25,6 @@ Akida Execution Engine API
     .. autoclass:: LayerStatistics
         :members:
 
-    Observer
-    ========
-    .. autoclass:: Observer
-        :members:
-
     InputData
     =========
     .. autoclass:: InputData
@@ -60,24 +55,6 @@ Akida Execution Engine API
     .. autoclass:: Dense
         :members:
         :inherited-members:
-
-    Sparse
-    ======
-    .. autoclass:: Sparse
-        :members:
-        :inherited-members:
-
-    coords_to_sparse
-    ================
-    .. autofunction:: coords_to_sparse
-
-    dense_to_sparse
-    ===============
-    .. autofunction:: dense_to_sparse
-
-    packetize
-    =========
-    .. autofunction:: packetize
 
     Backend
     =======
