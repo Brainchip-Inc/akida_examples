@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -198,17 +198,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -509,6 +504,230 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_maps</span> <span class="o">=</span> <span class="n">layer_maps</span>
 
 
+<span class="k">def</span> <span class="nf">_check_layers_data_format</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts that all layers in the model are &#39;channels_last&#39;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.keras.model): the Keras model to check.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Error if &#39;data_format&#39; is &#39;channels_first&#39;</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s1">&#39;data_format&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;channels_first&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;unsupported data format channels_first&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_model_input_output</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts that model inputs/outputs are supported for conversion.</span>
+
+<span class="sd">    The Keras model must have only one input layer and one output layer. The</span>
+<span class="sd">    input shape must 4-D (N, H, W, C).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.keras.model): the Keras model to check.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Error if multiple inputs</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Model must have only one input layer. Receives &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;inputs </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">input_names</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Error if multiple outputs</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Model must have only one output layer. Receives &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;outputs </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">output_names</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Error if input shape is not 4D, i.e. (N, H, W, C)</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_shape</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Input shape of model must be 4-D (batch size + 3-D &quot;</span>
+                   <span class="sa">f</span><span class="s2">&quot;tensors). Receives input shape </span><span class="si">{</span><span class="n">input_shape</span><span class="si">}</span><span class="s2">. &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="s2">&quot;If your model begins with a Dense layer, you must &quot;</span>
+                <span class="s2">&quot;start your model with a Flatten layer and an input shape of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (1, 1, </span><span class="si">{</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">) instead of </span><span class="si">{</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_map_first_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_is_image</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Map the first layers of the Keras model to an Akida layer.</span>
+
+<span class="sd">    To be Akida-compatible, the first layers of the quantized Keras model must</span>
+<span class="sd">    be:</span>
+
+<span class="sd">    - an optional InputLayer.</span>
+<span class="sd">    - an optional Rescaling layer</span>
+<span class="sd">    - the first neural layer. If input is image, this layer must be a Conv2D</span>
+<span class="sd">        with 1 or 3 channels.</span>
+
+<span class="sd">    Depending on input_is_image, an InputData or an InputConvolutional is</span>
+<span class="sd">    returned. The index of the next layer to process is also returned.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.keras model): the model to parse.</span>
+<span class="sd">        input_is_image (bool): True if input is an image (8-bit input with 1 or</span>
+<span class="sd">            3 channels) followed by QuantizedConv2D. Akida model input will be</span>
+<span class="sd">            InputConvolutional. If False, Akida model input will be InputData.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">       :obj:`LayerMapping`: a layer map corresponding to the first Akida layer.</span>
+<span class="sd">       int: the index of the next layer to process.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">next_layer</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># If first layer is input layer, skip it</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">):</span>
+        <span class="n">next_layer</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># If next layer is Rescaling layer, skip it</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">],</span>
+                  <span class="n">layers</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">Rescaling</span><span class="p">):</span>
+        <span class="n">next_layer</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Get first Akida layer</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">input_is_image</span><span class="p">:</span>
+        <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Error if input_is_image=True and first layer is not a Conv2D</span>
+        <span class="c1"># or input channels is not 1 or 3.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;With input_is_image=True, first layer &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must be&quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot; Conv2D and input shape must have 1 or 3 channels. &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;Receives layer of type &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">next_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> channels.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">)</span>
+        <span class="n">next_layer</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">layer_ak</span><span class="p">,</span> <span class="n">next_layer</span>
+
+
+<span class="k">def</span> <span class="nf">_get_akida_layer_type</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns Akida layer type of a Keras neural layer</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layer (:obj:`tf.keras.layers.Layer`): a Keras layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedConv2D</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">,</span>
+                       <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedSeparableConv2D</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDense</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">FullyConnected</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_fill_akida_layer_map</span><span class="p">(</span><span class="n">layer_ak</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">,</span> <span class="n">index_layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fill Akida layer map with pooling/batchnorm/activation layers.</span>
+
+<span class="sd">    This function modifies and fills the `layer_ak` map, that corresponds to</span>
+<span class="sd">    a block of a neural layer + optional pooling/batchnorm/activation layers.</span>
+<span class="sd">    For instance, if the `index_layer` of Keras layers (i.e.</span>
+<span class="sd">    `layers_keras[index_layer]` is a BatchNormalization layer, the Akida layer</span>
+<span class="sd">    map will keep this index in `layer_ak.index_batchnorm`. This is needed</span>
+<span class="sd">    later when creating the Akida model and computing the fire thresholds and</span>
+<span class="sd">    steps.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layer_ak (:obj:`LayerMapping`): the Akida layer map which will be</span>
+<span class="sd">            filled with pooling/batchnorm/activation Keras layers.</span>
+<span class="sd">        layers_keras (list): list of Keras layers of the model.</span>
+<span class="sd">        index_layer (int): index of the Keras layer to read.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Two </span><span class="si">{0}</span><span class="s2"> layers were detected related to </span><span class="si">{1}</span><span class="s2">: </span><span class="si">{2}</span><span class="s2"> and </span><span class="si">{3}</span><span class="s2">. Only &quot;</span>
+               <span class="s2">&quot;one </span><span class="si">{0}</span><span class="s2"> layer is supported.&quot;</span><span class="p">)</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">index_layer</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAveragePooling2D</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;pooling&quot;</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_pool</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">=</span> <span class="n">index_layer</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">)</span> <span class="ow">or</span>
+          <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;BatchNormalization&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;BatchNormalization&quot;</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="o">=</span> <span class="n">index_layer</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedActivation</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_activation</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;activation&quot;</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_ak</span><span class="o">.</span><span class="n">index_activation</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_activation</span> <span class="o">=</span> <span class="n">index_layer</span>
+
+
+<span class="k">def</span> <span class="nf">_check_flatten_layer</span><span class="p">(</span><span class="n">layers_keras</span><span class="p">,</span> <span class="n">flatten_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts that the Flatten layer is supported for conversion.</span>
+
+<span class="sd">    A Flatten layer is supported if it is followed by a Dense layer or if it</span>
+<span class="sd">    is the last layer of the model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layers_keras (list): the model&#39;s Keras layers.</span>
+<span class="sd">        flatten_index (int): the index of the Flatten layer in the list of</span>
+<span class="sd">            layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layers_keras</span><span class="p">[</span><span class="n">flatten_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">,</span>
+                                                     <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDense</span><span class="p">):</span>
+            <span class="k">return</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Flatten layer only supported before a Dense one&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_unsupported_activations</span><span class="p">(</span><span class="n">index_unsupported_activations</span><span class="p">,</span>
+                                   <span class="n">last_neural_index</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts that unsupported activations are after the last Akida layer.</span>
+
+<span class="sd">    Akida does not support other activations than ReLU/QuantizedActivation. The</span>
+<span class="sd">    only exception is if an unsupported activation is placed after the last</span>
+<span class="sd">    neural layer. For example, a Sigmoid/Softmax at the end of the model. In</span>
+<span class="sd">    this case, the conversion is performed but the unsupported activation is</span>
+<span class="sd">    discarded.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        index_unsupported_activations (list): the indices of the unsupported</span>
+<span class="sd">            activation layers.</span>
+<span class="sd">        last_neural_index (int): the index of the last neural layer in the</span>
+<span class="sd">            model.</span>
+<span class="sd">        layers_keras (list): the model&#39;s Keras layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check if the unsupported activation is after the last neural layer (i.e.</span>
+    <span class="c1"># in the last Akida layer</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_unsupported_activations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">last_neural_index</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Activation layers other than ReLU and quantized &quot;</span>
+                <span class="s2">&quot;activations are not supported before the last &quot;</span>
+                <span class="s2">&quot;neural layer. Receives activation layer &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">layers_keras</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; before the last neural&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; layer &#39;</span><span class="si">{</span><span class="n">layers_keras</span><span class="p">[</span><span class="n">last_neural_index</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: the activation layer &#39;</span><span class="si">{</span><span class="n">layers_keras</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
+              <span class="s2">&quot;will be discarded at conversion. The outputs of the Akida &quot;</span>
+              <span class="s2">&quot;model will be the potentials before this activation layer.&quot;</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">generate_model_mapping</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_is_image</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates a model map between Keras and Akida models.</span>
 
@@ -525,104 +744,38 @@
 <span class="sd">       :obj:`ModelMapping`: a model map corresponding to the input Keras model.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Error if &#39;data_format&#39; is &#39;channels_first&#39;</span>
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s1">&#39;data_format&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;channels_first&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;unsupported data format channels_first&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Error if input shape is not 4D, i.e. (N, H, W, C)</span>
-    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_shape</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Input shape of model must be 4-D (batch size + 3-D &quot;</span>
-                   <span class="sa">f</span><span class="s2">&quot;tensors). Receives input shape </span><span class="si">{</span><span class="n">input_shape</span><span class="si">}</span><span class="s2">. &quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
-                <span class="s2">&quot;If your model begins with a Dense layer, you must &quot;</span>
-                <span class="s2">&quot;start your model with a Flatten layer and an input shape of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; (1, 1, </span><span class="si">{</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">) instead of </span><span class="si">{</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+    <span class="n">_check_layers_data_format</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">_check_model_input_output</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">layer_ak</span><span class="p">,</span> <span class="n">next_layer</span> <span class="o">=</span> <span class="n">_map_first_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_is_image</span><span class="p">)</span>
 
+    <span class="c1"># Loop on layers</span>
+    <span class="n">neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">,</span>
+                     <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
+                     <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDense</span><span class="p">)</span>
+    <span class="n">ignore_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">)</span>
+    <span class="n">activation_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Softmax</span><span class="p">)</span>
     <span class="n">layer_maps</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">index_unsupported_activations</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="c1"># First we need to map the input layer</span>
-    <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1"># If first layer is input layer, skip it</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">):</span>
-        <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="c1"># Get first Akida layer</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">input_is_image</span><span class="p">:</span>
-        <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span><span class="p">,</span> <span class="n">first_layer</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Error if input_is_image=True and first layer is not a Conv2D</span>
-        <span class="c1"># or input channels is not 1 or 3.</span>
-        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">)</span> <span class="ow">or</span>
-                <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
-            <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;With input_is_image=True, first layer &quot;</span>
-                       <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must be&quot;</span>
-                       <span class="sa">f</span><span class="s2">&quot; Conv2D and input shape must have 1 or 3 channels. &quot;</span>
-                       <span class="sa">f</span><span class="s2">&quot;Receives layer of type &quot;</span>
-                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with &quot;</span>
-                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> channels.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
-        <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">,</span> <span class="n">first_layer</span><span class="p">)</span>
-        <span class="n">first_layer</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="c1"># Loop on layers</span>
-    <span class="n">neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">)</span>
-    <span class="n">ignore_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">)</span>
-    <span class="n">activation_list</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Softmax</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">first_layer</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
-        <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first_layer</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="c1"># If this layer is a neural layer, append the current Akida layer and</span>
         <span class="c1"># start a new one</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">neural_layers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">neural_layers</span><span class="p">:</span>
             <span class="n">layer_maps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer_ak</span><span class="p">)</span>
-            <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">layer</span>
+            <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">_get_akida_layer_type</span><span class="p">(</span><span class="n">layer</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">continue</span>
 
-        <span class="c1"># Neural layers</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
-            <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">):</span>
-            <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
-            <span class="n">layer_ak</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">FullyConnected</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-
-        <span class="c1"># Pooling + batchnorm + activation layers</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span>
-                        <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAveragePooling2D</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two pooling layers were detected in layer&quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Only one pooling &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;layer is supported.&quot;</span><span class="p">)</span>
-            <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">)</span> <span class="ow">or</span>
-              <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;BatchNormalization&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two BatchNormalization layers were &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;detected after layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot; Only one BatchNormalization layer is &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;supported.&quot;</span><span class="p">)</span>
-            <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedActivation</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_activation</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two activation layers were &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;detected after layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot; Only one activation layer is supported.&quot;</span><span class="p">)</span>
-            <span class="n">layer_ak</span><span class="o">.</span><span class="n">index_activation</span> <span class="o">=</span> <span class="n">i</span>
-
+        <span class="c1"># Pooling + batchnorm + activation layers -&gt; update akida layer map</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAveragePooling2D</span><span class="p">,</span>
+                            <span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedActivation</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;BatchNormalization&#39;</span><span class="p">):</span>
+            <span class="n">_fill_akida_layer_map</span><span class="p">(</span><span class="n">layer_ak</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="c1"># Allow flatten before a dense layer</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
-                    <span class="k">continue</span>
-            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Flatten layer only supported before a Dense &quot;</span>
-                               <span class="s2">&quot;one&quot;</span><span class="p">)</span>
+            <span class="n">_check_flatten_layer</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="c1"># Check Reshape compatibility</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">):</span>
             <span class="n">_check_reshape_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
@@ -641,23 +794,125 @@
     <span class="c1"># Append last parsed layer if any</span>
     <span class="n">layer_maps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer_ak</span><span class="p">)</span>
 
-    <span class="c1"># Check if the unsupported activation is after the last neural layer (i.e.</span>
-    <span class="c1"># in the last Akida layer</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index_unsupported_activations</span><span class="p">:</span>
-        <span class="n">index_last</span> <span class="o">=</span> <span class="n">layer_maps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index_neural</span>
-        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">index_last</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Activation layers other than ReLU and quantized &quot;</span>
-                <span class="s2">&quot;activations are not supported before the last &quot;</span>
-                <span class="s2">&quot;neural layer. Receives activation layer &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; before the last neural&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; layer &#39;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">index_last</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: the activation layer &#39;</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
-              <span class="s2">&quot;will be discarded at conversion. The outputs of the Akida &quot;</span>
-              <span class="s2">&quot;model will be the potentials before this activation layer.&quot;</span><span class="p">)</span>
+    <span class="n">_check_unsupported_activations</span><span class="p">(</span><span class="n">index_unsupported_activations</span><span class="p">,</span>
+                                   <span class="n">layer_maps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index_neural</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ModelMapping</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_maps</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_batchnorm_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts BatchNormalization layer is compatible for conversion.</span>
+
+<span class="sd">    Four checks are performed here:</span>
+<span class="sd">    - BN must be applied on the last axis of the input tensor.</span>
+<span class="sd">    - gammas must not be zero.</span>
+<span class="sd">    - gammas must be positive if a MaxPool2D layer is placed before BN.</span>
+<span class="sd">    - BN must be placed before the activation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       layer_map (:obj:`LayerMapping`): the layer map to check.</span>
+<span class="sd">       layers_keras (list): the model&#39;s Keras layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">:</span>
+        <span class="c1"># Raise error if BatchNormalization &#39;axis&#39; is different from the last</span>
+        <span class="c1"># dimension. The &#39;axis&#39; parameter is a list containing the axes on what</span>
+        <span class="c1"># the batch normalization is applied.</span>
+        <span class="n">layer_BN</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span>
+                <span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be applied on the &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;last axis. Receives </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="c1"># Raise error if a gamma is zero.</span>
+        <span class="n">gammas</span> <span class="o">=</span> <span class="n">layer_BN</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">gammas</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has at least&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; one gamma equal to zero. This case is not supported.&quot;</span><span class="p">)</span>
+        <span class="c1"># Raise error if BatchNormalization has at least one negative gamma</span>
+        <span class="c1"># and if a MaxPool2D layer is placed before it.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
+            <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_pool</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">)</span> <span class="ow">and</span>
+                    <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">&lt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has at &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;least one negative gamma and a MaxPool2D layer is &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;placed before it. This case is not supported.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Raise error if BatchNormalization is placed after the activation</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span> <span class="ow">and</span>
+            <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="o">&gt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In the layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, the batch &quot;</span>
+                           <span class="s2">&quot;normalization layer must be placed before &quot;</span>
+                           <span class="s2">&quot;the activation.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_pooling_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts pooling layer is compatible for conversion.</span>
+
+<span class="sd">    Two checks are performed here:</span>
+<span class="sd">    - a global average pooling must be placed before the activation layer</span>
+<span class="sd">    - the padding of MaxPool2D must be the same as the padding of neural layer</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       layer_map (:obj:`LayerMapping`): the layer map to check.</span>
+<span class="sd">       layers_keras (list): the model&#39;s Keras layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span>
+
+    <span class="c1"># Raise error if GlobalAvgPool2D is placed after the activation</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAvgPool2D</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">&gt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In the layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, the global &quot;</span>
+                           <span class="s2">&quot;average pooling layer must be placed before &quot;</span>
+                           <span class="s2">&quot;the activation.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Raises error if the padding of MaxPool2D is different from the padding</span>
+    <span class="c1"># of the neural processing layer.</span>
+    <span class="k">if</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
+        <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_pool</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">layer_neural</span><span class="o">.</span><span class="n">padding</span> <span class="o">!=</span> <span class="n">layer_pool</span><span class="o">.</span><span class="n">padding</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pooling layer </span><span class="si">{</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (padding: &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">padding</span><span class="si">}</span><span class="s2">) must have the same &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;padding as </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (padding: &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">padding</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_dense_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Asserts Dense layer is compatible for conversion.</span>
+
+<span class="sd">    One check is performed here:</span>
+<span class="sd">    - input shape must be (bs, N) or (bs, 1, 1, N) (bs is the batch size).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       layer_map (:obj:`LayerMapping`): the layer map to check.</span>
+<span class="sd">       layers_keras (list): the model&#39;s Keras layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span>
+
+    <span class="c1"># Raises error if Dense input shape is incorrect: supported</span>
+    <span class="c1"># shapes are (N,) and (1, 1, N). Remember input_shape has the batch</span>
+    <span class="c1"># size as first element of tuple.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_neural</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># Input shape is (N,)</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span>
+            <span class="c1"># Input shape is (1, 1, N)</span>
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span>
+             <span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+             <span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The Dense layer &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must have an input &quot;</span>
+                               <span class="s2">&quot;shape of (N,). Receives &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">check_mapping_compatibility</span><span class="p">(</span><span class="n">model_map</span><span class="p">):</span>
@@ -671,87 +926,20 @@
 <span class="sd">        :obj:`ModelMapping`: a model map corresponding to the Keras model to</span>
 <span class="sd">            check</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">layers_k</span> <span class="o">=</span> <span class="n">model_map</span><span class="o">.</span><span class="n">model_keras</span><span class="o">.</span><span class="n">layers</span>
+    <span class="n">layers_keras</span> <span class="o">=</span> <span class="n">model_map</span><span class="o">.</span><span class="n">model_keras</span><span class="o">.</span><span class="n">layers</span>
 
     <span class="c1"># Error if hidden layer without activation</span>
     <span class="k">for</span> <span class="n">layer_map</span> <span class="ow">in</span> <span class="n">model_map</span><span class="o">.</span><span class="n">layer_maps</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">!=</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span> \
                 <span class="ow">and</span> <span class="ow">not</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No activation layer detected with layer &quot;</span>
-                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layers_keras</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. &quot;</span>
                                <span class="s2">&quot;Activation is required in hidden layers.&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">layer_map</span> <span class="ow">in</span> <span class="n">model_map</span><span class="o">.</span><span class="n">layer_maps</span><span class="p">:</span>
-        <span class="n">layer_neural</span> <span class="o">=</span> <span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_neural</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">:</span>
-            <span class="c1"># Raise error if BatchNormalization &#39;axis&#39; is different from the last</span>
-            <span class="c1"># dimension. The &#39;axis&#39; parameter is a list containing the axes on what</span>
-            <span class="c1"># the batch normalization is applied.</span>
-            <span class="n">layer_BN</span> <span class="o">=</span> <span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">]</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span>
-                    <span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be applied on the &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;last axis. Receives </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-            <span class="c1"># Raise error if a gamma is zero.</span>
-            <span class="n">gammas</span> <span class="o">=</span> <span class="n">layer_BN</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">gammas</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has at least&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot; one gamma equal to zero. This case is not supported.&quot;</span><span class="p">)</span>
-            <span class="c1"># Raise error if BatchNormalization has at least one negative gamma</span>
-            <span class="c1"># and if a MaxPool2D layer is placed before it.</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
-                <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">]</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_pool</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">)</span> <span class="ow">and</span>
-                        <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">&lt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer </span><span class="si">{</span><span class="n">layer_BN</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has at &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;least one negative gamma and a MaxPool2D layer is &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;placed before it. This case is not supported.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Raise error if BatchNormalization is placed after the activation</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span> <span class="ow">and</span>
-                <span class="n">layer_map</span><span class="o">.</span><span class="n">index_batchnorm</span> <span class="o">&gt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In the layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, the batch &quot;</span>
-                               <span class="s2">&quot;normalization layer must be placed before &quot;</span>
-                               <span class="s2">&quot;the activation.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Raise error if GlobalAvgPool2D is placed after the activation</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="ow">and</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">],</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAvgPool2D</span><span class="p">)</span> <span class="ow">and</span>
-                <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span> <span class="o">&gt;</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_activation</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;In the layer </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, the global &quot;</span>
-                               <span class="s2">&quot;average pooling layer must be placed before &quot;</span>
-                               <span class="s2">&quot;the activation.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Raises error if Dense input shape is incorrect: supported</span>
-        <span class="c1"># shapes are (N,) and (1, 1, N). Remember input_shape has the batch</span>
-        <span class="c1"># size as first element of tuple.</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_neural</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
-            <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># Input shape is (N,)</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span>
-                <span class="c1"># Input shape is (1, 1, N)</span>
-                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span>
-                 <span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
-                 <span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The Dense layer &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must have an input &quot;</span>
-                                   <span class="s2">&quot;shape of (N,). Receives &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Raises error if the padding of MaxPool2D is different from the padding</span>
-        <span class="c1"># of the neural processing layer.</span>
-        <span class="k">if</span> <span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">:</span>
-            <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">layers_k</span><span class="p">[</span><span class="n">layer_map</span><span class="o">.</span><span class="n">index_pool</span><span class="p">]</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_pool</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">MaxPool2D</span><span class="p">)</span> <span class="ow">and</span>
-                    <span class="n">layer_neural</span><span class="o">.</span><span class="n">padding</span> <span class="o">!=</span> <span class="n">layer_pool</span><span class="o">.</span><span class="n">padding</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pooling layer </span><span class="si">{</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (padding: &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">padding</span><span class="si">}</span><span class="s2">) must have the same &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;padding as </span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (padding: &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_neural</span><span class="o">.</span><span class="n">padding</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+        <span class="n">_check_batchnorm_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">)</span>
+        <span class="n">_check_pooling_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">)</span>
+        <span class="n">_check_dense_compatibility</span><span class="p">(</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">layers_keras</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_check_reshape_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>

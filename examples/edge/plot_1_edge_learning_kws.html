@@ -72,7 +72,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -200,17 +200,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -743,7 +738,7 @@ ________________________________________________________________________________
 dense_7 (FullyConnected)              [1, 1, 33]    (1, 1, 256, 33)
 ____________________________________________________________________________________
 Input shape: 49, 10, 1
-Backend type: Software - 1.8.11
+Backend type: Software - 1.8.13
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Measure Akida accuracy on validation set</span>
@@ -756,6 +751,9 @@ Backend type: Software - 1.8.11
 
 <span class="n">acc_val_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_ak</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida CNN2SNN validation set accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">acc_val_ak</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+
+<span class="c1"># Remember model statistics for later purpose</span>
+<span class="n">model_statistics</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">()</span>
 
 <span class="c1"># For non-regression purpose</span>
 <span class="k">assert</span> <span class="n">acc_val_ak</span> <span class="o">&gt;</span> <span class="mf">0.88</span>
@@ -781,38 +779,18 @@ Backend type: Software - 1.8.11
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Estimate the number of spikes at the end of the feature extractor.</span>
 
-<span class="c1"># Get the Observer of the feature extractor output (layer before last)</span>
-<span class="n">last_layer_feature_extractor</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s1">&#39;separable_6&#39;</span><span class="p">)</span>
-<span class="n">obs</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">get_observer</span><span class="p">(</span><span class="n">last_layer_feature_extractor</span><span class="p">)</span>
-
-<span class="c1"># Forward samples to get the number of output spikes</span>
-<span class="c1"># 10% of the training set should be sufficient for a good estimate</span>
-<span class="n">num_batches</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x_train_ak</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_batches</span><span class="p">):</span>
-    <span class="n">model_ak</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_train_ak</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">:(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">])</span>
-
-<span class="c1"># Retrieve the number of output spikes from the Observer</span>
-<span class="n">all_spikes</span> <span class="o">=</span> <span class="p">[</span><span class="n">spikes</span><span class="o">.</span><span class="n">nnz</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">spikes</span> <span class="ow">in</span> <span class="n">obs</span><span class="o">.</span><span class="n">spikes</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
-<span class="n">median_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_spikes</span><span class="p">)</span>
+<span class="c1"># Retrieve the number of output spikes from the feature extractor output</span>
+<span class="n">median_spikes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model_statistics</span><span class="p">[</span><span class="s1">&#39;separable_6&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">output_sparsity</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median of number of spikes: </span><span class="si">{</span><span class="n">median_spikes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="c1"># Fix the number of weights to 1.2 times the median of output spikes</span>
 <span class="n">num_weights</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1.2</span> <span class="o">*</span> <span class="n">median_spikes</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The number of weights is then set to:&quot;</span><span class="p">,</span> <span class="n">num_weights</span><span class="p">)</span>
-
-<span class="c1"># Plot a histogram of the number of output spikes</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">all_spikes</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Number of output spikes of the feature extractor&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of output spikes&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Frequency&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="Number of output spikes of the feature extractor" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_1_edge_learning_kws_001.png" />
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Median of number of spikes: 71.0
-The number of weights is then set to: 85
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Median of number of spikes: 72
+The number of weights is then set to: 86
 </pre></div>
 </div>
 </div>
@@ -874,10 +852,10 @@ ________________________________________________________________________________
 ____________________________________________
 Learning Layer    # Input Conn.  # Weights
 ============================================
-akida_edge_layer  256            85
+akida_edge_layer  256            86
 ____________________________________________
 Input shape: 49, 10, 1
-Backend type: Software - 1.8.11
+Backend type: Software - 1.8.13
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
@@ -897,7 +875,7 @@ Backend type: Software - 1.8.11
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida learning with 33 classes...         (this step can take a few minutes)
-Elapsed time for Akida training: 170.63 s
+Elapsed time for Akida training: 242.09 s
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Measure Akida accuracy on validation set</span>
@@ -911,7 +889,7 @@ Elapsed time for Akida training: 170.63 s
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 89.96 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 89.84 %
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -977,7 +955,7 @@ respectively 6, 7 and 6 utterances.</p>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Edge learning with 3 new classes ...
-Elapsed time for Akida edge learning: 0.88 s
+Elapsed time for Akida edge learning: 1.24 s
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Predict on the new validation set</span>
@@ -1004,10 +982,10 @@ Elapsed time for Akida edge learning: 0.88 s
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy on 3 new keywords:         19/19
-Akida validation set accuracy on 33 old classes:         89.52 %
+Akida validation set accuracy on 33 old classes:         89.36 %
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 3 minutes  8.821 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 4 minutes  20.979 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-1-edge-learning-kws-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/2b41d7b19be0b67175397b3549fe25da/plot_1_edge_learning_kws.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_1_edge_learning_kws.py</span></code></a></p>

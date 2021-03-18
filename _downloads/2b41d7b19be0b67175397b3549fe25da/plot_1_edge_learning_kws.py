@@ -247,6 +247,9 @@ for i in range(num_batches_val):
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
+# Remember model statistics for later purpose
+model_statistics = model_ak.get_statistics()
+
 # For non-regression purpose
 assert acc_val_ak > 0.88
 
@@ -269,32 +272,13 @@ model_ak.add(layer_fc)
 
 # Estimate the number of spikes at the end of the feature extractor.
 
-# Get the Observer of the feature extractor output (layer before last)
-last_layer_feature_extractor = model_ak.get_layer('separable_6')
-obs = model_ak.get_observer(last_layer_feature_extractor)
-
-# Forward samples to get the number of output spikes
-# 10% of the training set should be sufficient for a good estimate
-num_batches = ceil(0.1 * x_train_ak.shape[0] / batch_size)
-for i in range(num_batches):
-    model_ak.forward(x_train_ak[i * batch_size:(i + 1) * batch_size])
-
-# Retrieve the number of output spikes from the Observer
-all_spikes = [spikes.nnz for _, spikes in obs.spikes.items()]
-median_spikes = np.median(all_spikes)
+# Retrieve the number of output spikes from the feature extractor output
+median_spikes = int(model_statistics['separable_6'].output_sparsity * 100)
 print(f"Median of number of spikes: {median_spikes}")
 
 # Fix the number of weights to 1.2 times the median of output spikes
 num_weights = int(1.2 * median_spikes)
 print("The number of weights is then set to:", num_weights)
-
-# Plot a histogram of the number of output spikes
-import matplotlib.pyplot as plt
-plt.hist(all_spikes, bins=30)
-plt.title("Number of output spikes of the feature extractor")
-plt.xlabel("Number of output spikes")
-plt.ylabel("Frequency")
-plt.show()
 
 ##############################################################################
 # 4. Learn with Akida using the training set

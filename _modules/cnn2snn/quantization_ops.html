@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -198,17 +198,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -756,6 +751,38 @@
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">red_range</span><span class="p">)</span></div></div>
 
 
+<span class="k">class</span> <span class="nc">ScaleFactorQuantizer</span><span class="p">(</span><span class="n">LinearWeightQuantizer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This weight quantizer uses fixed scale factors given at instantiation</span>
+<span class="sd">    to compute quantized weights.</span>
+
+<span class="sd">    Unlike other quantizers where scale factors</span>
+<span class="sd">    are calculated based on the weights to quantize, the scale factors here</span>
+<span class="sd">    are fixed. It is not meant to be used directly but only to &quot;freeze&quot; the</span>
+<span class="sd">    quantization range of another quantizer. For example, it is used to</span>
+<span class="sd">    freeze any quantizer before folding BatchNormalization layers.</span>
+<span class="sd">    Manipulating layers and weights with this quantizer must be done with care,</span>
+<span class="sd">    as it might require to update the frozen scale factors.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bitwidth (int): the quantization bitwidth.</span>
+<span class="sd">        scale_factors(float or list): the scale factors for all filters. If the</span>
+<span class="sd">            scale factor is identical for all filters, a scalar can be given.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span> <span class="n">scale_factors</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">scale_factors</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bitwidth</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">scale_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;scale_factors&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span><span class="o">.</span><span class="n">numpy</span><span class="p">()})</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+
 <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">identifier</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the weight quantizer corresponding to the identifier.</span>
 
@@ -779,7 +806,8 @@
                 <span class="s1">&#39;StdWeightQuantizer&#39;</span><span class="p">:</span> <span class="n">StdWeightQuantizer</span><span class="p">,</span>
                 <span class="s1">&#39;TrainableStdWeightQuantizer&#39;</span><span class="p">:</span> <span class="n">TrainableStdWeightQuantizer</span><span class="p">,</span>
                 <span class="s1">&#39;MaxQuantizer&#39;</span><span class="p">:</span> <span class="n">MaxQuantizer</span><span class="p">,</span>
-                <span class="s1">&#39;MaxPerAxisQuantizer&#39;</span><span class="p">:</span> <span class="n">MaxPerAxisQuantizer</span>
+                <span class="s1">&#39;MaxPerAxisQuantizer&#39;</span><span class="p">:</span> <span class="n">MaxPerAxisQuantizer</span><span class="p">,</span>
+                <span class="s1">&#39;ScaleFactorQuantizer&#39;</span><span class="p">:</span> <span class="n">ScaleFactorQuantizer</span>
             <span class="p">})</span>
 
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not interpret identifier </span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2"> &quot;</span>

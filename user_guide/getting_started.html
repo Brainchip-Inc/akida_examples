@@ -72,7 +72,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -200,17 +200,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -480,7 +475,7 @@ datasets.</p>
 neural layers.</p>
 <p>Run the XOR example below, then visit the <a class="reference external" href="../examples/index.html">Akida examples</a>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">FullyConnected</span><span class="p">,</span> <span class="n">coords_to_sparse</span>
+<span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">FullyConnected</span>
 
 <span class="c1"># Instantiate xor model</span>
 <span class="n">xor</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
@@ -530,20 +525,17 @@ neural layers.</p>
 <span class="c1"># Not even evaluated since we don&#39;t have input spikes</span>
 
 <span class="c1"># 0, 1 -&gt; spikes</span>
-<span class="n">in_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
-<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">coords_to_sparse</span><span class="p">(</span><span class="n">in_coords</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 <span class="n">out_spikes</span> <span class="o">=</span> <span class="n">xor</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">in_spikes</span><span class="p">)</span>
 <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># 1, 0 -&gt; spikes</span>
-<span class="n">in_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
-<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">coords_to_sparse</span><span class="p">(</span><span class="n">in_coords</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 <span class="n">out_spikes</span> <span class="o">=</span> <span class="n">xor</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">in_spikes</span><span class="p">)</span>
 <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># 1, 1 -&gt; no spikes</span>
-<span class="n">in_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
-<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">coords_to_sparse</span><span class="p">(</span><span class="n">in_coords</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">in_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 <span class="n">out_spikes</span> <span class="o">=</span> <span class="n">xor</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">in_spikes</span><span class="p">)</span>
 <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">out_spikes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
 </pre></div>

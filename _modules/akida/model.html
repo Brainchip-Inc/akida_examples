@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -198,17 +198,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -445,11 +440,10 @@
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Sparse</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">BackendType</span><span class="p">,</span> <span class="n">ModelBase</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span>
-                   <span class="n">PoolingType</span><span class="p">,</span> <span class="n">NsocVersion</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Dense</span><span class="p">,</span> <span class="n">BackendType</span><span class="p">,</span> <span class="n">ModelBase</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolingType</span><span class="p">,</span>
+                   <span class="n">NsocVersion</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.parameters_serializer</span> <span class="kn">import</span> <span class="n">deserialize_parameters</span>
 <span class="kn">from</span> <span class="nn">.layer_statistics</span> <span class="kn">import</span> <span class="n">LayerStatistics</span>
-<span class="kn">from</span> <span class="nn">.observer</span> <span class="kn">import</span> <span class="n">Observer</span>
 <span class="kn">from</span> <span class="nn">.compatibility</span> <span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">common</span>
 <span class="kn">from</span> <span class="nn">.input_data</span> <span class="kn">import</span> <span class="n">InputData</span>
 <span class="kn">from</span> <span class="nn">.fully_connected</span> <span class="kn">import</span> <span class="n">FullyConnected</span>
@@ -478,6 +472,49 @@
     <span class="n">_copy_layer_variables</span><span class="p">(</span><span class="n">new_layer</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_get_sequences</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of the model layer sequences</span>
+
+<span class="sd">       Each sequence is a tuple of layers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Build a dict of &lt;keys, layer sequences&gt;. Each entry corresponds to a</span>
+    <span class="c1"># tuple of layers ending at the layer specified by the key name</span>
+    <span class="n">sequences</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="c1"># We ignore InputData layers</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">sequences</span><span class="p">:</span>
+            <span class="c1"># This layer belongs to an existing sequence</span>
+            <span class="n">inbound_name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+            <span class="c1"># Create a new sequence tuple from the existing sequence</span>
+            <span class="n">sequences</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">sequences</span><span class="p">[</span><span class="n">inbound_name</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">layer</span><span class="p">,)</span>
+            <span class="c1"># Clear the existing sequence</span>
+            <span class="k">del</span> <span class="n">sequences</span><span class="p">[</span><span class="n">inbound_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># We haven&#39;t encountered an ancestor for that layer, or it has</span>
+            <span class="c1"># multiple ancestors: start a new sequence</span>
+            <span class="n">sequences</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer</span><span class="p">,)</span>
+    <span class="c1"># Return the list of unique values in the sequence dictionary</span>
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">sequences</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">_get_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the metrics for a specific sequence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># Sequence metrics are identified by the first and last layers</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">sequence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+    <span class="c1"># Filter-out metrics not corresponding to that sequence</span>
+    <span class="n">seq_metrics_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+    <span class="c1"># Get the metrics matching the specified name for the sequence</span>
+    <span class="n">metrics_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seq_metrics_names</span> <span class="k">if</span> <span class="n">metrics</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="n">metrics_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">ModelBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An Akida neural ``Model``, represented as a hierarchy of layers.</span>
 
@@ -492,6 +529,8 @@
 <span class="sd">            architecture, or a serialized Model.</span>
 <span class="sd">            If None, an empty sequential model will be created, or filled</span>
 <span class="sd">            with the layers in the layers parameter.</span>
+<span class="sd">        serialized_buffer (bytes, optional): binary buffer containing a</span>
+<span class="sd">            serialized Model.</span>
 <span class="sd">        layers (:obj:`list`, optional): list of layers that will be copied</span>
 <span class="sd">            to the new model. If the list does not start with an input layer,</span>
 <span class="sd">            it will be added automatically.</span>
@@ -501,20 +540,26 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">serialized_buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">backend</span><span class="o">=</span><span class="n">BackendType</span><span class="o">.</span><span class="n">Software</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">serialized_buffer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;filename, serialized_buffer and layer list &quot;</span>
+                                 <span class="s2">&quot;should not be passed at the same time&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;filename and layer list should not&quot;</span>
-                                     <span class="s2">&quot; be passed at the same time&quot;</span><span class="p">)</span>
                 <span class="c1"># get file extension</span>
                 <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.yml&#39;</span><span class="p">,</span> <span class="s1">&#39;.yaml&#39;</span><span class="p">):</span>
                     <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">serialized_buffer</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">serialized_buffer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serialized_buffer</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -529,7 +574,8 @@
                     <span class="c1"># Add an InputData layer</span>
                     <span class="k">if</span> <span class="n">ltype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_layer_types</span><span class="p">:</span>
                         <span class="n">input_dims</span> <span class="o">=</span> <span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">input_dims</span>
-                        <span class="n">input_data</span> <span class="o">=</span> <span class="n">InputData</span><span class="p">(</span><span class="o">*</span><span class="n">input_dims</span><span class="p">)</span>
+                        <span class="n">input_data</span> <span class="o">=</span> <span class="n">InputData</span><span class="p">(</span><span class="o">*</span><span class="n">input_dims</span><span class="p">,</span>
+                                               <span class="n">input_bits</span><span class="o">=</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">input_bits</span><span class="p">)</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
                         <span class="n">_copy_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
@@ -551,10 +597,40 @@
 <span class="sd">            a dictionary of obj:`LayerStatistics` indexed by layer_name.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">layers_stats</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()):</span>
-            <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-            <span class="n">layers_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer_statistics</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="c1"># Filter-out InputData layer</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">layer</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">!=</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span>
+        <span class="p">]</span>
+        <span class="c1"># Initialize empty statistics per layer</span>
+        <span class="n">layers_stats</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">LayerStatistics</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># No metrics available: just return empty statistics</span>
+            <span class="k">return</span> <span class="n">layers_stats</span>
+        <span class="c1"># Extract model layer sequences</span>
+        <span class="n">sequences</span> <span class="o">=</span> <span class="n">_get_sequences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">sequences</span><span class="p">:</span>
+            <span class="c1"># Get activations and inference metrics for the sequence</span>
+            <span class="n">inference</span> <span class="o">=</span> <span class="n">_get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="s2">&quot;inference&quot;</span><span class="p">)</span>
+            <span class="n">nb_activations</span> <span class="o">=</span> <span class="n">_get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="s2">&quot;activations&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inference</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">nb_activations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># This is definitely not expected, but silently skip this</span>
+                <span class="c1"># sequence because other sequences may have valid metrics</span>
+                <span class="k">continue</span>
+            <span class="c1"># Get the number of samples evaluated for that sequence</span>
+            <span class="n">nb_samples</span> <span class="o">=</span> <span class="n">inference</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">nb_activations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># A single activations value corresponds to the last layer</span>
+                <span class="n">layer</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">layer_activations</span> <span class="o">=</span> <span class="n">nb_activations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">layers_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LayerStatistics</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">layer_activations</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Each activations value correspond to a sequence layer</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+                    <span class="n">layer_activations</span> <span class="o">=</span> <span class="n">nb_activations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">layers_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LayerStatistics</span><span class="p">(</span>
+                        <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">layer_activations</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layers_stats</span></div>
 
     <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
@@ -593,17 +669,16 @@
                 <span class="n">layer_description</span><span class="p">[</span><span class="s2">&quot;Parameters&quot;</span><span class="p">])</span>
 
             <span class="c1"># create a layer object from the dict</span>
+            <span class="n">akida_layer_types</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;inputData&#39;</span><span class="p">:</span> <span class="n">InputData</span><span class="p">,</span>
+                <span class="s1">&#39;inputConvolutional&#39;</span><span class="p">:</span> <span class="n">InputConvolutional</span><span class="p">,</span>
+                <span class="s1">&#39;fullyConnected&#39;</span><span class="p">:</span> <span class="n">FullyConnected</span><span class="p">,</span>
+                <span class="s1">&#39;convolutional&#39;</span><span class="p">:</span> <span class="n">Convolutional</span><span class="p">,</span>
+                <span class="s1">&#39;separableConvolutional&#39;</span><span class="p">:</span> <span class="n">SeparableConvolutional</span><span class="p">,</span>
+            <span class="p">}</span>
             <span class="n">layer</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;inputData&quot;</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">InputData</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;inputConvolutional&quot;</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">InputConvolutional</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;fullyConnected&quot;</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">FullyConnected</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;convolutional&quot;</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">Convolutional</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;separableConvolutional&quot;</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">SeparableConvolutional</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">layer_type</span> <span class="ow">in</span> <span class="n">akida_layer_types</span><span class="p">:</span>
+                <span class="n">layer</span> <span class="o">=</span> <span class="n">akida_layer_types</span><span class="p">[</span><span class="n">layer_type</span><span class="p">](</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;depthwiseConvolutional&quot;</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;depthwiseConvolutional layer name is deprecated,&quot;</span>
                               <span class="s2">&quot; please use separableConvolutional instead.&quot;</span><span class="p">)</span>
@@ -652,7 +727,7 @@
 <span class="sd">        - c, representing the channel, or more generally the feature.</span>
 
 <span class="sd">        If the inputs are events, the input shape must be (n, w, h, c), but if</span>
-<span class="sd">        the inputs are images (numpy array), their shape must be (n, h, w, c).</span>
+<span class="sd">        the inputs are images their shape must be (n, h, w, c).</span>
 
 <span class="sd">        Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</span>
 
@@ -662,8 +737,7 @@
 <span class="sd">        accuracy.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (:obj:`Sparse`,`numpy.ndarray`): a (n, w, h, c) Sparse or a</span>
-<span class="sd">                (n, h, w, c) numpy.ndarray</span>
+<span class="sd">            inputs (:obj:`numpy.ndarray`): a numpy.ndarray</span>
 <span class="sd">            num_classes (int, optional): optional parameter (defaults to the</span>
 <span class="sd">                number of neurons in the last layer).</span>
 
@@ -671,8 +745,7 @@
 <span class="sd">            :obj:`numpy.ndarray`: an array of shape (n).</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            TypeError: if the input doesn&#39;t have the correct type</span>
-<span class="sd">                (Sparse, numpy.ndarray).</span>
+<span class="sd">            TypeError: if the input is not a numpy.ndarray.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_constraints</span><span class="p">()</span>
@@ -680,22 +753,18 @@
         <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;C_CONTIGUOUS&#39;</span><span class="p">]:</span>
-                <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dense</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Sparse</span><span class="p">):</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;predict expects a numpy array as input&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;C_CONTIGUOUS&#39;</span><span class="p">]:</span>
+            <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;predict expects Sparse or numpy array as input&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">labels</span></div>
+            <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dense</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Model.fit"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">input_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Trains a set of images or events through the model.</span>
 
-<span class="sd">        Trains the model with the specified input tensor.</span>
+<span class="sd">        Trains the model with the specified input tensor (numpy array).</span>
 
 <span class="sd">        The expected input tensor dimensions are:</span>
 
@@ -705,21 +774,18 @@
 <span class="sd">        - c, representing the channel, or more generally the feature.</span>
 
 <span class="sd">        If the inputs are events, the input shape must be (n, w, h, c), but if</span>
-<span class="sd">        the inputs are images (numpy array), their shape must be (n, h, w, c).</span>
+<span class="sd">        the inputs are images, their shape must be (n, h, w, c).</span>
 
 <span class="sd">        Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</span>
 
-<span class="sd">        If activations are enabled for the last layer, the output tensor is a</span>
-<span class="sd">        Sparse object.</span>
+<span class="sd">        If activations are enabled for the last layer, the output is an uint8</span>
+<span class="sd">        tensor.</span>
 
-<span class="sd">        If activations are disabled for the last layer, the output tensor is a</span>
-<span class="sd">        numpy array.</span>
-
-<span class="sd">        The output tensor shape is always (n, out_w, out_h, out_c).</span>
+<span class="sd">        If activations are disabled for the last layer, the output is an int32</span>
+<span class="sd">        tensor.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (:obj:`Sparse`,`numpy.ndarray`): a (n, w, h, c) Sparse or a</span>
-<span class="sd">                (n, h, w, c) numpy.ndarray</span>
+<span class="sd">            inputs (:obj:`numpy.ndarray`): a numpy.ndarray</span>
 <span class="sd">            input_labels (list(int), optional): input labels.</span>
 <span class="sd">                Must have one label per input, or a single label for all inputs.</span>
 <span class="sd">                If a label exceeds the defined number of classes, the input will</span>
@@ -729,8 +795,7 @@
 <span class="sd">            a numpy array of shape (n, out_w, out_h, out_c).</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            TypeError: if the input doesn&#39;t have the correct type</span>
-<span class="sd">                (Sparse, numpy.ndarray).</span>
+<span class="sd">            TypeError: if the input is not a numpy.ndarray.</span>
 <span class="sd">            ValueError: if the input doesn&#39;t match the required shape,</span>
 <span class="sd">                format, etc.</span>
 
@@ -744,16 +809,14 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_labels</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">input_labels</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;fit expects integer as labels&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Sparse</span><span class="p">):</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">input_labels</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;C_CONTIGUOUS&#39;</span><span class="p">]:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dense</span><span class="p">,</span> <span class="n">input_labels</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;fit expects Sparse or numpy array as input&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;fit expects a numpy array as input&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Model.forward"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
@@ -769,44 +832,38 @@
 <span class="sd">        - c, representing the channel, or more generally the feature.</span>
 
 <span class="sd">        If the inputs are events, the input shape must be (n, w, h, c), but if</span>
-<span class="sd">        the inputs are images (numpy array), their shape must be (n, h, w, c).</span>
+<span class="sd">        the inputs are images, their shape must be (n, h, w, c).</span>
 
 <span class="sd">        Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</span>
 
-<span class="sd">        If activations are enabled for the last layer, the output tensor is a</span>
-<span class="sd">        Sparse object.</span>
+<span class="sd">        If activations are enabled for the last layer, the output is an uint8</span>
+<span class="sd">        tensor.</span>
 
-<span class="sd">        If activations are disabled for the last layer, the output tensor is a</span>
-<span class="sd">        numpy array.</span>
-
-<span class="sd">        The output tensor shape is always (n, out_w, out_h, out_c).</span>
+<span class="sd">        If activations are disabled for the last layer, the output is an int32</span>
+<span class="sd">        tensor.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (:obj:`Sparse`,`numpy.ndarray`): a (n, w, h, c) Sparse or a</span>
-<span class="sd">                (n, h, w, c) numpy.ndarray</span>
+<span class="sd">            inputs (:obj:`numpy.ndarray`): a numpy.ndarray</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            a numpy array of shape (n, out_w, out_h, out_c).</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            TypeError: if the inputs doesn&#39;t have the correct type</span>
-<span class="sd">                (Sparse, numpy.ndarray).</span>
+<span class="sd">            TypeError: if the input is not a numpy.ndarray.</span>
 <span class="sd">            ValueError: if the inputs doesn&#39;t match the required shape,</span>
 <span class="sd">                format, etc.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_constraints</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Sparse</span><span class="p">):</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;C_CONTIGUOUS&#39;</span><span class="p">]:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">dense</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;forward expects Sparse or numpy array as input&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;forward expects a numpy array as input&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Model.evaluate"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
@@ -830,18 +887,14 @@
 
 <span class="sd">        Note: only grayscale (c=1) or RGB (c=3) images (arrays) are supported.</span>
 
-<span class="sd">        The output tensor shape is always (n, out_w, out_h, out_c).</span>
-
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (:obj:`Sparse`,`numpy.ndarray`): a (n, w, h, c) Sparse or a</span>
-<span class="sd">                (n, h, w, c) numpy.ndarray</span>
+<span class="sd">            inputs (:obj:`numpy.ndarray`): a (n, w, h, c) numpy.ndarray</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">           :obj:`numpy.ndarray`: a float array of shape (n, w, h, c).</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            TypeError: if the input doesn&#39;t have the correct type</span>
-<span class="sd">                (Sparse, numpy.ndarray).</span>
+<span class="sd">            TypeError: if the input is not a numpy.ndarray.</span>
 <span class="sd">            RuntimeError: if the model last layer has an activation.</span>
 <span class="sd">            ValueError: if the input doesn&#39;t match the required shape,</span>
 <span class="sd">                format, or if the model only has an InputData layer.</span>
@@ -849,16 +902,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_constraints</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Sparse</span><span class="p">):</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;C_CONTIGUOUS&#39;</span><span class="p">]:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dense</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">dense</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;forward expects Sparse or numpy array as input&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;evaluate expects a numpy array as input&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Model.summary"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -882,34 +933,6 @@
         <span class="n">layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span>
         <span class="n">layer_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
-            <span class="c1"># Convert to np.array</span>
-            <span class="n">to_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">to_str</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-            <span class="c1"># get column lengths</span>
-            <span class="n">str_len_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">cell</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>
-            <span class="n">str_lens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">str_len_f</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">line_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">str_lens</span><span class="p">)</span>
-            <span class="c1"># Prepare format rows</span>
-            <span class="n">size_formats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">cell</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">:</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">format_strings</span> <span class="o">=</span> <span class="n">size_formats</span><span class="p">(</span><span class="n">str_lens</span><span class="p">)</span>
-            <span class="n">format_row</span> <span class="o">=</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">format_strings</span><span class="p">)</span>
-            <span class="c1"># Generate separators</span>
-            <span class="n">separator_len</span> <span class="o">=</span> <span class="n">line_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">*</span> <span class="n">separator_len</span>
-            <span class="n">double_separator</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="n">separator_len</span>
-
-            <span class="c1"># Print header</span>
-            <span class="n">center_format</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">:^</span><span class="si">{</span><span class="n">separator_len</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">center_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">title</span><span class="p">))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">format_row</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">double_separator</span><span class="p">)</span>
-            <span class="c1"># Print body</span>
-            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">format_row</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">row</span><span class="p">))</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
-
         <span class="k">def</span> <span class="nf">_basic_summary</span><span class="p">():</span>
             <span class="c1"># Prepare headers</span>
             <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Layer (type)&#39;</span><span class="p">,</span> <span class="s1">&#39;Output shape&#39;</span><span class="p">,</span> <span class="s1">&#39;Kernel shape&#39;</span><span class="p">]</span>
@@ -930,7 +953,7 @@
                 <span class="c1"># Prepare row and add it</span>
                 <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_and_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">output_dims</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kernel_shape</span><span class="p">)]</span>
                 <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-            <span class="n">_print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Model Summary&quot;</span><span class="p">)</span>
+            <span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Model Summary&quot;</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_learning_summary</span><span class="p">():</span>
             <span class="n">learning_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">learning</span><span class="p">]</span>
@@ -951,7 +974,7 @@
                 <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_connections</span><span class="p">),</span> <span class="n">incoming_conn</span><span class="p">]</span>
                 <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
-            <span class="n">_print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Learning Summary&quot;</span><span class="p">)</span>
+            <span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Learning Summary&quot;</span><span class="p">)</span>
 
         <span class="c1"># Print formatted table</span>
         <span class="n">_basic_summary</span><span class="p">()</span>
@@ -967,44 +990,6 @@
         <span class="nb">print</span><span class="p">()</span>
         <span class="c1"># Print hardware incompatibilities, if any found</span>
         <span class="n">check</span><span class="o">.</span><span class="n">summary_hardware_incompatibilities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Model.get_observer"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.get_observer">[docs]</a>    <span class="k">def</span> <span class="nf">get_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the Observer object attached to the specified layer.</span>
-
-<span class="sd">        Observers are containers attached to a ``Layer`` that allows to</span>
-<span class="sd">        retrieve layer output spikes and potentials.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            layer (:obj:`Layer`): the layer you want to observe.</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            :obj:`Observer`: the observer attached to the layer.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Model.get_layer_statistics"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.get_layer_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">get_layer_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the LayerStatistics object attached to the specified layer.</span>
-
-<span class="sd">        LayerStatistics are containers attached to an akida.Layer that allows to</span>
-<span class="sd">        retrieve layer statistics:</span>
-
-<span class="sd">            (average sparsity, number of operations and number of possible</span>
-<span class="sd">            spikes, row_sparsity).</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            layer (:obj:`Layer`): layer where you want to obtain the ``LayerStatistics`` object.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            a ``LayerStatistics`` object.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">prev_layer</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-                <span class="n">prev_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="k">break</span>
-
-        <span class="k">return</span> <span class="n">LayerStatistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">prev_layer</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Model.add_classes"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.add_classes">[docs]</a>    <span class="k">def</span> <span class="nf">add_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_add_classes</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds classes to the last layer of the model.</span>
@@ -1051,6 +1036,35 @@
             <span class="n">new_var</span> <span class="o">=</span> <span class="n">new_layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
             <span class="n">new_var</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="n">old_num_neurons</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
             <span class="n">new_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">new_var</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="c1"># Convert to np.array</span>
+    <span class="n">to_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">to_str</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="c1"># get column lengths</span>
+    <span class="n">str_len_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">cell</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>
+    <span class="n">str_lens</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">str_len_f</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">line_len</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">str_lens</span><span class="p">)</span>
+    <span class="c1"># Prepare format rows</span>
+    <span class="n">size_formats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">cell</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">:</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">cell</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">format_strings</span> <span class="o">=</span> <span class="n">size_formats</span><span class="p">(</span><span class="n">str_lens</span><span class="p">)</span>
+    <span class="n">format_row</span> <span class="o">=</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">format_strings</span><span class="p">)</span>
+    <span class="c1"># Generate separators</span>
+    <span class="n">separator_len</span> <span class="o">=</span> <span class="n">line_len</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">*</span> <span class="n">separator_len</span>
+    <span class="n">double_separator</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="n">separator_len</span>
+
+    <span class="c1"># Print header</span>
+    <span class="n">center_format</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="s2">:^</span><span class="si">{</span><span class="n">separator_len</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">center_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">title</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">format_row</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">double_separator</span><span class="p">)</span>
+    <span class="c1"># Print body</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">format_row</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">row</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
 </pre></div>
 
            </div>

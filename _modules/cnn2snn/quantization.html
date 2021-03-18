@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -198,17 +198,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -467,6 +462,7 @@
 <span class="n">keras_neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">)</span>
 <span class="n">cnn2snn_neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
                          <span class="n">QuantizedDense</span><span class="p">)</span>
+<span class="n">supported_neural_layers</span> <span class="o">=</span> <span class="n">keras_neural_layers</span> <span class="o">+</span> <span class="n">cnn2snn_neural_layers</span>
 
 
 <div class="viewcode-block" id="quantize"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.quantize">[docs]</a><span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -538,7 +534,7 @@
         <span class="k">nonlocal</span> <span class="n">first_neural_layer</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">_quantize_activation_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras_neural_layers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">supported_neural_layers</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">first_neural_layer</span><span class="p">:</span>
                 <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">input_weight_quantization</span>
                 <span class="n">first_neural_layer</span> <span class="o">=</span> <span class="kc">False</span>
@@ -615,7 +611,7 @@
         <span class="k">if</span> <span class="n">layer</span> <span class="o">==</span> <span class="n">layer_to_quantize</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">)):</span>
                 <span class="k">return</span> <span class="n">_quantize_activation_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras_neural_layers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">supported_neural_layers</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>

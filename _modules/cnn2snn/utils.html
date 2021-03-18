@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.11
+                Akida 1.8.13
               </div>
             
           
@@ -198,17 +198,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#observer">Observer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparse">Sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#coords-to-sparse">coords_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense-to-sparse">dense_to_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#packetize">packetize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -460,26 +455,15 @@
 <span class="sd">can be quantized.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Input</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputLayer</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span>
                                      <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">,</span>
                                      <span class="n">BatchNormalization</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span>
-<span class="kn">from</span> <span class="nn">.quantization_ops</span> <span class="kn">import</span> <span class="n">StdWeightQuantizer</span><span class="p">,</span> <span class="n">TrainableStdWeightQuantizer</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span><span class="p">,</span>
+                                     <span class="n">clone_model</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span>
-                                  <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">,</span>
-                                  <span class="n">ActivationDiscreteRelu</span><span class="p">,</span> <span class="n">QuantizedReLU</span><span class="p">)</span>
-
-<span class="n">cnn2snn_objects</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;StdWeightQuantizer&#39;</span><span class="p">:</span> <span class="n">StdWeightQuantizer</span><span class="p">,</span>
-    <span class="s1">&#39;TrainableStdWeightQuantizer&#39;</span><span class="p">:</span> <span class="n">TrainableStdWeightQuantizer</span><span class="p">,</span>
-    <span class="s1">&#39;QuantizedConv2D&#39;</span><span class="p">:</span> <span class="n">QuantizedConv2D</span><span class="p">,</span>
-    <span class="s1">&#39;QuantizedSeparableConv2D&#39;</span><span class="p">:</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
-    <span class="s1">&#39;QuantizedDense&#39;</span><span class="p">:</span> <span class="n">QuantizedDense</span><span class="p">,</span>
-    <span class="s1">&#39;ActivationDiscreteRelu&#39;</span><span class="p">:</span> <span class="n">ActivationDiscreteRelu</span><span class="p">,</span>
-    <span class="s1">&#39;QuantizedReLU&#39;</span><span class="p">:</span> <span class="n">QuantizedReLU</span>
-<span class="p">}</span>
+                                  <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.transforms.sequential</span> <span class="kn">import</span> <span class="n">compute_BN_folded_weights</span>
+<span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
 
 
 <span class="k">def</span> <span class="nf">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
@@ -489,131 +473,189 @@
 <span class="sd">    is the first step before folding BN layers into neural layers.</span>
 <span class="sd">    Note: inversion of layers is equivalent only if the gammas of BN layers</span>
 <span class="sd">    are positive. The function raises an error if not.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`tf.keras.Model`): a tf.keras model.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        :obj:`tf.keras.Model`: a keras.Model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">InputLayer</span><span class="p">):</span>
-        <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Maps between successive pooling-&gt;batchnorm layers. These pairs will be</span>
+    <span class="c1"># inverted when cloning the model.</span>
+    <span class="n">pool2bn_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">bn2pool_map</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="n">inp</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">inp</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">first_layer</span>
-    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="n">supported_pool</span> <span class="o">=</span> <span class="p">(</span><span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">)</span>
-        <span class="n">is_pool</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">supported_pool</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_pool</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">):</span>
-            <span class="n">gammas</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="c1"># NB: negative gammas are only a problem for max pooling, not</span>
-                <span class="c1"># for avg pooling</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> negative &quot;</span>
-                                   <span class="s2">&quot;gammas in the batch norm layer &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Negative gammas are &quot;</span>
-                                   <span class="s2">&quot;not supported.&quot;</span><span class="p">)</span>
-            <span class="n">next_layer_config</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-            <span class="c1"># GlobalAveragePooling2D brings a change on axis for the batch norm.</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="c1"># We map BatchNormalization layers that have only one inbound layer</span>
+        <span class="c1"># being a MaxPool2D or GlobalAveragePooling2D.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span><span class="p">,</span>
+                           <span class="p">(</span><span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">))):</span>
+            <span class="n">bn2pool_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
+            <span class="n">pool2bn_map</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span>
+
+    <span class="k">def</span> <span class="nf">replace_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">pool2bn_map</span><span class="p">:</span>
+            <span class="c1"># Replace pooling layer with the corresponding BN layer</span>
+            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">pool2bn_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+            <span class="n">config_bn</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">):</span>
-                <span class="n">next_layer_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">bn_layer</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">next_layer_config</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">bn_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-            <span class="n">bn_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">config_bn</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">layer_bn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config_bn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">bn2pool_map</span><span class="p">:</span>
+            <span class="c1"># Replace BN layer with the corresponding pooling layer</span>
+            <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">bn2pool_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">layer_pool</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">](</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">new_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">new_model</span>
 
 
 <span class="k">def</span> <span class="nf">fold_batch_norms</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a new model where batchnorm layers are folded into</span>
 <span class="sd">    previous neural layers.</span>
+
 <span class="sd">    From a Keras model where BN layers follow neural layers, this</span>
 <span class="sd">    function removes the BN layers and updates weights and bias</span>
 <span class="sd">    accordingly of the preceding neural layers. The new model is</span>
 <span class="sd">    strictly equivalent to the previous one.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`tf.keras.Model`): a Keras model.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        :obj:`tf.keras.Model`: a tf.keras.Model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">InputLayer</span><span class="p">):</span>
-        <span class="n">first_layer</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="n">inp</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">first_layer</span><span class="p">]</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">inp</span>
+    <span class="c1"># Copy model in order to modify before cloning.</span>
+    <span class="n">model_copy</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">model_copy</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
 
-    <span class="n">i</span> <span class="o">=</span> <span class="n">first_layer</span>
+    <span class="c1"># Get BN layers to fold, mapping with the preceding neural layer and the</span>
+    <span class="c1"># following layer if present.</span>
+    <span class="n">map_neural_layer_to_bn</span><span class="p">,</span> <span class="n">map_bn_to_next_layer</span> <span class="o">=</span> <span class="n">_find_batchnorms_to_fold</span><span class="p">(</span>
+        <span class="n">model_copy</span><span class="p">)</span>
+
+    <span class="c1"># Update model before cloning: remove BN layers, update inbound nodes and</span>
+    <span class="c1"># output layers</span>
+    <span class="n">_prepare_model_to_fold_BN</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span>
+                              <span class="n">map_bn_to_next_layer</span><span class="p">)</span>
+
+    <span class="c1"># Clone model (BN layers will disappear)</span>
+    <span class="k">def</span> <span class="nf">replace_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="c1"># Set use_bias=True in neural layers where BN layers are folded, to</span>
+        <span class="c1"># accept new computed weights</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">model_foldBN</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
+
+    <span class="c1"># Set weights in the new model</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model_copy</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="p">:</span>
+            <span class="n">model_foldBN</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Set new weights</span>
+            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">map_neural_layer_to_bn</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+            <span class="n">new_weights</span> <span class="o">=</span> <span class="n">compute_BN_folded_weights</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer_bn</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">model_foldBN</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_foldBN</span>
+
+
+<span class="k">def</span> <span class="nf">_find_batchnorms_to_fold</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Detect BatchNormalization layers that can be folded.</span>
+
+<span class="sd">    We limit to BN layers that follow supported neural layer types. Moreover,</span>
+<span class="sd">    we only fold BN layers with one inbound/outbound node, in order to avoid</span>
+<span class="sd">    layers with multiple nodes (e.g. layers used multiple times in the model</span>
+<span class="sd">    or in other models).</span>
+
+<span class="sd">    The function returns two maps (dict):</span>
+<span class="sd">    - one between the neural layer and its BN layer to be folded</span>
+<span class="sd">    - one between the BN layer and its following layer (it if exists)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">supported_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">,</span>
                         <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">)</span>
-    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                    <span class="s2">&quot;The layer preceding a batch norm layer must be &quot;</span>
-                    <span class="s2">&quot;(Quantized)Conv2D, (Quantized)SeparableConv2D or &quot;</span>
-                    <span class="s2">&quot;(Quantized)SeparableConv2D.&quot;</span><span class="p">)</span>
+    <span class="c1"># Map between a neural layer and its following BN layer, and map between</span>
+    <span class="c1"># the BN layer and its next layer.</span>
+    <span class="n">map_neural_layer_to_bn</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">map_bn_to_next_layer</span> <span class="o">=</span> <span class="p">{}</span>
 
-            <span class="c1"># Get weights and BN parameters</span>
-            <span class="n">gamma</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-            <span class="n">epsilon</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">epsilon</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">)):</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">bias</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span>
-                    <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">0</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">bias</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span>
-                    <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="c1"># Find triplet &quot;neural layer -&gt; BN -&gt; next layer&quot;</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="c1"># Find a neural layer followed by a BN layer</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">supported_layers</span> <span class="ow">and</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)):</span>
 
-            <span class="c1"># Compute new weights for folded layer</span>
-            <span class="n">scale_BN</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)</span>
-            <span class="n">new_weights</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">)):</span>
-                <span class="n">new_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">new_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">scale_BN</span><span class="p">)</span>
-            <span class="n">new_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta</span> <span class="o">+</span> <span class="p">(</span><span class="n">bias</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_BN</span><span class="p">)</span>
+            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span>
+            <span class="c1"># To be folded, BN layer must have only one inbound node and</span>
+            <span class="c1"># no more than one outbound node.</span>
+            <span class="n">bn_outbounds</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">outbound_nodes</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_bn</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn_outbounds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">continue</span>
 
-            <span class="c1"># Create new layer</span>
-            <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">QuantizedSeparableConv2D</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">SeparableConv2D</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">QuantizedConv2D</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">QuantizedDense</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Dense</span><span class="p">):</span>
-                <span class="n">new_layer</span> <span class="o">=</span> <span class="n">Dense</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">map_neural_layer_to_bn</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_bn</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn_outbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">map_bn_to_next_layer</span><span class="p">[</span><span class="n">layer_bn</span><span class="p">]</span> <span class="o">=</span> <span class="n">bn_outbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span>
 
-            <span class="n">x</span> <span class="o">=</span> <span class="n">new_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="n">new_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span> <span class="n">map_bn_to_next_layer</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">BatchNormalization</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">_prepare_model_to_fold_BN</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span>
+                              <span class="n">map_bn_to_next_layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prepare model to be cloned with folded BatchNormalization layers.</span>
 
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="sd">    To fold BN layers by using &quot;clone_model&quot;, the model must be prepared by</span>
+<span class="sd">    modifying some internal variables, such as _layers, _output_layers or</span>
+<span class="sd">    _inbound_nodes.</span>
+
+<span class="sd">    Three operations are done here:</span>
+<span class="sd">    1. Remove BN layers from model.layers.</span>
+<span class="sd">    2. Bypass BN layers in the graph by updating inbound nodes of the layers</span>
+<span class="sd">       following the BN layers. The new inbound nodes are the neural layers</span>
+<span class="sd">       preceding the BN layers.</span>
+<span class="sd">    3. If a BN layer is an output layer of the model, the preceding neural</span>
+<span class="sd">       layer must be added to the new output layers.</span>
+
+<span class="sd">    The model instance and the layers are directly modified in this function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Remove BN layers from model.layers.</span>
+    <span class="k">for</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">layer_bn</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="c1"># Update inbound nodes as there is no BN between neural layer and</span>
+    <span class="c1"># following layer. Inbound nodes are used in &quot;clone_layer&quot; function to</span>
+    <span class="c1"># create the model architecture. Here, we replace the inbound node of the</span>
+    <span class="c1"># next layer with the inbound node of the BN layer, in order to bypass the</span>
+    <span class="c1"># BN layer.</span>
+    <span class="k">for</span> <span class="n">layer_bn</span><span class="p">,</span> <span class="n">next_layer</span> <span class="ow">in</span> <span class="n">map_bn_to_next_layer</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># pylint: disable=protected-access</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">node_index</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">next_layer</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">[</span><span class="n">node_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># If BN layer is an output layer, replace it with its</span>
+    <span class="c1"># inbound layer</span>
+    <span class="k">for</span> <span class="n">neural_layer</span><span class="p">,</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># pylint: disable=protected-access</span>
+        <span class="k">if</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="p">:</span>
+            <span class="c1"># Replace BN layer in _output_layers and _output_coordinates</span>
+            <span class="n">index_bn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">layer_bn</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="n">neural_layer</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">_output_coordinates</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">neural_layer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">merge_separable_conv</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
