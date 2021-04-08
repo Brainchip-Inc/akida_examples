@@ -50,6 +50,11 @@ Akida Execution Engine API
     .. autoclass:: SeparableConvolutional
         :members:
 
+    Concat
+    ======
+    .. autoclass:: Concat
+        :members:
+
     Dense
     ======
     .. autoclass:: Dense
