@@ -1,7 +1,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Akida Examples'
-copyright = 'Copyright 2020, BrainChip Holdings Ltd. All Rights Reserved.'
+copyright = '2020, BrainChip Holdings Ltd. All Rights Reserved'
 author = 'Brainchip'
 
 # The full version, including alpha/beta/rc tags
