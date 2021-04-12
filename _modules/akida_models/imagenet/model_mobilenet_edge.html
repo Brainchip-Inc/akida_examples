@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida_models.cifar10.model_vgg &mdash; Akida Examples  documentation</title>
+  <title>akida_models.imagenet.model_mobilenet_edge &mdash; Akida Examples  documentation</title>
   
 
   
@@ -418,7 +418,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>akida_models.cifar10.model_vgg</li>
+      <li>akida_models.imagenet.model_mobilenet_edge</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -433,7 +433,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida_models.cifar10.model_vgg</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.imagenet.model_mobilenet_edge</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2020 Brainchip Holdings Ltd.</span>
@@ -451,164 +451,97 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">VGG model definition for CIFAR10 classification.</span>
+<span class="sd">This model is an adaptation of the `mobilenet_imagenet` model for edge</span>
+<span class="sd">applications. It is based on MobileNetBC with top layers replaced by a quantized</span>
+<span class="sd">spike extractor and a classification layer.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span>
+<span class="c1"># Tensorflow/Keras imports</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span>
 
 <span class="c1"># CNN2SNN imports</span>
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize_layer</span>
 
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
+<span class="c1"># Local utils</span>
+<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/vgg/&#39;</span>
+<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/mobilenet_edge/&#39;</span>
 
 
-<div class="viewcode-block" id="vgg_cifar10"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vgg_cifar10">[docs]</a><span class="k">def</span> <span class="nf">vgg_cifar10</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                <span class="n">classes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Instantiates a vgg-like model for the &quot;Cifar-10&quot; example.</span>
-<span class="sd">    This model is based on the vgg architecture, mainly with fewer layers.</span>
-<span class="sd">    The weights and activations are quantized such that it can be converted into</span>
-<span class="sd">    an Akida model.</span>
-<span class="sd">    This architecture is inspired by vgg.</span>
+<div class="viewcode-block" id="mobilenet_edge_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_edge_imagenet">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_edge_imagenet</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Instantiates a MobileNet-edge architecture.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple): input shape tuple of the model</span>
-<span class="sd">        classes (int): number of classes to classify images into</span>
-<span class="sd">        weight_quantization (int): sets all weights in the model to have</span>
-<span class="sd">            a particular quantization bitwidth except for the weights in the</span>
-<span class="sd">            first layer.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        activ_quantization (int): sets all activations in the model to have a.</span>
-<span class="sd">            particular activation quantization bitwidth.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_weight_quantization (int): sets weight quantization in the first</span>
-<span class="sd">            layer. Defaults to weight_quantization value.</span>
-
-<span class="sd">            * &#39;None&#39; implements the same bitwidth as the other weights.</span>
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        base_model (str/tf.keras.Model): a mobilenet_imagenet quantized model.</span>
+<span class="sd">        classes (int) : the number of classes for the edge classifier.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tf.keras.Model: a quantized Keras model for vgg/cifar10</span>
+<span class="sd">        tf.keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Overrides input weight quantization if None</span>
-    <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">base_model</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Identify the last separable, which is the base model classifier</span>
+        <span class="n">base_classifier</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;separable_14&quot;</span><span class="p">)</span>
+        <span class="c1"># remember the classifier weight bitwidth</span>
+        <span class="n">wq</span> <span class="o">=</span> <span class="n">base_classifier</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">bitwidth</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The base model is not a quantized </span><span class="se">\</span>
+<span class="s2">                          Mobilenet/Imagenet model&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_0&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Recreate a model with all layers up to the classifier</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">base_classifier</span><span class="o">.</span><span class="n">input</span>
+    <span class="c1"># Add the new end layer with kernel_size (3, 3) instead of (1,1) for</span>
+    <span class="c1"># hardware compatibility reasons</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                             <span class="n">filters</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;spike_generator&#39;</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_1&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_2&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_3&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_4&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_5&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_6&#39;</span><span class="p">,</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
-
+    <span class="c1"># Then add the Akida edge learning layer that will be dropped after</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_7&#39;</span><span class="p">,</span>
-                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_8&#39;</span><span class="p">,</span>
-                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">classes</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;classification_layer&quot;</span><span class="p">,</span>
+                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">classes</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_2&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;vgg_cifar10&#39;</span><span class="p">)</span>
+    <span class="c1"># Create model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                  <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                  <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_edge&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-        <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weight_quantization</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">,</span>
-                        <span class="n">input_weight_quantization</span><span class="p">)</span>
+    <span class="c1"># Quantize edge layers</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator&#39;</span><span class="p">,</span> <span class="n">wq</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator_relu&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># NOTE: quantization set to 2 here, to be as close as</span>
+    <span class="c1"># possible to the Akida native layer that will replace this one,</span>
+    <span class="c1"># with binary weights.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;classification_layer&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="vgg_cifar10_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vgg_cifar10_pretrained">[docs]</a><span class="k">def</span> <span class="nf">vgg_cifar10_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Helper method to retrieve a `vgg_cifar10` model that was trained on</span>
-<span class="sd">    CIFAR10 dataset.</span>
+<div class="viewcode-block" id="mobilenet_edge_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_edge_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_edge_imagenet_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `mobilenet_edge_imagenet` model that was</span>
+<span class="sd">    trained on ImageNet dataset.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg_cifar10_iq2_wq2_aq2.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;4f7cae882447c296b1efff2f63242e9700e1439c9295a75c6164d403e887f0ed&#39;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;f2d062221741aa538b897016459df1ed93f28d666ea90fbb699b5b8d57fec5e5&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
