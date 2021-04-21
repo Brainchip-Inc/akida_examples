@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.13
+                Akida 1.9.0
               </div>
             
           
@@ -451,6 +451,7 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;Model quantization API&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">clone_model</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Layer</span>
 
@@ -458,7 +459,8 @@
 <span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
                                   <span class="n">QuantizedDense</span><span class="p">,</span> <span class="n">ActivationDiscreteRelu</span><span class="p">,</span>
                                   <span class="n">QuantizedActivation</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batch_norms</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batch_norms</span><span class="p">,</span>
+                    <span class="n">_find_batchnorms_to_fold</span><span class="p">)</span>
 
 <span class="n">keras_neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">)</span>
 <span class="n">cnn2snn_neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
@@ -470,7 +472,8 @@
              <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
              <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
              <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">fold_BN</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+             <span class="n">fold_BN</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+             <span class="n">quantizer_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts a standard sequential Keras model to a CNN2SNN Keras quantized</span>
 <span class="sd">    model, compatible for Akida conversion.</span>
 
@@ -508,6 +511,9 @@
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
 <span class="sd">        fold_BN (bool): enable folding batch normalization layers with their</span>
 <span class="sd">             corresponding neural layer.</span>
+<span class="sd">        quantizer_function (function): callable that takes as argument the layer</span>
+<span class="sd">            instance to be quantized and the corresponding default quantizer and</span>
+<span class="sd">            returns the quantizer to use.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a quantized Keras model</span>
@@ -519,13 +525,15 @@
 
     <span class="c1"># Apply Model transformations, obtaining strictly equivalent models at</span>
     <span class="c1"># inference time.</span>
-
+    <span class="c1"># Invert batch normalization and pooling</span>
+    <span class="n">model_t</span> <span class="o">=</span> <span class="n">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="c1"># Raise warning</span>
+    <span class="n">_check_inconsistent_fold_BN</span><span class="p">(</span><span class="n">model_t</span><span class="p">,</span> <span class="n">fold_BN</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fold_BN</span><span class="p">:</span>
-        <span class="c1"># Invert batch normalization and pooling</span>
-        <span class="n">model_t</span> <span class="o">=</span> <span class="n">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="c1"># Fold batch norm layers with corresponding neural layers</span>
         <span class="n">model_t</span> <span class="o">=</span> <span class="n">fold_batch_norms</span><span class="p">(</span><span class="n">model_t</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Keep original model without transformation</span>
         <span class="n">model_t</span> <span class="o">=</span> <span class="n">model</span>
 
     <span class="c1"># Convert neural layers and ReLU to CNN2SNN quantized layers</span>
@@ -541,7 +549,8 @@
                 <span class="n">first_neural_layer</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">weight_quantization</span>
-            <span class="k">return</span> <span class="n">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span>
+                                               <span class="n">quantizer_function</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
     <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model_t</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
@@ -550,7 +559,7 @@
     <span class="k">return</span> <span class="n">new_model</span></div>
 
 
-<div class="viewcode-block" id="quantize_layer"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.quantize_layer">[docs]</a><span class="k">def</span> <span class="nf">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">):</span>
+<div class="viewcode-block" id="quantize_layer"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.quantize_layer">[docs]</a><span class="k">def</span> <span class="nf">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span> <span class="n">quantizer_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Quantizes a specific layer with the given bitwidth.</span>
 
 <span class="sd">    This function returns a Keras model where the target layer is quantized.</span>
@@ -586,6 +595,9 @@
 <span class="sd">            converted, or the index or name of the target layer.</span>
 <span class="sd">        bitwidth (int): the desired quantization bitwidth. If zero, no</span>
 <span class="sd">            quantization will be applied.</span>
+<span class="sd">        quantizer_function (function): callable that takes as argument the layer</span>
+<span class="sd">            instance to be quantized and the corresponding default quantizer and</span>
+<span class="sd">            returns the quantizer to use.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a quantized Keras model</span>
@@ -613,7 +625,8 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">)):</span>
                 <span class="k">return</span> <span class="n">_quantize_activation_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">supported_neural_layers</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span>
+                                                   <span class="n">quantizer_function</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
@@ -623,13 +636,13 @@
     <span class="k">return</span> <span class="n">new_model</span></div>
 
 
-<span class="k">def</span> <span class="nf">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_convert_to_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span> <span class="n">quantizer_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Quantizes a standard Keras layer (Conv2D, SeparableConv2D, Dense) or a</span>
 <span class="sd">    CNN2SNN quantized layer (QuantizedConv2D, QuantizedSeparableConv2D,</span>
 <span class="sd">    QuantizedDense) to a CNN2SNN quantized layer with given bitwidth.</span>
 
 <span class="sd">    A native Keras layer will be converted to a quantized layer with a</span>
-<span class="sd">    MaxPerAxisQuantizer.</span>
+<span class="sd">    MaxPerAxisQuantizer if quantizer_function is not specified.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        layer (tf.keras.Layer): a standard Keras (Conv2D, SeparableConv2D or</span>
@@ -637,6 +650,9 @@
 <span class="sd">            QuantizedDense) layer.</span>
 <span class="sd">        bitwidth (int): the desired weight quantization bitwidth. If zero, the</span>
 <span class="sd">            Keras neural layer will be returned as it is.</span>
+<span class="sd">        quantizer_function (function): callable that takes as argument the layer</span>
+<span class="sd">            instance to be quantized and the corresponding default quantizer and</span>
+<span class="sd">            returns the quantizer to use.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :obj:`tensorflow.keras.Layer`: a CNN2SNN quantized Keras layer</span>
@@ -644,7 +660,6 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: if a quantized layer is quantized with bitwidth 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
 
     <span class="c1"># Handle case where bitwidth=0</span>
@@ -657,7 +672,10 @@
 
     <span class="c1"># Set quantizer with expected bitwidth</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;quantizer&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MaxPerAxisQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">)</span>
+        <span class="n">quantizer</span> <span class="o">=</span> <span class="n">MaxPerAxisQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">quantizer_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">quantizer</span> <span class="o">=</span> <span class="n">quantizer_function</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantizer</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bitwidth</span>
 
@@ -678,7 +696,10 @@
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;quantizer_dw&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer_dw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MaxQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">)</span>
+            <span class="n">quantizer</span> <span class="o">=</span> <span class="n">MaxQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">quantizer_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">quantizer</span> <span class="o">=</span> <span class="n">quantizer_function</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">)</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer_dw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantizer</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;quantizer_dw&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bitwidth</span>
         <span class="n">pop_unsupported_args</span><span class="p">(</span><span class="n">QuantizedSeparableConv2D</span><span class="p">)</span>
@@ -723,6 +744,45 @@
     <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bitwidth</span>
     <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_inconsistent_fold_BN</span><span class="p">(</span><span class="n">model_inverted_mp_bn</span><span class="p">,</span> <span class="n">fold_BN</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raises a warning message if &#39;fold_BN&#39; argument is not consistent with the</span>
+<span class="sd">    model.</span>
+
+<span class="sd">    Warning is raised in two configurations:</span>
+<span class="sd">      - a quantized neural layer with a BN layer is present and fold_BN = True.</span>
+<span class="sd">      - a float neural layer with a BN layer is present and fold_BN = False.</span>
+
+<span class="sd">    In both cases, we advise to retrain on a few batches to align BN parameters</span>
+<span class="sd">    with the quantized weights.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_inverted_mp_bn (:obj:`tf.keras.Model`): a Keras model to check.</span>
+<span class="sd">            This model must have BN layers directly after neural layers. This is</span>
+<span class="sd">            done by first applying the &quot;invert_batchnorm_pooling&quot; transformation</span>
+<span class="sd">        fold_BN (bool): whether BN layers must be folded or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+
+    <span class="n">neural_layers_to_fold_bn</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_find_batchnorms_to_fold</span><span class="p">(</span><span class="n">model_inverted_mp_bn</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">neural_layer</span> <span class="ow">in</span> <span class="n">neural_layers_to_fold_bn</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fold_BN</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">neural_layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cnn2snn_neural_layers</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The model contains the quantized neural layer (layer &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">neural_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="n">neural_layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;) followed by a BatchNormalization layer. This configuration&quot;</span>
+                <span class="s2">&quot; is not consistent with fold_BN=True. This might require &quot;</span>
+                <span class="s2">&quot;retraining on a few batches to align BatchNormalization &quot;</span>
+                <span class="s2">&quot;parameters with the quantized weights.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">fold_BN</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">neural_layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">keras_neural_layers</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The model contains the float neural layer (layer &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">neural_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="n">neural_layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;) followed by a BatchNormalization layer. This configuration&quot;</span>
+                <span class="s2">&quot; is not consistent with fold_BN=False. This might require &quot;</span>
+                <span class="s2">&quot;retraining on a few batches to align BatchNormalization &quot;</span>
+                <span class="s2">&quot;parameters with the new quantized weights.&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>

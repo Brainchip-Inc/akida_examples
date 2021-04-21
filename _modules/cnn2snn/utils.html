@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.13
+                Akida 1.9.0
               </div>
             
           
@@ -456,13 +456,11 @@
 <span class="sd">can be quantized.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputLayer</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span>
-                                     <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">,</span>
-                                     <span class="n">BatchNormalization</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span><span class="p">,</span>
-                                     <span class="n">clone_model</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span>
-                                  <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
+                                     <span class="n">GlobalAveragePooling2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span><span class="p">,</span> <span class="n">clone_model</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
+                                  <span class="n">QuantizedDense</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.transforms.sequential</span> <span class="kn">import</span> <span class="n">compute_BN_folded_weights</span>
 <span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
 
@@ -657,81 +655,6 @@
             <span class="n">index_bn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">layer_bn</span><span class="p">)</span>
             <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="n">neural_layer</span>
             <span class="n">model</span><span class="o">.</span><span class="n">_output_coordinates</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">neural_layer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">merge_separable_conv</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a new model where all depthwise conv2d layers followed by conv2d</span>
-<span class="sd">    layers are merged into single separable conv layers.</span>
-
-<span class="sd">    The new model is strictly equivalent to the previous one.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a Keras model.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tf.keras.Model`: a tf.keras.Model.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># If no layers are Depthwise, there is nothing to be done, return.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">QuantizedDepthwiseConv2D</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">]):</span>
-        <span class="k">return</span> <span class="n">model</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">InputLayer</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">input</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QuantizedDepthwiseConv2D</span><span class="p">):</span>
-            <span class="c1"># Check layers expected order</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layer </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
-                                     <span class="s2">&quot;QuantizedDepthwiseConv2D should be &quot;</span>
-                                     <span class="s2">&quot;followed by QuantizedConv2D layers.&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Unsupported bias in &quot;</span>
-                                     <span class="s2">&quot;QuantizedDepthwiseConv2D Layer &quot;</span>
-                                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
-
-            <span class="c1"># Get weights and prepare new ones</span>
-            <span class="n">dw_weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">pw_weights</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">new_weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">dw_weights</span><span class="p">,</span> <span class="n">pw_weights</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">:</span>
-                <span class="n">bias</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">new_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span>
-
-            <span class="c1"># Create new layer</span>
-            <span class="n">new_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span>
-            <span class="n">new_layer</span> <span class="o">=</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
-                                                 <span class="n">layer</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
-                                                 <span class="n">quantizer_dw</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">quantizer</span><span class="p">,</span>
-                                                 <span class="n">quantizer</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">quantizer</span><span class="p">,</span>
-                                                 <span class="n">padding</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                                                 <span class="n">use_bias</span><span class="o">=</span><span class="n">next_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">,</span>
-                                                 <span class="n">name</span><span class="o">=</span><span class="n">new_name</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">new_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="n">new_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-
-    <span class="c1"># Add last layer if not done already</span>
-    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">QuantizedDepthwiseConv2D</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layer </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
-                                 <span class="s2">&quot;QuantizedDepthwiseConv2D should be followed &quot;</span>
-                                 <span class="s2">&quot;by QuantizedConv2D layers.&quot;</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">](</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="load_quantized_model"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.load_quantized_model">[docs]</a><span class="k">def</span> <span class="nf">load_quantized_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compile_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>

@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                Akida 1.8.13
+                Akida 1.9.0
               </div>
             
           
@@ -435,22 +435,15 @@
             
   <h1>Source code for akida.model</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Dense</span><span class="p">,</span> <span class="n">BackendType</span><span class="p">,</span> <span class="n">ModelBase</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolingType</span><span class="p">,</span>
                    <span class="n">NsocVersion</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.parameters_serializer</span> <span class="kn">import</span> <span class="n">deserialize_parameters</span>
 <span class="kn">from</span> <span class="nn">.layer_statistics</span> <span class="kn">import</span> <span class="n">LayerStatistics</span>
 <span class="kn">from</span> <span class="nn">.compatibility</span> <span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">common</span>
 <span class="kn">from</span> <span class="nn">.input_data</span> <span class="kn">import</span> <span class="n">InputData</span>
-<span class="kn">from</span> <span class="nn">.fully_connected</span> <span class="kn">import</span> <span class="n">FullyConnected</span>
-<span class="kn">from</span> <span class="nn">.convolutional</span> <span class="kn">import</span> <span class="n">Convolutional</span>
-<span class="kn">from</span> <span class="nn">.separable_convolutional</span> <span class="kn">import</span> <span class="n">SeparableConvolutional</span>
-<span class="kn">from</span> <span class="nn">.input_convolutional</span> <span class="kn">import</span> <span class="n">InputConvolutional</span>
 
 
 <span class="c1"># Private utility functions</span>
@@ -519,15 +512,18 @@
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">ModelBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An Akida neural ``Model``, represented as a hierarchy of layers.</span>
 
-<span class="sd">    The ``Model`` class is the main interface to Akida and allows to creates an</span>
-<span class="sd">    empty ``Model``, a ``Model`` template from a YAML file, or a full ``Model``</span>
-<span class="sd">    from a serialized file.</span>
+<span class="sd">    The ``Model`` class is the main interface to Akida and allows:</span>
+
+<span class="sd">    - to create an empty ``Model`` to which you can add layers programmatically</span>
+<span class="sd">    using the sequential API,</span>
+<span class="sd">    - to reload a full ``Model`` from a serialized file or a memory buffer,</span>
+<span class="sd">    - to create a new ``Model`` from a list of layers taken from an existing</span>
+<span class="sd">    ``Model``.</span>
 
 <span class="sd">    It provides methods to instantiate, train, test and save models.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        filename (str, optional): path of the YAML file containing the model</span>
-<span class="sd">            architecture, or a serialized Model.</span>
+<span class="sd">        filename (str, optional): path to the serialized Model.</span>
 <span class="sd">            If None, an empty sequential model will be created, or filled</span>
 <span class="sd">            with the layers in the layers parameter.</span>
 <span class="sd">        serialized_buffer (bytes, optional): binary buffer containing a</span>
@@ -541,26 +537,14 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">serialized_buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">backend</span><span class="o">=</span><span class="n">BackendType</span><span class="o">.</span><span class="n">Software</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">serialized_buffer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;filename, serialized_buffer and layer list &quot;</span>
-                                 <span class="s2">&quot;should not be passed at the same time&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;filename and layer list should not be passed&quot;</span>
+                                 <span class="s2">&quot; at the same time&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># get file extension</span>
-                <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.yml&#39;</span><span class="p">,</span> <span class="s1">&#39;.yaml&#39;</span><span class="p">):</span>
-                    <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                        <span class="n">serialized_buffer</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="n">serialized_buffer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serialized_buffer</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
+                <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ModelBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -633,67 +617,6 @@
                     <span class="n">layers_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LayerStatistics</span><span class="p">(</span>
                         <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">layer_activations</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">layers_stats</span></div>
-
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Builds a model from a YAML description file of the layers.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            filename (str): path of the YAML file containing the model</span>
-<span class="sd">                architecture, or a serialized Model.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># test whether the yml file can be found</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The ymlfile (</span><span class="si">{}</span><span class="s2">) could not be found, &quot;</span>
-                             <span class="s2">&quot;instance not initialised&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-        <span class="c1"># load the file</span>
-        <span class="n">yaml_content</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;Layers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yaml_content</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid model configuration: missing &#39;Layers&#39; section.&quot;</span><span class="p">)</span>
-
-        <span class="n">layers</span> <span class="o">=</span> <span class="n">yaml_content</span><span class="p">[</span><span class="s2">&quot;Layers&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty model configuration.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># build and add layers to the model</span>
-        <span class="k">for</span> <span class="n">layer_description</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="n">layer_description</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span>
-
-            <span class="c1"># deserialize YAML into a kwargs dict for the layer</span>
-            <span class="k">if</span> <span class="s2">&quot;Parameters&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layer_description</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model configuration: &quot;</span>
-                                 <span class="s2">&quot;missing &#39;Parameters&#39; section in layer &quot;</span> <span class="o">+</span>
-                                 <span class="n">name</span><span class="p">)</span>
-            <span class="n">layer_type</span><span class="p">,</span> <span class="n">params_dict</span> <span class="o">=</span> <span class="n">deserialize_parameters</span><span class="p">(</span>
-                <span class="n">layer_description</span><span class="p">[</span><span class="s2">&quot;Parameters&quot;</span><span class="p">])</span>
-
-            <span class="c1"># create a layer object from the dict</span>
-            <span class="n">akida_layer_types</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;inputData&#39;</span><span class="p">:</span> <span class="n">InputData</span><span class="p">,</span>
-                <span class="s1">&#39;inputConvolutional&#39;</span><span class="p">:</span> <span class="n">InputConvolutional</span><span class="p">,</span>
-                <span class="s1">&#39;fullyConnected&#39;</span><span class="p">:</span> <span class="n">FullyConnected</span><span class="p">,</span>
-                <span class="s1">&#39;convolutional&#39;</span><span class="p">:</span> <span class="n">Convolutional</span><span class="p">,</span>
-                <span class="s1">&#39;separableConvolutional&#39;</span><span class="p">:</span> <span class="n">SeparableConvolutional</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="n">layer</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">layer_type</span> <span class="ow">in</span> <span class="n">akida_layer_types</span><span class="p">:</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">akida_layer_types</span><span class="p">[</span><span class="n">layer_type</span><span class="p">](</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;depthwiseConvolutional&quot;</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;depthwiseConvolutional layer name is deprecated,&quot;</span>
-                              <span class="s2">&quot; please use separableConvolutional instead.&quot;</span><span class="p">)</span>
-                <span class="n">layer</span> <span class="o">=</span> <span class="n">SeparableConvolutional</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">params_dict</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="nb">str</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model configuration: missing&quot;</span>
-                                 <span class="s2">&quot; &#39;layerType&#39; parameter in layer &quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model configuration, unknown&quot;</span>
-                                 <span class="s2">&quot; layerType &quot;</span> <span class="o">+</span> <span class="n">layer_type</span> <span class="o">+</span> <span class="s2">&quot; in layer &quot;</span> <span class="o">+</span>
-                                 <span class="n">name</span><span class="p">)</span>
-
-            <span class="c1"># add the layer</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">BackendType</span><span class="o">.</span><span class="n">Hardware</span> \

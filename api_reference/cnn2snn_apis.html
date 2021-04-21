@@ -72,7 +72,7 @@
             
             
               <div class="version">
-                Akida 1.8.13
+                Akida 1.9.0
               </div>
             
           
@@ -447,7 +447,7 @@ models.</p>
 <h3>quantize<a class="headerlink" href="#quantize" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="cnn2snn.quantize">
-<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fold_BN</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/quantization.html#quantize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fold_BN</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">quantizer_function</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/quantization.html#quantize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a standard sequential Keras model to a CNN2SNN Keras quantized
 model, compatible for Akida conversion.</p>
 <p>This function returns a Keras model where the standard neural layers
@@ -489,6 +489,9 @@ layer. Defaults to weight_quantization value.</p>
 </p></li>
 <li><p><strong>fold_BN</strong> (<em>bool</em>) – enable folding batch normalization layers with their
 corresponding neural layer.</p></li>
+<li><p><strong>quantizer_function</strong> (<em>function</em>) – callable that takes as argument the layer
+instance to be quantized and the corresponding default quantizer and
+returns the quantizer to use.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -505,7 +508,7 @@ corresponding neural layer.</p></li>
 <h3>quantize_layer<a class="headerlink" href="#quantize-layer" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="cnn2snn.quantize_layer">
-<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">quantize_layer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">target_layer</span></em>, <em class="sig-param"><span class="n">bitwidth</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/quantization.html#quantize_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.quantize_layer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">quantize_layer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">target_layer</span></em>, <em class="sig-param"><span class="n">bitwidth</span></em>, <em class="sig-param"><span class="n">quantizer_function</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/quantization.html#quantize_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.quantize_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Quantizes a specific layer with the given bitwidth.</p>
 <p>This function returns a Keras model where the target layer is quantized.
 All other layers are preserved.
@@ -542,6 +545,9 @@ modified.</p>
 converted, or the index or name of the target layer.</p></li>
 <li><p><strong>bitwidth</strong> (<em>int</em>) – the desired quantization bitwidth. If zero, no
 quantization will be applied.</p></li>
+<li><p><strong>quantizer_function</strong> (<em>function</em>) – callable that takes as argument the layer
+instance to be quantized and the corresponding default quantizer and
+returns the quantizer to use.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -643,18 +649,10 @@ be InputData. (Default value = True)</p></li>
 <h3>check_model_compatibility<a class="headerlink" href="#check-model-compatibility" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="cnn2snn.check_model_compatibility">
-<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">check_model_compatibility</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_keras</span></em>, <em class="sig-param"><span class="n">input_is_image</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/mapping_generator.html#check_model_compatibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.check_model_compatibility" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">cnn2snn.</code><code class="sig-name descname">check_model_compatibility</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">input_is_image</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/compatibility_checks.html#check_model_compatibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cnn2snn.check_model_compatibility" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if a Keras model is compatible for cnn2snn conversion.</p>
 <p>This function doesn’t convert the Keras model to an Akida model
-but only checks if the model design is compatible. The checks are performed
-at two different levels:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Some checks are done when the Keras model is scanned, during the
-generation of the model map.</p></li>
-<li><p>Other checks are then done based on the model map.</p></li>
-</ol>
-</div></blockquote>
+but only checks if the model design is compatible.</p>
 <p>Note that this function doesn’t check if the quantization bitwidths (weights
 or activations) are supported by the Akida Execution Engine or by the Akida
 NSoC.</p>
@@ -765,7 +763,7 @@ in the last layer</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>tf.keras model</em>) – the model to parse.</p></li>
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – the model to check.</p></li>
 <li><p><strong>input_is_image</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if input is an image (8-bit input
 with 1 or 3 channels) followed by QuantizedConv2D. Akida model
 input will be InputConvolutional. If False, Akida model input will
