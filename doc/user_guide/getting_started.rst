@@ -2,14 +2,13 @@
 Getting started
 ===============
 
-The Akida Development Tools can easily be installed using `pip
+The Akida MetaTF ML Tools can easily be installed using `pip
 <https://pypi.org/project/pip/>`_ python installer (see `Installation <../installation.html>`_).
 
 For beginners
 -------------
 
-The Akida Development Environment comes with ready-to-use models for popular
-datasets.
+MetaTF examples come with ready-to-use models for popular datasets.
 
 Run the MNIST example below, then visit the `Akida examples <../examples/index.html>`_.
 

@@ -8,7 +8,7 @@ author = 'Brainchip'
 import pkg_resources
 
 try:
-    version = 'Akida '+pkg_resources.get_distribution('akida').version
+    version = 'MetaTF '+pkg_resources.get_distribution('akida').version
 except Exception:
     version = 'unknown'
 
@@ -71,7 +71,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'collapse_navigation':False,
-    'style_nav_header_background':'#3f51b5'
+    'style_nav_header_background':'#78b3ff'
 }
 
 # Hide undesired components

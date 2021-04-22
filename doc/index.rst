@@ -91,17 +91,17 @@ the application need.
    Figure 2. Akida IP example configurations
 
 
-The Akida Development Environment
----------------------------------
+The Akida Neuromorphic ML Framework
+-----------------------------------
 
-The Akida Development Environment (ADE) relies on a high-level neural networks
-API, written in Python, and largely inspired by the `Keras API
+The Akida Neuromorphic ML Framework (MetaTF) relies on a high-level neural
+networks API, written in Python, and largely inspired by the `Keras API
 <https://keras.io>`_.
 
 The core data structure used by the Akida Execution Engine is a neural network
 **model**\ , which itself is a linear stack of **layers**.
 
-The ADE leverages the `TensorFlow <https://www.tensorflow.org/>`_ framework and
+MetaTF leverages the `TensorFlow <https://www.tensorflow.org/>`_ framework and
 `PyPI <https://pypi.org/>`_ for BrainChip tools installation.
 The major difference with other machine learning frameworks is that the data
 exchanged between layers is not the usual **dense** multidimensional arrays,
@@ -111,14 +111,14 @@ multidimensional arrays.
 Throughout this documentation, those events will often be referred as "spikes",
 due to their close similarity with the signals exchanged by biological neurons.
 
-.. figure:: img/ade.png
-   :target: _images/ade.png
+.. figure:: img/metatf.png
+   :target: _images/metatf.png
    :alt: Brainchip
    :align: center
 
-   Figure 3. Akida Development Environment
+   Figure 3. Akida MetaTF ML Framework
 
-The Akida Development Environment comprises three main python packages:
+The MetaTF ML framework comprises three main python packages:
 
 * the `Akida Execution Engine <https://pypi.org/project/akida>`_ is an interface
   to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the
