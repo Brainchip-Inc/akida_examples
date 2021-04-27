@@ -180,7 +180,7 @@ for _, stat in stats.items():
 
 ######################################################################
 # 5. Confusion matrix
-# ^^^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~~~
 #
 # The confusion matrix provides a good summary of what mistakes the
 # network is making.

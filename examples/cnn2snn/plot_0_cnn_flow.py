@@ -132,7 +132,7 @@ print("Model compatible for Akida conversion:",
 
 ######################################################################
 # 3. Model training
-# ^^^^^^^^^^^^^^^^^^
+# ~~~~~~~~~~~~~~~~~
 #
 # Before going any further, train the model and get its performance.
 # The created model should have achieved a test accuracy a little over 99% after
