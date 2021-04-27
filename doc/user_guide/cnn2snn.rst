@@ -144,7 +144,7 @@ Quantize an already quantized model with different quantization bitwidths:
 
 .. code-block:: bash
 
-    cnn2snn -m model_keras_iq8_wq4_aq4.h5 -wq 2 -aq 2
+    cnn2snn -m model_keras_iq8_wq4_aq4.h5 quantize -wq 2 -aq 2
 
 A new quantized model named ``model_keras_iq2_wq2_aq2.h5`` is saved.
 
