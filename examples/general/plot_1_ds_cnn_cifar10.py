@@ -242,7 +242,6 @@ if num_images == 1000:
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
-model_akida.predict(raw_x_test[:20])
 for _, stat in stats.items():
     print(stat)
 
