@@ -185,7 +185,7 @@ Example of sequential definition of a model:
    model.add(InputData(name="input",
                        input_width=32,
                        input_height=32,
-                       input_features=1))
+                       input_channels=1))
    model.add(FullyConnected(name="fully",
                             num_neurons=32,
                             threshold_fire=40))
