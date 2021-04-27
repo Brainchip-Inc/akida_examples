@@ -155,7 +155,6 @@ assert abs(mae_keras - mae_akida) < 0.5
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
-model_akida.evaluate(x_test_akida[:20])
 for _, stat in stats.items():
     print(stat)
 

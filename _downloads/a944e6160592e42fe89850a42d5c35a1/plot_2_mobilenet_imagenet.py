@@ -262,7 +262,6 @@ assert accuracy_akida >= 0.9
 # Print model statistics
 print("Model statistics")
 stats = model_akida.get_statistics()
-model_akida.predict(x_test[:20])
 for _, stat in stats.items():
     print(stat)
 

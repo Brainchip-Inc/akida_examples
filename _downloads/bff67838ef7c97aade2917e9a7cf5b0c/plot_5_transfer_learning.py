@@ -373,8 +373,6 @@ assert akida_accuracy > 0.97
 
 # Print model statistics
 stats = model_akida.get_statistics()
-batch, _ = iter(test_batches_akida).get_next()
-model_akida.evaluate(batch[:20].numpy())
 
 print("Model statistics")
 for _, stat in stats.items():
