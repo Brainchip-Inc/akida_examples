@@ -358,7 +358,7 @@ model_ak.save(model_file)
 del model_ak
 
 ##############################################################################
-# 4. Edge learning
+# 5. Edge learning
 # ~~~~~~~~~~~~~~~~
 #
 # After the "offline" training stage, we emulate the use case where the
