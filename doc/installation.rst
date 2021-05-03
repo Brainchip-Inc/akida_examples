@@ -40,6 +40,7 @@ be setup with Python's pip package manager:
     .. code-block:: bash
 
       conda create --name akida_env python=3.6
+      conda activate akida_env
 
 Running examples
 ----------------
