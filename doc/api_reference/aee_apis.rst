@@ -86,3 +86,8 @@ Akida Execution Engine API
     =============
     .. autofunction:: akida.compatibility.model_hardware_incompatibilities
     .. autofunction:: akida.compatibility.create_from_model
+
+    Device
+    ======
+    .. autoclass:: Device
+        :members:
