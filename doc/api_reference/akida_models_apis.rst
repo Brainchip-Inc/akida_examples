@@ -20,6 +20,13 @@ Akida models API
     -----------
     .. autofunction:: akida_models.layer_blocks.dense_block
 
+    Helpers
+    ===================
+
+    BatchNormalization gamma constraint
+    -----------------------------------
+    .. autofunction:: add_gamma_constraint
+
     Model zoo
     =========
 
