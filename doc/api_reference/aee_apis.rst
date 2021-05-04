@@ -61,11 +61,9 @@ Akida Execution Engine API
         :members:
         :inherited-members:
 
-    Backend
-    =======
+    BackendType
+    ===========
     .. autoclass:: BackendType
-    .. autofunction:: has_backend
-    .. autofunction:: backends
 
     ConvolutionMode
     ===============
