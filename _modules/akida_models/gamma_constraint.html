@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida.layer_statistics &mdash; Akida Examples  documentation</title>
+  <title>akida_models.gamma_constraint &mdash; Akida Examples  documentation</title>
   
 
   
@@ -426,7 +426,7 @@
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>akida.layer_statistics</li>
+      <li>akida_models.gamma_constraint</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -441,122 +441,80 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida.layer_statistics</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">LayerType</span>
+  <h1>Source code for akida_models.gamma_constraint</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="c1"># Copyright 2020 Brainchip Holdings Ltd.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#    http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Custom constraint for BatchNormalization layers and a method helper to apply the</span>
+<span class="sd">constraint.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">clone_model</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">custom_object_scope</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">BatchNormalization</span>
+
+<span class="kn">from</span> <span class="nn">cnn2snn.min_value_constraint</span> <span class="kn">import</span> <span class="n">MinValueConstraint</span>
 
 
-<div class="viewcode-block" id="LayerStatistics"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.LayerStatistics">[docs]</a><span class="k">class</span> <span class="nc">LayerStatistics</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Container attached to an akida.Model and an akida.Layer that allows to</span>
-<span class="sd">        retrieve layer statistics:</span>
-<span class="sd">        (average input and output sparsity, number of operations, number of</span>
-<span class="sd">        possible spikes, row_sparsity).</span>
+<div class="viewcode-block" id="add_gamma_constraint"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.add_gamma_constraint">[docs]</a><span class="k">def</span> <span class="nf">add_gamma_constraint</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Method helper to add a MinValueConstraint to an existing model so that</span>
+<span class="sd">    gamma values of its BatchNormalization layers are above a defined minimum.</span>
 
+<span class="sd">    This is typically used to help having a model that will be Akida compatible</span>
+<span class="sd">    after conversion. In some cases, the mapping on hardware will fail because</span>
+<span class="sd">    of huge values for `threshold_fire` or `threshold_fire_step` with a message</span>
+<span class="sd">    indicating that a value cannot fit in a 20 bit signed or unsigned integer.</span>
+<span class="sd">    In such a case, this helper can be called to apply a constraint that can fix</span>
+<span class="sd">    the issue.</span>
+
+<span class="sd">    Note that in order for the constraint to be applied to the actual weights,</span>
+<span class="sd">    some training must be done: for an already trained model, it can be on a few</span>
+<span class="sd">    batches, one epoch or more depending on the impact the constraint has on</span>
+<span class="sd">    accuracy. This helper can also be called to a new model that has not been</span>
+<span class="sd">    trained yet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.Keras.Model): the model for which gamma constraints will be</span>
+<span class="sd">            added.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Keras.Model: the same model with BatchNormalisation layers updated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># pylint: disable=too-many-instance-attributes</span>
+    <span class="k">def</span> <span class="nf">apply_gamma_constraint</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+        <span class="n">constraint</span> <span class="o">=</span> <span class="n">MinValueConstraint</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">gamma_constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Layer </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> already has a gamma_constraint set &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;to </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">gamma_constraint</span><span class="si">}</span><span class="s2">, it will be overwritten.&quot;</span><span class="p">)</span>
+            <span class="n">bn</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
+            <span class="n">bn</span><span class="o">.</span><span class="n">gamma_constraint</span> <span class="o">=</span> <span class="n">constraint</span>
+            <span class="k">return</span> <span class="n">bn</span>
+        <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_activations</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span> <span class="o">=</span> <span class="n">layer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nb_samples</span> <span class="o">=</span> <span class="n">nb_samples</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nb_activations</span> <span class="o">=</span> <span class="n">nb_activations</span>
+    <span class="k">with</span> <span class="n">custom_object_scope</span><span class="p">({</span><span class="s1">&#39;MinValueConstraint&#39;</span><span class="p">:</span> <span class="n">MinValueConstraint</span><span class="p">}):</span>
+        <span class="n">updated_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                    <span class="n">clone_function</span><span class="o">=</span><span class="n">apply_gamma_constraint</span><span class="p">)</span>
+    <span class="n">updated_model</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;{layer: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;, layer_type: &quot;</span> <span class="o">+</span> \
-            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, output_sparsity: &quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">+=</span> <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">,</span> <span class="s2">&quot;.2f&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;N/A&quot;</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;}&quot;</span>
-        <span class="k">return</span> <span class="n">data</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="k">def</span> <span class="nf">str_column_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">col_width</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">col_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">formatted_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="n">col_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">formatted_data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">col_width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-
-            <span class="k">return</span> <span class="n">formatted_data</span>
-
-        <span class="n">data</span> <span class="o">=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="s2">&quot;Layer (type)&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="s2">&quot;output sparsity&quot;</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">layer_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">layer_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">,</span> <span class="s2">&quot;.2f&quot;</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;N/A&quot;</span>
-        <span class="k">return</span> <span class="n">data</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">possible_spikes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get possible spikes for the layer.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            int: the possible spike amount value.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">output_dims</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">row_sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get kernel row sparsity.</span>
-
-<span class="sd">        Compute row sparsity for kernel weights.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">          float: the kernel row sparsity value.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span> <span class="ow">or</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
-                <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">):</span>
-            <span class="n">row_sparsity</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span>
-            <span class="n">wshape</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">wshape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Exception in LayerStatistics: weights shape &quot;</span>
-                                 <span class="s2">&quot;have null dimension: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">wshape</span><span class="p">))</span>
-
-            <span class="c1"># Going through all line blocks</span>
-            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wshape</span><span class="p">[</span><span class="mi">3</span><span class="p">]):</span>
-                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wshape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
-                    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">wshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">weights</span><span class="p">[:,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">f</span><span class="p">],</span>
-                                          <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">wshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))):</span>
-                            <span class="c1"># Counting when line block is full of zero.</span>
-                            <span class="n">row_sparsity</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">return</span> <span class="n">row_sparsity</span> <span class="o">/</span> <span class="p">(</span><span class="n">wshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">wshape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">wshape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">output_sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get average output sparsity for the layer.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            float: the average output sparsity value.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_samples</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">activations_per_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_activations</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nb_samples</span>
-        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">activations_per_sample</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">possible_spikes</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">layer_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the name of the corresponding layer.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: the layer name.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">name</span></div>
+    <span class="k">return</span> <span class="n">updated_model</span></div>
 </pre></div>
 
            </div>

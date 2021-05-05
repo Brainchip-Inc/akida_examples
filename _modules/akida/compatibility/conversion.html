@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.0
+                MetaTF 1.9.2
               </div>
             
           
@@ -205,11 +205,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#backend">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#device">Device</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -248,6 +250,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#conv-block">conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
@@ -628,7 +634,7 @@
         <span class="n">new_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">new_value</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="create_from_model"><a class="viewcode-back" href="../../../api_reference/aee_apis.html#akida.compatibility.create_from_model">[docs]</a><span class="k">def</span> <span class="nf">create_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="create_from_model"><a class="viewcode-back" href="../../../api_reference/aee_apis.html#akida.compatibility.create_from_model">[docs]</a><span class="k">def</span> <span class="nf">create_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hw_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Tries to create a HW compatible model from an incompatible one</span>
 
 <span class="sd">    Tries to create a HW compatible model from an incompatible one, using SW</span>
@@ -637,13 +643,13 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): a Model object to convert</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): version of the NSoC</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): version of the Hardware</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :obj:`Model`: a new Model with no guarantee that it is HW compatible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">added_neurons</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">new_model</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+    <span class="n">new_model</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
     <span class="n">nb_layers</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_layers</span><span class="p">):</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
@@ -656,7 +662,7 @@
             <span class="c1"># pooling (whatever the thresholds) is split into 2 CNPs:</span>
             <span class="c1"># - one performing the convolution</span>
             <span class="c1"># - the other one performing the pooling</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span> <span class="ow">and</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">hw_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">NSoC_v1</span> <span class="ow">and</span>
                     <span class="ow">not</span> <span class="n">common</span><span class="o">.</span><span class="n">cnp_is_identity</span><span class="p">(</span><span class="n">layer</span><span class="p">)):</span>
                 <span class="n">_cnp_max_pooling_split</span><span class="p">(</span><span class="n">new_model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -668,7 +674,7 @@
             <span class="k">continue</span>
         <span class="c1"># If CNP has an average pooling on a SeparableConvolutional, it has to</span>
         <span class="c1"># be updated to add dummy neurons, except if this is the last layer</span>
-        <span class="k">if</span> <span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span> <span class="ow">and</span> <span class="n">_cnp_sep_avg_pooling</span><span class="p">(</span>
+        <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">NSoC_v1</span> <span class="ow">and</span> <span class="n">_cnp_sep_avg_pooling</span><span class="p">(</span>
                 <span class="n">layer</span><span class="p">)</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">nb_layers</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">added_neurons</span> <span class="o">=</span> <span class="n">_cnp_sep_avg_pooling_add_dummy_neurons</span><span class="p">(</span>
                 <span class="n">new_model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>

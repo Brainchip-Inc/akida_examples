@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.0
+                MetaTF 1.9.2
               </div>
             
           
@@ -205,11 +205,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#device">Device</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -248,6 +250,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#conv-block">conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
@@ -442,7 +448,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Dense</span><span class="p">,</span> <span class="n">BackendType</span><span class="p">,</span> <span class="n">ModelBase</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolingType</span><span class="p">,</span>
-                   <span class="n">NsocVersion</span><span class="p">)</span>
+                   <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">devices</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.layer_statistics</span> <span class="kn">import</span> <span class="n">LayerStatistics</span>
 <span class="kn">from</span> <span class="nn">.compatibility</span> <span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">common</span>
 <span class="kn">from</span> <span class="nn">.input_data</span> <span class="kn">import</span> <span class="n">InputData</span>
@@ -574,7 +580,7 @@
         <span class="n">out_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dims</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
         <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&lt;akida.Model, layer_count=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">())</span>
         <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, output_dims=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_dims</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, backend_type=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&gt;&quot;</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, backend_type=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&gt;&quot;</span>
         <span class="k">return</span> <span class="n">data</span>
 
 <div class="viewcode-block" id="Model.get_statistics"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.get_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">get_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -621,8 +627,8 @@
         <span class="k">return</span> <span class="n">layers_stats</span></div>
 
     <span class="k">def</span> <span class="nf">_check_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">BackendType</span><span class="o">.</span><span class="n">Hardware</span> \
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_device</span><span class="p">()</span><span class="o">.</span><span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="n">BackendType</span><span class="o">.</span><span class="n">Hardware</span> \
+            <span class="ow">and</span> <span class="n">devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">NSoC_v1</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span>
                         <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span>
@@ -911,8 +917,7 @@
         <span class="n">input_dims</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[\[\]]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_dims</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input shape: </span><span class="si">{</span><span class="n">input_dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="c1"># Print backend info</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Backend type: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span>
-              <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Backend type: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
         <span class="c1"># Print hardware incompatibilities, if any found</span>
         <span class="n">check</span><span class="o">.</span><span class="n">summary_hardware_incompatibilities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
@@ -961,7 +966,81 @@
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_names</span><span class="p">:</span>
             <span class="n">new_var</span> <span class="o">=</span> <span class="n">new_layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
             <span class="n">new_var</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="n">old_num_neurons</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-            <span class="n">new_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">new_var</span><span class="p">)</span></div></div>
+            <span class="n">new_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">new_var</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.mapping_summary"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.mapping_summary">[docs]</a>    <span class="k">def</span> <span class="nf">mapping_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints a string summary of how the model is mapped.</span>
+
+<span class="sd">        This method prints a mapping summary of the model:</span>
+
+<span class="sd">        For each layer, if it is mapped on HW:</span>
+<span class="sd">        - gives the number of NPs used</span>
+<span class="sd">        - list NPs with spatial dimensions and neurons they are responsible for</span>
+
+<span class="sd">        If a layer is mapped on SW, it will only show input dimensions and neurons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="p">()</span>
+
+        <span class="c1"># Prepare headers</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;Layer (type)&#39;</span><span class="p">,</span> <span class="s1">&#39;NP (Col,Row,Id)&#39;</span><span class="p">,</span> <span class="s1">&#39;Input size [x, y, shape]&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;# Neurons&#39;</span>
+        <span class="p">]</span>
+        <span class="c1"># prepare an empty table</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">headers</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">layers</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+                <span class="c1"># layer name (type)</span>
+                <span class="n">layer_type</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
+                <span class="n">name_and_type</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">l</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">layer_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="n">input_total</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Total = </span><span class="si">{</span><span class="n">l</span><span class="o">.</span><span class="n">input_dims</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="s2">&quot;weights&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">:</span>
+                        <span class="n">weight_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights_pw&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">weight_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="n">nb_neurons_total</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Total = </span><span class="si">{</span><span class="n">weight_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nb_neurons_total</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span>
+
+                <span class="n">program</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">program</span>
+                <span class="k">if</span> <span class="n">program</span><span class="p">:</span>
+                    <span class="c1"># HRC is a special case, because it uses a separate module</span>
+                    <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">:</span>
+                        <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">([</span>
+                            <span class="n">name_and_type</span><span class="p">,</span> <span class="s2">&quot;HRC&quot;</span><span class="p">,</span> <span class="n">input_total</span><span class="p">,</span> <span class="n">nb_neurons_total</span>
+                        <span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">nps</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                        <span class="c1"># Print NPs informations</span>
+                        <span class="n">nb_nps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nps</span><span class="p">)</span>
+                        <span class="n">str_nb_nps</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nb_nps</span><span class="si">}</span><span class="s2"> NP&quot;</span>
+                        <span class="c1"># Handle plural</span>
+                        <span class="k">if</span> <span class="n">nb_nps</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">str_nb_nps</span> <span class="o">+=</span> <span class="s2">&quot;s&quot;</span>
+
+                        <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">([</span>
+                            <span class="n">name_and_type</span><span class="p">,</span> <span class="n">str_nb_nps</span><span class="p">,</span> <span class="n">input_total</span><span class="p">,</span>
+                            <span class="n">nb_neurons_total</span>
+                        <span class="p">])</span>
+                        <span class="k">for</span> <span class="n">np_mapping</span> <span class="ow">in</span> <span class="n">nps</span><span class="p">:</span>
+                            <span class="n">np_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">np_mapping</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">col</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">np_mapping</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">row</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">np_mapping</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">)&quot;</span>
+                            <span class="n">np_space</span> <span class="o">=</span> <span class="n">np_mapping</span><span class="o">.</span><span class="n">input_internal</span>
+                            <span class="n">np_input</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">np_space</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">np_space</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">np_space</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">]&quot;</span>
+                            <span class="n">row</span> <span class="o">=</span> <span class="p">[</span>
+                                <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">np_id</span><span class="p">,</span> <span class="n">np_input</span><span class="p">,</span>
+                                <span class="nb">str</span><span class="p">(</span><span class="n">np_mapping</span><span class="o">.</span><span class="n">num_neurons</span><span class="p">)</span>
+                            <span class="p">]</span>
+                            <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Layer is not HW mapped</span>
+                    <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">([</span>
+                        <span class="n">name_and_type</span><span class="p">,</span> <span class="s2">&quot;Mapped in SW&quot;</span><span class="p">,</span> <span class="n">input_total</span><span class="p">,</span>
+                        <span class="n">nb_neurons_total</span>
+                    <span class="p">])</span>
+
+        <span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Mapping Summary&quot;</span><span class="p">)</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>

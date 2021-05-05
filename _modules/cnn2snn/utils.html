@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.0
+                MetaTF 1.9.2
               </div>
             
           
@@ -205,11 +205,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backend">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#device">Device</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -248,6 +250,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#conv-block">conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
@@ -458,6 +464,7 @@
 <span class="sd">can be quantized.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
                                      <span class="n">GlobalAveragePooling2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span><span class="p">,</span> <span class="n">clone_model</span><span class="p">)</span>
@@ -510,7 +517,8 @@
             <span class="k">return</span> <span class="n">layer_pool</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
+        <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
         <span class="n">new_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
@@ -534,7 +542,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Copy model in order to modify before cloning.</span>
-    <span class="n">model_copy</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
+        <span class="n">model_copy</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">model_copy</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
 
     <span class="c1"># Get BN layers to fold, mapping with the preceding neural layer and the</span>
@@ -556,7 +565,8 @@
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-    <span class="n">model_foldBN</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
+        <span class="n">model_foldBN</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
 
     <span class="c1"># Set weights in the new model</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model_copy</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>

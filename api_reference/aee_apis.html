@@ -72,7 +72,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.0
+                MetaTF 1.9.2
               </div>
             
           
@@ -207,11 +207,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#backend">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device">Device</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -250,6 +252,10 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#conv-block">conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#model-zoo">Model zoo</a><ul>
@@ -510,6 +516,12 @@ it will be added automatically.</p></li>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.get_statistics" title="akida.Model.get_statistics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_statistics</span></code></a>()</p></td>
 <td><p>Get statistics by layer for this network.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.mapping" title="akida.Model.mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapping</span></code></a>(self)</p></td>
+<td><p>Return the list of model sequences mapped to the hardware as specified by the Model BackendType.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.mapping_summary" title="akida.Model.mapping_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapping_summary</span></code></a>()</p></td>
+<td><p>Prints a string summary of how the model is mapped.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.pop_layer" title="akida.Model.pop_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_layer</span></code></a>(self)</p></td>
 <td><p>Remove the last layer of the current model.</p></td>
@@ -808,6 +820,29 @@ access to the underlying layers.</p>
 <dt id="akida.Model.layers">
 <em class="property">property </em><code class="sig-name descname">layers</code><a class="headerlink" href="#akida.Model.layers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of layers in current model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.Model.mapping">
+<code class="sig-name descname">mapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">akida.core.ModelBase</span></em><span class="sig-paren">)</span> &#x2192; List[akida::Sequence]<a class="headerlink" href="#akida.Model.mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of model sequences mapped to the hardware as specified by
+the Model BackendType.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a list of <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.Model.mapping_summary">
+<code class="sig-name descname">mapping_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/model.html#Model.mapping_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida.Model.mapping_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a string summary of how the model is mapped.</p>
+<p>This method prints a mapping summary of the model:</p>
+<p>For each layer, if it is mapped on HW:
+- gives the number of NPs used
+- list NPs with spatial dimensions and neurons they are responsible for</p>
+<p>If a layer is mapped on SW, it will only show input dimensions and neurons</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1525,8 +1560,8 @@ quantize the neuron response.</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="backend">
-<h2>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backendtype">
+<h2>BackendType<a class="headerlink" href="#backendtype" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="akida.BackendType">
 <em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">BackendType</code><a class="headerlink" href="#akida.BackendType" title="Permalink to this definition">¶</a></dt>
@@ -1534,31 +1569,6 @@ quantize the neuron response.</p></li>
 <p>Software</p>
 <p>Hardware</p>
 <p>Hybrid</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="akida.has_backend">
-<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">has_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backend</span><span class="p">:</span> <span class="n">akida.core.BackendType</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#akida.has_backend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks if a given backend type is available</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference internal" href="#akida.BackendType" title="akida.BackendType"><em>BackendType</em></a>) – the backend to check</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="akida.backends">
-<code class="sig-prename descclassname">akida.</code><code class="sig-name descname">backends</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>akida.core.BackendType<span class="p">, </span>akida.core.Backend<span class="p">]</span><a class="headerlink" href="#akida.backends" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the full list of available backends</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>list of BackendType</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>
@@ -1606,11 +1616,64 @@ quantize the neuron response.</p></li>
 </dd></dl>
 
 </div>
+<div class="section" id="hwversion">
+<h2>HwVersion<a class="headerlink" href="#hwversion" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="akida.HwVersion">
+<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">HwVersion</code><a class="headerlink" href="#akida.HwVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Attributes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HwVersion.major_rev" title="akida.HwVersion.major_rev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">major_rev</span></code></a></p></td>
+<td><p>The hardware major revision</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.HwVersion.minor_rev" title="akida.HwVersion.minor_rev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minor_rev</span></code></a></p></td>
+<td><p>The hardware minor revision</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HwVersion.product_id" title="akida.HwVersion.product_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">product_id</span></code></a></p></td>
+<td><p>The hardware product identifier</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.HwVersion.vendor_id" title="akida.HwVersion.vendor_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vendor_id</span></code></a></p></td>
+<td><p>The hardware vendor identifier</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="akida.HwVersion.major_rev">
+<em class="property">property </em><code class="sig-name descname">major_rev</code><a class="headerlink" href="#akida.HwVersion.major_rev" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hardware major revision</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.HwVersion.minor_rev">
+<em class="property">property </em><code class="sig-name descname">minor_rev</code><a class="headerlink" href="#akida.HwVersion.minor_rev" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hardware minor revision</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.HwVersion.product_id">
+<em class="property">property </em><code class="sig-name descname">product_id</code><a class="headerlink" href="#akida.HwVersion.product_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hardware product identifier</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.HwVersion.vendor_id">
+<em class="property">property </em><code class="sig-name descname">vendor_id</code><a class="headerlink" href="#akida.HwVersion.vendor_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hardware vendor identifier</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="compatibility">
 <h2>Compatibility<a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="akida.compatibility.model_hardware_incompatibilities">
-<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">model_hardware_incompatibilities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">nsoc_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/compatibility/check.html#model_hardware_incompatibilities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida.compatibility.model_hardware_incompatibilities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">model_hardware_incompatibilities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">hw_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/compatibility/check.html#model_hardware_incompatibilities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida.compatibility.model_hardware_incompatibilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks a model compatibility with hardware.</p>
 <p>This method performs parameters value checking for hardware
 compatibility and returns incompatibility messages when needed.</p>
@@ -1618,7 +1681,7 @@ compatibility and returns incompatibility messages when needed.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>) – the Model to check hardware compatibility</p></li>
-<li><p><strong>nsoc_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">NsocVersion</span></code>, optional) – the NSoC version to check</p></li>
+<li><p><strong>hw_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">HwVersion</span></code>, optional) – the hardware version to check</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1630,7 +1693,7 @@ The list is empty if the model is hardware compatible.</p>
 
 <dl class="py function">
 <dt id="akida.compatibility.create_from_model">
-<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">create_from_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">nsoc_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/compatibility/conversion.html#create_from_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida.compatibility.create_from_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">akida.compatibility.</code><code class="sig-name descname">create_from_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">hw_version</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/compatibility/conversion.html#create_from_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida.compatibility.create_from_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tries to create a HW compatible model from an incompatible one</p>
 <p>Tries to create a HW compatible model from an incompatible one, using SW
 workarounds for known limitations. It returns a converted model that is not
@@ -1639,7 +1702,7 @@ guaranteed to be HW compatible, depending if workaround have been found.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>) – a Model object to convert</p></li>
-<li><p><strong>nsoc_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">NsocVersion</span></code>, optional) – version of the NSoC</p></li>
+<li><p><strong>hw_version</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">HwVersion</span></code>, optional) – version of the Hardware</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1651,12 +1714,78 @@ guaranteed to be HW compatible, depending if workaround have been found.</p>
 </dl>
 </dd></dl>
 
+</div>
+<div class="section" id="device">
+<h2>Device<a class="headerlink" href="#device" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="akida.NsocVersion">
-<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">NsocVersion</code><a class="headerlink" href="#akida.NsocVersion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Members:</p>
-<p>Unknown</p>
-<p>v1</p>
+<dt id="akida.Device">
+<em class="property">class </em><code class="sig-prename descclassname">akida.</code><code class="sig-name descname">Device</code><a class="headerlink" href="#akida.Device" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Attributes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Device.desc" title="akida.Device.desc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desc</span></code></a></p></td>
+<td><p>Returns the Device description</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Device.options" title="akida.Device.options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">options</span></code></a></p></td>
+<td><p>The device options</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Device.version" title="akida.Device.version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">version</span></code></a></p></td>
+<td><p>The device hardware version.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Device.read_clock_counter" title="akida.Device.read_clock_counter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_clock_counter</span></code></a>(self)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Device.toggle_clock_counter" title="akida.Device.toggle_clock_counter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">toggle_clock_counter</span></code></a>(self, arg0)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="akida.Device.desc">
+<em class="property">property </em><code class="sig-name descname">desc</code><a class="headerlink" href="#akida.Device.desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Device description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a string describing the Device</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.Device.options">
+<em class="property">property </em><code class="sig-name descname">options</code><a class="headerlink" href="#akida.Device.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>The device options</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida.Device.read_clock_counter">
+<code class="sig-name descname">read_clock_counter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">akida.core.Device</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#akida.Device.read_clock_counter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="akida.Device.toggle_clock_counter">
+<code class="sig-name descname">toggle_clock_counter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">akida.core.Device</span></em>, <em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#akida.Device.toggle_clock_counter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="akida.Device.version">
+<em class="property">property </em><code class="sig-name descname">version</code><a class="headerlink" href="#akida.Device.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The device hardware version.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>

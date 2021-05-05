@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.0
+                MetaTF 1.9.2
               </div>
             
           
@@ -205,11 +205,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#dense">Dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#backend">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#learningtype">LearningType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/aee_apis.html#device">Device</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -248,6 +250,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#conv-block">conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
@@ -436,11 +442,11 @@
            <div itemprop="articleBody">
             
   <h1>Source code for akida.compatibility.check</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolingType</span><span class="p">,</span> <span class="n">NsocVersion</span><span class="p">,</span> <span class="n">ConvolutionMode</span>
+<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolingType</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">ConvolutionMode</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<span class="k">def</span> <span class="nf">summary_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">summary_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hw_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a model compatibility with hardware and prints a summary.</span>
 
 <span class="sd">    This method performs parameters value checking for hardware</span>
@@ -448,16 +454,16 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): the Model to check hardware compatibility</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">incompatibilities</span> <span class="o">=</span> <span class="n">model_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">)</span>
+    <span class="n">incompatibilities</span> <span class="o">=</span> <span class="n">model_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">incompatibilities</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hardware incompatibilities:&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">incompatibilities</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="model_hardware_incompatibilities"><a class="viewcode-back" href="../../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities">[docs]</a><span class="k">def</span> <span class="nf">model_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="model_hardware_incompatibilities"><a class="viewcode-back" href="../../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities">[docs]</a><span class="k">def</span> <span class="nf">model_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hw_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a model compatibility with hardware.</span>
 
 <span class="sd">    This method performs parameters value checking for hardware</span>
@@ -465,7 +471,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): the Model to check hardware compatibility</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        a list of str containing the hardware incompatibilities of the model.</span>
@@ -475,13 +481,13 @@
     <span class="n">incompatibilities</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()):</span>
         <span class="n">layer_incompatibility</span> <span class="o">=</span> <span class="n">layer_hardware_incompatibilities</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">)</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">layer_incompatibility</span><span class="p">:</span>
             <span class="n">incompatibilities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer_incompatibility</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">incompatibilities</span></div>
 
 
-<span class="k">def</span> <span class="nf">layer_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">layer_hardware_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">hw_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a layer compatibility with hardware.</span>
 
 <span class="sd">    This method performs parameters value checking for hardware</span>
@@ -490,7 +496,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): the Model to check hardware compatibility</span>
 <span class="sd">        layer_index (int): the layer index.</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
@@ -519,17 +525,16 @@
     <span class="c1"># fullyConnected layer</span>
     <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">FullyConnected</span><span class="p">:</span>
         <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_fully_connected_hw_incompatibilities</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">)</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
 
     <span class="c1"># inputConvolutional layer</span>
     <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">:</span>
-        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_input_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">)</span>
+        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_input_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
 
     <span class="c1"># convolutional layers</span>
     <span class="k">elif</span> <span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
           <span class="ow">in</span> <span class="p">[</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">]):</span>
-        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span>
-                                                 <span class="n">nsoc_version</span><span class="p">)</span>
+        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">full_message</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">hw_msg</span><span class="p">)</span>
 
@@ -569,13 +574,13 @@
     <span class="k">return</span> <span class="p">[]</span>
 
 
-<span class="k">def</span> <span class="nf">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">bit_number</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a warning message if the given parameter is not in the</span>
+<span class="k">def</span> <span class="nf">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">param_array</span><span class="p">,</span> <span class="n">bit_number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a warning message if the values of the given array are not in the</span>
 <span class="sd">    expected bits range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name (str): name of the parameter to display in the message.</span>
-<span class="sd">        param: parameter to check if valid</span>
+<span class="sd">        param_array (:obj:`numpy.ndarray`): a numpy.ndarray to check if valid.</span>
 <span class="sd">        bit_number (int): bit number in witch the parameter is coded.</span>
 
 <span class="sd">    Returns:</span>
@@ -583,15 +588,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">limit_low</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">bit_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">limit_high</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">bit_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">limit_low</span><span class="p">,</span> <span class="n">limit_high</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">param_array</span> <span class="o">&lt;</span> <span class="n">limit_high</span><span class="p">,</span>
+                          <span class="n">param_array</span> <span class="o">&gt;=</span> <span class="n">limit_low</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be in [</span><span class="si">{</span><span class="n">limit_low</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">limit_high</span> <span class="o">-</span> <span class="mi">1</span><span class="si">}</span><span class="s2">], &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;currently at </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;currently at </span><span class="si">{</span><span class="n">param_array</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">]</span>
     <span class="k">return</span> <span class="p">[]</span>
 
 
-<span class="k">def</span> <span class="nf">_get_fully_connected_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_fully_connected_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a FullyConnected layer compatibility with hardware.</span>
 
 <span class="sd">    This method performs parameters value checking for hardware</span>
@@ -600,19 +606,19 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): the Model to check hardware compatibility</span>
 <span class="sd">        layer_index (int): the layer index.</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
 <span class="sd">            Empty string if the layer is hardware compatible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">params</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer_index</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer_index</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span>
     <span class="n">hw_msg</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="c1"># Check threshold_fire parameter</span>
-    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="s1">&#39;threshold_fire&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">threshold_fire</span><span class="p">,</span>
-                                        <span class="mi">20</span><span class="p">)</span>
+    <span class="c1"># Check thresholds</span>
+    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_threshold_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
 
     <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_in_msg</span><span class="p">(</span><span class="s1">&#39;weights_bits&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">weights_bits</span><span class="p">,</span>
                                   <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
@@ -621,7 +627,7 @@
         <span class="k">if</span> <span class="s2">&quot;threshold_fire_bits&quot;</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">previous_params</span><span class="p">):</span>
             <span class="c1"># Allowed input bitwidth</span>
             <span class="n">allowed_input_bw</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">nsoc_version</span> <span class="o">!=</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hw_version</span> <span class="o">!=</span> <span class="n">NSoC_v1</span><span class="p">:</span>
                 <span class="n">allowed_input_bw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
             <span class="n">input_bw</span> <span class="o">=</span> <span class="n">previous_params</span><span class="o">.</span><span class="n">threshold_fire_bits</span>
             <span class="k">if</span> <span class="n">input_bw</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_input_bw</span><span class="p">:</span>
@@ -629,7 +635,7 @@
                               <span class="s2">&quot;threshold_fire_bits in previous layer &quot;</span>
                               <span class="s2">&quot;must be in &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowed_input_bw</span><span class="p">)</span> <span class="o">+</span>
                               <span class="s2">&quot;, currently at &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_bw</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">NSoC_v1</span><span class="p">:</span>
         <span class="n">num_neurons</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">num_neurons</span>
         <span class="k">if</span> <span class="n">num_neurons</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">params</span><span class="o">.</span><span class="n">activations_enabled</span><span class="p">:</span>
             <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- learn requires at least 3 neurons, &quot;</span>
@@ -637,7 +643,7 @@
     <span class="k">return</span> <span class="n">hw_msg</span>
 
 
-<span class="k">def</span> <span class="nf">_get_input_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_input_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a InputConvolutional layer compatibility with hardware.</span>
 
 <span class="sd">    This method performs parameters value checking for hardware</span>
@@ -645,7 +651,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        layer (:obj:`Layer`): the Layer to check hardware compatibility</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
@@ -682,8 +688,8 @@
         <span class="n">max_num_filters</span> <span class="o">=</span> <span class="p">{</span><span class="mi">3</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="mi">96</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">max_num_filters</span><span class="p">[</span><span class="n">kernel_size</span><span class="p">]</span>
 
-    <span class="c1"># Check threshold_fire parameter</span>
-    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="s1">&#39;threshold_fire&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">threshold_fire</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="c1"># Check thresholds</span>
+    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_threshold_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
 
     <span class="c1"># Check kernel parameters for constraints</span>
     <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">must_be_equal_constraints</span><span class="p">:</span>
@@ -703,11 +709,11 @@
         <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- input width cannot be higher than &quot;</span> <span class="o">+</span>
                       <span class="nb">str</span><span class="p">(</span><span class="n">max_line_width</span><span class="p">))</span>
     <span class="c1"># NSOC-V1: valid conv with stride != 1 is not supported for now</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span> <span class="ow">and</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">hw_version</span> <span class="o">==</span> <span class="n">NSoC_v1</span> <span class="ow">and</span>
             <span class="n">p</span><span class="o">.</span><span class="n">convolution_mode</span> <span class="o">==</span> <span class="n">ConvolutionMode</span><span class="o">.</span><span class="n">Valid</span> <span class="ow">and</span>
         <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stride_x</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">stride_y</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)):</span>
         <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- Convolution stride must be 1 when having &quot;</span>
-                      <span class="s2">&quot;convolution mode &#39;VALID&#39; for NsocVersion.v1&quot;</span><span class="p">)</span>
+                      <span class="s2">&quot;convolution mode &#39;VALID&#39; for NSoC v1&quot;</span><span class="p">)</span>
     <span class="c1"># Check pooling parameters</span>
     <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">pooling_type</span> <span class="o">==</span> <span class="n">PoolingType</span><span class="o">.</span><span class="n">Max</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">pool_must_be_equal_constraints</span><span class="p">:</span>
@@ -725,7 +731,7 @@
     <span class="k">return</span> <span class="n">hw_msg</span>
 
 
-<span class="k">def</span> <span class="nf">_get_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_conv_hw_incompatibilities</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks a Convolutional or SeparableConvolutional layer compatibility</span>
 <span class="sd">    with hardware.</span>
 
@@ -735,7 +741,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (:obj:`Model`): the Model to check hardware compatibility</span>
 <span class="sd">        layer_index (int): the layer index.</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
@@ -774,15 +780,15 @@
     <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">must_be_in_constraints</span><span class="p">:</span>
         <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_in_msg</span><span class="p">(</span><span class="o">*</span><span class="n">constraint</span><span class="p">)</span>
 
-    <span class="c1"># Check threshold_fire parameter</span>
-    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="s1">&#39;threshold_fire&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">threshold_fire</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="c1"># Check thresholds</span>
+    <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_threshold_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">pooling_type</span> <span class="o">==</span> <span class="n">PoolingType</span><span class="o">.</span><span class="n">Max</span><span class="p">:</span>
         <span class="c1"># Max pooling forbidden if it is not followed by another NP</span>
         <span class="n">layers_vert_pool</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span>
         <span class="p">]</span>
-        <span class="k">if</span> <span class="n">nsoc_version</span> <span class="o">!=</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hw_version</span> <span class="o">!=</span> <span class="n">NSoC_v1</span><span class="p">:</span>
             <span class="n">layers_vert_pool</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">FullyConnected</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">layer_index</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span>
                 <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
@@ -808,11 +814,11 @@
                 <span class="s2">&quot;- pooling size must be lower than or equal to input dimensions&quot;</span>
             <span class="p">)</span>
     <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">pooling_type</span> <span class="o">==</span> <span class="n">PoolingType</span><span class="o">.</span><span class="n">Average</span><span class="p">:</span>
-        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_avg_pooling_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">)</span>
+        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_avg_pooling_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">hw_msg</span>
 
 
-<span class="k">def</span> <span class="nf">_get_avg_pooling_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nsoc_version</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_avg_pooling_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">hw_version</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Checks global average pooling compatibility with hardware.</span>
 
 <span class="sd">    A global average pooling can only be present in a Convolutional or</span>
@@ -823,7 +829,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        layer (:obj:`Layer`): the Layer to check global average pooling</span>
 <span class="sd">            hardware compatibility</span>
-<span class="sd">        nsoc_version (:obj:`NsocVersion`, optional): the NSoC version to check</span>
+<span class="sd">        hw_version (:obj:`HwVersion`, optional): the hardware version to check</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
@@ -836,12 +842,32 @@
         <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- only global average pooling is supported:&quot;</span>
                       <span class="s2">&quot; pooling_width and pooling height must be &quot;</span>
                       <span class="s2">&quot;set to -1 (default)&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">nsoc_version</span> <span class="o">==</span> <span class="n">NsocVersion</span><span class="o">.</span><span class="n">v1</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">num_neurons</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">NSoC_v1</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">num_neurons</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- with average pooling, number of neurons must&quot;</span>
                       <span class="s2">&quot; be a multiple of 8&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">input_dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">32</span><span class="p">:</span>
         <span class="n">hw_msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- with average pooling, the maximum input width&quot;</span>
                       <span class="s2">&quot; is 32&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hw_msg</span>
+
+
+<span class="k">def</span> <span class="nf">_get_threshold_incompatibilities</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">bit_number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks threshold_fire and threshold_fire_step compatibility with hardware</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layer (:obj:`Layer`): the Layer to check thresholds hardware</span>
+<span class="sd">            compatibility.</span>
+<span class="sd">        bit_number (int): bit number in witch the thresholds are coded.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: message containing hardware incompatibilities of the layer.</span>
+<span class="sd">            Empty string if the layer is hardware compatible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hw_msg</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Check threshold_fire and threshold_fire_step parameters</span>
+    <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;threshold_fire&#39;</span><span class="p">,</span> <span class="s1">&#39;threshold_fire_step&#39;</span><span class="p">):</span>
+        <span class="n">thres</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+        <span class="n">hw_msg</span> <span class="o">+=</span> <span class="n">_get_must_be_coded_on_msg</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">thres</span><span class="p">,</span> <span class="n">bit_number</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">hw_msg</span>
 </pre></div>
 
