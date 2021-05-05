@@ -322,7 +322,7 @@ Most of the parameters for these blocks are identical to those passed to the
 corresponding inner processing layers, such as strides and bias.
 
 ``conv_block``
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -336,7 +336,7 @@ corresponding inner processing layers, such as strides and bias.
                   **kwargs):
 
 ``dense_block``
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -347,7 +347,7 @@ corresponding inner processing layers, such as strides and bias.
                    **kwargs)
 
 ``separable_conv_block``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 

@@ -56,7 +56,7 @@ Akida Execution Engine API
         :members:
 
     Dense
-    ======
+    =====
     .. autoclass:: Dense
         :members:
         :inherited-members:

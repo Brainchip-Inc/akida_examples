@@ -1,5 +1,5 @@
 API reference
-**************
+*************
 
 .. toctree::
    Akida Execution Engine <aee_apis.rst>

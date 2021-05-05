@@ -277,7 +277,7 @@ accept dense inputs, thanks to the special `InputConvolutional <../api_reference
 layer.
 
 Input Scaling
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 The `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`_
 layer only receives 8-bit input values:
