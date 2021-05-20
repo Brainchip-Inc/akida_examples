@@ -372,11 +372,8 @@ assert akida_accuracy > 0.97
 ######################################################################
 
 # Print model statistics
-stats = model_akida.get_statistics()
-
 print("Model statistics")
-for _, stat in stats.items():
-    print(stat)
+print(model_akida.statistics)
 
 ######################################################################
 # Let's summarize the accuracy for the quantized Keras and the Akida model.

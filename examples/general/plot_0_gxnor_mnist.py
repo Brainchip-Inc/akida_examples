@@ -117,9 +117,7 @@ assert accuracy > 0.99
 
 # Print model statistics
 print("Model statistics")
-stats = model_akida.get_statistics()
-for _, stat in stats.items():
-    print(stat)
+print(model_akida.statistics)
 
 # Display results
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "% / " + "F1 score: " +

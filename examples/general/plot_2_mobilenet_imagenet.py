@@ -261,9 +261,7 @@ assert accuracy_akida >= 0.9
 
 # Print model statistics
 print("Model statistics")
-stats = model_akida.get_statistics()
-for _, stat in stats.items():
-    print(stat)
+print(model_akida.statistics)
 
 ######################################################################
 # 5.4 Show predictions for a random image

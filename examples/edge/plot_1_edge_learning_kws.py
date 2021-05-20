@@ -248,7 +248,8 @@ acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
 # Remember model statistics for later purpose
-model_statistics = model_ak.get_statistics()
+model_statistics = model_ak.statistics
+sequence_name = model_ak.mapping()[0].name
 
 # For non-regression purpose
 assert acc_val_ak > 0.88
@@ -273,7 +274,9 @@ model_ak.add(layer_fc)
 # Estimate the number of spikes at the end of the feature extractor.
 
 # Retrieve the number of output spikes from the feature extractor output
-median_spikes = int(model_statistics['separable_6'].output_sparsity * 100)
+output_sparsity = model_statistics[sequence_name].layer_stats[
+    'separable_6'].output_sparsity
+median_spikes = int(output_sparsity * 100)
 print(f"Median of number of spikes: {median_spikes}")
 
 # Fix the number of weights to 1.2 times the median of output spikes

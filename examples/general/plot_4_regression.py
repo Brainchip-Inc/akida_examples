@@ -154,9 +154,7 @@ assert abs(mae_keras - mae_akida) < 0.5
 
 # Print model statistics
 print("Model statistics")
-stats = model_akida.get_statistics()
-for _, stat in stats.items():
-    print(stat)
+print(model_akida.statistics)
 
 ######################################################################
 # Let's summarize the MAE performance for the native Keras, the quantized Keras
