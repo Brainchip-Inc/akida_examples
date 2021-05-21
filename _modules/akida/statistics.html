@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida.layer_statistics &mdash; Akida Examples  documentation</title>
+  <title>akida.statistics &mdash; Akida Examples  documentation</title>
   
 
   
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.2
+                MetaTF 1.9.3
               </div>
             
           
@@ -426,7 +426,7 @@
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>akida.layer_statistics</li>
+      <li>akida.statistics</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -441,20 +441,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida.layer_statistics</h1><div class="highlight"><pre>
+  <h1>Source code for akida.statistics</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">LayerType</span>
 
 
 <div class="viewcode-block" id="LayerStatistics"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.LayerStatistics">[docs]</a><span class="k">class</span> <span class="nc">LayerStatistics</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Container attached to an akida.Model and an akida.Layer that allows to</span>
-<span class="sd">        retrieve layer statistics:</span>
-<span class="sd">        (average input and output sparsity, number of operations, number of</span>
-<span class="sd">        possible spikes, row_sparsity).</span>
-
+    <span class="sd">&quot;&quot;&quot;Provides layer statistics:</span>
+<span class="sd">        (average output sparsity, number of possible spikes, row_sparsity).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># pylint: disable=too-many-instance-attributes</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_activations</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span> <span class="o">=</span> <span class="n">layer</span>
@@ -557,6 +552,150 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<span class="k">class</span> <span class="nc">SequenceStatistics</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Provides layer sequence statistics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">inference</span><span class="p">,</span> <span class="n">nb_activations</span><span class="p">,</span> <span class="n">events</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span> <span class="o">=</span> <span class="n">sequence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inference</span> <span class="o">=</span> <span class="n">inference</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">layer</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">!=</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span>
+        <span class="p">]</span>
+        <span class="c1"># Initialize empty statistics per layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layer_stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">LayerStatistics</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">inference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nb_activations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Get the number of samples evaluated for that sequence</span>
+            <span class="n">nb_samples</span> <span class="o">=</span> <span class="n">inference</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">nb_activations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># A single activations value corresponds to the last layer</span>
+                <span class="n">layer</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">layer_activations</span> <span class="o">=</span> <span class="n">nb_activations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_layer_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LayerStatistics</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">layer_activations</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Each activations value correspond to a sequence layer</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+                    <span class="n">layer_activations</span> <span class="o">=</span> <span class="n">nb_activations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_layer_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LayerStatistics</span><span class="p">(</span>
+                        <span class="n">layer</span><span class="p">,</span> <span class="n">nb_samples</span><span class="p">,</span> <span class="n">layer_activations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">events</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">durations</span> <span class="o">=</span> <span class="n">events</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">events</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">sum_timings</span><span class="p">(</span><span class="n">event_type</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">durations</span><span class="p">[</span><span class="n">events</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">event_type</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">[</span><span class="s1">&#39;fill&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_timings</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">[</span><span class="s1">&#39;proc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_timings</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">[</span><span class="s1">&#39;fetch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_timings</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;{sequence: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, fps: &quot;</span> <span class="o">+</span> <span class="n">fps</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timings</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, timings: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timings</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, layer_stats: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_stats</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;Sequence &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="o">+</span> <span class="s2">&quot; fps&quot;</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Average framerate = &quot;</span> <span class="o">+</span> <span class="n">fps</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timings</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Last inference timings: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timings</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">layer_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_stats</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">layer_stats</span><span class="o">.</span><span class="n">output_sparsity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">data</span> <span class="o">+=</span> <span class="n">layer_stats</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layer_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get statistics by layer for this sequence.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a dictionary of obj:`LayerStatistics` indexed by layer_name.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_stats</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1000</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inference</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inference</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">timings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timings</span>
+
+
+<span class="k">def</span> <span class="nf">_get_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the metrics for a specific sequence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># Sequence metrics are identified by the first and last layers</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">name</span>
+    <span class="c1"># Filter-out metrics not corresponding to that sequence</span>
+    <span class="n">seq_metrics_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+    <span class="c1"># Get the metrics matching the specified name for the sequence</span>
+    <span class="n">metrics_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seq_metrics_names</span> <span class="k">if</span> <span class="n">metrics</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="n">metrics_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">class</span> <span class="nc">Statistics</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Provides statistics for all Model layer sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Iterate through model layer sequences</span>
+        <span class="n">sequences</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">mapping</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">sequences</span><span class="p">:</span>
+            <span class="c1"># Get activations and inference metrics for the sequence</span>
+            <span class="n">inference</span> <span class="o">=</span> <span class="n">_get_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="s2">&quot;inference&quot;</span><span class="p">)</span>
+            <span class="n">nb_activations</span> <span class="o">=</span> <span class="n">_get_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="s2">&quot;activations&quot;</span><span class="p">)</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="n">_get_metrics</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="s2">&quot;events&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">[</span><span class="n">sequence</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">SequenceStatistics</span><span class="p">(</span>
+                <span class="n">sequence</span><span class="p">,</span> <span class="n">inference</span><span class="p">,</span> <span class="n">nb_activations</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">fps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">stat</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 </pre></div>
 
            </div>
