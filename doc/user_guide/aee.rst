@@ -71,10 +71,6 @@ added in subsequent releases.
     `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__.
     This layer is configurable, either using trained-weights imported from a CNN
     or by setting its kernels through the Akida API.
-    A special `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__
-    layer with pre-defined kernels is included in the Akida Execution Engine:
-    `InputBCSpike <../api_reference/aee_apis.html#inputbcspike>`__.
-    It contains orientation filters to detect edges.
 
 Input events buffering
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -103,8 +99,7 @@ Data frames parallelization
 
 The Akida Execution Engine can process several image data frames in parallel
 through its `InputConvolutional
-<../api_reference/aee_apis.html#inputconvolutional>`__ layer (or its
-`InputBCSpike <../api_reference/aee_apis.html#inputbcspike>`__ variant). All
+<../api_reference/aee_apis.html#inputconvolutional>`__ layer. All
 image frames should be grouped together inside a 4-dimensional array.
 
 3. Determine training mode
@@ -169,7 +164,6 @@ creating a ``Model`` object and adding layers to it using the
 `.add() <../api_reference/aee_apis.html#akida.Model.add>`__
 method. The available layers are `InputData <../api_reference/aee_apis.html#inputdata>`__,
 `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__,
-`InputBCSpike <../api_reference/aee_apis.html#inputbcspike>`__,
 `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__,
 `Convolutional <../api_reference/aee_apis.html#convolutional>`__ and
 `SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__.
@@ -219,9 +213,6 @@ types:
   appropriate event-based format, e.g., the output from a neuromorphic camera.
 * `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__
   - image-specific input layer, taking either RGB or grayscale pixel input.
-* `InputBCSpike <../api_reference/aee_apis.html#inputbcspike>`__ – an
-  `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__
-  layer with pre-defined weights to detect edges in images.
 
 Data-Processing layer types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
