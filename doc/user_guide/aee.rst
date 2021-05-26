@@ -296,13 +296,16 @@ time, even after the model has been saved and reloaded.
 Learning constraints
 ^^^^^^^^^^^^^^^^^^^^
 
-The following restrictions apply to Akida Unsupervised Learning:
+Only the last layer of a model can be trained with Akida Unsupervised Learning
+and must fulfill the following constraints:
 
-* Only `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__ and `Convolutional <../api_reference/aee_apis.html#convolutional>`__ layers can be trained,
+* must be of type `FullyConnected
+<../api_reference/aee_apis.html#fullyconnected>`__ or `Convolutional
+<../api_reference/aee_apis.html#convolutional>`__,
 
-* Only layers with binary weights can be trained,
+* must have binary weight,
 
-* Only layers receiving binary inputs can be trained.
+* must receive binary inputs.
 
 Compiling a layer
 ^^^^^^^^^^^^^^^^^
