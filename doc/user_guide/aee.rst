@@ -339,11 +339,9 @@ required, they will acquire some ‘generalization’ that is: tolerance to slig
 different forms of the pattern they are intended to detect – but, will also lose
 some ‘specificity’, or become more responsive to members of different classes.
 
-The ``num_weights`` parameter has other dependencies, such as an
-event-generating threshold or ``threshold_fire`` and the number of events
-processed at a time, defined either by the size of an input image, the number
-of input events, or the ``packet_size`` of an `InputData <../api_reference/aee_apis.html#inputdata>`__
-layer.
+Tips to set Akida learning parameters are detailed in `the dedicated example
+<../examples/edge/plot_2_edge_learning_parameters.html>`_.
+
 
 Learning parameters
 ^^^^^^^^^^^^^^^^^^^
