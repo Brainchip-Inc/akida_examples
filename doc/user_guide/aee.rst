@@ -310,8 +310,9 @@ and must fulfill the following constraints:
 Compiling a layer
 ^^^^^^^^^^^^^^^^^
 
-For a layer to learn using Akida Unsupervised Learning, it must first be compiled
-with specific `learning parameters <aee.html#id7>`_.
+For a layer to learn using Akida Unsupervised Learning, it must first be
+compiled with specific `learning parameters <aee.html#id7>`_ using the
+`Model.compile <../api_reference/aee_apis.html#akida.Model.compile>`_ method.
 
 The only mandatory parameter is the number of active (non-zero) connections that
 each of the layer neurons has with the previous layer, expressed as the number
