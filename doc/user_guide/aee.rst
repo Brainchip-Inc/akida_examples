@@ -137,8 +137,9 @@ creating a ``Model`` object and adding layers to it using the
 method. The available layers are `InputData <../api_reference/aee_apis.html#inputdata>`__,
 `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__,
 `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__,
-`Convolutional <../api_reference/aee_apis.html#convolutional>`__ and
-`SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__.
+`Convolutional <../api_reference/aee_apis.html#convolutional>`__,
+`SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__
+and `Concat <../api_reference/aee_apis.html#concat>`__.
 Layers are built with a name and a list of named parameters that are described
 in the sections below.
 
