@@ -108,7 +108,7 @@ In addition to the model design constraints, the Akida NSoC has several
 quantization constraints:
 
 * Weights of the neural layers must be quantized using
-  `1, 2, 3, 4 or 8 bits <hw_constraints.html>`_.
+  `1, 2, 4 or 8 bits <hw_constraints.html>`_.
 * Activations should be quantized too using 1, 2 or 4 bits, with maximum spike
   value set to 15\ [#fn-4]_\.
 * Every neural layer accepts inputs with different quantization parameters,
