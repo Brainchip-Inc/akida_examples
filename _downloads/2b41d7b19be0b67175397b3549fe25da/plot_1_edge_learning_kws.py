@@ -249,7 +249,7 @@ print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
 # Remember model statistics for later purpose
 model_statistics = model_ak.statistics
-sequence_name = model_ak.mapping()[0].name
+sequence_name = model_ak.sequences[0].name
 
 # For non-regression purpose
 assert acc_val_ak > 0.88
