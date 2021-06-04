@@ -95,6 +95,7 @@ Current available models for creation are:
  * mobilenet_imagenet
  * mobilenet_imagenet_edge
  * yolo_base
+ * vgg_imagenet
 
 Command-line interface for model training
 -----------------------------------------
