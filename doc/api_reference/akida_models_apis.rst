@@ -80,6 +80,12 @@ Akida models API
     .. autofunction:: akida_models.vgg_cifar10
     .. autofunction:: akida_models.vgg_cifar10_pretrained
 
+    ImageNet
+    ~~~~~~~~
+    .. autofunction:: akida_models.vgg_imagenet
+    .. autofunction:: akida_models.vgg_imagenet_pretrained
+    .. autofunction:: akida_models.vgg_melanoma_pretrained
+
     UTK Face
     ~~~~~~~~
     .. autofunction:: akida_models.vgg_utk_face
