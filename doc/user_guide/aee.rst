@@ -299,9 +299,8 @@ Learning constraints
 Only the last layer of a model can be trained with Akida Unsupervised Learning
 and must fulfill the following constraints:
 
-* must be of type `FullyConnected
-<../api_reference/aee_apis.html#fullyconnected>`__ or `Convolutional
-<../api_reference/aee_apis.html#convolutional>`__,
+* must be of type `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__
+  or `Convolutional <../api_reference/aee_apis.html#convolutional>`__,
 
 * must have binary weight,
 
