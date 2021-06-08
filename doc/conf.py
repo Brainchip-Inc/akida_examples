@@ -87,3 +87,9 @@ autodoc_default_options = {
 
 # silence warning raised by autodocsumm
 suppress_warnings = ['app.add_directive']
+
+# this folder is copied to the documentation's HTML output
+html_static_path = ['_static']
+
+# add a custom css file to remove rtd theme page width limit
+html_css_files = ['custom.css',]
