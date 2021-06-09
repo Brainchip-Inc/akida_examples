@@ -486,10 +486,10 @@ MNIST dataset.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
 
     8192/11490434 [..............................] - ETA: 0s
-  737280/11490434 [&gt;.............................] - ETA: 0s
- 2408448/11490434 [=====&gt;........................] - ETA: 0s
- 4317184/11490434 [==========&gt;...................] - ETA: 0s
- 7348224/11490434 [==================&gt;...........] - ETA: 0s
+  425984/11490434 [&gt;.............................] - ETA: 1s
+ 2154496/11490434 [====&gt;.........................] - ETA: 0s
+ 6414336/11490434 [===============&gt;..............] - ETA: 0s
+10223616/11490434 [=========================&gt;....] - ETA: 0s
 11493376/11490434 [==============================] - 0s 0us/step
 </pre></div>
 </div>
@@ -584,16 +584,13 @@ sample_image in the script above (anything from 0 to 9999).</p>
 </div>
 <div class="section" id="check-performance">
 <h2>4. Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">accuracy_score</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
 
 <span class="c1"># Check performance against num_samples samples</span>
 <span class="n">num_samples</span> <span class="o">=</span> <span class="mi">10000</span>
 
 <span class="n">results</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_set</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)],</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">accuracy</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">test_label</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">],</span> <span class="n">results</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">])</span>
-<span class="n">f1</span> <span class="o">=</span> <span class="n">f1_score</span><span class="p">(</span><span class="n">test_label</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">],</span>
-              <span class="n">results</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">],</span>
-              <span class="n">average</span><span class="o">=</span><span class="s1">&#39;weighted&#39;</span><span class="p">)</span>
 
 <span class="c1"># For non-regression purpose</span>
 <span class="k">assert</span> <span class="n">accuracy</span> <span class="o">&gt;</span> <span class="mf">0.99</span>
@@ -603,15 +600,14 @@ sample_image in the script above (anything from 0 to 9999).</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">model_akida</span><span class="o">.</span><span class="n">statistics</span><span class="p">)</span>
 
 <span class="c1"># Display results</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">accuracy</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;% / &quot;</span> <span class="o">+</span> <span class="s2">&quot;F1 score: &quot;</span> <span class="o">+</span>
-      <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">accuracy</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Model statistics
 
 Sequence SW/conv_0-dense_3
-Average framerate = 2945.80 fps
+Average framerate = 2938.01 fps
 Layer (type)                  output sparsity
 conv_0 (InputConvolutional)   0.85
 Layer (type)                  output sparsity
@@ -622,7 +618,7 @@ Layer (type)                  output sparsity
 dense_2 (FullyConnected)      0.68
 Layer (type)                  output sparsity
 dense_3 (FullyConnected)      N/A
-Accuracy: 99.07% / F1 score: 0.99
+Accuracy: 99.07%
 </pre></div>
 </div>
 <p>Depending on the number of samples you run, you should find a
@@ -634,7 +630,7 @@ slightly more complex final classification is applied (with a single
 additional integer subtraction per neuron), but for simplicity we leave
 those details aside here. See the cnn2snn training framework for a full
 description.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.068 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.061 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-0-gxnor-mnist-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/f549929a016413c18b0da1178bc1c0a5/plot_0_gxnor_mnist.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_0_gxnor_mnist.py</span></code></a></p>

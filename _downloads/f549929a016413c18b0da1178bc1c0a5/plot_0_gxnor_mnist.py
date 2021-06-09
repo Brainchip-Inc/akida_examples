@@ -101,16 +101,13 @@ print(outputs.squeeze())
 # 4. Check performance
 # ~~~~~~~~~~~~~~~~~~~~
 
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import accuracy_score
 
 # Check performance against num_samples samples
 num_samples = 10000
 
 results = model_akida.predict(test_set[:int(num_samples)], 10)
 accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
-f1 = f1_score(test_label[:num_samples],
-              results[:num_samples],
-              average='weighted')
 
 # For non-regression purpose
 assert accuracy > 0.99
@@ -120,8 +117,7 @@ print("Model statistics")
 print(model_akida.statistics)
 
 # Display results
-print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "% / " + "F1 score: " +
-      "{0:.2f}".format(f1))
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
