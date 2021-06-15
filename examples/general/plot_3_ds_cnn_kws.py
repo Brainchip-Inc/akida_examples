@@ -10,8 +10,7 @@ converted using the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__.
 
 This example uses a Keyword Spotting Dataset prepared using
 **TensorFlow** `audio recognition
-example <https://www.tensorflow.org/tutorials/sequences/audio_recognition>`__
-utils.
+example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 
 The words to recognize are first converted to `spectrogram
 images <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work>`__
