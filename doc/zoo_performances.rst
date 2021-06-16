@@ -84,6 +84,18 @@ Classification
    :scale: 4 %
    :target: http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5
 
+.. |mb_ite_25_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenette_224_alpha_25_iq8_wq4_aq4.h5
+
+.. |mb_ite_50_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenette_224_alpha_50_iq8_wq4_aq4.h5
+
+.. |mb_ite_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenette_224_iq8_wq4_aq4.h5
+
 .. |vgg_mel_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: http://data.brainchip.com/models/vgg/vgg11_melanoma_iq8_wq4_aq4.h5
@@ -116,6 +128,12 @@ Classification
 | MobileNetV1      | 224        | ImageNet           | 8/4/4        | 69.53%         | |mb_ex|     | (128, 128)     | |mb_224_dl|    |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | MobileNetV1      | 160        | Cats vs dogs       | 8/4/4        | 98.11%         | |mb_cvd_ex| | (127.5, 127.5) | |mb_cvd_dl|    |
++------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
+| MobileNetV1 0.25 | 224        | Imagenette         | 8/4/4        | 86.83%         |             | (128, 128)     | |mb_ite_25_dl| |
++------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
+| MobileNetV1 0.5  | 224        | Imagenette         | 8/4/4        | 92.05%         |             | (128, 128)     | |mb_ite_50_dl| |
++------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
+| MobileNetV1      | 224        | Imagenette         | 8/4/4        | 94.34%         |             | (128, 128)     | |mb_ite_dl|    |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | MobileNetV1 0.5  | 160        | ImageNet           | 8/4/4        | 49.69%         | |mbe_ex|    | (128, 128)     | |mbe_160_dl|   |
 | edge             |            |                    |              |                |             |                |                |
