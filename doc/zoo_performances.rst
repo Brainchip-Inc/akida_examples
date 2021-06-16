@@ -88,6 +88,10 @@ Classification
    :scale: 4 %
    :target: http://data.brainchip.com/models/vgg/vgg11_melanoma_iq8_wq4_aq4.h5
 
+.. |vgg_odir_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/vgg/vgg11_odir5k_iq8_wq4_aq4.h5
+
 .. |gx_ex| image:: ./img/link_icon.png
    :scale: 4 %
    :target: examples/general/plot_0_gxnor_mnist.html
@@ -127,6 +131,9 @@ Classification
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | VGG11            | 224        | SIIM-ISIC Melanoma | 8/4/4        | 98.31% -       |             | (255, 0)       | |vgg_mel_dl|   |
 |                  |            | Classification     |              | AUROC 0,8020   |             |                |                |
++------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
+| VGG11            | 224        | ODIR-5K Ocular     | 8/4/4        | 90.53% -       |             | (255, 0)       | |vgg_odir_dl|  |
+|                  |            | disease recognition|              | AUROC 0,9473   |             |                |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | GXNOR            | 28         | MNIST              | 2/2/2        | 99.07%         | |gx_ex|     |                | |gx_dl|        |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
