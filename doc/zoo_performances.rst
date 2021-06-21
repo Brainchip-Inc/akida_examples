@@ -104,6 +104,10 @@ Classification
    :scale: 4 %
    :target: http://data.brainchip.com/models/vgg/vgg11_odir5k_iq8_wq4_aq4.h5
 
+.. |vgg_oct_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/vgg/vgg11_retinal_oct_iq8_wq4_aq4.h5
+
 .. |gx_ex| image:: ./img/link_icon.png
    :scale: 4 %
    :target: examples/general/plot_0_gxnor_mnist.html
@@ -152,6 +156,9 @@ Classification
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | VGG11            | 224        | ODIR-5K Ocular     | 8/4/4        | 90.53% -       |             | (255, 0)       | |vgg_odir_dl|  |
 |                  |            | disease recognition|              | AUROC 0,9473   |             |                |                |
++------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
+| VGG11            | 224        | Retinal OCT ocular | 8/4/4        | 80.60% -       |             | (255, 0)       | |vgg_oct_dl|   |
+|                  |            | disease recognition|              | AUROC 0,9768   |             |                |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
 | GXNOR            | 28         | MNIST              | 2/2/2        | 99.07%         | |gx_ex|     |                | |gx_dl|        |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+----------------+
