@@ -229,3 +229,24 @@ Keyword spotting
 +==============+=======================+==============+================+==========+===============+==========+
 | DS-CNN       | Google speech command | 8/4/4        | 91.33%         | |kws_ex| | (225, 0)      | |kws_dl| |
 +--------------+-----------------------+--------------+----------------+----------+---------------+----------+
+
+
+.. |time_icon_ref| image:: ./img/time_icon.png
+   :scale: 5 %
+
+|time_icon_ref| Time domain
+---------------------------
+
+Fault detection
+~~~~~~~~~~~~~~~
+
+.. |cwru_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/convtiny/convtiny_cwru_iq8_wq2_aq4.h5
+
++--------------+--------------------------+--------------+----------+---------------+-----------+
+| Architecture | Dataset                  | Quantization | Accuracy | Input scaling | Download  |
++==============+==========================+==============+==========+===============+===========+
+| Convtiny     | CWRU Electric Motor Ball | 8/2/4        | 98.9%    | (1, 127)      | |cwru_dl| |
+|              | Bearing Fault Diagnosis  |              |          |               |           |
++--------------+--------------------------+--------------+----------+---------------+-----------+
