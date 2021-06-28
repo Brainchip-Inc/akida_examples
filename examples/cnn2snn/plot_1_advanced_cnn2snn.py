@@ -483,6 +483,7 @@ class CustomQuantizedActivation(qlayers.QuantizedActivation):
 
     def __init__(self, bitwidth, max_value, **kwargs):
         super().__init__(bitwidth, **kwargs)
+        self.max_value = max_value
         self.step_height_ = tf.constant(max_value / self.levels)
 
     @property
@@ -496,6 +497,11 @@ class CustomQuantizedActivation(qlayers.QuantizedActivation):
     @property
     def threshold(self):
         return 0.5 * self.step_height_
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({'max_value': self.max_value})
+        return config
 
 
 # Create a custom quantized activation layer
