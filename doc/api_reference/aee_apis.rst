@@ -91,3 +91,13 @@ Akida Execution Engine API
     ======
     .. autoclass:: Device
         :members:
+    .. autofunction:: akida.devices
+
+    NP
+    ==
+    .. autoclass:: akida.NP.Mesh
+        :members:
+    .. autoclass:: akida.NP.Info
+        :members:
+    .. autoclass:: akida.NP.Ident
+        :members:
