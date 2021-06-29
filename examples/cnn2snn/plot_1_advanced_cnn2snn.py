@@ -534,3 +534,39 @@ plt.show()
 # 1, as in the standard ReLU layer. This can be a suitable activation layer for
 # use cases where the maximum activation value is not known. The layer can learn
 # what are the best values to adapt to the input potentials.
+
+######################################################################
+# .. _high_scale_factors:
+#
+# 4. How to deal with too high scale factors
+# ------------------------------------------
+#
+# A quantized Keras model may have sometimes very high scale factors, i.e. very
+# small weights, in the neural layers. During conversion into an Akida model,
+# these scale factors are used to compute the Akida fire thresholds and steps
+# required for Akida inference. However, these fire thresholds and steps are
+# limited in memory on NSoC. It may happen that their values are too big to fit
+# into memory and then a Runtime Error occurs at Akida inference, e.g. ``Runtime
+# Error: Error when programming layer 'separable_8': Backend Hardware(CNP):
+# 1246278 cannot fit in a 20 bits unsigned integer``.
+#
+# If you're facing this issue, it is necessary to retrain your Keras model to
+# avoid too high scale factors in the neural layers. One possible reason for
+# these high scale factors is the presence of very small gammas in
+# BatchNormalization (BN) layers. Indeed, when folding BN layers into their
+# preceding neural layers, the weights corresponding to tiny BN gammas become in
+# turn very small, which leads to high scale factors. The akida_models package
+# provides a tool to add constraint on BN gammas: the gammas are clipped to a
+# minimum value of 1e-2: the gammas cannot be smaller than this threshold. The
+# code snippet below illustrates how to use the provided tool. Note that it must
+# be applied on the Keras float (or quantized) model before folding BN layers.
+
+from akida_models import add_gamma_constraint
+
+# Add BN gamma constraint on all BN layers of the model
+model_keras_with_gamma_constraint = add_gamma_constraint(model_keras)
+
+######################################################################
+# The new model can then be trained using ``compile()`` and ``fit()`` and
+# quantized if needed. The trained model will not have BN gammas less than 1e-2,
+# which is valuable to avoid very high scale factors.
