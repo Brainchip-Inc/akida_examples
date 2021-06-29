@@ -92,6 +92,8 @@ Akida Execution Engine API
     .. autoclass:: Device
         :members:
     .. autofunction:: akida.devices
+    .. autofunction:: akida.AKD1000
+    .. autofunction:: akida.TwoNodesIP
 
     NP
     ==

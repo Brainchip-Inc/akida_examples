@@ -347,6 +347,25 @@ The list of hardware devices detected on a specific host is available using the
     device = devices()[0]
     print(device.hw_version)
 
+Virtual Devices
+"""""""""""""""
+
+Most of the time, ``Device`` objects are real hardware devices, but virtual
+devices can also be created to allow the mapping of a ``Model`` on a host that is
+not connected to a hardware device.
+
+Virtual devices are simply created by specifying their hardware revision and mesh
+topology:
+
+.. code-block:: python
+
+    # Assuming mesh has been defined above
+    device = Device(NSoC_v2, mesh)
+
+It is possible to build a virtual device for known hardware devices, by calling
+functions `AKD1000() <../api_reference/aee_apis.html#akida.AKD1000>`__ and
+`TwoNodesIP() <../api_reference/aee_apis.html#akida.TwoNodesIP>`__.
+
 Model mapping
 ^^^^^^^^^^^^^
 
