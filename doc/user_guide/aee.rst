@@ -318,6 +318,51 @@ layer types share the following pooling parameters:
   patches. If not specified, a stride of ``pooling_width`` or ``pooling_height``
   is applied.
 
+Model Hardware Mapping
+----------------------
+
+By default, Akida models are implicitly mapped on a software backend: in other
+words, their inference is computed on the host CPU.
+
+Devices
+^^^^^^^
+In order to perform the inference of a model on hardware, the corresponding
+``Model`` object must first be mapped on a specific ``Device``.
+
+The Akida ``Device`` object represents an Akida device, which is entirely
+characterized by:
+
+- its `hardware version <../api_reference/aee_apis.html#hwversion>`__,
+- the description of its `mesh <../api_reference/aee_apis.html#akida.NP.Mesh>`__ of
+  processing nodes.
+
+Discovering Hardware Devices
+""""""""""""""""""""""""""""
+
+The list of hardware devices detected on a specific host is available using the 
+`devices() <../api_reference/aee_apis.html#akida.devices>`__ method.
+
+.. code-block:: python
+
+    device = devices()[0]
+    print(device.hw_version)
+
+Model mapping
+^^^^^^^^^^^^^
+
+Mapping a model on a specific device is as simple as calling the ``Model``
+`.map() <../api_reference/aee_apis.html#akida.Model.map>`__ method.
+
+.. code-block:: python
+
+    model.map(device)
+
+Please be aware however that some errors may be raised when mapping the model if
+some hardware incompatibilities are detected.
+
+Once the model has been mapped, the inference happens on the hardware, and not
+on the host CPU.
+
 Using Akida Edge learning
 -------------------------
 
