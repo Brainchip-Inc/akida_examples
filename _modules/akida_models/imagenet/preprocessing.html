@@ -262,6 +262,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#ds-cnn">DS-CNN</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#vgg">VGG</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#yolo">YOLO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#convtiny">ConvTiny</a></li>
 </ul>
 </li>
 </ul>
@@ -384,6 +385,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../zoo_performances.html#audio-icon-ref-audio-domain"> Audio domain</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../zoo_performances.html#keyword-spotting">Keyword spotting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zoo_performances.html#time-icon-ref-time-domain"> Time domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../zoo_performances.html#fault-detection">Fault detection</a></li>
 </ul>
 </li>
 </ul>
@@ -826,7 +831,7 @@
     <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_decode_crop_and_flip</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_decode_crop_and_flip</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Crops the given image to a random part of the image, and randomly flips.</span>
 
 <span class="sd">  We use the fused decode_and_crop op, which performs better than the two ops</span>
@@ -839,6 +844,7 @@
 <span class="sd">      where each coordinate is [0, 1) and the coordinates are arranged as</span>
 <span class="sd">      [ymin, xmin, ymax, xmax].</span>
 <span class="sd">    num_channels: Integer depth of the image buffer for decoding.</span>
+<span class="sd">    decode: whether to decode the image or not</span>
 
 <span class="sd">  Returns:</span>
 <span class="sd">    3-D tensor with cropped image.</span>
@@ -851,8 +857,14 @@
     <span class="c1"># allowed range of aspect ratios, sizes and overlap with the human-annotated</span>
     <span class="c1"># bounding box. If no box is supplied, then we assume the bounding box is</span>
     <span class="c1"># the entire image.</span>
+
+    <span class="k">if</span> <span class="n">decode</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">extract_jpeg_shape</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">)</span>
+
     <span class="n">sample_distorted_bounding_box</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">sample_distorted_bounding_box</span><span class="p">(</span>
-        <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">extract_jpeg_shape</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">),</span>
+        <span class="n">shape</span><span class="p">,</span>
         <span class="n">bounding_boxes</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
         <span class="n">min_object_covered</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">aspect_ratio_range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.33</span><span class="p">],</span>
@@ -861,16 +873,20 @@
         <span class="n">use_image_if_no_bounding_boxes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">bbox_begin</span><span class="p">,</span> <span class="n">bbox_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sample_distorted_bounding_box</span>
 
-    <span class="c1"># Reassemble the bounding box in the format the crop op requires.</span>
-    <span class="n">offset_y</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">bbox_begin</span><span class="p">)</span>
-    <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">bbox_size</span><span class="p">)</span>
-    <span class="n">crop_window</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">offset_y</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">decode</span><span class="p">:</span>
+        <span class="c1"># Reassemble the bounding box in the format the crop op requires.</span>
+        <span class="n">offset_y</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">bbox_begin</span><span class="p">)</span>
+        <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">bbox_size</span><span class="p">)</span>
+        <span class="n">crop_window</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">offset_y</span><span class="p">,</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">target_height</span><span class="p">,</span> <span class="n">target_width</span><span class="p">])</span>
 
-    <span class="c1"># Use the fused decode and crop op here, which is faster than each in</span>
-    <span class="c1"># series.</span>
-    <span class="n">cropped</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_and_crop_jpeg</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span>
-                                            <span class="n">crop_window</span><span class="p">,</span>
-                                            <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+        <span class="c1"># Use the fused decode and crop op here, which is faster than each in</span>
+        <span class="c1"># series.</span>
+        <span class="n">cropped</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_and_crop_jpeg</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span>
+                                                <span class="n">crop_window</span><span class="p">,</span>
+                                                <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cropped</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">bbox_begin</span><span class="p">,</span> <span class="n">bbox_size</span><span class="p">)</span>
 
     <span class="c1"># Flip to add a little more random distortion in.</span>
     <span class="n">cropped</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">random_flip_left_right</span><span class="p">(</span><span class="n">cropped</span><span class="p">)</span>
@@ -1115,7 +1131,8 @@
                      <span class="n">num_channels</span><span class="p">,</span>
                      <span class="n">is_training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">alpha</span><span class="o">=</span><span class="mf">128.</span><span class="p">,</span>
-                     <span class="n">beta</span><span class="o">=</span><span class="mf">128.</span><span class="p">):</span>
+                     <span class="n">beta</span><span class="o">=</span><span class="mf">128.</span><span class="p">,</span>
+                     <span class="n">decode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Preprocesses the given image.</span>
 
 <span class="sd">  Preprocessing includes decoding, cropping, and resizing for both training</span>
@@ -1132,20 +1149,24 @@
 <span class="sd">    num_channels: Integer depth of the image buffer for decoding.</span>
 <span class="sd">    is_training: `True` if we&#39;re preprocessing the image for training and</span>
 <span class="sd">      `False` otherwise.</span>
+<span class="sd">    decode: whether to decode the image or not</span>
 
 <span class="sd">  Returns:</span>
 <span class="sd">    A preprocessed image.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">is_training</span><span class="p">:</span>
         <span class="c1"># For training, we want to randomize some of the distortions.</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">_decode_crop_and_flip</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_decode_crop_and_flip</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">decode</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">_resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">output_height</span><span class="p">,</span> <span class="n">output_width</span><span class="p">)</span>
         <span class="c1"># this could improve things but we skip it for now -- KDC</span>
         <span class="c1">#image = _random_distort_color(image)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># For validation, we want to decode, resize, then just crop the middle.</span>
+        <span class="k">if</span> <span class="n">decode</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_jpeg</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image_buffer</span>
         <span class="n">resize_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">output_height</span><span class="p">,</span> <span class="n">output_width</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.143</span><span class="p">))</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_jpeg</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">_aspect_preserving_resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">resize_min</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">_central_crop</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">output_height</span><span class="p">,</span> <span class="n">output_width</span><span class="p">)</span>
 
