@@ -55,12 +55,6 @@ Akida Execution Engine API
     .. autoclass:: Concat
         :members:
 
-    Dense
-    =====
-    .. autoclass:: Dense
-        :members:
-        :inherited-members:
-
     BackendType
     ===========
     .. autoclass:: BackendType
