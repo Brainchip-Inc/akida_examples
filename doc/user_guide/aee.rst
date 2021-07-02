@@ -345,7 +345,7 @@ The list of hardware devices detected on a specific host is available using the
 .. code-block:: python
 
     device = devices()[0]
-    print(device.hw_version)
+    print(device.version)
 
 Virtual Devices
 """""""""""""""
@@ -381,6 +381,41 @@ some hardware incompatibilities are detected.
 
 Once the model has been mapped, the inference happens on the hardware, and not
 on the host CPU.
+
+Advanced Mapping Details and Hardware Devices Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When mapping a model on a device, the information related to the layers and
+related variables are processed in such way that the selected device can
+perform an inference.
+If the model to be programmed is too big to fit on the device, the ``Model``
+`.map() <../api_reference/aee_apis.html#akida.Model.map>`__ might create more
+than one "sequence". When inference methods are used, each sequence will be
+chain loaded on the device to process the given input.
+Sequences can be obtainer using the ``Model``
+`.sequences() <../api_reference/aee_apis.html#akida.Model.sequences>`__
+property, that will return a list of sequence objects. The program used to load
+one sequence can be obtained programmatically.
+
+.. code-block:: python
+
+    model.map(device)
+    print(len(model.sequences))
+    # Assume there is at least one sequence.
+    sequence = model.sequences[0]
+    # Check which layers have been mapped in this sequence
+    print(sequence.layers)
+    # Sequence program can be saved to a bytes object
+    sequence_program = sequence.program.to_buffer()
+    # Check program size
+    print(len(sequence_program))
+
+The number of sequences and program size for each are included in the ``Model``
+`.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
+output after it has been mapped on a device. This information can be used to
+modify a model to make it fit into less sequences, and program size can be
+used to estimate the flash and memory usage on an embedded system that would
+use the device.
 
 Using Akida Edge learning
 -------------------------
