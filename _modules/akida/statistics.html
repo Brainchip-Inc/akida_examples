@@ -71,7 +71,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.4
+                MetaTF 1.9.5
               </div>
             
           
@@ -129,6 +129,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/aee.html#model-hardware-mapping">Model Hardware Mapping</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#devices">Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#model-mapping">Model mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#advanced-mapping-details-and-hardware-devices-usage">Advanced Mapping Details and Hardware Devices Usage</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/aee.html#id1">Using Akida Edge learning</a><ul>
@@ -210,7 +211,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#concat">Concat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -218,6 +218,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#device">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sequence">Sequence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#np">NP</a></li>
 </ul>
 </li>
@@ -507,8 +509,7 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="s2">&quot;Layer (type)&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
         <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="s2">&quot;output sparsity&quot;</span><span class="p">)</span>
         <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">layer_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">layer_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">),</span> <span class="mi">30</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">+=</span> <span class="n">str_column_data</span><span class="p">(</span><span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_sparsity</span><span class="p">,</span> <span class="s2">&quot;.2f&quot;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -740,7 +741,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="c1"># Look first for a Sequence statistics</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="c1"># Look for a Layer statistics in each sequence statistics</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">seq_stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seq_stat</span><span class="o">.</span><span class="n">layer_stats</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">seq_stat</span><span class="o">.</span><span class="n">layer_stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stats</span><span class="p">)</span>

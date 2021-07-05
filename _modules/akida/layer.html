@@ -71,7 +71,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.4
+                MetaTF 1.9.5
               </div>
             
           
@@ -129,6 +129,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/aee.html#model-hardware-mapping">Model Hardware Mapping</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#devices">Devices</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#model-mapping">Model mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/aee.html#advanced-mapping-details-and-hardware-devices-usage">Advanced Mapping Details and Hardware Devices Usage</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/aee.html#id1">Using Akida Edge learning</a><ul>
@@ -210,7 +211,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#separableconvolutional">SeparableConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#concat">Concat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#dense">Dense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#backendtype">BackendType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#convolutionmode">ConvolutionMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#poolingtype">PoolingType</a></li>
@@ -218,6 +218,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwversion">HwVersion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#compatibility">Compatibility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#device">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sequence">Sequence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#np">NP</a></li>
 </ul>
 </li>
@@ -471,6 +473,14 @@
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
+<span class="k">def</span> <span class="nf">layer_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">layer_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">layer_type</span> <span class="o">=</span> <span class="n">layer_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;FullyConnected&quot;</span><span class="p">,</span> <span class="s2">&quot;Fully.&quot;</span><span class="p">)</span>
+    <span class="n">layer_type</span> <span class="o">=</span> <span class="n">layer_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Convolutional&quot;</span><span class="p">,</span> <span class="s2">&quot;Conv.&quot;</span><span class="p">)</span>
+    <span class="n">layer_type</span> <span class="o">=</span> <span class="n">layer_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Separable&quot;</span><span class="p">,</span> <span class="s2">&quot;Sep.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; (&quot;</span> <span class="o">+</span> <span class="n">layer_type</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+
 <span class="k">def</span> <span class="nf">layer_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&lt;akida.Layer, type=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">+=</span> <span class="s2">&quot;, name=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -501,7 +511,7 @@
 <span class="sd">        values (:obj:`numpy.ndarray`): a numpy.ndarray containing the variable values.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">get_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
