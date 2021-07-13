@@ -71,7 +71,7 @@
             
             
               <div class="version">
-                MetaTF 1.9.5
+                MetaTF 1.9.6
               </div>
             
           
@@ -221,6 +221,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sequence">Sequence</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#soc">soc</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
@@ -490,7 +491,19 @@
 
 <span class="k">def</span> <span class="nf">_copy_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
     <span class="n">new_layer</span> <span class="o">=</span> <span class="n">Layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_layer</span><span class="p">)</span>
+    <span class="n">inbounds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># For each original inbound layer</span>
+    <span class="k">for</span> <span class="n">inbound</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbounds</span><span class="p">:</span>
+        <span class="c1"># Get the corresponding layer copied in the new model</span>
+        <span class="n">new_inbound</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">inbound</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_inbound</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">Concat</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Missing </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> inbound layer </span><span class="si">{</span><span class="n">inbound</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Use the last layer of the target model</span>
+            <span class="n">new_inbound</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">inbounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_inbound</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_layer</span><span class="p">,</span> <span class="n">inbounds</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">learning</span><span class="p">:</span>
         <span class="c1"># Recompile model with layer parameters</span>
         <span class="n">learn_params</span> <span class="o">=</span> <span class="p">{</span>
