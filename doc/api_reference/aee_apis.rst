@@ -107,3 +107,9 @@ Akida Execution Engine API
         :members:
     .. autoclass:: akida.NP.Ident
         :members:
+
+    soc
+    ===
+    .. autoclass:: akida.core.soc.ClockMode
+    .. autofunction:: akida.core.soc.get_clock_mode
+    .. autofunction:: akida.core.soc.set_clock_mode
