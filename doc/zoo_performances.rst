@@ -114,7 +114,7 @@ Classification
 
 .. |gx_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz
+   :target: http://data.brainchip.com/models/gxnor/gxnor_mnist_iq2_wq2_aq1.h5
 
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
 | Architecture     | Resolution | Dataset            | Quantization | Top-1 accuracy | Example     | Input scaling  | Size (KB) | NPs | Download       |
@@ -152,15 +152,15 @@ Classification
 | VGG11            | 224        | ImageNet           | 8/4/4        | 51.09%         |             | (128, 128)     | 34825.2   | 21  | |vgg11_dl|     |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
 | VGG11            | 224        | SIIM-ISIC Melanoma | 8/4/4        | 98.31% -       |             | (255, 0)       | 31804.8   | 21  | |vgg_mel_dl|   |
-|                  |            | Classification     |              | AUROC 0,8020   |             |                |           |     |                |
+|                  |            | Classification     |              | AUROC 0.8020   |             |                |           |     |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
 | VGG11            | 224        | ODIR-5K Ocular     | 8/4/4        | 90.53% -       |             | (255, 0)       | 3131.3    | 21  | |vgg_odir_dl|  |
-|                  |            | disease recognition|              | AUROC 0,9473   |             |                |           |     |                |
+|                  |            | disease recognition|              | AUROC 0.9473   |             |                |           |     |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
 | VGG11            | 224        | Retinal OCT ocular | 8/4/4        | 80.60% -       |             | (255, 0)       | 3131.3    | 21  | |vgg_oct_dl|   |
-|                  |            | disease recognition|              | AUROC 0,9768   |             |                |           |     |                |
+|                  |            | disease recognition|              | AUROC 0.9768   |             |                |           |     |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
-| GXNOR            | 28         | MNIST              | 2/2/1        | 99.07%         | |gx_ex|     |                | 225.3     | 4   | |gx_dl|        |
+| GXNOR            | 28         | MNIST              | 2/2/1        | 99.24%         | |gx_ex|     | (255, 0)       | 420.8     | 4   | |gx_dl|        |
 +------------------+------------+--------------------+--------------+----------------+-------------+----------------+-----------+-----+----------------+
 
 
@@ -207,6 +207,28 @@ Regression
 +--------------+------------+--------------------------+--------------+--------+----------+---------------+-----------+-----+----------+
 
 
+Face recognition
+~~~~~~~~~~~~~~~~
+
+.. |fid_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet/mobilenet_faceidentification_iq8_wq4_aq4.h5
+
+.. |fver_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet/mobilenet_faceverification_iq8_wq4_aq4.h5
+
++-----------------+------------+----------------------+--------------+----------+---------------+-----------+-----+-----------+
+| Architecture    | Resolution | Dataset              | Quantization | Accuracy | Input scaling | Size (KB) | NPs | Download  |
++=================+============+======================+==============+==========+===============+===========+=====+===========+
+| MobileNetV1 0.5 | 112x96     | CASIA Webface        | 8/4/4        | 69.17%   | (128, 128)    | 1882.0    | 21  | |fid_dl|  |
+|                 |            | face identification  |              |          |               |           |     |           |
++-----------------+------------+----------------------+--------------+----------+---------------+-----------+-----+-----------+
+| MobileNetV1 0.5 | 112x96     | LFW                  | 8/4/4        | 97.27%   | (128, 128)    | 643.2     | 20  | |fver_dl| |
+|                 |            | face verification    |              |          |               |           |     |           |
++-----------------+------------+----------------------+--------------+----------+---------------+-----------+-----+-----------+
+
+
 .. |audio_icon_ref| image:: ./img/headphones_icon.png
    :scale: 5 %
 
@@ -250,3 +272,38 @@ Fault detection
 | Convtiny     | CWRU Electric Motor Ball | 8/2/4        | 98.9%    | (1, 127)      | 56.9      | 4   | |cwru_dl| |
 |              | Bearing Fault Diagnosis  |              |          |               |           |     |           |
 +--------------+--------------------------+--------------+----------+---------------+-----------+-----+-----------+
+
+Classification
+~~~~~~~~~~~~~~
+
+.. |ecg_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/vgg/vgg11_ecg_iq8_wq4_aq4.h5
+
++--------------+------------+--------------------+--------------+--------------+---------------+-----------+-----+-----------+
+| Architecture | Resolution | Dataset            | Quantization | Accuracy     | Input scaling | Size (KB) | NPs | Download  |
++==============+============+====================+==============+==============+===============+===========+=====+===========+
+| VGG11        | 160        | Physionet2017      | 8/4/4        | 73.89% -     | (1, 0)        | 3131.3    | 21  | |ecg_dl|  |
+|              |            | ECG classification |              | AUROC 0.8149 |               |           |     |           |
++--------------+------------+--------------------+--------------+--------------+---------------+-----------+-----+-----------+
+
+
+.. |pointcloud_icon_ref| image:: ./img/pointcloud_icon.png
+   :scale: 5 %
+
+|pointcloud_icon_ref| Point cloud
+---------------------------------
+
+Classification
+~~~~~~~~~~~~~~
+
+.. |p++_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/pointnet_plus/pointnet_plus_modelnet40_iq8_wq4_aq4.h5
+
++--------------+--------------------+--------------+--------------+---------------+-----------+-----+-----------+
+| Architecture | Dataset            | Quantization | Accuracy     | Input scaling | Size (KB) | NPs | Download  |
++==============+====================+==============+==============+===============+===========+=====+===========+
+| PointNet++   | ModelNet40         | 8/4/4        | 84.76%       | (127, 127)    | 528.5     | 17  | |p++_dl|  |
+|              | 3D Point Cloud     |              |              |               |           |     |           |
++--------------+--------------------+--------------+--------------+---------------+-----------+-----+-----------+
