@@ -138,23 +138,18 @@ Apply quantization-aware training to a VGG model for the CIFAR10 dataset by:
  * creating the model
  * training the full-precision model for 100 epochs
  * quantizing weights and activations to 4 bits
- * tuning the 4-4-4 quantized model for 15 epochs
- * quantizing weights and activations to 2 bits
- * tuning the 2-2-2 quantized model for 15 epochs
+ * tuning the 8-4-4 quantized model for 15 epochs
 
 .. code-block:: bash
 
     akida_models create -s vgg_cifar10.h5 vgg_cifar10
 
-    cifar10_train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e 100 train
+    cifar10_train train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e 100
 
     cnn2snn -m vgg_cifar10.h5 quantize -wq 4 -aq 4
 
-    cifar10_train -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e 15 tune
+    cifar10_train tune -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e 15
 
-    cnn2snn -m vgg_cifar10_iq4_wq4_aq4.h5 quantize -wq 2 -aq 2
-
-    cifar10_train -m vgg_cifar10_iq2_wq2_aq2.h5 -s vgg_cifar10_iq2_wq2_aq2.h5 -e 15 tune
 
 Note that the model is saved and reloaded at each step.
 
@@ -174,15 +169,15 @@ obtain a network with 2-bit weights and activations.
 
    akida_models create vgg_utk_face
 
-   utk_face_train -e 300 -m vgg_utk_face.h5 -s vgg_utk_face.h5
+   utk_face_train train -e 300 -m vgg_utk_face.h5 -s vgg_utk_face.h5
 
    cnn2snn -m vgg_utk_face.h5 quantize -iq 8 -wq 4 -aq 4
 
-   utk_face_train -e 30 -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
+   utk_face_train train -e 30 -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
 
    cnn2snn -m vgg_utk_face_iq8_wq4_aq4.h5 quantize -iq 8 -wq 2 -aq 2
 
-   utk_face_train -e 30 -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
+   utk_face_train train -e 30 -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
 
 KWS training
 ^^^^^^^^^^^^
@@ -203,26 +198,21 @@ binary activations for edge learning.
 
    akida_models create -s ds_cnn_kws.h5 ds_cnn_kws
 
-   kws_train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
+   kws_train train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
 
    cnn2snn -m ds_cnn_kws.h5 quantize -iq 0 -wq 0 -aq 4
 
-   kws_train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 \
-               -e 16
+   kws_train train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -e 16
 
    cnn2snn -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 quantize -iq 8 -wq 4 -aq 4
 
-   kws_train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 \
-               -e 16
+   kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -e 16
 
-   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 \
-               -e 16 -laq 3
+   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -e 16 -laq 3
 
-   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 \
-               -e 16 -laq 2
+   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -e 16 -laq 2
 
-   kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 \
-               -e 16 -laq 1
+   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -e 16 -laq 1
 
 YOLO training
 ^^^^^^^^^^^^^
@@ -235,27 +225,25 @@ YOLO training pipeline uses the ``yolo_base`` model and the CNN2SNN
 
 Create a YOLO model for VOC car/person training, use transfer learning from
 MobileNet weights trained on ImageNet and perform step-wise quantization to
-obtain a network with 4-bit weights and activations.
+obtain a network with 4-bit weights and activations. Note that the backbone
+MobileNet layers are frozen (i.e not trainable) when performing float training
+using the `--freeze_before` or `-fb` option.
 
 .. code-block:: bash
 
-   wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5
+   wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_alpha_50.h5
 
-   akida_models create -s yolo_voc.h5 yolo_base -c 2 \
-                                                -bw 'mobilenet_imagenet_alpha_50.h5'
+   akida_models create -s yolo_voc.h5 yolo_base -c 2 -bw mobilenet_imagenet_alpha_50.h5
 
-   yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 \
-               -f True -s yolo_voc.h5 train
+   yolo_train train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_voc.h5
 
    cnn2snn -m yolo_voc.h5 quantize -iq 8 -wq 8 -aq 8
 
-   yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 \
-               -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5 train
+   yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5
 
    cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq 8 -wq 4 -aq 4
 
-   yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 \
-               -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5 tune
+   yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5
 
 
 Layer Blocks
