@@ -92,10 +92,13 @@ Current available models for creation are:
  * vgg_cifar10
  * vgg_utk_face
  * ds_cnn_kws
+ * pointnet_plus_modelnet40
  * mobilenet_imagenet
+ * vgg_imagenet
  * mobilenet_imagenet_edge
  * yolo_base
- * vgg_imagenet
+ * convtiny_cwru
+ * gxnor_mnist
 
 Command-line interface for model training
 -----------------------------------------
