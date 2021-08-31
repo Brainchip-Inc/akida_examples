@@ -53,6 +53,8 @@ Akida models API
     .. autofunction:: akida_models.mobilenet_imagenet_pretrained
     .. autofunction:: akida_models.mobilenet_imagenette_pretrained
     .. autofunction:: akida_models.mobilenet_cats_vs_dogs_pretrained
+    .. autofunction:: akida_models.mobilenet_faceidentification_pretrained
+    .. autofunction:: akida_models.mobilenet_faceverification_pretrained
     .. autofunction:: akida_models.mobilenet_edge_imagenet
     .. autofunction:: akida_models.mobilenet_edge_imagenet_pretrained
 
@@ -102,6 +104,7 @@ Akida models API
     .. autofunction:: akida_models.vgg_melanoma_pretrained
     .. autofunction:: akida_models.vgg_odir5k_pretrained
     .. autofunction:: akida_models.vgg_retinal_oct_pretrained
+    .. autofunction:: akida_models.vgg_ecg_pretrained
 
     UTK Face
     ~~~~~~~~
@@ -148,3 +151,24 @@ Akida models API
     ~~~~
     .. autofunction:: akida_models.convtiny_cwru
     .. autofunction:: akida_models.convtiny_cwru_pretrained
+
+    PointNet++
+    ----------
+
+    ModelNet40
+    ~~~~~~~~~~
+    .. autofunction:: akida_models.pointnet_plus_modelnet40
+    .. autofunction:: akida_models.pointnet_plus_modelnet40_pretrained
+
+    Processing
+    **********
+    .. autofunction:: akida_models.modelnet40.preprocessing.get_modelnet_from_file
+    .. autofunction:: akida_models.modelnet40.preprocessing.get_modelnet
+
+    GXNOR
+    -----
+
+    MNIST
+    ~~~~~
+    .. autofunction:: akida_models.gxnor_mnist
+    .. autofunction:: akida_models.gxnor_mnist_pretrained
