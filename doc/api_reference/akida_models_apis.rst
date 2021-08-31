@@ -27,6 +27,13 @@ Akida models API
     -----------------------------------
     .. autofunction:: add_gamma_constraint
 
+    Knowledge distillation
+    ======================
+
+    .. autoclass:: akida_models.distiller.Distiller
+        :members:
+    .. autofunction:: akida_models.distiller.KLDistillationLoss
+
     Model zoo
     =========
 
