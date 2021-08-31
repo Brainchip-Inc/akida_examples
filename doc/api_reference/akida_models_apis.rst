@@ -34,6 +34,13 @@ Akida models API
         :members:
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
+    Pruning
+    =======
+
+    .. autofunction:: akida_models.delete_filters
+    .. autofunction:: akida_models.prune_model
+
+
     Model zoo
     =========
 
