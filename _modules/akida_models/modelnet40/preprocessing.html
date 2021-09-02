@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida_models.cwru.model_convtiny &mdash; Akida Examples  documentation</title>
+  <title>akida_models.modelnet40.preprocessing &mdash; Akida Examples  documentation</title>
   
 
   
@@ -465,7 +465,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>akida_models.cwru.model_convtiny</li>
+      <li>akida_models.modelnet40.preprocessing</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -480,9 +480,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida_models.cwru.model_convtiny</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/env python</span>
-<span class="c1"># ******************************************************************************</span>
+  <h1>Source code for akida_models.modelnet40.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -498,72 +497,207 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Convtiny model definition for CWRU classification.</span>
+<span class="sd">Preprocessing tools for ModelNet40 data handling.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Softmax</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
-
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span>
-
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
-
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/convtiny/&#39;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">trimesh</span>
+<span class="kn">from</span> <span class="nn">.pointnet_utils</span> <span class="kn">import</span> <span class="n">pointnet_preproc</span>
 
 
-<div class="viewcode-block" id="convtiny_cwru"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.convtiny_cwru">[docs]</a><span class="k">def</span> <span class="nf">convtiny_cwru</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; Instantiates a CNN for CWRU classification with input shape (32, 32, 1)</span>
-<span class="sd">    and 10 classes.</span>
+<span class="k">def</span> <span class="nf">parse_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parse the dataset.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.keras.Model: a Keras model for Convtiny/CWRU</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_2&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flatten&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_1&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_2&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;predictions&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Softmax</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;act_softmax&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;convtiny_cwru_32_10&#39;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="convtiny_cwru_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.convtiny_cwru_pretrained">[docs]</a><span class="k">def</span> <span class="nf">convtiny_cwru_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Helper method to retrieve a `convtiny_cwru` model that was trained on</span>
-<span class="sd">    CWRU dataset.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        data_dir (str): directory that contains the dataset.</span>
+<span class="sd">        num_points (int, optional): number of points  with which mesh is sample.</span>
+<span class="sd">            Defaults to 1024.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tf.keras.Model: a Keras Model instance.</span>
-
+<span class="sd">        tuple: tuple of train and test points with the corresponding labels.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;convtiny_cwru_iq8_wq2_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;69705f8060a0da8dfde7bd88dab250a06cbcf4e923bba97b5e36132d5166b554&#39;</span>
-    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
-                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Preparing Dataset. May take a few minutes&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is only done once for a given requested number of points&#39;</span><span class="p">)</span>
+    <span class="n">train_points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">train_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">test_points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">test_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">class_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">folders</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">))</span>
+    <span class="n">folders</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">folders</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;README.txt&#39;</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;processing class: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">folder</span><span class="p">)))</span>
+            <span class="c1"># store folder name with ID so we can retrieve later</span>
+            <span class="n">class_map</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">folder</span><span class="p">))</span>
+            <span class="c1"># gather all files</span>
+            <span class="n">train_files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="s2">&quot;train/*&quot;</span><span class="p">))</span>
+            <span class="n">test_files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="s2">&quot;test/*&quot;</span><span class="p">))</span>
+
+            <span class="c1"># Raw files have extremely varying amplitude ranges</span>
+            <span class="c1"># Here, we normalise all to the range [-1, 1]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">train_files</span><span class="p">:</span>
+                <span class="n">temp_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">trimesh</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">num_points</span><span class="p">))</span>
+                <span class="n">temp_points</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">temp_points</span><span class="p">))</span>
+                <span class="n">train_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_points</span><span class="p">)</span>
+                <span class="n">train_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">test_files</span><span class="p">:</span>
+                <span class="n">temp_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">trimesh</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">num_points</span><span class="p">))</span>
+                <span class="n">temp_points</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">temp_points</span><span class="p">))</span>
+                <span class="n">test_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_points</span><span class="p">)</span>
+                <span class="n">test_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_points</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">test_points</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">train_labels</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">test_labels</span><span class="p">),</span>
+        <span class="n">class_map</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">data_transformation</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Data transformation function.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        points (tf.Tensor): the points to which jitter is added.</span>
+<span class="sd">        label (tf.Tensor): the labels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Tensor, tf.Tensor: the points and labels for data transformation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># jitter points</span>
+    <span class="n">points</span> <span class="o">+=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># shuffle points</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="n">label</span>
+
+
+<div class="viewcode-block" id="get_modelnet_from_file"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.modelnet40.preprocessing.get_modelnet_from_file">[docs]</a><span class="k">def</span> <span class="nf">get_modelnet_from_file</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;ModelNet40.zip&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Load the ModelNet data from file.</span>
+
+<span class="sd">    First parse through the ModelNet data folders. Each mesh is loaded and</span>
+<span class="sd">    sampled into a point cloud before being added to a standard python list and</span>
+<span class="sd">    converted to a `numpy` array. We also store the current enumerate index</span>
+<span class="sd">    value as the object label and use a dictionary to recall this later.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_points (int): number of points with which mesh is sample.</span>
+<span class="sd">        filename (str): the dataset file to load if the npz file was not</span>
+<span class="sd">            generated yet. Defaults to &quot;ModelNet40.zip&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.array, np.array, np.array, np.array, dict: train set, train labels,</span>
+<span class="sd">            test set, test labels as numpy arrays and dict containing class</span>
+<span class="sd">            folder name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">short_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">base</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">datafile</span> <span class="o">=</span> <span class="n">short_filename</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num_points</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;pts.npz&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">datafile</span><span class="p">):</span>
+        <span class="n">loadin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">train_points</span> <span class="o">=</span> <span class="n">loadin</span><span class="p">[</span><span class="s1">&#39;train_points&#39;</span><span class="p">]</span>
+        <span class="n">train_labels</span> <span class="o">=</span> <span class="n">loadin</span><span class="p">[</span><span class="s1">&#39;train_labels&#39;</span><span class="p">]</span>
+        <span class="n">test_points</span> <span class="o">=</span> <span class="n">loadin</span><span class="p">[</span><span class="s1">&#39;test_points&#39;</span><span class="p">]</span>
+        <span class="n">test_labels</span> <span class="o">=</span> <span class="n">loadin</span><span class="p">[</span><span class="s1">&#39;test_labels&#39;</span><span class="p">]</span>
+        <span class="n">class_map</span> <span class="o">=</span> <span class="n">loadin</span><span class="p">[</span><span class="s1">&#39;class_map&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">filename</span>
+
+        <span class="c1"># Join the test directory if needed</span>
+        <span class="n">is_exist</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_exist</span><span class="p">:</span>
+            <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;modelnet40&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">is_exist</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+
+        <span class="c1"># Download dataset if not yet on local</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_exist</span><span class="p">:</span>
+            <span class="n">original_url</span> <span class="o">=</span> <span class="s2">&quot;http://modelnet.cs.princeton.edu/&quot;</span> <span class="o">+</span> <span class="n">filename</span>
+            <span class="c1">## Load dataset</span>
+            <span class="c1"># For ModelNet40, 2 Gb to download, and 12K files to unzip,</span>
+            <span class="c1"># so can take some time</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking for downloaded, unzipped data (one-time task)...&quot;</span><span class="p">)</span>
+            <span class="n">data_dir</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">original_url</span><span class="p">,</span>
+                <span class="n">extract</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_dir</span><span class="p">),</span> <span class="n">short_filename</span><span class="p">)</span>
+
+        <span class="c1"># Then read in the data and store a fixed number of points per sample</span>
+        <span class="n">train_points</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">,</span> <span class="n">class_map</span> <span class="o">=</span> <span class="n">parse_dataset</span><span class="p">(</span>
+            <span class="n">data_dir</span><span class="p">,</span> <span class="n">num_points</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span>
+                 <span class="n">train_points</span><span class="o">=</span><span class="n">train_points</span><span class="p">,</span>
+                 <span class="n">train_labels</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span>
+                 <span class="n">test_points</span><span class="o">=</span><span class="n">test_points</span><span class="p">,</span>
+                 <span class="n">test_labels</span><span class="o">=</span><span class="n">test_labels</span><span class="p">,</span>
+                 <span class="n">class_map</span><span class="o">=</span><span class="n">class_map</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">train_points</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">,</span> <span class="n">class_map</span></div>
+
+
+<div class="viewcode-block" id="get_modelnet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.modelnet40.preprocessing.get_modelnet">[docs]</a><span class="k">def</span> <span class="nf">get_modelnet</span><span class="p">(</span><span class="n">train_points</span><span class="p">,</span>
+                 <span class="n">train_labels</span><span class="p">,</span>
+                 <span class="n">test_points</span><span class="p">,</span>
+                 <span class="n">test_labels</span><span class="p">,</span>
+                 <span class="n">batch_size</span><span class="p">,</span>
+                 <span class="n">selected_points</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                 <span class="n">knn_points</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Obtains the ModelNet dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        train_points (numpy.array): train set.</span>
+<span class="sd">        train_labels (numpy.array): train labels.</span>
+<span class="sd">        test_points (numpy.array): test set.</span>
+<span class="sd">        test_labels (numpy.array): test labels.</span>
+<span class="sd">        batch_size (int): size of the batch.</span>
+<span class="sd">        selected_points (int): num points to process per sample. Default is 512.</span>
+<span class="sd">        knn_points (int): number of points to include in each localised group.</span>
+<span class="sd">            Must be a power of 2, and ideally an integer square (so 64, or 16</span>
+<span class="sd">            for a deliberately small network, or 256 for large).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.data.Dataset, tf.data.Dataset: train and test point with data</span>
+<span class="sd">            augmentation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Our data can now be read into a `tf.data.Dataset()` object. We set the</span>
+    <span class="c1"># shuffle buffer size to the entire size of the dataset as prior to this the</span>
+    <span class="c1"># data is ordered by class. Data augmentation is important when working with</span>
+    <span class="c1"># point cloud data. We create an augmentation function to jitter and shuffle</span>
+    <span class="c1"># the train dataset.</span>
+
+    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">train_points</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">))</span>
+    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_points</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">train_points</span><span class="p">))</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">data_transformation</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> \
+            <span class="n">train_dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">points</span><span class="p">,</span>
+                              <span class="n">label</span><span class="p">:</span> <span class="n">pointnet_preproc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span>
+                                                   <span class="n">selected_points</span><span class="p">,</span> <span class="n">knn_points</span><span class="p">),</span>
+                              <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
+
+    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">test_dataset</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">test_dataset</span> <span class="o">=</span> \
+        <span class="n">test_dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">points</span><span class="p">,</span>
+                         <span class="n">label</span><span class="p">:</span> <span class="n">pointnet_preproc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">selected_points</span><span class="p">,</span>
+                                              <span class="n">knn_points</span><span class="p">),</span>
+                         <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">test_dataset</span></div>
 </pre></div>
 
            </div>

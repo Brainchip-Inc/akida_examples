@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida_models.layer_blocks &mdash; Akida Examples  documentation</title>
+  <title>akida_models.distiller &mdash; Akida Examples  documentation</title>
   
 
   
@@ -465,7 +465,7 @@
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>akida_models.layer_blocks</li>
+      <li>akida_models.distiller</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -480,10 +480,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida_models.layer_blocks</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.distiller</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
-<span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2020 Brainchip Holdings Ltd.</span>
+<span class="c1"># *****************************************************************************</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -498,201 +497,141 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Layers blocks definitions.</span>
+<span class="sd">Tools for Knowledge Distillation training.</span>
+
+<span class="sd">Originated from https://keras.io/examples/vision/knowledge_distillation/.</span>
+
+<span class="sd">Reference Hinton et al. (2015) https://arxiv.org/abs/1503.02531</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span>
-                                     <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
-                                     <span class="n">AvgPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">tensorflow</span> <span class="kn">import</span> <span class="n">GradientTape</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">KLDivergence</span>
 
 
-<span class="k">def</span> <span class="nf">_add_pooling_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pooling_type</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">layer_base_name</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Add a pooling layer in the graph.</span>
+<div class="viewcode-block" id="Distiller"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller">[docs]</a><span class="k">class</span> <span class="nc">Distiller</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The class that will be used to train the student model using the</span>
+<span class="sd">    distillation knowledge method.</span>
 
-<span class="sd">    From an input tensor &#39;x&#39;, the function returns the output tensor after</span>
-<span class="sd">    a pooling layer defined by &#39;pooling_type&#39;.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        x (tf.Tensor): the input tensor</span>
-<span class="sd">        pooling_type (str): type of pooling among the following: &#39;max&#39;,</span>
-<span class="sd">            &#39;avg&#39; or &#39;global_avg&#39;.</span>
-<span class="sd">        pool_size (int or tuple of 2 integers): factors by which to</span>
-<span class="sd">            downscale (vertical, horizontal). (2, 2) will halve the input in</span>
-<span class="sd">            both spatial dimension. If only one integer is specified, the same</span>
-<span class="sd">            window length will be used for both dimensions.</span>
-<span class="sd">        padding (str): one of &quot;valid&quot; or &quot;same&quot; (case-insensitive).</span>
-<span class="sd">        layer_base_name (str): base name for the pooling layer.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.Tensor: an output tensor after pooling</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">pooling_type</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">MaxPool2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">,</span>
-                         <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
-                         <span class="n">name</span><span class="o">=</span><span class="n">layer_base_name</span> <span class="o">+</span> <span class="s1">&#39;_maxpool&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pooling_type</span> <span class="o">==</span> <span class="s1">&#39;avg&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">AvgPool2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">,</span>
-                         <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
-                         <span class="n">name</span><span class="o">=</span><span class="n">layer_base_name</span> <span class="o">+</span> <span class="s1">&#39;_avgpool&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pooling_type</span> <span class="o">==</span> <span class="s1">&#39;global_avg&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">GlobalAvgPool2D</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">layer_base_name</span> <span class="o">+</span> <span class="s1">&#39;_global_avg&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;pooling_type&#39; argument must be &#39;max&#39;, &quot;</span>
-                     <span class="s2">&quot;&#39;avg&#39; or &#39;global_avg&#39;.&quot;</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="conv_block"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_block">[docs]</a><span class="k">def</span> <span class="nf">conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
-               <span class="n">filters</span><span class="p">,</span>
-               <span class="n">kernel_size</span><span class="p">,</span>
-               <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-               <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-               <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-               <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-               <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Adds a convolutional layer with optional layers in the following order:</span>
-<span class="sd">    max pooling, batch normalization, activation.</span>
+<span class="sd">    Reference `Hinton et al. (2015) &lt;https://arxiv.org/abs/1503.02531&gt;`_.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        inputs (tf.Tensor): input tensor of shape `(rows, cols, channels)`</span>
-<span class="sd">        filters (int): the dimensionality of the output space</span>
-<span class="sd">            (i.e. the number of output filters in the convolution).</span>
-<span class="sd">        kernel_size (int or tuple of 2 integers): specifying the</span>
-<span class="sd">            height and width of the 2D convolution kernel.</span>
-<span class="sd">            Can be a single integer to specify the same value for</span>
-<span class="sd">            all spatial dimensions.</span>
-<span class="sd">        pooling (str): add a pooling layer of type &#39;pooling&#39; among the</span>
-<span class="sd">            values &#39;max&#39;, &#39;avg&#39;, &#39;global_max&#39; or &#39;global_avg&#39;, with pooling</span>
-<span class="sd">            size set to pool_size. If &#39;None&#39;, no pooling will be added.</span>
-<span class="sd">        pool_size (int or tuple of 2 integers): factors by which to</span>
-<span class="sd">            downscale (vertical, horizontal). (2, 2) will halve the input in</span>
-<span class="sd">            both spatial dimension. If only one integer is specified, the same</span>
-<span class="sd">            window length will be used for both dimensions.</span>
-<span class="sd">        add_batchnorm (bool): add a BatchNormalization layer</span>
-<span class="sd">        add_activation (bool): add a ReLU layer</span>
-<span class="sd">        **kwargs: arguments passed to the tf.keras.Conv2D layer, such as</span>
-<span class="sd">            strides, padding, use_bias, weight_regularizer, etc.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.Tensor: output tensor of conv2D block.</span>
+<span class="sd">        student (tf.keras.Model): the student model</span>
+<span class="sd">        teacher (tf.keras.Model): the well trained teacher model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;activation&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;Keyword argument &#39;activation&#39; in conv_block must be None.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;dilation_rate&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dilation_rate&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dilation_rate&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;dilation_rate&#39; is not &quot;</span>
-                             <span class="s2">&quot;supported in conv_block.&quot;</span><span class="p">)</span>
 
-    <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="c1">#pylint: disable=abstract-method</span>
 
-    <span class="k">if</span> <span class="n">pooling</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">_add_pooling_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pooling</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">conv_layer</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                               <span class="n">conv_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student</span><span class="p">,</span> <span class="n">teacher</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="o">=</span> <span class="n">teacher</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student</span> <span class="o">=</span> <span class="n">student</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_loss_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">if</span> <span class="n">add_batchnorm</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">conv_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_BN&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<div class="viewcode-block" id="Distiller.compile"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller.compile">[docs]</a>    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">optimizer</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="p">,</span>
+                <span class="n">student_loss_fn</span><span class="p">,</span>
+                <span class="n">distillation_loss_fn</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Configure the distiller.</span>
 
-    <span class="k">if</span> <span class="n">add_activation</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">conv_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="sd">        Args:</span>
+<span class="sd">            optimizer (tf.keras.optimizers.Optimizer): Keras optimizer</span>
+<span class="sd">                for the student weights</span>
+<span class="sd">            metrics (tf.keras.metrics.Metric): Keras metrics for evaluation</span>
+<span class="sd">            student_loss_fn (tf.keras.losses.Loss): loss function of difference</span>
+<span class="sd">                between student predictions and ground-truth</span>
+<span class="sd">            distillation_loss_fn (tf.keras.losses.Loss): loss function of</span>
+<span class="sd">                difference between student predictions and teacher predictions</span>
+<span class="sd">            alpha (float): weight to student_loss_fn and 1-alpha to</span>
+<span class="sd">                distillation_loss_fn</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#pylint: disable=arguments-differ</span>
 
-    <span class="k">return</span> <span class="n">x</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_loss_fn</span> <span class="o">=</span> <span class="n">student_loss_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="n">distillation_loss_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span></div>
+
+<div class="viewcode-block" id="Distiller.train_step"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller.train_step">[docs]</a>    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># Unpack data</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># Forward pass of teacher</span>
+        <span class="n">teacher_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
+            <span class="c1"># Forward pass of student</span>
+            <span class="n">student_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Compute losses</span>
+            <span class="n">student_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_loss_fn</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">student_predictions</span><span class="p">)</span>
+            <span class="n">distillation_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distillation_loss_fn</span><span class="p">(</span>
+                <span class="n">teacher_predictions</span><span class="p">,</span> <span class="n">student_predictions</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">student_loss</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">distillation_loss</span>
+
+        <span class="c1"># Compute gradients</span>
+        <span class="n">trainable_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">trainable_variables</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">trainable_vars</span><span class="p">)</span>
+
+        <span class="c1"># Update weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">gradients</span><span class="p">,</span> <span class="n">trainable_vars</span><span class="p">))</span>
+
+        <span class="c1"># Update the metrics configured in `compile()`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compiled_metrics</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">student_predictions</span><span class="p">)</span>
+
+        <span class="c1"># Return a dict of performance</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">}</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;student_loss&quot;</span><span class="p">:</span> <span class="n">student_loss</span><span class="p">,</span>
+            <span class="s2">&quot;distillation_loss&quot;</span><span class="p">:</span> <span class="n">distillation_loss</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="Distiller.test_step"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller.test_step">[docs]</a>    <span class="k">def</span> <span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># Unpack the data</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># Compute predictions</span>
+        <span class="n">y_prediction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the loss</span>
+        <span class="n">student_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_loss_fn</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_prediction</span><span class="p">)</span>
+
+        <span class="c1"># Update the metrics.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compiled_metrics</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_prediction</span><span class="p">)</span>
+
+        <span class="c1"># Return a dict of performance</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">}</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;student_loss&quot;</span><span class="p">:</span> <span class="n">student_loss</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span></div></div>
 
 
-<div class="viewcode-block" id="separable_conv_block"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.layer_blocks.separable_conv_block">[docs]</a><span class="k">def</span> <span class="nf">separable_conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
-                         <span class="n">filters</span><span class="p">,</span>
-                         <span class="n">kernel_size</span><span class="p">,</span>
-                         <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                         <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                         <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Adds a separable convolutional layer with optional layers in the</span>
-<span class="sd">    following order: global average pooling, max pooling, batch normalization,</span>
-<span class="sd">    activation.</span>
+<div class="viewcode-block" id="KLDistillationLoss"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.KLDistillationLoss">[docs]</a><span class="k">class</span> <span class="nc">KLDistillationLoss</span><span class="p">(</span><span class="n">KLDivergence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The `KLDistillationLoss` is a simple wrapper around the KLDivergence loss</span>
+<span class="sd">    that accepts raw predictions instead of probability distributions.</span>
+
+<span class="sd">    Before invoking the KLDivergence loss, it converts the inputs predictions to</span>
+<span class="sd">    probabilities by dividing them by a constant &#39;temperature&#39; and applies a</span>
+<span class="sd">    softmax.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        inputs (tf.Tensor): input tensor of shape `(height, width, channels)`</span>
-<span class="sd">        filters (int): the dimensionality of the output space</span>
-<span class="sd">            (i.e. the number of output filters in the pointwise convolution).</span>
-<span class="sd">        kernel_size (int or tuple of 2 integers): specifying the</span>
-<span class="sd">            height and width of the 2D convolution window. Can be a single</span>
-<span class="sd">            integer to specify the same value for all spatial dimensions.</span>
-<span class="sd">        pooling (str): add a pooling layer of type &#39;pooling&#39; among the</span>
-<span class="sd">            values &#39;max&#39;, &#39;avg&#39;, &#39;global_max&#39; or &#39;global_avg&#39;, with pooling</span>
-<span class="sd">            size set to pool_size. If &#39;None&#39;, no pooling will be added.</span>
-<span class="sd">        pool_size (int or tuple of 2 integers): factors by which to</span>
-<span class="sd">            downscale (vertical, horizontal). (2, 2) will halve the input in</span>
-<span class="sd">            both spatial dimension. If only one integer is specified, the same</span>
-<span class="sd">            window length will be used for both dimensions.</span>
-<span class="sd">        add_batchnorm (bool): add a BatchNormalization layer</span>
-<span class="sd">        add_activation (bool): add a ReLU layer</span>
-<span class="sd">        **kwargs: arguments passed to the tf.keras.SeparableConv2D layer,</span>
-<span class="sd">            such as strides, padding, use_bias, etc.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.Tensor: output tensor of separable conv block.</span>
+<span class="sd">        temperature (float): temperature for softening probability</span>
+<span class="sd">            distributions. Larger temperature gives softer distributions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;activation&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;activation&#39; in separable_conv_block&quot;</span>
-                         <span class="s2">&quot; must be None.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;dilation_rate&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dilation_rate&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dilation_rate&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;dilation_rate&#39; is not &quot;</span>
-                             <span class="s2">&quot;supported in separable_conv_block.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;depth_multiplier&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;depth_multiplier&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;depth_multiplier&#39; is not &quot;</span>
-                             <span class="s2">&quot;supported in separable_conv_block.&quot;</span><span class="p">)</span>
 
-    <span class="n">sep_conv_layer</span> <span class="o">=</span> <span class="n">SeparableConv2D</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">sep_conv_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">pooling</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">_add_pooling_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pooling</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">sep_conv_layer</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                               <span class="n">sep_conv_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">add_batchnorm</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">sep_conv_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_BN&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">add_activation</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">sep_conv_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">x</span></div>
-
-
-<div class="viewcode-block" id="dense_block"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block">[docs]</a><span class="k">def</span> <span class="nf">dense_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
-                <span class="n">units</span><span class="p">,</span>
-                <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Adds a dense layer with optional layers in the following order:</span>
-<span class="sd">    batch normalization, activation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        inputs (tf.Tensor): Input tensor of shape `(rows, cols, channels)`</span>
-<span class="sd">        units (int): dimensionality of the output space</span>
-<span class="sd">        add_batchnorm (bool): add a BatchNormalization layer</span>
-<span class="sd">        add_activation (bool): add a ReLU layer</span>
-<span class="sd">        **kwargs: arguments passed to the Dense layer, such as</span>
-<span class="sd">            use_bias, kernel_initializer, weight_regularizer, etc.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.Tensor: output tensor of the dense block.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;activation&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;activation&#39; in dense_block&quot;</span>
-                         <span class="s2">&quot; must be None.&quot;</span><span class="p">)</span>
-
-    <span class="n">dense_layer</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">add_batchnorm</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">dense_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_BN&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">add_activation</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">dense_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">x</span></div>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">y_true</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

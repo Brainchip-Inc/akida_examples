@@ -268,12 +268,16 @@
 <li class="toctree-l4"><a class="reference internal" href="#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#knowledge-distillation">Knowledge distillation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pruning">Pruning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#model-zoo">Model zoo</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mobilenet">Mobilenet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ds-cnn">DS-CNN</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#vgg">VGG</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#yolo">YOLO</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#convtiny">ConvTiny</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pointnet">PointNet++</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gxnor">GXNOR</a></li>
 </ul>
 </li>
 </ul>
@@ -392,6 +396,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#classification">Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#object-detection">Object detection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#regression">Regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#face-recognition">Face recognition</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#audio-icon-ref-audio-domain"> Audio domain</a><ul>
@@ -400,6 +405,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#time-icon-ref-time-domain"> Time domain</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#fault-detection">Fault detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#id1">Classification</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#pointcloud-icon-ref-point-cloud"> Point cloud</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#id2">Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -610,19 +620,236 @@ accuracy. This helper can also be called to a new model that has not been
 trained yet.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>tf.Keras.Model</em>) – the model for which gamma constraints will be
+<dd class="field-odd"><p><strong>model</strong> (<em>tf.keras.Model</em>) – the model for which gamma constraints will be
 added.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the same model with BatchNormalisation layers updated.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tf.Keras.Model</p>
+<dd class="field-odd"><p>tf.keras.Model</p>
 </dd>
 </dl>
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="knowledge-distillation">
+<h2>Knowledge distillation<a class="headerlink" href="#knowledge-distillation" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="akida_models.distiller.Distiller">
+<em class="property">class </em><code class="sig-prename descclassname">akida_models.distiller.</code><code class="sig-name descname">Distiller</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/distiller.html#Distiller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.distiller.Distiller" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class that will be used to train the student model using the
+distillation knowledge method.</p>
+<p>Reference <a class="reference external" href="https://arxiv.org/abs/1503.02531">Hinton et al. (2015)</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student</strong> (<em>tf.keras.Model</em>) – the student model</p></li>
+<li><p><strong>teacher</strong> (<em>tf.keras.Model</em>) – the well trained teacher model</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida_models.distiller.Distiller.compile" title="akida_models.distiller.Distiller.compile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile</span></code></a>(optimizer, metrics, student_loss_fn, …)</p></td>
+<td><p>Configure the distiller.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida_models.distiller.Distiller.test_step" title="akida_models.distiller.Distiller.test_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_step</span></code></a>(data)</p></td>
+<td><p>The logic for one evaluation step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida_models.distiller.Distiller.train_step" title="akida_models.distiller.Distiller.train_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_step</span></code></a>(data)</p></td>
+<td><p>The logic for one training step.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="akida_models.distiller.Distiller.compile">
+<code class="sig-name descname">compile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">optimizer</span></em>, <em class="sig-param"><span class="n">metrics</span></em>, <em class="sig-param"><span class="n">student_loss_fn</span></em>, <em class="sig-param"><span class="n">distillation_loss_fn</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/distiller.html#Distiller.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.distiller.Distiller.compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the distiller.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>tf.keras.optimizers.Optimizer</em>) – Keras optimizer
+for the student weights</p></li>
+<li><p><strong>metrics</strong> (<em>tf.keras.metrics.Metric</em>) – Keras metrics for evaluation</p></li>
+<li><p><strong>student_loss_fn</strong> (<em>tf.keras.losses.Loss</em>) – loss function of difference
+between student predictions and ground-truth</p></li>
+<li><p><strong>distillation_loss_fn</strong> (<em>tf.keras.losses.Loss</em>) – loss function of
+difference between student predictions and teacher predictions</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – weight to student_loss_fn and 1-alpha to
+distillation_loss_fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida_models.distiller.Distiller.test_step">
+<code class="sig-name descname">test_step</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/distiller.html#Distiller.test_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.distiller.Distiller.test_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>The logic for one evaluation step.</p>
+<p>This method can be overridden to support custom evaluation logic.
+This method is called by <cite>Model.make_test_function</cite>.</p>
+<p>This function should contain the mathematical logic for one step of
+evaluation.
+This typically includes the forward pass, loss calculation, and metrics
+updates.</p>
+<p>Configuration details for <em>how</em> this logic is run (e.g. <cite>tf.function</cite> and
+<cite>tf.distribute.Strategy</cite> settings), should be left to
+<cite>Model.make_test_function</cite>, which can also be overridden.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – A nested structure of <a href="#id1"><span class="problematic" id="id2">`</span></a>Tensor`s.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <cite>dict</cite> containing values that will be passed to
+<cite>tf.keras.callbacks.CallbackList.on_train_batch_end</cite>. Typically, the
+values of the <cite>Model</cite>’s metrics are returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="akida_models.distiller.Distiller.train_step">
+<code class="sig-name descname">train_step</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/distiller.html#Distiller.train_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.distiller.Distiller.train_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>The logic for one training step.</p>
+<p>This method can be overridden to support custom training logic.
+This method is called by <cite>Model.make_train_function</cite>.</p>
+<p>This method should contain the mathematical logic for one step of training.
+This typically includes the forward pass, loss calculation, backpropagation,
+and metric updates.</p>
+<p>Configuration details for <em>how</em> this logic is run (e.g. <cite>tf.function</cite> and
+<cite>tf.distribute.Strategy</cite> settings), should be left to
+<cite>Model.make_train_function</cite>, which can also be overridden.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – A nested structure of <a href="#id3"><span class="problematic" id="id4">`</span></a>Tensor`s.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <cite>dict</cite> containing values that will be passed to
+<cite>tf.keras.callbacks.CallbackList.on_train_batch_end</cite>. Typically, the
+values of the <cite>Model</cite>’s metrics are returned. Example:
+<cite>{‘loss’: 0.2, ‘accuracy’: 0.7}</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.distiller.KLDistillationLoss">
+<code class="sig-prename descclassname">akida_models.distiller.</code><code class="sig-name descname">KLDistillationLoss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">temperature</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/distiller.html#KLDistillationLoss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.distiller.KLDistillationLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>KLDistillationLoss</cite> is a simple wrapper around the KLDivergence loss
+that accepts raw predictions instead of probability distributions.</p>
+<p>Before invoking the KLDivergence loss, it converts the inputs predictions to
+probabilities by dividing them by a constant ‘temperature’ and applies a
+softmax.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>temperature</strong> (<em>float</em>) – temperature for softening probability
+distributions. Larger temperature gives softer distributions.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="pruning">
+<h2>Pruning<a class="headerlink" href="#pruning" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="akida_models.delete_filters">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">delete_filters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer_to_prune</span></em>, <em class="sig-param"><span class="n">filters_to_prune</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/filter_pruning.html#delete_filters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.delete_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes filters in the given layer and updates weights in it and its
+subsequent layers.</p>
+<p>A pruned model is returned. Only linear models are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>tf.keras.Model</em>) – the model to prune.</p></li>
+<li><p><strong>layer_to_prune</strong> (<em>str</em>) – the name of the neural layer where filters will be
+deleted.</p></li>
+<li><p><strong>filters_to_prune</strong> (<em>list</em>) – indices of filters to delete in the given
+layer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the pruned model</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.keras.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.prune_model">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">prune_model</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">acceptance_function</em>, <em class="sig-param">pruning_rates=None</em>, <em class="sig-param">prunable_layers_policy=&lt;function neural_layers&gt;</em>, <em class="sig-param">prunable_filters_policy=&lt;function smallest_filters&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/filter_pruning.html#prune_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.prune_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prune model automatically based on an acceptance function.</p>
+<p>The algorithm for filter pruning is as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Select the first prunable layer (according to the
+<code class="docutils literal notranslate"><span class="pre">prunable_layers_policy</span></code> function).</p></li>
+<li><p>As long as the <code class="docutils literal notranslate"><span class="pre">acceptance_function</span></code> returns True, prune
+successively the layer with different pruning rates (according to
+<code class="docutils literal notranslate"><span class="pre">pruning_rates</span></code> and <code class="docutils literal notranslate"><span class="pre">prunable_filters_policy</span></code>).</p></li>
+<li><p>When the current pruned model is not acceptable, the last valid
+pruning rate is selected for the final pruned model.</p></li>
+<li><p>Repeat steps 1, 2 and 3 for the next prunable layers.</p></li>
+</ol>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">acceptable_drop</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+<span class="k">def</span> <span class="nf">acceptance_function</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">pruned_model</span><span class="p">):</span>
+    <span class="c1"># This function returns True if the pruned_model is acceptable.</span>
+    <span class="c1"># Here, the pruned model is acceptable if the accuracy drops</span>
+    <span class="c1"># less than 5% from the base model.</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">accuracy</span>
+
+    <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span> <span class="o">-</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">pruned_model</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">acceptable_drop</span>
+
+<span class="c1"># Prune model</span>
+<span class="n">pruned_model</span><span class="p">,</span> <span class="n">pruning_rates</span> <span class="o">=</span> <span class="n">prune_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">acceptance_function</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a tf.keras model to prune</p></li>
+<li><p><strong>acceptance_function</strong> (<em>function</em>) – a criterion function that returns True
+if the pruned model is acceptable. The signature must be
+<cite>function(base_model, pruned_model)</cite>.</p></li>
+<li><p><strong>pruning_rates</strong> (<em>list</em><em>, </em><em>optional</em>) – a list of pruning rates to test. Default
+is [0.1, 0.2, …, 0.9].</p></li>
+<li><p><strong>prunable_layers_policy</strong> (<em>function</em><em>, </em><em>optional</em>) – a function returning the
+layers to prune in the model. The signature must be
+<cite>function(model)</cite>, and must return a list of prunable layer names.
+By default, all neural layers (Conv2D/SeparableConv2D/Dense) are
+candidates for pruning.</p></li>
+<li><p><strong>prunable_filters_policy</strong> (<em>function</em><em>, </em><em>optional</em>) – a function that returns
+the filters to prune in a given layer for a specific pruning rate.
+The signature must be <cite>function(layer, pruning_rate)</cite> and returns a
+list of indices to prune. By default, filters with the lowest
+magnitude are pruned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the pruned model and the pruning rates.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="model-zoo">
 <h2>Model zoo<a class="headerlink" href="#model-zoo" title="Permalink to this headline">¶</a></h2>
@@ -742,6 +969,37 @@ Imagenette dataset.</p>
 <code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">mobilenet_cats_vs_dogs_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/imagenet/model_mobilenet.html#mobilenet_cats_vs_dogs_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.mobilenet_cats_vs_dogs_pretrained" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper method to retrieve a <cite>mobilenet_imagenet</cite> model that was trained on
 Cats vs.Dogs dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.mobilenet_faceidentification_pretrained">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">mobilenet_faceidentification_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/imagenet/model_mobilenet.html#mobilenet_faceidentification_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.mobilenet_faceidentification_pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve a <cite>mobilenet_imagenet</cite> model that was trained on
+CASIA Webface dataset and that performs face identification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.mobilenet_faceverification_pretrained">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">mobilenet_faceverification_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/imagenet/model_mobilenet.html#mobilenet_faceverification_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.mobilenet_faceverification_pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve a <cite>mobilenet_imagenet</cite> model that was trained on
+CASIA Webface dataset and optimized with ArcFace that can perform face
+verification on LFW.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a Keras Model instance.</p>
@@ -1087,8 +1345,8 @@ KWS dataset.</p>
 </dl>
 </dd></dl>
 
-<div class="section" id="id1">
-<h5>Preprocessing<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="id5">
+<h5>Preprocessing<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h5>
 <dl class="py function">
 <dt id="akida_models.kws.preprocessing.prepare_model_settings">
 <code class="sig-prename descclassname">akida_models.kws.preprocessing.</code><code class="sig-name descname">prepare_model_settings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample_rate</span></em>, <em class="sig-param"><span class="n">clip_duration_ms</span></em>, <em class="sig-param"><span class="n">window_size_ms</span></em>, <em class="sig-param"><span class="n">window_stride_ms</span></em>, <em class="sig-param"><span class="n">feature_bin_count</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/kws/preprocessing.html#prepare_model_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.kws.preprocessing.prepare_model_settings" title="Permalink to this definition">¶</a></dt>
@@ -1353,8 +1611,8 @@ then builds an MFCC fingerprint from that.</p>
 </div>
 <div class="section" id="vgg">
 <h3>VGG<a class="headerlink" href="#vgg" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="id2">
-<h4>CIFAR-10<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id6">
+<h4>CIFAR-10<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
 <dl class="py function">
 <dt id="akida_models.vgg_cifar10">
 <code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">vgg_cifar10</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="o">=</span><span class="default_value">(32, 32, 3)</span></em>, <em class="sig-param"><span class="n">classes</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/cifar10/model_vgg.html#vgg_cifar10"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.vgg_cifar10" title="Permalink to this definition">¶</a></dt>
@@ -1417,8 +1675,8 @@ CIFAR10 dataset.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id3">
-<h4>ImageNet<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id7">
+<h4>ImageNet<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
 <dl class="py function">
 <dt id="akida_models.vgg_imagenet">
 <code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">vgg_imagenet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="o">=</span><span class="default_value">(224, 224, 3)</span></em>, <em class="sig-param"><span class="n">classes</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">include_top</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">pooling</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/imagenet/model_vgg.html#vgg_imagenet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.vgg_imagenet" title="Permalink to this definition">¶</a></dt>
@@ -1540,6 +1798,21 @@ retinal OCT dataset.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt id="akida_models.vgg_ecg_pretrained">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">vgg_ecg_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/imagenet/model_vgg.html#vgg_ecg_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.vgg_ecg_pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve a <cite>vgg_imagenet</cite> model that was trained on ECG
+classification Physionet2017 dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="utk-face">
 <h4>UTK Face<a class="headerlink" href="#utk-face" title="Permalink to this headline">¶</a></h4>
@@ -1601,8 +1874,8 @@ UTK Face dataset.</p>
 </dl>
 </dd></dl>
 
-<div class="section" id="id4">
-<h5>Preprocessing<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="id8">
+<h5>Preprocessing<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h5>
 <dl class="py function">
 <dt id="akida_models.utk_face.preprocessing.load_data">
 <code class="sig-prename descclassname">akida_models.utk_face.preprocessing.</code><code class="sig-name descname">load_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/utk_face/preprocessing.html#load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.utk_face.preprocessing.load_data" title="Permalink to this definition">¶</a></dt>
@@ -1874,7 +2147,7 @@ Code originally from <a class="reference external" href="https://github.com/fizy
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>tf.Keras.Model</em>) – model to evaluate.</p></li>
+<li><p><strong>model</strong> (<em>tf.keras.Model</em>) – model to evaluate.</p></li>
 <li><p><strong>val_data</strong> (<em>dict</em>) – dictionary containing validation data as obtained
 using <cite>preprocess_widerface.py</cite> module</p></li>
 <li><p><strong>labels</strong> (<em>list</em>) – list of labels as strings</p></li>
@@ -1978,7 +2251,7 @@ from the training dataset.</p>
 <dl class="py function">
 <dt id="akida_models.convtiny_cwru">
 <code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">convtiny_cwru</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/cwru/model_convtiny.html#convtiny_cwru"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.convtiny_cwru" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instanciates a CNN for CWRU classification with input shape (32, 32, 1)
+<dd><p>Instantiates a CNN for CWRU classification with input shape (32, 32, 1)
 and 10 classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1995,6 +2268,214 @@ and 10 classes.</p>
 <code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">convtiny_cwru_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/cwru/model_convtiny.html#convtiny_cwru_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.convtiny_cwru_pretrained" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper method to retrieve a <cite>convtiny_cwru</cite> model that was trained on
 CWRU dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="pointnet">
+<h3>PointNet++<a class="headerlink" href="#pointnet" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="modelnet40">
+<h4>ModelNet40<a class="headerlink" href="#modelnet40" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="akida_models.pointnet_plus_modelnet40">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">pointnet_plus_modelnet40</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selected_points</span><span class="o">=</span><span class="default_value">128</span></em>, <em class="sig-param"><span class="n">features</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">knn_points</span><span class="o">=</span><span class="default_value">64</span></em>, <em class="sig-param"><span class="n">classes</span><span class="o">=</span><span class="default_value">40</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/modelnet40/model_pointnet_plus.html#pointnet_plus_modelnet40"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.pointnet_plus_modelnet40" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates a PointNet++ model for the ModelNet40 classification.</p>
+<p>This example implements the point cloud deep learning paper
+<a class="reference external" href="https://arxiv.org/abs/1612.00593">PointNet (Qi et al., 2017)</a>. For a
+detailed introduction on PointNet see <a class="reference external" href="https://medium.com/&#64;luis_gonzales/an-in-depth-look-at-pointnet-111d7efdaa1a">this blog post</a>.</p>
+<p>PointNet++ is conceived as a repeated series of operations: sampling and
+grouping of points, followed by the trainable convnet itself. Those
+operations are then repeated at increased scale.
+Each of the selected points is taken as the centroid of the K-nearest
+neighbours. This defines a localized group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_points</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of points to process per
+sample. Default is 128.</p></li>
+<li><p><strong>features</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of features. Expected values are
+1 or 3. Default is 3.</p></li>
+<li><p><strong>knn_points</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of points to include in each
+localised group. Must be a power of 2, and ideally an integer square
+(so 64, or 16 for a deliberately small network, or 256 for large).
+Default is 64.</p></li>
+<li><p><strong>classes</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of classes for the classifier.
+Default is 40.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – network filters multiplier. Default is 1.0.</p></li>
+<li><p><strong>weight_quantization</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>sets all weights in the model to
+have a particular quantization bitwidth except for the weights in
+the first layer. Defaults to 0.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit weights.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+<li><p><strong>activ_quantization</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>sets all activations in the model to
+have a particular activation quantization bitwidth. Defaults to 0.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit activations.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a quantized Keras model for PointNet++/ModelNet40.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.pointnet_plus_modelnet40_pretrained">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">pointnet_plus_modelnet40_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/modelnet40/model_pointnet_plus.html#pointnet_plus_modelnet40_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.pointnet_plus_modelnet40_pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve a <cite>pointnet_plus</cite> model that was trained on
+ModelNet40 dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="id9">
+<h5>Processing<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h5>
+<dl class="py function">
+<dt id="akida_models.modelnet40.preprocessing.get_modelnet_from_file">
+<code class="sig-prename descclassname">akida_models.modelnet40.preprocessing.</code><code class="sig-name descname">get_modelnet_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_points</span></em>, <em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">'ModelNet40.zip'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/modelnet40/preprocessing.html#get_modelnet_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.modelnet40.preprocessing.get_modelnet_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the ModelNet data from file.</p>
+<p>First parse through the ModelNet data folders. Each mesh is loaded and
+sampled into a point cloud before being added to a standard python list and
+converted to a <cite>numpy</cite> array. We also store the current enumerate index
+value as the object label and use a dictionary to recall this later.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_points</strong> (<em>int</em>) – number of points with which mesh is sample.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – the dataset file to load if the npz file was not
+generated yet. Defaults to “ModelNet40.zip”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>train set, train labels,</dt><dd><p>test set, test labels as numpy arrays and dict containing class
+folder name.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array, np.array, np.array, np.array, dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.modelnet40.preprocessing.get_modelnet">
+<code class="sig-prename descclassname">akida_models.modelnet40.preprocessing.</code><code class="sig-name descname">get_modelnet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_points</span></em>, <em class="sig-param"><span class="n">train_labels</span></em>, <em class="sig-param"><span class="n">test_points</span></em>, <em class="sig-param"><span class="n">test_labels</span></em>, <em class="sig-param"><span class="n">batch_size</span></em>, <em class="sig-param"><span class="n">selected_points</span><span class="o">=</span><span class="default_value">128</span></em>, <em class="sig-param"><span class="n">knn_points</span><span class="o">=</span><span class="default_value">64</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/modelnet40/preprocessing.html#get_modelnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.modelnet40.preprocessing.get_modelnet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains the ModelNet dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_points</strong> (<em>numpy.array</em>) – train set.</p></li>
+<li><p><strong>train_labels</strong> (<em>numpy.array</em>) – train labels.</p></li>
+<li><p><strong>test_points</strong> (<em>numpy.array</em>) – test set.</p></li>
+<li><p><strong>test_labels</strong> (<em>numpy.array</em>) – test labels.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – size of the batch.</p></li>
+<li><p><strong>selected_points</strong> (<em>int</em>) – num points to process per sample. Default is 512.</p></li>
+<li><p><strong>knn_points</strong> (<em>int</em>) – number of points to include in each localised group.
+Must be a power of 2, and ideally an integer square (so 64, or 16
+for a deliberately small network, or 256 for large).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>train and test point with data</dt><dd><p>augmentation.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.data.Dataset, tf.data.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="gxnor">
+<h3>GXNOR<a class="headerlink" href="#gxnor" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="mnist">
+<h4>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="akida_models.gxnor_mnist">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">gxnor_mnist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">weight_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">activ_quantization</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">input_weight_quantization</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/mnist/model_gxnor.html#gxnor_mnist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.gxnor_mnist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates a Keras GXNOR model with an additional dense layer to make
+better classification.</p>
+<p>The paper describing the original model can be found <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0893608018300108">here</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weight_quantization</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>sets all weights in the model to
+have a particular quantization bitwidth except for the weights in
+the first layer. Defaults to 0.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit weights.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+<li><p><strong>activ_quantization</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>sets all activations in the model to
+have a particular activation quantization bitwidth. Defaults to 0.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit activations.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+<li><p><strong>input_weight_quantization</strong> (<em>int</em><em>, </em><em>optional</em>) – <p>sets weight quantization in
+the first layer. Defaults to weight_quantization value.</p>
+<ul>
+<li><p>’0’ implements floating point 32-bit weights.</p></li>
+<li><p>’2’ through ‘8’ implements n-bit weights where n is from 2-8 bits.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Keras model for GXNOR/MNIST</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="akida_models.gxnor_mnist_pretrained">
+<code class="sig-prename descclassname">akida_models.</code><code class="sig-name descname">gxnor_mnist_pretrained</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/mnist/model_gxnor.html#gxnor_mnist_pretrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#akida_models.gxnor_mnist_pretrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve a <cite>gxnor_mnist</cite> model that was trained on
+MNIST dataset.</p>
+<p>This model was trained with the distillation knowledge method, using
+the EfficientNet model from <a class="reference external" href="https://github.com/EscVM/Efficient-CapsNet">this repository</a> and the <cite>Distiller</cite> class from
+the knowledge distillation toolkit (<cite>akida_models.distiller</cite>).</p>
+<p>The float training was done for 30 epochs with a learning rate of 1e-4
+After that we gradually quantize the model from:
+8-4-4 –&gt; 4-4-4 –&gt; 4-4-2 –&gt; 2-2-2 –&gt; 2-2-1 tuning the model at each step
+with the same distillation training method for 5 epochs and a learning rate
+of 5e-5.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a Keras Model instance.</p>

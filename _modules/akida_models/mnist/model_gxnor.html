@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>akida_models.cwru.model_convtiny &mdash; Akida Examples  documentation</title>
+  <title>akida_models.mnist.model_gxnor &mdash; Akida Examples  documentation</title>
   
 
   
@@ -465,7 +465,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>akida_models.cwru.model_convtiny</li>
+      <li>akida_models.mnist.model_gxnor</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -480,7 +480,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for akida_models.cwru.model_convtiny</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.mnist.model_gxnor</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
@@ -498,67 +498,123 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Convtiny model definition for CWRU classification.</span>
+<span class="sd">GXNOR model definition for MNIST classification.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Softmax</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/convtiny/&#39;</span>
+<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/gxnor/&#39;</span>
 
 
-<div class="viewcode-block" id="convtiny_cwru"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.convtiny_cwru">[docs]</a><span class="k">def</span> <span class="nf">convtiny_cwru</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; Instantiates a CNN for CWRU classification with input shape (32, 32, 1)</span>
-<span class="sd">    and 10 classes.</span>
+<div class="viewcode-block" id="gxnor_mnist"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist</span><span class="p">(</span><span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Instantiates a Keras GXNOR model with an additional dense layer to make</span>
+<span class="sd">    better classification.</span>
+
+<span class="sd">    The paper describing the original model can be found `here</span>
+<span class="sd">    &lt;https://www.sciencedirect.com/science/article/pii/S0893608018300108&gt;`_.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        weight_quantization (int, optional): sets all weights in the model to</span>
+<span class="sd">            have a particular quantization bitwidth except for the weights in</span>
+<span class="sd">            the first layer. Defaults to 0.</span>
+
+<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
+<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        activ_quantization (int, optional): sets all activations in the model to</span>
+<span class="sd">            have a particular activation quantization bitwidth. Defaults to 0.</span>
+
+<span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
+<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_weight_quantization(int, optional): sets weight quantization in</span>
+<span class="sd">            the first layer. Defaults to weight_quantization value.</span>
+
+<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
+<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tf.keras.Model: a Keras model for Convtiny/CWRU</span>
-
+<span class="sd">        tf.keras.Model: a Keras model for GXNOR/MNIST</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># check if overrides have been provided and override</span>
+    <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
+
+    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Block 1</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block1_conv1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                    <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
+    <span class="c1"># Block 2</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_2&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block2_conv1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                    <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
+    <span class="c1"># Classification block</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flatten&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_1&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_2&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;predictions&#39;</span><span class="p">,</span> <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Softmax</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;act_softmax&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">units</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc1&#39;</span><span class="p">,</span>
+                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;predictions&#39;</span><span class="p">,</span>
+                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;convtiny_cwru_32_10&#39;</span><span class="p">)</span></div>
+    <span class="c1"># Create model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gxnor_mnist&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weight_quantization</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">,</span>
+                        <span class="n">input_weight_quantization</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="convtiny_cwru_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.convtiny_cwru_pretrained">[docs]</a><span class="k">def</span> <span class="nf">convtiny_cwru_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Helper method to retrieve a `convtiny_cwru` model that was trained on</span>
-<span class="sd">    CWRU dataset.</span>
+<div class="viewcode-block" id="gxnor_mnist_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `gxnor_mnist` model that was trained on</span>
+<span class="sd">    MNIST dataset.</span>
+
+<span class="sd">    This model was trained with the distillation knowledge method, using</span>
+<span class="sd">    the EfficientNet model from `this repository</span>
+<span class="sd">    &lt;https://github.com/EscVM/Efficient-CapsNet&gt;`_ and the `Distiller` class from</span>
+<span class="sd">    the knowledge distillation toolkit (`akida_models.distiller`).</span>
+
+<span class="sd">    The float training was done for 30 epochs with a learning rate of 1e-4</span>
+<span class="sd">    After that we gradually quantize the model from:</span>
+<span class="sd">    8-4-4 --&gt; 4-4-4 --&gt; 4-4-2 --&gt; 2-2-2 --&gt; 2-2-1 tuning the model at each step</span>
+<span class="sd">    with the same distillation training method for 5 epochs and a learning rate</span>
+<span class="sd">    of 5e-5.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;convtiny_cwru_iq8_wq2_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;69705f8060a0da8dfde7bd88dab250a06cbcf4e923bba97b5e36132d5166b554&#39;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_iq2_wq2_aq1.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;96472a8f0aa7243066318502d1d568e7202ec446b4745cf336fbaeb366b6aa33&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

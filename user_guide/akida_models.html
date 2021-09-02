@@ -268,12 +268,16 @@
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/akida_models_apis.html#knowledge-distillation">Knowledge distillation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api_reference/akida_models_apis.html#pruning">Pruning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#mobilenet">Mobilenet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#ds-cnn">DS-CNN</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#vgg">VGG</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#yolo">YOLO</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#convtiny">ConvTiny</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#pointnet">PointNet++</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api_reference/akida_models_apis.html#gxnor">GXNOR</a></li>
 </ul>
 </li>
 </ul>
@@ -392,6 +396,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#classification">Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#object-detection">Object detection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#regression">Regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#face-recognition">Face recognition</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#audio-icon-ref-audio-domain"> Audio domain</a><ul>
@@ -400,6 +405,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#time-icon-ref-time-domain"> Time domain</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#fault-detection">Fault detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#id1">Classification</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../zoo_performances.html#pointcloud-icon-ref-point-cloud"> Point cloud</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../zoo_performances.html#id2">Classification</a></li>
 </ul>
 </li>
 </ul>
@@ -545,10 +555,13 @@ optional arguments:
 <li><p>vgg_cifar10</p></li>
 <li><p>vgg_utk_face</p></li>
 <li><p>ds_cnn_kws</p></li>
+<li><p>pointnet_plus_modelnet40</p></li>
 <li><p>mobilenet_imagenet</p></li>
+<li><p>vgg_imagenet</p></li>
 <li><p>mobilenet_imagenet_edge</p></li>
 <li><p>yolo_base</p></li>
-<li><p>vgg_imagenet</p></li>
+<li><p>convtiny_cwru</p></li>
+<li><p>gxnor_mnist</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -587,22 +600,16 @@ more details about quantization aware training.</p>
 <li><p>creating the model</p></li>
 <li><p>training the full-precision model for 100 epochs</p></li>
 <li><p>quantizing weights and activations to 4 bits</p></li>
-<li><p>tuning the 4-4-4 quantized model for 15 epochs</p></li>
-<li><p>quantizing weights and activations to 2 bits</p></li>
-<li><p>tuning the 2-2-2 quantized model for 15 epochs</p></li>
+<li><p>tuning the 8-4-4 quantized model for 15 epochs</p></li>
 </ul>
 </div></blockquote>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create -s vgg_cifar10.h5 vgg_cifar10
 
-cifar10_train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e <span class="m">100</span> train
+cifar10_train train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e <span class="m">100</span>
 
 cnn2snn -m vgg_cifar10.h5 quantize -wq <span class="m">4</span> -aq <span class="m">4</span>
 
-cifar10_train -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e <span class="m">15</span> tune
-
-cnn2snn -m vgg_cifar10_iq4_wq4_aq4.h5 quantize -wq <span class="m">2</span> -aq <span class="m">2</span>
-
-cifar10_train -m vgg_cifar10_iq2_wq2_aq2.h5 -s vgg_cifar10_iq2_wq2_aq2.h5 -e <span class="m">15</span> tune
+cifar10_train tune -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e <span class="m">15</span>
 </pre></div>
 </div>
 <p>Note that the model is saved and reloaded at each step.</p>
@@ -617,15 +624,15 @@ training script called by the <code class="docutils literal notranslate"><span c
 obtain a network with 2-bit weights and activations.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create vgg_utk_face
 
-utk_face_train -e <span class="m">300</span> -m vgg_utk_face.h5 -s vgg_utk_face.h5
+utk_face_train train -e <span class="m">300</span> -m vgg_utk_face.h5 -s vgg_utk_face.h5
 
 cnn2snn -m vgg_utk_face.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
 
-utk_face_train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
+utk_face_train train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
 
 cnn2snn -m vgg_utk_face_iq8_wq4_aq4.h5 quantize -iq <span class="m">8</span> -wq <span class="m">2</span> -aq <span class="m">2</span>
 
-utk_face_train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
+utk_face_train train -e <span class="m">30</span> -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
 </pre></div>
 </div>
 </div>
@@ -642,26 +649,21 @@ layer. It must be set to 1 for the last training step, since the model requires
 binary activations for edge learning.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create -s ds_cnn_kws.h5 ds_cnn_kws
 
-kws_train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e <span class="m">16</span>
+kws_train train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e <span class="m">16</span>
 
 cnn2snn -m ds_cnn_kws.h5 quantize -iq <span class="m">0</span> -wq <span class="m">0</span> -aq <span class="m">4</span>
 
-kws_train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 <span class="se">\</span>
-            -e <span class="m">16</span>
+kws_train train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -e <span class="m">16</span>
 
 cnn2snn -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
 
-kws_train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 <span class="se">\</span>
-            -e <span class="m">16</span>
+kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -e <span class="m">16</span>
 
-kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 <span class="se">\</span>
-            -e <span class="m">16</span> -laq <span class="m">3</span>
+kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -e <span class="m">16</span> -laq <span class="m">3</span>
 
-kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 <span class="se">\</span>
-            -e <span class="m">16</span> -laq <span class="m">2</span>
+kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -e <span class="m">16</span> -laq <span class="m">2</span>
 
-kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 <span class="se">\</span>
-            -e <span class="m">16</span> -laq <span class="m">1</span>
+kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -e <span class="m">16</span> -laq <span class="m">1</span>
 </pre></div>
 </div>
 </div>
@@ -673,24 +675,22 @@ kws_train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 <s
 <p><strong>Example</strong></p>
 <p>Create a YOLO model for VOC car/person training, use transfer learning from
 MobileNet weights trained on ImageNet and perform step-wise quantization to
-obtain a network with 4-bit weights and activations.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_alpha_50.h5
+obtain a network with 4-bit weights and activations. Note that the backbone
+MobileNet layers are frozen (i.e not trainable) when performing float training
+using the <cite>–freeze_before</cite> or <cite>-fb</cite> option.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_alpha_50.h5
 
-akida_models create -s yolo_voc.h5 yolo_base -c <span class="m">2</span> <span class="se">\</span>
-                                             -bw <span class="s1">&#39;mobilenet_imagenet_alpha_50.h5&#39;</span>
+akida_models create -s yolo_voc.h5 yolo_base -c <span class="m">2</span> -bw mobilenet_imagenet_alpha_50.h5
 
-yolo_train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e <span class="m">25</span> <span class="se">\</span>
-            -f True -s yolo_voc.h5 train
+yolo_train train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e <span class="m">25</span> -fb 1conv -s yolo_voc.h5
 
 cnn2snn -m yolo_voc.h5 quantize -iq <span class="m">8</span> -wq <span class="m">8</span> -aq <span class="m">8</span>
 
-yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 <span class="se">\</span>
-            -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq8_aq8.h5 train
+yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq8_aq8.h5
 
 cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
 
-yolo_train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 <span class="se">\</span>
-            -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq4_aq4.h5 tune
+yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_voc_iq8_wq4_aq4.h5
 </pre></div>
 </div>
 </div>
