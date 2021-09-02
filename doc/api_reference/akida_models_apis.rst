@@ -37,8 +37,8 @@ Akida models API
     Pruning
     =======
 
-    .. autofunction:: akida_models.delete_filters
     .. autofunction:: akida_models.prune_model
+    .. autofunction:: akida_models.delete_filters
 
 
     Model zoo
