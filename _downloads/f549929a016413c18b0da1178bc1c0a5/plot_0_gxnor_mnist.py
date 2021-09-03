@@ -6,8 +6,8 @@ The MNIST dataset is a handwritten digits database. It has a training
 set of 60,000 samples, and a test set of 10,000 samples. Each sample
 comprises a 28x28 pixel image and an associated label.
 
-This tutorial illustrates how to use a pre-trained Akida model to process the
-MNIST dataset.
+This tutorial illustrates how to use a pre-trained model to process the MNIST
+dataset.
 
 """
 
@@ -24,42 +24,123 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.datasets import mnist
 
 # Retrieve MNIST dataset
-(train_set, train_label), (test_set, test_label) = mnist.load_data()
+_, (test_set_raw, test_label) = mnist.load_data()
 
 # Add a dimension to images sets as akida expects 4 dimensions inputs
-train_set = np.expand_dims(train_set, -1)
-test_set = np.expand_dims(test_set, -1)
+test_set_raw = np.expand_dims(test_set_raw, -1)
+
+# Rescale inputs images so that values are in [0, 1]
+input_scaling = (255, 0)
+test_set = test_set_raw / input_scaling[0]
+
+# Convert to 8-bits inputs for Akida
+test_set_raw = test_set_raw.astype('uint8')
 
 # Display a few images from the test set
 f, axarr = plt.subplots(1, 4)
 for i in range(0, 4):
-    axarr[i].imshow(test_set[i].reshape((28, 28)), cmap=cm.Greys_r)
+    axarr[i].imshow(test_set_raw[i].reshape((28, 28)), cmap=cm.Greys_r)
     axarr[i].set_title('Class %d' % test_label[i])
 plt.show()
 
 ######################################################################
-# 2. Load the pre-trained Akida model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. Create a Keras GXNOR model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The pre-trained neural network model is available on
-# `Brainchip data server <http://data.brainchip.com/models/gxnor/>`_
-# You only need to pass this .fbz file to the Akida Execution Engine in order
-# to instantiate the model.
+# The GXNOR architecture is available in the `Akida models zoo
+# <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist>`_ along
+# with pretrained weights.
+#
+#  .. Note:: The pre-trained weights were obtained with knowledge distillation
+#            training, using the EfficientNet model from `this repository
+#            <https://github.com/EscVM/Efficient-CapsNet>`_ and the `Distiller`
+#            class from the `knowledge distillation toolkit
+#            <../../api_reference/akida_models_apis.html#knowledge-distillation>`_.
+#
+#            The float training was done for 30 epochs, the model is then
+#            gradually quantized following:
+#            8-4-4 --> 4-4-4 --> 4-4-2 --> 2-2-2 --> 2-2-1
+#            by tuning the model at each step with the same distillation
+#            training method for 5 epochs.
 
-from akida import Model
+from akida_models import gxnor_mnist_pretrained
 
-from tensorflow.keras.utils import get_file
+model_keras = gxnor_mnist_pretrained()
+model_keras.summary()
 
-# Load provided model configuration file
-model_file = get_file("gxnor_mnist.fbz",
-                      "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
-                      cache_subdir='models/gxnor')
-model_akida = Model(model_file)
+######################################################################
+
+# Check Model performances
+from tensorflow.keras.losses import SparseCategoricalCrossentropy
+
+model_keras.compile(optimizer='adam',
+                    loss=SparseCategoricalCrossentropy(from_logits=True),
+                    metrics=['accuracy'])
+keras_accuracy = model_keras.evaluate(test_set, test_label, verbose=0)[1]
+print(f"Keras accuracy : {keras_accuracy}")
+
+######################################################################
+# 3. Conversion to Akida
+# ~~~~~~~~~~~~~~~~~~~~~~
+
+######################################################################
+# 3.1 Convert to Akida model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# When converting to an Akida model, we just need to pass the Keras model
+# and the input scaling that was used during training to `cnn2snn.convert
+# <../../api_reference/cnn2snn_apis.html#convert>`_.
+
+from cnn2snn import convert
+
+model_akida = convert(model_keras, input_scaling=input_scaling)
+
+######################################################################
+# 3.2 Check hardware compliancy
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# method provides a detailed description of the Model layers.
+#
+# It also indicates hardware-incompatibilities if there are any. Hardware
+# compatibility can also be checked manually using
+# `model_hardware_incompatibilities
+# <../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
+
 model_akida.summary()
 
 ######################################################################
-# 3. Show predictions for a single image
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3.3. Check performance
+# ^^^^^^^^^^^^^^^^^^^^^^
+
+from sklearn.metrics import accuracy_score
+
+# Check performance against num_samples samples
+num_samples = 10000
+
+results = model_akida.predict(test_set_raw[:num_samples])
+accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
+
+# For non-regression purpose
+assert accuracy > 0.99
+
+# Display results
+print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
+
+######################################################################
+# Depending on the number of samples you run, you should find a
+# performance of around 99% (99.24% if you run all 10000 samples).
+#
+
+######################################################################
+
+# Print model statistics
+print("Model statistics")
+print(model_akida.statistics)
+
+######################################################################
+# 3.4 Show predictions for a single image
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now try processing a single image, say, the first image in the dataset
 # that we looked at above:
@@ -67,7 +148,7 @@ model_akida.summary()
 
 # Test a single example
 sample_image = 0
-image = test_set[sample_image]
+image = test_set_raw[sample_image]
 outputs = model_akida.evaluate(image.reshape(1, 28, 28, 1))
 print('Input Label: %i' % test_label[sample_image])
 
@@ -95,39 +176,4 @@ print(outputs.squeeze())
 #
 # Check this for some of the other samples by editing the value of
 # sample_image in the script above (anything from 0 to 9999).
-#
-
-######################################################################
-# 4. Check performance
-# ~~~~~~~~~~~~~~~~~~~~
-
-from sklearn.metrics import accuracy_score
-
-# Check performance against num_samples samples
-num_samples = 10000
-
-results = model_akida.predict(test_set[:int(num_samples)], 10)
-accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
-
-# For non-regression purpose
-assert accuracy > 0.99
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-# Display results
-print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
-
-######################################################################
-# Depending on the number of samples you run, you should find a
-# performance of around 99% (99.07% if you run all 10000 samples).
-#
-# Note that classification here is done simply by identifying the neuron
-# with the highest activation level. Slightly higher performance is
-# actually possible for this model implementation (~99.1 %) if a very
-# slightly more complex final classification is applied (with a single
-# additional integer subtraction per neuron), but for simplicity we leave
-# those details aside here. See the cnn2snn training framework for a full
-# description.
 #

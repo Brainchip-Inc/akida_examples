@@ -288,9 +288,8 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html#general-examples">General examples</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">GXNOR/MNIST inference</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#dataset-preparation">1. Dataset preparation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#load-the-pre-trained-akida-model">2. Load the pre-trained Akida model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#show-predictions-for-a-single-image">3. Show predictions for a single image</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#check-performance">4. Check performance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#create-a-keras-gxnor-model">2. Create a Keras GXNOR model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#conversion-to-akida">3. Conversion to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="plot_1_ds_cnn_cifar10.html">DS-CNN CIFAR10 inference</a><ul>
@@ -494,8 +493,8 @@ to download the full example code</p>
 <p>The MNIST dataset is a handwritten digits database. It has a training
 set of 60,000 samples, and a test set of 10,000 samples. Each sample
 comprises a 28x28 pixel image and an associated label.</p>
-<p>This tutorial illustrates how to use a pre-trained Akida model to process the
-MNIST dataset.</p>
+<p>This tutorial illustrates how to use a pre-trained model to process the MNIST
+dataset.</p>
 <div class="section" id="dataset-preparation">
 <h2>1. Dataset preparation<a class="headerlink" href="#dataset-preparation" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -506,16 +505,22 @@ MNIST dataset.</p>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.datasets</span> <span class="kn">import</span> <span class="n">mnist</span>
 
 <span class="c1"># Retrieve MNIST dataset</span>
-<span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">train_label</span><span class="p">),</span> <span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+<span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">test_set_raw</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
 
 <span class="c1"># Add a dimension to images sets as akida expects 4 dimensions inputs</span>
-<span class="n">train_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">test_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_set_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">test_set_raw</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Rescale inputs images so that values are in [0, 1]</span>
+<span class="n">input_scaling</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">test_set</span> <span class="o">=</span> <span class="n">test_set_raw</span> <span class="o">/</span> <span class="n">input_scaling</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Convert to 8-bits inputs for Akida</span>
+<span class="n">test_set_raw</span> <span class="o">=</span> <span class="n">test_set_raw</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
 
 <span class="c1"># Display a few images from the test set</span>
 <span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
-    <span class="n">axarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">test_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">Greys_r</span><span class="p">)</span>
+    <span class="n">axarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">test_set_raw</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">Greys_r</span><span class="p">)</span>
     <span class="n">axarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Class </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">test_label</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -525,76 +530,235 @@ MNIST dataset.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
 
     8192/11490434 [..............................] - ETA: 0s
-  606208/11490434 [&gt;.............................] - ETA: 0s
- 1916928/11490434 [====&gt;.........................] - ETA: 0s
- 2834432/11490434 [======&gt;.......................] - ETA: 0s
- 4210688/11490434 [=========&gt;....................] - ETA: 0s
- 5373952/11490434 [=============&gt;................] - ETA: 0s
- 6504448/11490434 [===============&gt;..............] - ETA: 0s
- 7634944/11490434 [==================&gt;...........] - ETA: 0s
- 8765440/11490434 [=====================&gt;........] - ETA: 0s
- 9912320/11490434 [========================&gt;.....] - ETA: 0s
-11042816/11490434 [===========================&gt;..] - ETA: 0s
+  311296/11490434 [..............................] - ETA: 2s
+ 1277952/11490434 [==&gt;...........................] - ETA: 0s
+ 1835008/11490434 [===&gt;..........................] - ETA: 0s
+ 2457600/11490434 [=====&gt;........................] - ETA: 0s
+ 3063808/11490434 [======&gt;.......................] - ETA: 0s
+ 3653632/11490434 [========&gt;.....................] - ETA: 0s
+ 4325376/11490434 [==========&gt;...................] - ETA: 0s
+ 4849664/11490434 [===========&gt;..................] - ETA: 0s
+ 5488640/11490434 [=============&gt;................] - ETA: 0s
+ 6127616/11490434 [==============&gt;...............] - ETA: 0s
+ 6750208/11490434 [================&gt;.............] - ETA: 0s
+ 7372800/11490434 [==================&gt;...........] - ETA: 0s
+ 7946240/11490434 [===================&gt;..........] - ETA: 0s
+ 8568832/11490434 [=====================&gt;........] - ETA: 0s
+ 9175040/11490434 [======================&gt;.......] - ETA: 0s
+ 9797632/11490434 [========================&gt;.....] - ETA: 0s
+10420224/11490434 [==========================&gt;...] - ETA: 0s
+11075584/11490434 [===========================&gt;..] - ETA: 0s
 11493376/11490434 [==============================] - 1s 0us/step
 </pre></div>
 </div>
 </div>
-<div class="section" id="load-the-pre-trained-akida-model">
-<h2>2. Load the pre-trained Akida model<a class="headerlink" href="#load-the-pre-trained-akida-model" title="Permalink to this headline">¶</a></h2>
-<p>The pre-trained neural network model is available on
-<a class="reference external" href="http://data.brainchip.com/models/gxnor/">Brainchip data server</a>
-You only need to pass this .fbz file to the Akida Execution Engine in order
-to instantiate the model.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span>
+<div class="section" id="create-a-keras-gxnor-model">
+<h2>2. Create a Keras GXNOR model<a class="headerlink" href="#create-a-keras-gxnor-model" title="Permalink to this headline">¶</a></h2>
+<p>The GXNOR architecture is available in the <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist">Akida models zoo</a> along
+with pretrained weights.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pre-trained weights were obtained with knowledge distillation
+training, using the EfficientNet model from <a class="reference external" href="https://github.com/EscVM/Efficient-CapsNet">this repository</a> and the <cite>Distiller</cite>
+class from the <a class="reference external" href="../../api_reference/akida_models_apis.html#knowledge-distillation">knowledge distillation toolkit</a>.</p>
+<p>The float training was done for 30 epochs, the model is then
+gradually quantized following:
+8-4-4 –&gt; 4-4-4 –&gt; 4-4-2 –&gt; 2-2-2 –&gt; 2-2-1
+by tuning the model at each step with the same distillation
+training method for 5 epochs.</p>
+</div>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">gxnor_mnist_pretrained</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
-
-<span class="c1"># Load provided model configuration file</span>
-<span class="n">model_file</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="s2">&quot;gxnor_mnist.fbz&quot;</span><span class="p">,</span>
-                      <span class="s2">&quot;http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz&quot;</span><span class="p">,</span>
-                      <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models/gxnor&#39;</span><span class="p">)</span>
-<span class="n">model_akida</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model_file</span><span class="p">)</span>
-<span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">model_keras</span> <span class="o">=</span> <span class="n">gxnor_mnist_pretrained</span><span class="p">()</span>
+<span class="n">model_keras</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/models/gxnor/gxnor_mnist_iq2_wq2_aq1.h5
 
-  8192/373501 [..............................] - ETA: 0s
- 73728/373501 [====&gt;.........................] - ETA: 0s
-204800/373501 [===============&gt;..............] - ETA: 0s
-376832/373501 [==============================] - 0s 0us/step
-                Model Summary
+   8192/6683792 [..............................] - ETA: 29s
+  73728/6683792 [..............................] - ETA: 8s 
+ 270336/6683792 [&gt;.............................] - ETA: 3s
+ 466944/6683792 [=&gt;............................] - ETA: 2s
+ 663552/6683792 [=&gt;............................] - ETA: 2s
+ 860160/6683792 [==&gt;...........................] - ETA: 2s
+1056768/6683792 [===&gt;..........................] - ETA: 2s
+1253376/6683792 [====&gt;.........................] - ETA: 1s
+1449984/6683792 [=====&gt;........................] - ETA: 1s
+1646592/6683792 [======&gt;.......................] - ETA: 1s
+1843200/6683792 [=======&gt;......................] - ETA: 1s
+2039808/6683792 [========&gt;.....................] - ETA: 1s
+2236416/6683792 [=========&gt;....................] - ETA: 1s
+2433024/6683792 [=========&gt;....................] - ETA: 1s
+2629632/6683792 [==========&gt;...................] - ETA: 1s
+2826240/6683792 [===========&gt;..................] - ETA: 1s
+3022848/6683792 [============&gt;.................] - ETA: 1s
+3219456/6683792 [=============&gt;................] - ETA: 1s
+3416064/6683792 [==============&gt;...............] - ETA: 1s
+3612672/6683792 [===============&gt;..............] - ETA: 1s
+3809280/6683792 [================&gt;.............] - ETA: 0s
+4005888/6683792 [================&gt;.............] - ETA: 0s
+4202496/6683792 [=================&gt;............] - ETA: 0s
+4399104/6683792 [==================&gt;...........] - ETA: 0s
+4595712/6683792 [===================&gt;..........] - ETA: 0s
+4661248/6683792 [===================&gt;..........] - ETA: 0s
+4857856/6683792 [====================&gt;.........] - ETA: 0s
+5054464/6683792 [=====================&gt;........] - ETA: 0s
+5251072/6683792 [======================&gt;.......] - ETA: 0s
+5447680/6683792 [=======================&gt;......] - ETA: 0s
+5644288/6683792 [========================&gt;.....] - ETA: 0s
+5840896/6683792 [=========================&gt;....] - ETA: 0s
+6037504/6683792 [==========================&gt;...] - ETA: 0s
+6234112/6683792 [==========================&gt;...] - ETA: 0s
+6430720/6683792 [===========================&gt;..] - ETA: 0s
+6627328/6683792 [============================&gt;.] - ETA: 0s
+6684672/6683792 [==============================] - 2s 0us/step
+WARNING:tensorflow:No training configuration found in the save file, so the model was *not* compiled. Compile it manually.
+Model: &quot;gxnor_mnist&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_1 (InputLayer)         [(None, 28, 28, 1)]       0
+_________________________________________________________________
+block1_conv1 (QuantizedConv2 (None, 28, 28, 32)        832
+_________________________________________________________________
+block1_conv1_maxpool (MaxPoo (None, 14, 14, 32)        0
+_________________________________________________________________
+block1_conv1_relu (Activatio (None, 14, 14, 32)        0
+_________________________________________________________________
+block2_conv1 (QuantizedConv2 (None, 14, 14, 64)        51264
+_________________________________________________________________
+block2_conv1_maxpool (MaxPoo (None, 7, 7, 64)          0
+_________________________________________________________________
+block2_conv1_relu (Activatio (None, 7, 7, 64)          0
+_________________________________________________________________
+flatten (Flatten)            (None, 3136)              0
+_________________________________________________________________
+fc1 (QuantizedDense)         (None, 512)               1606144
+_________________________________________________________________
+fc1_relu (ActivationDiscrete (None, 512)               0
+_________________________________________________________________
+predictions (QuantizedDense) (None, 10)                5130
+=================================================================
+Total params: 1,663,370
+Trainable params: 1,663,370
+Non-trainable params: 0
+_________________________________________________________________
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check Model performances</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.losses</span> <span class="kn">import</span> <span class="n">SparseCategoricalCrossentropy</span>
+
+<span class="n">model_keras</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span>
+                    <span class="n">loss</span><span class="o">=</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+<span class="n">keras_accuracy</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="n">test_label</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Keras accuracy : </span><span class="si">{</span><span class="n">keras_accuracy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Keras accuracy : 0.9923999905586243
+</pre></div>
+</div>
+</div>
+<div class="section" id="conversion-to-akida">
+<h2>3. Conversion to Akida<a class="headerlink" href="#conversion-to-akida" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convert-to-akida-model">
+<h3>3.1 Convert to Akida model<a class="headerlink" href="#convert-to-akida-model" title="Permalink to this headline">¶</a></h3>
+<p>When converting to an Akida model, we just need to pass the Keras model
+and the input scaling that was used during training to <a class="reference external" href="../../api_reference/cnn2snn_apis.html#convert">cnn2snn.convert</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+
+<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-hardware-compliancy">
+<h3>3.2 Check hardware compliancy<a class="headerlink" href="#check-hardware-compliancy" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="../../api_reference/aee_apis.html#akida.Model.summary">Model.summary</a>
+method provides a detailed description of the Model layers.</p>
+<p>It also indicates hardware-incompatibilities if there are any. Hardware
+compatibility can also be checked manually using
+<a class="reference external" href="../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities">model_hardware_incompatibilities</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>                Model Summary
 ______________________________________________
 Input shape  Output shape  Sequences  Layers
 ==============================================
-[28, 28, 1]  [1, 1, 10]    1          5
+[28, 28, 1]  [1, 1, 10]    1          4
 ______________________________________________
 
-             SW/conv_0-dense_3 (Software)
-______________________________________________________
-Layer (type)         Output shape  Kernel shape
-======================================================
-conv_0 (InputConv.)  [14, 14, 32]  (5, 5, 1, 32)
-______________________________________________________
-conv_1 (Conv.)       [7, 7, 32]    (5, 5, 32, 32)
-______________________________________________________
-conv_2 (Conv.)       [7, 7, 32]    (5, 5, 32, 32)
-______________________________________________________
-dense_2 (Fully.)     [1, 1, 512]   (1, 1, 1568, 512)
-______________________________________________________
-dense_3 (Fully.)     [1, 1, 10]    (1, 1, 512, 10)
-______________________________________________________
+           SW/block1_conv1-predictions (Software)
+____________________________________________________________
+Layer (type)               Output shape  Kernel shape
+============================================================
+block1_conv1 (InputConv.)  [14, 14, 32]  (5, 5, 1, 32)
+____________________________________________________________
+block2_conv1 (Conv.)       [7, 7, 64]    (5, 5, 32, 64)
+____________________________________________________________
+fc1 (Fully.)               [1, 1, 512]   (1, 1, 3136, 512)
+____________________________________________________________
+predictions (Fully.)       [1, 1, 10]    (1, 1, 512, 10)
+____________________________________________________________
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-performance">
+<h3>3.3. Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+
+<span class="c1"># Check performance against num_samples samples</span>
+<span class="n">num_samples</span> <span class="o">=</span> <span class="mi">10000</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_set_raw</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">])</span>
+<span class="n">accuracy</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">test_label</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">],</span> <span class="n">results</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">])</span>
+
+<span class="c1"># For non-regression purpose</span>
+<span class="k">assert</span> <span class="n">accuracy</span> <span class="o">&gt;</span> <span class="mf">0.99</span>
+
+<span class="c1"># Display results</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">accuracy</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Accuracy: 99.24%
+</pre></div>
+</div>
+<p>Depending on the number of samples you run, you should find a
+performance of around 99% (99.24% if you run all 10000 samples).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Print model statistics</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_akida</span><span class="o">.</span><span class="n">statistics</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Model statistics
+
+Sequence SW/block1_conv1-predictions
+Average framerate = 2791.74 fps
+Layer (type)                  output sparsity
+block1_conv1 (InputConv.)     0.85
+Layer (type)                  output sparsity
+block2_conv1 (Conv.)          0.89
+Layer (type)                  output sparsity
+fc1 (Fully.)                  0.80
+Layer (type)                  output sparsity
+predictions (Fully.)          N/A
 </pre></div>
 </div>
 </div>
 <div class="section" id="show-predictions-for-a-single-image">
-<h2>3. Show predictions for a single image<a class="headerlink" href="#show-predictions-for-a-single-image" title="Permalink to this headline">¶</a></h2>
+<h3>3.4 Show predictions for a single image<a class="headerlink" href="#show-predictions-for-a-single-image" title="Permalink to this headline">¶</a></h3>
 <p>Now try processing a single image, say, the first image in the dataset
 that we looked at above:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test a single example</span>
 <span class="n">sample_image</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">image</span> <span class="o">=</span> <span class="n">test_set</span><span class="p">[</span><span class="n">sample_image</span><span class="p">]</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">test_set_raw</span><span class="p">[</span><span class="n">sample_image</span><span class="p">]</span>
 <span class="n">outputs</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input Label: </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">test_label</span><span class="p">[</span><span class="n">sample_image</span><span class="p">])</span>
 
@@ -611,8 +775,8 @@ that we looked at above:</p>
 <img alt="Class 7" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_0_gxnor_mnist_002.png" />
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Input Label: 7
-[-2.4073963 -2.4073963 -3.9689505 -3.6436267 -3.3183029 -3.9038858
- -4.684663   2.4073963 -3.7086916 -3.6436267]
+[-2.6885889 -3.3714404 -3.4437032 -2.9686317 -3.1043468 -2.8324056
+ -3.2131     3.6556103 -3.326526  -2.5987935]
 </pre></div>
 </div>
 <p>Consider the output from the model, printed above. As is typical in
@@ -626,56 +790,7 @@ is easy to see that neuron 7 responds much more strongly than the
 others. The first sample is indeed a number 7.</p>
 <p>Check this for some of the other samples by editing the value of
 sample_image in the script above (anything from 0 to 9999).</p>
-</div>
-<div class="section" id="check-performance">
-<h2>4. Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
-
-<span class="c1"># Check performance against num_samples samples</span>
-<span class="n">num_samples</span> <span class="o">=</span> <span class="mi">10000</span>
-
-<span class="n">results</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_set</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)],</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">accuracy</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">test_label</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">],</span> <span class="n">results</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">])</span>
-
-<span class="c1"># For non-regression purpose</span>
-<span class="k">assert</span> <span class="n">accuracy</span> <span class="o">&gt;</span> <span class="mf">0.99</span>
-
-<span class="c1"># Print model statistics</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Model statistics&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">model_akida</span><span class="o">.</span><span class="n">statistics</span><span class="p">)</span>
-
-<span class="c1"># Display results</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">accuracy</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Model statistics
-
-Sequence SW/conv_0-dense_3
-Average framerate = 3083.87 fps
-Layer (type)                  output sparsity
-conv_0 (InputConv.)           0.85
-Layer (type)                  output sparsity
-conv_1 (Conv.)                0.78
-Layer (type)                  output sparsity
-conv_2 (Conv.)                0.69
-Layer (type)                  output sparsity
-dense_2 (Fully.)              0.68
-Layer (type)                  output sparsity
-dense_3 (Fully.)              N/A
-Accuracy: 99.07%
-</pre></div>
-</div>
-<p>Depending on the number of samples you run, you should find a
-performance of around 99% (99.07% if you run all 10000 samples).</p>
-<p>Note that classification here is done simply by identifying the neuron
-with the highest activation level. Slightly higher performance is
-actually possible for this model implementation (~99.1 %) if a very
-slightly more complex final classification is applied (with a single
-additional integer subtraction per neuron), but for simplicity we leave
-those details aside here. See the cnn2snn training framework for a full
-description.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.256 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  14.030 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-0-gxnor-mnist-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/f549929a016413c18b0da1178bc1c0a5/plot_0_gxnor_mnist.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_0_gxnor_mnist.py</span></code></a></p>
@@ -685,6 +800,7 @@ description.</p>
 </div>
 </div>
 <p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
 </div>
 </div>
 
