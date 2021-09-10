@@ -82,7 +82,7 @@ When designing a tf.keras model, consider design compatibility at these
 distinct levels before the quantization stage:
 
 
-* Only serial and feedforward arrangements can be converted\ [#fn-2]_.
+* Only serial and feedforward arrangements can be converted\ [#fn-1]_.
 * Supported Keras layers are listed `below <#supported-layer-types>`_.
 * Order of the layers is important, e.g. a BatchNormalization layer
   must be placed before the activation, and not after.
@@ -93,7 +93,7 @@ distinct levels before the quantization stage:
 All these design compatibility constraints are summarized in the CNN2SNN
 `check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`_
 function. A good practice is to check model compatibility before going through
-the training process [#fn-3]_.
+the training process [#fn-2]_.
 
 Helpers (see `Layer Blocks
 <../api_reference/akida_models_apis.html#layer-blocks>`_) are available in the
@@ -110,7 +110,7 @@ quantization constraints:
 * Weights of the neural layers must be quantized using
   `1, 2, 4 or 8 bits <hw_constraints.html>`_.
 * Activations should be quantized too using 1, 2 or 4 bits, with maximum spike
-  value set to 15\ [#fn-4]_\.
+  value set to 15\ [#fn-3]_\.
 * Every neural layer accepts inputs with different quantization parameters,
   e.g. a quantized Dense layer can only accept 1-bit or 2-bit inputs.
 
@@ -202,7 +202,7 @@ Keras layer types:
 CNN2SNN Quantization-aware layers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Several articles have reported\ [#fn-5]_ that the quantization of a pre-trained
+Several articles have reported\ [#fn-4]_ that the quantization of a pre-trained
 float Keras model using 8-bit precision can be performed with a minimal loss
 of accuracy for simple models, but that for lower bitwidth or complex models a
 quantization-aware re-training of the quantized model may be required.
@@ -332,15 +332,13 @@ substitutions that might come in handy:
 
 ____
 
-.. [#fn-1] Sparsity refers to the fraction of both weights and activations with
-           value zero.
-.. [#fn-2] Parallel layers and "residual" connections are currently not
+.. [#fn-1] Parallel layers and "residual" connections are currently not
            supported.
-.. [#fn-3] Check model compatibility must be applied on a quantized model. It
+.. [#fn-2] Check model compatibility must be applied on a quantized model. It
             then requires to quantize the model first.
-.. [#fn-4] The spike value depends on the intensity of the potential, see the
+.. [#fn-3] The spike value depends on the intensity of the potential, see the
            `Akida documentation <aee.html>`_ for details on the activation.
-.. [#fn-5] See for instance `"Quantizing deep convolutional networks for
+.. [#fn-4] See for instance `"Quantizing deep convolutional networks for
            efficient inference: A whitepaper"
            <https://arxiv.org/pdf/1806.08342.pdf>`_
            - Raghuraman Krishnamoorthi, 2018
