@@ -214,6 +214,10 @@ Face recognition
    :scale: 4 %
    :target: http://data.brainchip.com/models/mobilenet/mobilenet_faceidentification_iq8_wq4_aq4.h5
 
+.. |fide_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: http://data.brainchip.com/models/mobilenet_edge/mobilenet_faceidentification_edge_iq8_wq4_aq4.h5
+
 .. |fver_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: http://data.brainchip.com/models/mobilenet/mobilenet_faceverification_iq8_wq4_aq4.h5
@@ -223,6 +227,9 @@ Face recognition
 +=================+============+======================+==============+==========+===============+===========+=====+===========+
 | MobileNetV1 0.5 | 112x96     | CASIA Webface        | 8/4/4        | 69.17%   | (128, 128)    | 1882.0    | 21  | |fid_dl|  |
 |                 |            | face identification  |              |          |               |           |     |           |
++-----------------+------------+----------------------+--------------+----------+---------------+-----------+-----+-----------+
+| MobileNetV1 0.5 | 112x96     | CASIA Webface        | 8/4/4        | 71.40%   | (128, 128)    | 6932.1    | 35  | |fide_dl| |
+| edge            |            | face identification  |              |          |               |           |     |           |
 +-----------------+------------+----------------------+--------------+----------+---------------+-----------+-----+-----------+
 | MobileNetV1 0.5 | 112x96     | LFW                  | 8/4/4        | 97.27%   | (128, 128)    | 643.2     | 20  | |fver_dl| |
 |                 |            | face verification    |              |          |               |           |     |           |
