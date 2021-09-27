@@ -249,6 +249,20 @@ using the `--freeze_before` or `-fb` option.
    yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5
 
 
+Command-line interface for model evaluation
+-------------------------------------------
+
+The CLI also comes with an ``eval`` action that allows to evaluate model
+performances, the ``-ak`` or ``--akida`` option allows to evaluate the model
+once converted to Akida.
+
+.. code-block:: bash
+
+   cifar10_train eval -m vgg_cifar10_iq4_wq4_aq4.h5
+
+   cifar10_train eval -m vgg_cifar10_iq4_wq4_aq4.h5 -ak
+
+
 Layer Blocks
 ------------
 
