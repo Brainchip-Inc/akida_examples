@@ -154,7 +154,9 @@ Convolutional
 +---------------+-------------+----------+
 
 .. note::
-       * pooling stride cannot be greater than pooling size.
+       * pooling stride cannot be greater than pooling size
+       * a layer with max pooling must be followed by another Convolutional or
+         SeparableConvolutional layer.
 
 +-------------------+---------+
 |**Average Pooling**|**Width**|
@@ -188,6 +190,8 @@ SeparableConvolutional
 
 .. note::
        * pooling stride cannot be greater than pooling size.
+       * a layer with max pooling must be followed by another Convolutional or
+         SeparableConvolutional layer.
 
 +-------------------+---------+
 |**Average Pooling**|**Width**|
