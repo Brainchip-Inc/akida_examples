@@ -61,7 +61,7 @@ from cnn2snn import convert
 model_keras = mobilenet_edge_imagenet_pretrained()
 
 # Convert it to akida
-model_ak = convert(model_keras, input_scaling=(128, 128))
+model_ak = convert(model_keras)
 
 ##############################################################################
 

@@ -34,18 +34,12 @@ fname = get_file(
     "http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
-    [_, _, x_valid_akida, y_valid, _, _, word_to_index, _] = pickle.load(f)
+    [_, _, x_valid, y_valid, _, _, word_to_index, _] = pickle.load(f)
 
 # Preprocessed dataset parameters
 num_classes = len(word_to_index)
 
 print("Wanted words and labels:\n", word_to_index)
-
-# For cnn2snn Keras training, data must be scaled (usually to [0,1])
-a = 255
-b = 0
-
-x_valid_keras = (x_valid_akida.astype('float32') - b) / a
 
 ######################################################################
 # 2. Load a pre-trained native Keras model
@@ -83,7 +77,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 # Check Keras Model performance
-potentials_keras = model_keras.predict(x_valid_keras)
+potentials_keras = model_keras.predict(x_valid)
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 
 accuracy = accuracy_score(y_valid, preds_keras)
@@ -138,7 +132,7 @@ model_keras_quantized = ds_cnn_kws_pretrained()
 model_keras_quantized.summary()
 
 # Check Model performance
-potentials_keras_q = model_keras_quantized.predict(x_valid_keras)
+potentials_keras_q = model_keras_quantized.predict(x_valid)
 preds_keras_q = np.squeeze(np.argmax(potentials_keras_q, 1))
 
 accuracy_q = accuracy_score(y_valid, preds_keras_q)
@@ -155,13 +149,13 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy_q) + "%")
 from cnn2snn import convert
 
 # Convert the model
-model_akida = convert(model_keras_quantized, input_scaling=(a, b))
+model_akida = convert(model_keras_quantized)
 model_akida.summary()
 
 ######################################################################
 
 # Check Akida model performance
-preds_akida = model_akida.predict(x_valid_akida, num_classes=num_classes)
+preds_akida = model_akida.predict(x_valid, num_classes=num_classes)
 
 accuracy = accuracy_score(y_valid, preds_akida)
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")

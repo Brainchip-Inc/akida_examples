@@ -26,18 +26,6 @@ x_train = x_train.reshape(50000, 32, 32, 3)
 x_test = x_test.reshape(10000, 32, 32, 3)
 input_shape = (32, 32, 3)
 
-# Set aside raw test data for use with Akida Execution Engine later
-raw_x_test = x_test.astype('uint8')
-
-# Rescale x-data
-a = 255
-b = 0
-
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train = (x_train - b) / a
-x_test = (x_test - b) / a
-
 ######################################################################
 # 2. Create a Keras DS-CNN model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,7 +162,7 @@ check_model_performances(model_keras_quantized_pretrained, x_test)
 
 from cnn2snn import convert
 
-model_akida = convert(model_keras_quantized_pretrained, input_scaling=(a, b))
+model_akida = convert(model_keras_quantized_pretrained)
 
 ######################################################################
 # 5.2 Check hardware compliancy
@@ -221,7 +209,7 @@ num_images = 1000
 
 # Check Model performance
 start = timer()
-results = model_akida.predict(raw_x_test[:num_images])
+results = model_akida.predict(x_test[:num_images])
 accuracy = accuracy_score(y_test[:num_images], results)
 
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
@@ -277,14 +265,14 @@ predicted_class = ax0.text(20, 37, 'None')
 i = np.random.randint(y_test.shape[0])
 
 true_idx = int(y_test[i])
-pot = model_akida.evaluate(np.expand_dims(raw_x_test[i], axis=0)).squeeze()
+pot = model_akida.evaluate(np.expand_dims(x_test[i], axis=0)).squeeze()
 
 rpot = np.arange(len(pot))
 ax1.barh(rpot, pot, height=barWidth)
 ax1.set_yticks(rpot - 0.07 * barWidth)
 ax1.set_yticklabels(label_names)
 predicted_idx = pot.argmax()
-imgobj.set_data(raw_x_test[i])
+imgobj.set_data(x_test[i])
 if predicted_idx == true_idx:
     ax1.get_children()[predicted_idx].set_color('g')
 else:

@@ -284,7 +284,7 @@ compatible_model = Model(model_keras.input, model_keras.layers[-2].output)
 
 from cnn2snn import convert
 
-model_akida = convert(compatible_model, input_scaling=(127.5, 127.5))
+model_akida = convert(compatible_model)
 model_akida.summary()
 
 ######################################################################
@@ -346,7 +346,7 @@ raw_image = load_image(val_data[i]['image_path'])
 raw_height, raw_width, _ = raw_image.shape
 
 # Pre-process the image
-image = preprocess_image(raw_image, input_shape, False)
+image = preprocess_image(raw_image, input_shape)
 input_image = image[np.newaxis, :].astype(np.uint8)
 
 # Call evaluate on the image

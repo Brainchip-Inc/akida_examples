@@ -59,7 +59,7 @@ fname = get_file(
     "http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
-    [x_train_ak, y_train, _, _, _, _, word_to_index, _] = pickle.load(f)
+    [x_train, y_train, _, _, _, _, word_to_index, _] = pickle.load(f)
 
 ##############################################################################
 
@@ -70,8 +70,7 @@ from akida_models import ds_cnn_kws_pretrained
 model = ds_cnn_kws_pretrained()
 
 # Convert to an Akida model
-input_scaling = (255, 0)
-model_ak = convert(model, input_scaling=input_scaling)
+model_ak = convert(model)
 
 # Remove last layer
 model_ak.pop_layer()
@@ -106,8 +105,8 @@ import numpy as np
 
 # Forward samples to get the number of output spikes
 # Here, 10% of the training set is sufficient for a good estimation
-num_samples_to_use = int(len(x_train_ak) / 10)
-spikes = model_ak.forward(x_train_ak[:num_samples_to_use])
+num_samples_to_use = int(len(x_train) / 10)
+spikes = model_ak.forward(x_train[:num_samples_to_use])
 
 # Compute the median of the number of output spikes
 median_spikes = np.median(spikes.sum(axis=(1, 2, 3)))
@@ -237,7 +236,7 @@ neurons_per_class = [
 
 # Compute the losses for word 'six' and different number of neurons
 idx_samples = (y_train == word_to_index[word])
-x_train_word = x_train_ak[idx_samples]
+x_train_word = x_train[idx_samples]
 losses, num_learned_neurons = compute_losses(model_ak, x_train_word,
                                              neurons_per_class, num_weights)
 

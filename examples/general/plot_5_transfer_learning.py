@@ -138,27 +138,18 @@ tfds.disable_progress_bar()
 import tensorflow as tf
 
 IMG_SIZE = 160
-input_scaling = (127.5, 127.5)
 
 
-def format_example_keras(image, label):
+def format_example(image, label):
     image = tf.cast(image, tf.float32)
-    image = (image - input_scaling[1]) / input_scaling[0]
     image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
-    return image, label
-
-
-def format_example_akida(image, label):
-    image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
-    image = tf.cast(image, tf.uint8)
     return image, label
 
 
 ######################################################################
 
 BATCH_SIZE = 32
-test_batches_keras = raw_test.map(format_example_keras).batch(BATCH_SIZE)
-test_batches_akida = raw_test.map(format_example_akida).batch(BATCH_SIZE)
+test_batches = raw_test.map(format_example).batch(BATCH_SIZE)
 
 ######################################################################
 # 1.C - Get labels
@@ -170,7 +161,7 @@ test_batches_akida = raw_test.map(format_example_akida).batch(BATCH_SIZE)
 import numpy as np
 
 labels = np.array([])
-for _, label_batch in test_batches_keras:
+for _, label_batch in test_batches:
     labels = np.concatenate((labels, label_batch))
 
 num_images = labels.shape[0]
@@ -281,7 +272,7 @@ model_keras.load_weights(pretrained_weights)
 
 # Check performance on the test set
 model_keras.compile(metrics=['accuracy'])
-_, keras_accuracy = model_keras.evaluate(test_batches_keras)
+_, keras_accuracy = model_keras.evaluate(test_batches)
 
 print(f"Keras accuracy (float top layer): {keras_accuracy*100:.2f} %")
 
@@ -304,7 +295,7 @@ model_keras = quantize_layer(model_keras, 'top_layer_separable', bitwidth=4)
 
 # Check performance for the quantized Keras model
 model_keras.compile(metrics=['accuracy'])
-_, keras_accuracy = model_keras.evaluate(test_batches_keras)
+_, keras_accuracy = model_keras.evaluate(test_batches)
 
 print(f"Quantized Keras accuracy: {keras_accuracy*100:.2f} %")
 
@@ -336,7 +327,7 @@ print(f"Quantized Keras accuracy: {keras_accuracy*100:.2f} %")
 from cnn2snn import convert
 
 # Convert the model
-model_akida = convert(model_keras, input_scaling=input_scaling)
+model_akida = convert(model_keras)
 model_akida.summary()
 
 ######################################################################
@@ -352,8 +343,8 @@ pbar = ProgressBar(maxval=n_batches)
 pbar.start()
 start = timer()
 i = 1
-for batch, _ in test_batches_akida:
-    pots_batch_akida = model_akida.evaluate(batch.numpy())
+for batch, _ in test_batches:
+    pots_batch_akida = model_akida.evaluate(batch.numpy().astype('uint8'))
     pots_akida = np.concatenate((pots_akida, pots_batch_akida.squeeze()))
     pbar.update(i)
     i = i + 1

@@ -168,7 +168,7 @@ fname = get_file(
     "http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
-    [x_train_ak, y_train, x_val_ak, y_val, _, _, word_to_index,
+    [x_train, y_train, x_val, y_val, _, _, word_to_index,
      data_transform] = pickle.load(f)
 
 # Fetch pre-processed data for the 3 new keywords
@@ -179,8 +179,8 @@ fname2 = get_file(
     cache_subdir='datasets/kws')
 with open(fname2, 'rb') as f:
     [
-        x_train_new_ak, y_train_new, x_val_new_ak, y_val_new, files_train,
-        files_val, word_to_index_new, dt2
+        x_train_new, y_train_new, x_val_new, y_val_new, files_train, files_val,
+        word_to_index_new, dt2
     ] = pickle.load(f)
 
 print("Wanted words and labels:\n", word_to_index)
@@ -230,8 +230,7 @@ from math import ceil
 from cnn2snn import convert
 
 #  Convert to an Akida model
-input_scaling = (255, 0)
-model_ak = convert(model, input_scaling=input_scaling)
+model_ak = convert(model)
 model_ak.summary()
 
 ######################################################################
@@ -239,10 +238,10 @@ model_ak.summary()
 # Measure Akida accuracy on validation set
 batch_size = 1000
 preds_ak = np.zeros(y_val.shape[0])
-num_batches_val = ceil(x_val_ak.shape[0] / batch_size)
+num_batches_val = ceil(x_val.shape[0] / batch_size)
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_ak[s] = model_ak.predict(x_val_ak[s])
+    preds_ak[s] = model_ak.predict(x_val[s])
 
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
@@ -326,11 +325,11 @@ from time import time
 # Train the last layer using Akida `fit` method
 print(f"Akida learning with {num_classes} classes... \
         (this step can take a few minutes)")
-num_batches = ceil(x_train_ak.shape[0] / batch_size)
+num_batches = ceil(x_train.shape[0] / batch_size)
 start = time()
 for i in range(num_batches):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    model_ak.fit(x_train_ak[s], y_train[s].astype(np.int32))
+    model_ak.fit(x_train[s], y_train[s].astype(np.int32))
 end = time()
 
 print(f"Elapsed time for Akida training: {end-start:.2f} s")
@@ -341,7 +340,7 @@ print(f"Elapsed time for Akida training: {end-start:.2f} s")
 preds_val_ak = np.zeros(y_val.shape[0])
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_val_ak[s] = model_ak.predict(x_val_ak[s], num_classes=num_classes)
+    preds_val_ak[s] = model_ak.predict(x_val[s], num_classes=num_classes)
 
 acc_val_ak = np.sum(preds_val_ak == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy: {100 * acc_val_ak:.2f} %")
@@ -401,14 +400,14 @@ model_edge.add_classes(3)
 # Train the Akida model with new keywords; only few samples are used.
 print("\nEdge learning with 3 new classes ...")
 start = time()
-model_edge.fit(x_train_new_ak, y_train_new.astype(np.int32))
+model_edge.fit(x_train_new, y_train_new.astype(np.int32))
 end = time()
 print(f"Elapsed time for Akida edge learning: {end-start:.2f} s")
 
 ##############################################################################
 
 # Predict on the new validation set
-preds_ak_new = model_edge.predict(x_val_new_ak, num_classes=num_classes + 3)
+preds_ak_new = model_edge.predict(x_val_new, num_classes=num_classes + 3)
 good_preds_val_new_ak = np.sum(preds_ak_new == y_val_new)
 print(f"Akida validation set accuracy on 3 new keywords: \
         {good_preds_val_new_ak}/{y_val_new.shape[0]}")
@@ -418,8 +417,7 @@ print(f"Akida validation set accuracy on 3 new keywords: \
 preds_ak_old = np.zeros(y_val.shape[0])
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_ak_old[s] = model_edge.predict(x_val_ak[s],
-                                         num_classes=num_classes + 3)
+    preds_ak_old[s] = model_edge.predict(x_val[s], num_classes=num_classes + 3)
 
 acc_val_old_ak = np.sum(preds_ak_old == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy on 33 old classes: \
