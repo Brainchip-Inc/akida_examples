@@ -169,6 +169,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -514,6 +515,7 @@
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers.experimental.preprocessing</span> <span class="kn">import</span> <span class="n">Rescaling</span>
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span>
 
@@ -580,7 +582,8 @@
                        <span class="n">use_stride2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                        <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                        <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                       <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                       <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;Instantiates the MobileNet architecture.</span>
 
 <span class="sd">    Args:</span>
@@ -624,6 +627,9 @@
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
+<span class="sd">            inputs. Defaults to (128, -1). Note that following Akida convention,</span>
+<span class="sd">            the scale factor is an integer used as a divider.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras model for MobileNet/ImageNet.</span>
@@ -669,7 +675,13 @@
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
+    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">32</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_0&#39;</span><span class="p">,</span>
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
@@ -866,13 +878,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;d9eabb514a7db6d823ab108b0fbc64fe2872ad1113bd6c04c9a3329b6a41e135&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;7d509ed9156af1b8739537d4b16b64fc6ad7320e94638ec8e554c483f6464aaf&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;68cbbb4cf08d3ca6401695fc126a2efad381ae932d5e4661eea91077619dbe61&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;daa6cb88c0422b8218c6aec97925a790aa08c3d52c14d70aec16ddd73a42fd2b&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;c094be674a71ed4787694be7240fd97f36ee9526675b9974c0342e9db561c9c8&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;f90f6730ab02279883e0ae372b4d853b01fcf7fe354f5103685c74f119654492&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
@@ -894,7 +906,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;b021fccaba676de9549430336ff27875a85b2aea7ca767a5e70a76185362fa4b&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;d65eb369844d6fa4ce5cee85c41ef3a662620d1a05b838df94c8d173b8f92b2c&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -916,13 +928,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenette_224_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;986c725cd26163d7ccaee01eee6e6b6c4e2a9eab2f4787fa8b4be00177ac8a8e&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;99f9534763aaee3d92483c4b9c546370c094e78b48595d32ed41fb55020c2ea7&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenette_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;4f67e310a71e0bb002f61c429bf3400bc8ae22948f708049e8a0d161c4743152&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;45aab85907cee98a37077923df1e71b34aab146b98578dc05d316c7b2e7a6535&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenette_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;10e40aa671f757c9b916b141660f11655b26ea164a4cbc4927154ac077d88058&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;e8603c872b427ae6f530cfc46707a1c78ac227c8270cfa0278a292b3ff28b913&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
@@ -944,7 +956,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;fdc05362e0afd5e01634b9630ecfd461fa84070c484c5e4d90c48fa3a388b895&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;d12f1dbd40267b483056728252eb56f578403071dcd472e39143319d6c84096c&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -963,7 +975,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_faceverification_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;663a1c94426936eaa897701cab267ba4a60b6fd2224ee72353e48d976302dc9b&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;ee54055f6baa38339c9f45632a0ef37c8b617fe81b9e68b709845b5d1a711919&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

@@ -24,22 +24,15 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.datasets import mnist
 
 # Retrieve MNIST dataset
-_, (test_set_raw, test_label) = mnist.load_data()
+_, (test_set, test_label) = mnist.load_data()
 
 # Add a dimension to images sets as akida expects 4 dimensions inputs
-test_set_raw = np.expand_dims(test_set_raw, -1)
-
-# Rescale inputs images so that values are in [0, 1]
-input_scaling = (255, 0)
-test_set = test_set_raw / input_scaling[0]
-
-# Convert to 8-bits inputs for Akida
-test_set_raw = test_set_raw.astype('uint8')
+test_set = np.expand_dims(test_set, -1)
 
 # Display a few images from the test set
 f, axarr = plt.subplots(1, 4)
 for i in range(0, 4):
-    axarr[i].imshow(test_set_raw[i].reshape((28, 28)), cmap=cm.Greys_r)
+    axarr[i].imshow(test_set[i].reshape((28, 28)), cmap=cm.Greys_r)
     axarr[i].set_title('Class %d' % test_label[i])
 plt.show()
 
@@ -88,12 +81,11 @@ print(f"Keras accuracy : {keras_accuracy}")
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # When converting to an Akida model, we just need to pass the Keras model
-# and the input scaling that was used during training to `cnn2snn.convert
-# <../../api_reference/cnn2snn_apis.html#convert>`_.
+# to `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`_.
 
 from cnn2snn import convert
 
-model_akida = convert(model_keras, input_scaling=input_scaling)
+model_akida = convert(model_keras)
 
 ######################################################################
 # 3.2 Check hardware compliancy
@@ -118,7 +110,7 @@ from sklearn.metrics import accuracy_score
 # Check performance against num_samples samples
 num_samples = 10000
 
-results = model_akida.predict(test_set_raw[:num_samples])
+results = model_akida.predict(test_set[:num_samples])
 accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
 
 # For non-regression purpose
@@ -148,7 +140,7 @@ print(model_akida.statistics)
 
 # Test a single example
 sample_image = 0
-image = test_set_raw[sample_image]
+image = test_set[sample_image]
 outputs = model_akida.evaluate(image.reshape(1, 28, 28, 1))
 print('Input Label: %i' % test_label[sample_image])
 

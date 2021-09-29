@@ -169,6 +169,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -502,6 +503,7 @@
 
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers.experimental.preprocessing</span> <span class="kn">import</span> <span class="n">Rescaling</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
@@ -517,7 +519,8 @@
                  <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;Instantiates a VGG11 architecture with reduced number of filters in</span>
 <span class="sd">    convolutional layers (i.e. a quarter of the filters of the original</span>
 <span class="sd">    implementation of https://arxiv.org/pdf/1409.1556.pdf).</span>
@@ -553,6 +556,9 @@
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
+<span class="sd">            inputs. Defaults to (128, -1). Note that following Akida convention,</span>
+<span class="sd">            the scale factor is an integer used as a divider.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras model for VGG/ImageNet</span>
@@ -567,8 +573,14 @@
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+
     <span class="c1"># Block 1</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block1_conv1&#39;</span><span class="p">,</span>
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
@@ -699,7 +711,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg11_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;e585de7ff31ff4e521b193d4eccd3c00896f9149dacea7ac17af8c0f9d361fb3&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;4f67883ef8b149454acd1525c77021f9d032579b0653ada4732a0d21185013ae&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -717,7 +729,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg11_melanoma_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;e44274cf287529ebb70290bd21b4fc83979929c4ac1247390a6f1ba040ddf260&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;b5788f56280149c5414ef8221c6632681fbfad715cf1a3cc25c079773d7dc779&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -739,7 +751,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg11_odir5k_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;cb51a5dd2297141f9056d2ec0fbef9d10fbb75fd6f3b38358d8ce8c87f306abb&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;32f8e6a035fdd21987f11f1a605e6f2e194d364ca7c3e52c4e9b40f523df44fd&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -757,7 +769,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg11_retinal_oct_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;6f013df344564190ca6d3278f70470f43456590c5059e7b584ac64193591b670&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;0301b24ec7c33ac5d350618adaf8dd3300b62fc0655009d8326feb6f718a3ea8&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

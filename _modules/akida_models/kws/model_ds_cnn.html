@@ -169,6 +169,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -502,6 +503,7 @@
 
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Flatten</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers.experimental.preprocessing</span> <span class="kn">import</span> <span class="n">Rescaling</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">quantize_layer</span>
@@ -517,7 +519,8 @@
                <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-               <span class="n">last_layer_activ_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+               <span class="n">last_layer_activ_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;Instantiates a MobileNet-like model for the &quot;Keyword Spotting&quot; example.</span>
 
 <span class="sd">    This model is based on the MobileNet architecture, mainly with fewer layers.</span>
@@ -557,6 +560,9 @@
 <span class="sd">            * &#39;None&#39; implements the same bitwidth as the other activations.</span>
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
 <span class="sd">            * &#39;1&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
+<span class="sd">            inputs. Defaults to (255, 0). Note that following Akida convention,</span>
+<span class="sd">            the scale factor is an integer used as a divider.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras model for MobileNet/KWS</span>
@@ -572,7 +578,13 @@
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
+    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
@@ -672,7 +684,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;a26240d2e284b7ecd2634f8cd77366c0a4c7bd4f39e4bde4aa7d14d5d860e09e&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;cd56ca58ee1330bee8cc9ab52e6d18d52c69d2ff93457dd95f341243b7efb2d7&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

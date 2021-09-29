@@ -20,10 +20,6 @@ from akida_models.utk_face.preprocessing import load_data
 # Load the dataset using akida_models preprocessing tool
 x_train, y_train, x_test, y_test = load_data()
 
-# For CNN Keras training and inference, the data is normalized
-input_scaling = (127, 127)
-x_test_keras = (x_test.astype('float32') - input_scaling[1]) / input_scaling[0]
-
 # For Akida inference, use uint8 raw data
 x_test_akida = x_test.astype('uint8')
 
@@ -66,7 +62,7 @@ model_keras.summary()
 model_keras.compile(optimizer='Adam', loss='mae')
 
 # Check Keras model performance
-mae_keras = model_keras.evaluate(x_test_keras, y_test, verbose=0)
+mae_keras = model_keras.evaluate(x_test, y_test, verbose=0)
 
 print("Keras MAE: {0:.4f}".format(mae_keras))
 
@@ -115,7 +111,7 @@ model_quantized_keras.summary()
 model_quantized_keras.compile(optimizer='Adam', loss='mae')
 
 # Check Keras model performance
-mae_quant = model_quantized_keras.evaluate(x_test_keras, y_test, verbose=0)
+mae_quant = model_quantized_keras.evaluate(x_test, y_test, verbose=0)
 
 print("Keras MAE: {0:.4f}".format(mae_quant))
 
@@ -133,7 +129,7 @@ print("Keras MAE: {0:.4f}".format(mae_quant))
 from cnn2snn import convert
 
 # Convert the model
-model_akida = convert(model_quantized_keras, input_scaling=input_scaling)
+model_akida = convert(model_quantized_keras)
 model_akida.summary()
 
 #####################################################################
@@ -178,7 +174,7 @@ import matplotlib.pyplot as plt
 
 # Estimate age on a random single image and display Keras and Akida outputs
 id = np.random.randint(0, len(y_test) + 1)
-age_keras = model_keras.predict(x_test_keras[id:id + 1])
+age_keras = model_keras.predict(x_test[id:id + 1])
 
 plt.imshow(x_test_akida[id], interpolation='bicubic')
 plt.xticks([]), plt.yticks([])

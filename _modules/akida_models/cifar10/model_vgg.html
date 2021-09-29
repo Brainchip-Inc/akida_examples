@@ -169,6 +169,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -501,6 +502,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers.experimental.preprocessing</span> <span class="kn">import</span> <span class="n">Rescaling</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 
@@ -515,7 +517,8 @@
                 <span class="n">classes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;Instantiates a VGG-like model for the &quot;CIFAR-10&quot; example.</span>
 <span class="sd">    This model is based on the VGG architecture, mainly with fewer layers.</span>
 <span class="sd">    The weights and activations are quantized such that it can be converted into</span>
@@ -541,6 +544,9 @@
 <span class="sd">            * &#39;None&#39; implements the same bitwidth as the other weights.</span>
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
+<span class="sd">            inputs. Defaults to (255, 0). Note that following Akida convention,</span>
+<span class="sd">            the scale factor is an integer used as a divider.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras model for VGG/CIFAR-10</span>
@@ -551,7 +557,13 @@
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
+    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_0&#39;</span><span class="p">,</span>
@@ -651,8 +663,8 @@
 <span class="sd">        tf.keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg_cifar10_iq2_wq2_aq2.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;9f94ba8efc30877bc086cb77c22f220b26384f9c98cdae9e2cfb6c9e22a97033&#39;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;vgg_cifar10_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;4f67883ef8b149454acd1525c77021f9d032579b0653ada4732a0d21185013ae&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

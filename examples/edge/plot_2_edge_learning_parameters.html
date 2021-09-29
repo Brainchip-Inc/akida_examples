@@ -171,6 +171,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -544,7 +545,7 @@ feature extractor.</p>
     <span class="s2">&quot;http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl&quot;</span><span class="p">,</span>
     <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/kws&#39;</span><span class="p">)</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="p">[</span><span class="n">x_train_ak</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">word_to_index</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">word_to_index</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
@@ -554,8 +555,7 @@ feature extractor.</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ds_cnn_kws_pretrained</span><span class="p">()</span>
 
 <span class="c1"># Convert to an Akida model</span>
-<span class="n">input_scaling</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">model_ak</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
+<span class="n">model_ak</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 <span class="c1"># Remove last layer</span>
 <span class="n">model_ak</span><span class="o">.</span><span class="n">pop_layer</span><span class="p">()</span>
@@ -628,8 +628,8 @@ or for samples of each class separately. This analysis is not shown here.</p>
 
 <span class="c1"># Forward samples to get the number of output spikes</span>
 <span class="c1"># Here, 10% of the training set is sufficient for a good estimation</span>
-<span class="n">num_samples_to_use</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train_ak</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">spikes</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_train_ak</span><span class="p">[:</span><span class="n">num_samples_to_use</span><span class="p">])</span>
+<span class="n">num_samples_to_use</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">spikes</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_train</span><span class="p">[:</span><span class="n">num_samples_to_use</span><span class="p">])</span>
 
 <span class="c1"># Compute the median of the number of output spikes</span>
 <span class="n">median_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">spikes</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
@@ -758,7 +758,7 @@ number of neurons per class provides a similar analysis.</p>
 
 <span class="c1"># Compute the losses for word &#39;six&#39; and different number of neurons</span>
 <span class="n">idx_samples</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">word_to_index</span><span class="p">[</span><span class="n">word</span><span class="p">])</span>
-<span class="n">x_train_word</span> <span class="o">=</span> <span class="n">x_train_ak</span><span class="p">[</span><span class="n">idx_samples</span><span class="p">]</span>
+<span class="n">x_train_word</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">idx_samples</span><span class="p">]</span>
 <span class="n">losses</span><span class="p">,</span> <span class="n">num_learned_neurons</span> <span class="o">=</span> <span class="n">compute_losses</span><span class="p">(</span><span class="n">model_ak</span><span class="p">,</span> <span class="n">x_train_word</span><span class="p">,</span>
                                              <span class="n">neurons_per_class</span><span class="p">,</span> <span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
@@ -843,7 +843,7 @@ cannot be generalized for all use cases.</p>
 </tr>
 </tbody>
 </table>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  11.846 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  12.264 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-2-edge-learning-parameters-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d2a8403d961f7338d204f7b40b8414be/plot_2_edge_learning_parameters.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_2_edge_learning_parameters.py</span></code></a></p>

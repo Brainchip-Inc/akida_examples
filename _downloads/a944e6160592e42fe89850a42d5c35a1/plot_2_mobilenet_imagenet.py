@@ -60,13 +60,6 @@ for id in range(num_images):
                                           num_channels=NUM_CHANNELS)
     x_test[id, :, :, :] = np.expand_dims(image, axis=0)
 
-# Rescale images for Keras model (normalization between -1 and 1)
-# Assume rescaling format of (x - b)/a
-a = 128
-b = 128
-input_scaling = (a, b)
-x_test_preprocess = (x_test.astype('float32') - b) / a
-
 print(f'{num_images} images loaded and preprocessed.')
 
 ######################################################################
@@ -119,9 +112,7 @@ from timeit import default_timer as timer
 
 
 # Check model performance
-def check_model_performances(model,
-                             x_test=x_test_preprocess,
-                             labels_test=labels_test):
+def check_model_performances(model, x_test=x_test, labels_test=labels_test):
     num_images = len(x_test)
 
     start = timer()
@@ -214,8 +205,7 @@ check_model_performances(model_keras_quantized_pretrained)
 
 from cnn2snn import convert
 
-model_akida = convert(model_keras_quantized_pretrained,
-                      input_scaling=input_scaling)
+model_akida = convert(model_keras_quantized_pretrained)
 
 ######################################################################
 # 5.2 Check hardware compliancy

@@ -169,6 +169,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
@@ -518,9 +519,11 @@
               <span class="n">nb_box</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
               <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
               <span class="n">dropout</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+              <span class="n">use_stride2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
               <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
               <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-              <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+              <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mf">127.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot; Instantiates the YOLOv2 architecture.</span>
 
 <span class="sd">    Args:</span>
@@ -529,6 +532,8 @@
 <span class="sd">        nb_box (int): number of anchors boxes to use</span>
 <span class="sd">        alpha (float): controls the width of the model</span>
 <span class="sd">        dropout (float): dropout rate</span>
+<span class="sd">        use_stride2 (bool): optional, replace max pooling operations by stride 2</span>
+<span class="sd">            convolutions in layers separable 2, 4, 6 and 12.</span>
 <span class="sd">        weight_quantization (int): sets all weights in the model to have</span>
 <span class="sd">            a particular quantization bitwidth except for the weights in the</span>
 <span class="sd">            first layer.</span>
@@ -545,6 +550,9 @@
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
+<span class="sd">            inputs. Defaults to (127.5, -1). Note that following Akida</span>
+<span class="sd">            convention, the scale factor is a number used as a divider.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.keras.Model: a Keras Model instance.</span>
@@ -560,9 +568,11 @@
         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
         <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
         <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_stride2</span><span class="o">=</span><span class="n">use_stride2</span><span class="p">,</span>
         <span class="n">weight_quantization</span><span class="o">=</span><span class="n">weight_quantization</span><span class="p">,</span>
         <span class="n">activ_quantization</span><span class="o">=</span><span class="n">activ_quantization</span><span class="p">,</span>
-        <span class="n">input_weight_quantization</span><span class="o">=</span><span class="n">input_weight_quantization</span><span class="p">)</span>
+        <span class="n">input_weight_quantization</span><span class="o">=</span><span class="n">input_weight_quantization</span><span class="p">,</span>
+        <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
 
     <span class="c1"># Add YOLO top layers to the base model</span>
     <span class="n">input_shape</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">input_shape</span>
