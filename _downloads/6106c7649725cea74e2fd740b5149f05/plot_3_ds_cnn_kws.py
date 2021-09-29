@@ -23,6 +23,16 @@ image recognition tasks.
 # 1. Load the preprocessed dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# The TensorFlow `speech_commands <http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz>`__
+# dataset is used for training and validation. All keywords except "backward",
+# "follow" and "forward", are retrieved. These three words are kept to
+# illustrate the edge learning in this
+# `edge example <../edge/plot_1_edge_learning_kws.html>`__.
+# The data are not directly used for training. They are preprocessed,
+# transforming the audio files into MFCC features, well-suited for CNN networks.
+# A pickle file containing the preprocessed data is available on our data
+# server.
+#
 import pickle
 
 from tensorflow.keras.utils import get_file
