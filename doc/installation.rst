@@ -5,8 +5,8 @@ Requirements
 ------------
 
 * **Supported operating systems:** Windows 10, Ubuntu 16.04, 18.04 and 20.04
-* **Python version:** python 3.6 to 3.8
-* **TensorFlow version:** >= 2.4.0
+* **Python version:** python 3.6 to 3.9
+* **TensorFlow version:** 2.6.x
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
