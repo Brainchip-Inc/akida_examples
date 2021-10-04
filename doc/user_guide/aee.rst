@@ -115,13 +115,8 @@ Example of sequential definition of a model:
 
    from akida import Model, InputData, FullyConnected
    model = Model()
-   model.add(InputData(name="input",
-                       input_width=32,
-                       input_height=32,
-                       input_channels=1))
-   model.add(FullyConnected(name="fully",
-                            num_neurons=32,
-                            threshold_fire=40))
+   model.add(InputData(name="input", input_shape=(32, 32, 1)))
+   model.add(FullyConnected(name="fully", units=32, threshold=40))
 
 The ``Model`` `.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
 method prints a description of the model architecture.
@@ -143,7 +138,7 @@ Each layer type has a different set of attributes, available through the ``Layer
 .. code-block:: python
 
    fc = model.get_layer("fully")
-   n = fc.parameters.num_neurons
+   n = fc.parameters.units
    fc.parameters.weights_bits = 2
 
 Some layer types also have variables containing weights and thresholds:
@@ -153,7 +148,7 @@ Some layer types also have variables containing weights and thresholds:
    fc = model.get_layer("fully")
    weights = fc.variables["weights"]
    weights[0, 0, 0, 0] = 1
-   fc.variables["weights"] = weigths
+   fc.variables["weights"] = weights
 
 Inference
 ^^^^^^^^^
@@ -195,7 +190,7 @@ After an inference, the ``Model`` `.statistics <../api_reference/aee_apis.html#a
     inputs = np.ones(input_shape, dtype=np.uint8)
     # Inference
     outputs = model.evaluate(inputs)
-    assert outputs.dtype = np.float32
+    assert outputs.dtype == np.float32
 
 Saving and loading
 ^^^^^^^^^^^^^^^^^^
@@ -284,14 +279,14 @@ More generally, if we denote:
 All data-processing layers share the following activation parameters:
 
 
-* ``threshold_fire``\ : integer value which defines the threshold for neurons to
+* ``threshold``\ : integer value which defines the threshold for neurons to
   fire or generate an event. When using binary weights and activations, the
   activation level of neurons cannot exceed the ``num_weights`` value.
-* ``threshold_fire_bits``\ : < one of ``[1, 2, 4]``\ > Defines the number of
+* ``act_bits``\ : < one of ``[1, 2, 4]``\ > Defines the number of
   bits used to quantize the neuron response (defaults to one bit for binary).
   Quantized activations are integers in the range ``[1, 2^(weights_bits) -1]``.
-* ``threshold_fire_step``\ : a float value, defining the length of the potential
-  quantization intervals for threshold_fire_bits = 4. For 2 bits, this is 1/4 of
+* ``act_step``\ : a float value, defining the length of the potential
+  quantization intervals for act_bits = 4. For 2 bits, this is 1/4 of
   the length of the potentials intervals and it is not relevant for 1 bit.
 
 Pooling parameters
@@ -303,20 +298,19 @@ The `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__,
 layer types share the following pooling parameters:
 
 
-* [optional if ``pooling_type = Average``] ``pooling_width`` , ``pooling_height``:
-  integer values, sets the width and height of the patch used to perform the
-  pooling. If not specified it performs a global pooling.
-* [optional] `pooling_type`: `PoolingType <../api_reference/aee_apis.html#poolingtype>`__
+* [optional if ``pool_type = Average``] ``pool_size``: tuple of integer values,
+  sets the width and height of the patch used to perform the pooling. If not
+  specified it performs a global pooling.
+* [optional] `pool_type`: `PoolType <../api_reference/aee_apis.html#pooltype>`__
   Sets the effective pooling type (defaults to `NoPooling`):
 
   * ``NoPooling`` – no pooling.
   * ``Max`` – computing the maximum of each region.
   * ``Average`` – computing the average values of each region.
 
-* [optional] ``pooling_stride_x``, ``pooling_stride_y``: integer values,
-  set the horizontal and vertical strides applied when sliding the pooling
-  patches. If not specified, a stride of ``pooling_width`` or ``pooling_height``
-  is applied.
+* [optional] ``pool_stride``: tuple of integer values, sets the horizontal
+  and vertical strides applied when sliding the pooling patches. If not
+  specified, a stride of ``pool_size`` is applied.
 
 Model Hardware Mapping
 ----------------------
@@ -344,6 +338,8 @@ The list of hardware devices detected on a specific host is available using the
 
 .. code-block:: python
 
+    from akida import devices
+
     device = devices()[0]
     print(device.version)
 
@@ -358,6 +354,8 @@ Virtual devices are simply created by specifying their hardware revision and mes
 topology:
 
 .. code-block:: python
+
+    from akida import Device, NSoC_v2
 
     # Assuming mesh has been defined above
     device = Device(NSoC_v2, mesh)
@@ -456,9 +454,9 @@ The following learning parameters can be specified when compiling a layer:
   ``num_weights`` note that the total number of available connections for a
   `Convolutional <../api_reference/aee_apis.html#convolutional>`__
   layer is not set by the dimensions of the input to the layer, but by the
-  dimensions of the kernel. Total connections = ``kernel_height`` x
-  ``kernel_width`` x ``num_features`` , where ``num_features`` is typically the
-  ``num_neurons`` of the preceding layer. ``num_weights`` should be much smaller
+  dimensions of the kernel. Total connections = ``kernel_size`` x
+  ``num_features``, where ``num_features`` is typically the ``filters`` or
+  ``units`` of the preceding layer. ``num_weights`` should be much smaller
   than this value – not more than half, and often much less.
 * [optional] ``num_classes``: integer value, representing the number of
   classes in the dataset. Defining this value sets the learning to a ‘labeled’
