@@ -272,7 +272,7 @@ model_ak.add(layer_fc)
 # Estimate the number of spikes at the end of the feature extractor.
 
 # Retrieve the number of output spikes from the feature extractor output
-output_sparsity = model_statistics['separable_6'].output_sparsity
+output_sparsity = model_statistics['separable_4'].output_sparsity
 median_spikes = int(output_sparsity * 100)
 print(f"Median of number of spikes: {median_spikes}")
 
@@ -424,4 +424,4 @@ print(f"Akida validation set accuracy on 33 old classes: \
         {100 * acc_val_old_ak:.2f} %")
 
 # For non-regression purpose
-assert acc_val_old_ak > 0.88
+assert acc_val_old_ak > 0.85
