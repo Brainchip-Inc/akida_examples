@@ -263,8 +263,8 @@ num_neurons_per_class = 15
 
 model_ak.pop_layer()
 layer_fc = FullyConnected(name='akida_edge_layer',
-                          num_neurons=num_classes * num_neurons_per_class,
-                          activations_enabled=False)
+                          units=num_classes * num_neurons_per_class,
+                          activation=False)
 model_ak.add(layer_fc)
 
 ######################################################################
