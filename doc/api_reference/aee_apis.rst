@@ -59,13 +59,13 @@ Akida Execution Engine API
     ===========
     .. autoclass:: BackendType
 
-    ConvolutionMode
-    ===============
-    .. autoclass:: ConvolutionMode
+    Padding
+    =======
+    .. autoclass:: Padding
 
-    PoolingType
-    ===========
-    .. autoclass:: PoolingType
+    PoolType
+    ========
+    .. autoclass:: PoolType
 
     LearningType
     ============
