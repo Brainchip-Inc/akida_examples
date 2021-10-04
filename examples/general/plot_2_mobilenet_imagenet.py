@@ -213,11 +213,6 @@ model_akida = convert(model_keras_quantized_pretrained)
 #
 # The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
-#
-# It also indicates hardware incompatibilities if there are any. Hardware
-# compatibility can also be checked manually using
-# `model_hardware_incompatibilities
-# <../../api_reference/aee_apis.html#akida.compatibility.model_hardware_incompatibilities>`_.
 
 model_akida.summary()
 
