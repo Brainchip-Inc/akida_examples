@@ -53,14 +53,11 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
 
    # Instantiate xor model
    xor = Model()
-   layer_input = InputData(name="input",
-                           input_height=1,
-                           input_width=1,
-                           input_channels=2)
+   layer_input = InputData(name="input", input_shape=(1, 1, 2))
    xor.add(layer_input)
-   layer_hidden = FullyConnected(name="hidden", num_neurons=2, weights_bits=1)
+   layer_hidden = FullyConnected(name="hidden", units=2, weights_bits=1)
    xor.add(layer_hidden)
-   layer_output = FullyConnected(name="output", num_neurons=1, weights_bits=2)
+   layer_output = FullyConnected(name="output", units=1, weights_bits=2)
    xor.add(layer_output)
 
    # Display model structure and parameters
@@ -73,14 +70,14 @@ Run the XOR example below, then visit the `Akida examples <../examples/index.htm
    # - first neuron spikes if any of the two inputs is 1 (thresh = 0)
    # - second neuron spikes only if both inputs are 1 (thresh = 1)
    h_thresholds = np.array([0,1], dtype=np.int32)
-   layer_hidden.set_variable("threshold_fire", h_thresholds)
+   layer_hidden.set_variable("threshold", h_thresholds)
 
    # Set weights for output layer: first hidden neuron minus second
    o_weights = np.array([[[[1],[-1]]]], dtype=np.int8)
    layer_output.set_variable("weights", o_weights)
    # Set threshold for output layer: spike if neurons do not cancel each other
    o_thresholds = np.array([0], dtype=np.int32)
-   layer_output.set_variable("threshold_fire", o_thresholds)
+   layer_output.set_variable("threshold", o_thresholds)
 
    # XOR model table
    # +---+---+---------+
