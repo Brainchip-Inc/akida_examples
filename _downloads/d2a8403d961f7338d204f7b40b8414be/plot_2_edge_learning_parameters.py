@@ -187,17 +187,15 @@ def compute_losses(model,
     """
     spikes = model.forward(samples)
 
-    def create_one_fc_model(num_neurons):
+    def create_one_fc_model(units):
         model_fc = Model()
         model_fc.add(
             InputData(name="input",
-                      input_width=1,
-                      input_height=1,
-                      input_channels=spikes.shape[-1],
+                      input_shape=(1, 1, spikes.shape[-1]),
                       input_bits=1))
         layer_fc = FullyConnected(name='akida_edge_layer',
-                                  num_neurons=num_neurons,
-                                  activations_enabled=False)
+                                  units=units,
+                                  activation=False)
         model_fc.add(layer_fc)
         model_fc.compile(num_weights=num_weights,
                          learning_competition=learning_competition)
@@ -207,7 +205,7 @@ def compute_losses(model,
     num_learned_neurons = np.zeros((len(neurons_per_class), num_repetitions))
     for idx, n in enumerate(neurons_per_class):
         for i in range(num_repetitions):
-            model_fc = create_one_fc_model(num_neurons=n)
+            model_fc = create_one_fc_model(units=n)
 
             # Train model
             permut_spikes = np.random.permutation(spikes)
