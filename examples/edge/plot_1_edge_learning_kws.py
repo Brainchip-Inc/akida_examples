@@ -272,12 +272,12 @@ model_ak.add(layer_fc)
 # Estimate the number of spikes at the end of the feature extractor.
 
 # Retrieve the number of output spikes from the feature extractor output
-output_sparsity = model_statistics['separable_4'].output_sparsity
-median_spikes = int(output_sparsity * 100)
-print(f"Median of number of spikes: {median_spikes}")
+output_density = 1 - model_statistics['separable_4'].output_sparsity
+avg_spikes = model.get_layer('separable_4').output_shape[-1] * output_density
+print(f"Average number of spikes: {avg_spikes}")
 
-# Fix the number of weights to 1.2 times the median of output spikes
-num_weights = int(1.2 * median_spikes)
+# Fix the number of weights to 1.2 times the average number of output spikes
+num_weights = int(1.2 * avg_spikes)
 print("The number of weights is then set to:", num_weights)
 
 ##############################################################################
