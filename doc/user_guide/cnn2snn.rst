@@ -136,7 +136,7 @@ input weights:
 
 .. code-block:: bash
 
-    cnn2snn -m model_keras.h5 quantize -wq 4 -aq 4 -iq 8
+    cnn2snn quantize -m model_keras.h5 -wq 4 -aq 4 -iq 8
 
 The quantized model is automatically saved to ``model_keras_iq8_wq4_aq4.h5``.
 
@@ -144,7 +144,7 @@ Quantize an already quantized model with different quantization bitwidths:
 
 .. code-block:: bash
 
-    cnn2snn -m model_keras_iq8_wq4_aq4.h5 quantize -wq 2 -aq 2
+    cnn2snn quantize -m model_keras_iq8_wq4_aq4.h5 -wq 2 -aq 2
 
 A new quantized model named ``model_keras_iq2_wq2_aq2.h5`` is saved.
 
@@ -158,7 +158,7 @@ Convert a quantized model without input scaling and with image inputs:
 
 .. code-block:: bash
 
-    cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert
+    cnn2snn convert -m model_keras_iq2_wq2_aq2.h5
 
 An Akida .fbz model named ``model_keras_iq2_wq2_aq2.fbz`` is then saved.
 
@@ -166,7 +166,7 @@ Convert a quantized model with input scaling of (255, 0) and with sparse inputs:
 
 .. code-block:: bash
 
-    cnn2snn -m model_keras_iq2_wq2_aq2.h5 convert -sc 255 -sh 0 -sp True
+    cnn2snn convert -m model_keras_iq2_wq2_aq2.h5 -sc 255 -sh 0 -sp True
 
 Layers Considerations
 ---------------------

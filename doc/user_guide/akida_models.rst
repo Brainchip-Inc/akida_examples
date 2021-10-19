@@ -149,7 +149,7 @@ Apply quantization-aware training to a VGG model for the CIFAR10 dataset by:
 
     cifar10_train train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e 100
 
-    cnn2snn -m vgg_cifar10.h5 quantize -wq 4 -aq 4
+    cnn2snn quantize -m vgg_cifar10.h5 -wq 4 -aq 4
 
     cifar10_train tune -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e 15
 
@@ -174,11 +174,11 @@ obtain a network with 2-bit weights and activations.
 
    utk_face_train train -e 300 -m vgg_utk_face.h5 -s vgg_utk_face.h5
 
-   cnn2snn -m vgg_utk_face.h5 quantize -iq 8 -wq 4 -aq 4
+   cnn2snn quantize -m vgg_utk_face.h5 -iq 8 -wq 4 -aq 4
 
    utk_face_train train -e 30 -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
 
-   cnn2snn -m vgg_utk_face_iq8_wq4_aq4.h5 quantize -iq 8 -wq 2 -aq 2
+   cnn2snn quantize -m vgg_utk_face_iq8_wq4_aq4.h5 -iq 8 -wq 2 -aq 2
 
    utk_face_train train -e 30 -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
 
@@ -203,11 +203,11 @@ binary activations for edge learning.
 
    kws_train train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
 
-   cnn2snn -m ds_cnn_kws.h5 quantize -iq 0 -wq 0 -aq 4
+   cnn2snn quantize -m ds_cnn_kws.h5 -iq 0 -wq 0 -aq 4
 
    kws_train train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -e 16
 
-   cnn2snn -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 quantize -iq 8 -wq 4 -aq 4
+   cnn2snn quantize -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -iq 8 -wq 4 -aq 4
 
    kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -e 16
 
@@ -240,11 +240,11 @@ using the `--freeze_before` or `-fb` option.
 
    yolo_train train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_voc.h5
 
-   cnn2snn -m yolo_voc.h5 quantize -iq 8 -wq 8 -aq 8
+   cnn2snn quantize -m yolo_voc.h5 -iq 8 -wq 8 -aq 8
 
    yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5
 
-   cnn2snn -m yolo_voc_iq8_wq8_aq8.h5 quantize -iq 8 -wq 4 -aq 4
+   cnn2snn quantize -m yolo_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
 
    yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5
 

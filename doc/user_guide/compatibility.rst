@@ -28,7 +28,7 @@ Upgrading legacy models is done thru the CNN2SNN CLI ``upgrade`` action:
 
 .. code-block:: bash
 
-    cnn2snn -m 'model_with_legacy_quantizers.h5' upgrade -o 'upgraded_model.h5'
+    cnn2snn upgrade -m 'model_with_legacy_quantizers.h5' -o 'upgraded_model.h5'
 
 This command will save an ``upgraded_model.h5`` file that can be loaded with
 latest Akida tools.
