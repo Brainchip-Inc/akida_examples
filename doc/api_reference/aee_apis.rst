@@ -88,6 +88,16 @@ Akida Execution Engine API
     .. autofunction:: akida.AKD1000
     .. autofunction:: akida.TwoNodesIP
 
+    HWDevice
+    ========
+    .. autoclass:: HardwareDevice
+        :members:
+
+    SocDriver
+    =========
+    .. autoclass:: akida.core.SocDriver
+        :members:
+
     Sequence
     ==============
     .. autoclass:: Sequence
