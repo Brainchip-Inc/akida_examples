@@ -122,3 +122,8 @@ Akida Execution Engine API
     .. autoclass:: akida.core.soc.ClockMode
     .. autofunction:: akida.core.soc.get_clock_mode
     .. autofunction:: akida.core.soc.set_clock_mode
+
+    PowerMeter
+    ==========
+    .. autofunction:: akida.PowerMeter.flush
+    .. autofunction:: akida.PowerMeter.latest_measure
