@@ -125,5 +125,7 @@ Akida Execution Engine API
 
     PowerMeter
     ==========
-    .. autofunction:: akida.PowerMeter.flush
-    .. autofunction:: akida.PowerMeter.latest_measure
+    .. autoclass:: PowerMeter
+         :members:
+    .. autoclass:: PowerEvent
+         :members:
