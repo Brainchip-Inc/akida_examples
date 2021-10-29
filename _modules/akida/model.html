@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.0.2
+                MetaTF 2.0.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -399,7 +399,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BackendType</span><span class="p">,</span> <span class="n">ModelBase</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">PoolType</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span>
-                   <span class="n">devices</span><span class="p">,</span> <span class="n">PowerMeter</span><span class="p">)</span>
+                   <span class="n">devices</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.statistics</span> <span class="kn">import</span> <span class="n">Statistics</span>
 <span class="kn">from</span> <span class="nn">.compatibility</span> <span class="kn">import</span> <span class="n">common</span>
 <span class="kn">from</span> <span class="nn">.input_data</span> <span class="kn">import</span> <span class="n">InputData</span>
@@ -443,12 +443,15 @@
 
     <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">fetch_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="c1"># Get rid of old events</span>
-        <span class="n">PowerMeter</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="c1"># Call decorated method</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># Fetch events received in between</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log_events</span> <span class="o">=</span> <span class="n">PowerMeter</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">hw_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hw_device</span>
+        <span class="k">if</span> <span class="n">hw_device</span><span class="p">:</span>
+            <span class="c1"># Model is mapped to a HardwareDevice</span>
+            <span class="n">soc</span> <span class="o">=</span> <span class="n">hw_device</span><span class="o">.</span><span class="n">soc</span>
+            <span class="k">if</span> <span class="n">soc</span> <span class="ow">and</span> <span class="n">soc</span><span class="o">.</span><span class="n">power_measurement_enabled</span><span class="p">:</span>
+                <span class="c1"># The device collects power events: fetch them</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">power_events</span> <span class="o">=</span> <span class="n">soc</span><span class="o">.</span><span class="n">power_meter</span><span class="o">.</span><span class="n">events</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">return</span> <span class="n">fetch_events</span>
@@ -460,10 +463,10 @@
 <span class="sd">    The ``Model`` class is the main interface to Akida and allows:</span>
 
 <span class="sd">    - to create an empty ``Model`` to which you can add layers programmatically</span>
-<span class="sd">    using the sequential API,</span>
+<span class="sd">      using the sequential API,</span>
 <span class="sd">    - to reload a full ``Model`` from a serialized file or a memory buffer,</span>
 <span class="sd">    - to create a new ``Model`` from a list of layers taken from an existing</span>
-<span class="sd">    ``Model``.</span>
+<span class="sd">      ``Model``.</span>
 
 <span class="sd">    It provides methods to instantiate, train, test and save models.</span>
 
@@ -505,7 +508,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
                         <span class="n">_copy_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log_events</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power_events</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="bp">self</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">raise</span>
