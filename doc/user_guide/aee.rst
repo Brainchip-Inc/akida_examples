@@ -374,23 +374,21 @@ Mapping a model on a specific device is as simple as calling the ``Model``
 
     model.map(device)
 
-Please be aware however that some errors may be raised when mapping the model if
-some hardware incompatibilities are detected.
+When mapping a model on a device, the information related to the layers and related
+variables are processed in such way that the selected device can perform an inference.
+If the Model contains layers that are not hardware compatible or is too big to fit on
+the device, it will be split in multiple sequences.
 
-Once the model has been mapped, the inference happens on the hardware, and not
-on the host CPU.
+The number of sequences, program size for each and how they are mapped are included in
+the ``Model`` `.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__ output
+after it has been mapped on a device.
 
 Advanced Mapping Details and Hardware Devices Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When mapping a model on a device, the information related to the layers and
-related variables are processed in such way that the selected device can
-perform an inference.
-If the model to be programmed is too big to fit on the device, the ``Model``
-`.map() <../api_reference/aee_apis.html#akida.Model.map>`__ might create more
-than one "sequence". When inference methods are used, each sequence will be
-chain loaded on the device to process the given input.
-Sequences can be obtainer using the ``Model``
+Calling ``Model`` `.map() <../api_reference/aee_apis.html#akida.Model.map>`__ might create more
+than one "sequence". In this case, when inference methods are used, each sequence will be chain
+loaded on the device to process the given input. Sequences can be obtained using the ``Model``
 `.sequences() <../api_reference/aee_apis.html#akida.Model.sequences>`__
 property, that will return a list of sequence objects. The program used to load
 one sequence can be obtained programmatically.
@@ -408,12 +406,27 @@ one sequence can be obtained programmatically.
     # Check program size
     print(len(sequence_program))
 
-The number of sequences and program size for each are included in the ``Model``
-`.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
-output after it has been mapped on a device. This information can be used to
+The information found in the ``Model`` `.summary()
+<../api_reference/aee_apis.html#akida.Model.summary>`__ can be used to
 modify a model to make it fit into less sequences, and program size can be
 used to estimate the flash and memory usage on an embedded system that would
 use the device.
+
+Once the model has been mapped, the sequences mapped in the Hardware run on the device,
+and the sequences mapped in the Software run on the CPU.
+
+One can also force the model to be mapped as one sequence in the hardware device
+only by setting the parameter ``hw_only`` to True (by default the value is False).
+See the `.map() <../api_reference/aee_apis.html#akida.Model.map>`__ method API for more details.
+
+Note: an exception will be raised if the Model cannot be mapped entirely on the device.
+
+.. code-block:: python
+
+  model.map(device, hw_only=True)
+
+Once the model has been mapped, the inference happens only on the device, and not on the host
+CPU except for passing inputs and fetching outputs.
 
 Using Akida Edge learning
 -------------------------
