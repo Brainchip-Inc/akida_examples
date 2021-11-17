@@ -37,7 +37,7 @@ Three principal layer types are available:
 * `SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__,
   - a less computationally intensive convolutional layer.
 
-The weights of Akida layers are N-bit integer: please refer to the `hardware 
+The weights of Akida layers are N-bit integer: please refer to the `hardware
 constraints <./hw_constraints.html>`__ for details of the supported bitwidth for
 each layer.
 
@@ -47,7 +47,7 @@ Input Format
 Akida inputs and outputs are 4-dimensional tensors whose first dimension is the
 index of a specific sample.
 
-The inputs of Akida layers are N-bit integer: please refer to the `hardware 
+The inputs of Akida layers are N-bit integer: please refer to the `hardware
 constraints <./hw_constraints.html>`__ for details of the supported bitwidth for
 each layer.
 
@@ -333,7 +333,7 @@ characterized by:
 Discovering Hardware Devices
 """"""""""""""""""""""""""""
 
-The list of hardware devices detected on a specific host is available using the 
+The list of hardware devices detected on a specific host is available using the
 `devices() <../api_reference/aee_apis.html#akida.devices>`__ method.
 
 .. code-block:: python
