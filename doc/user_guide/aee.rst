@@ -401,10 +401,8 @@ one sequence can be obtained programmatically.
     sequence = model.sequences[0]
     # Check which layers have been mapped in this sequence
     print(sequence.layers)
-    # Sequence program can be saved to a bytes object
-    sequence_program = sequence.program.to_buffer()
     # Check program size
-    print(len(sequence_program))
+    print(len(sequence.program))
 
 The information found in the ``Model`` `.summary()
 <../api_reference/aee_apis.html#akida.Model.summary>`__ can be used to

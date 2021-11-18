@@ -102,11 +102,6 @@ Akida Execution Engine API
     .. autoclass:: Sequence
         :members:
 
-    Program
-    ==============
-    .. autoclass:: akida.core.Program
-        :members:
-
     NP
     ==
     .. autoclass:: akida.NP.Mesh
