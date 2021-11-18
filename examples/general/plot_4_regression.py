@@ -147,12 +147,6 @@ print("Akida MAE: {0:.4f}".format(mae_akida))
 assert abs(mae_keras - mae_akida) < 0.5
 
 ######################################################################
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-######################################################################
 # Let's summarize the MAE performance for the native Keras, the quantized Keras
 # and the Akida model.
 #

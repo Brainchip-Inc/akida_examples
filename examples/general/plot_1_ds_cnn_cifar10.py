@@ -218,12 +218,8 @@ if num_images == 1000:
 ######################################################################
 # Activations sparsity has a great impact on akida inference time. One can have
 # a look at the average input and output sparsity of each layer using
-# `Model.statistics <../../api_reference/aee_apis.html#akida.Model.statistics>`_
+# `evaluate_sparsity <../../api_reference/aee_apis.html#akida.evaluate_sparsity>`_
 #
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
 
 ######################################################################
 # 5.4 Show predictions for a random image

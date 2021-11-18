@@ -361,12 +361,6 @@ print(f"Akida accuracy: {akida_accuracy*100:.2f} %")
 assert akida_accuracy > 0.97
 
 ######################################################################
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-######################################################################
 # Let's summarize the accuracy for the quantized Keras and the Akida model.
 #
 # +-----------------+----------+

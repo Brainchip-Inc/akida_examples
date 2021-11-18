@@ -174,12 +174,6 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 assert accuracy > 0.9
 
 ######################################################################
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-######################################################################
 # 5. Confusion matrix
 # ~~~~~~~~~~~~~~~~~~~
 #
