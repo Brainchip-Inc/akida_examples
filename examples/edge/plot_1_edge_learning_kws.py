@@ -246,9 +246,6 @@ for i in range(num_batches_val):
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
-# Remember model statistics for later purpose
-model_statistics = model_ak.statistics
-
 # For non-regression purpose
 assert acc_val_ak > 0.88
 
@@ -269,10 +266,15 @@ model_ak.add(layer_fc)
 
 ######################################################################
 
-# Estimate the number of spikes at the end of the feature extractor.
+from akida import evaluate_sparsity
+
+# Compute sparsity information for the model using 10% of the training data
+# which is enough for a good estimate
+num_samples = ceil(0.1 * x_train.shape[0])
+sparsities = evaluate_sparsity(model_ak, x_train[:num_samples])
 
 # Retrieve the number of output spikes from the feature extractor output
-output_density = 1 - model_statistics['separable_4'].output_sparsity
+output_density = 1 - sparsities[model_ak.get_layer('separable_4')]
 avg_spikes = model.get_layer('separable_4').output_shape[-1] * output_density
 print(f"Average number of spikes: {avg_spikes}")
 
