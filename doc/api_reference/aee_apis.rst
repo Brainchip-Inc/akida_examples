@@ -20,10 +20,9 @@ Akida Execution Engine API
     .. autoclass:: Layer
         :members:
 
-    LayerStatistics
+    Sparsity
     ===============
-    .. autoclass:: LayerStatistics
-        :members:
+    .. autofunction:: akida.evaluate_sparsity
 
     InputData
     =========
@@ -99,7 +98,7 @@ Akida Execution Engine API
         :members:
 
     Sequence
-    ==============
+    ========
     .. autoclass:: Sequence
         :members:
 
