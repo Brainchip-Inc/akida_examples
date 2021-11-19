@@ -714,21 +714,19 @@ functions <a class="reference external" href="../api_reference/aee_apis.html#aki
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Please be aware however that some errors may be raised when mapping the model if
-some hardware incompatibilities are detected.</p>
-<p>Once the model has been mapped, the inference happens on the hardware, and not
-on the host CPU.</p>
+<p>When mapping a model on a device, the information related to the layers and related
+variables are processed in such way that the selected device can perform an inference.
+If the Model contains layers that are not hardware compatible or is too big to fit on
+the device, it will be split in multiple sequences.</p>
+<p>The number of sequences, program size for each and how they are mapped are included in
+the <code class="docutils literal notranslate"><span class="pre">Model</span></code> <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.summary">.summary()</a> output
+after it has been mapped on a device.</p>
 </section>
 <section id="advanced-mapping-details-and-hardware-devices-usage">
 <h3>Advanced Mapping Details and Hardware Devices Usage<a class="headerlink" href="#advanced-mapping-details-and-hardware-devices-usage" title="Permalink to this headline"></a></h3>
-<p>When mapping a model on a device, the information related to the layers and
-related variables are processed in such way that the selected device can
-perform an inference.
-If the model to be programmed is too big to fit on the device, the <code class="docutils literal notranslate"><span class="pre">Model</span></code>
-<a class="reference external" href="../api_reference/aee_apis.html#akida.Model.map">.map()</a> might create more
-than one “sequence”. When inference methods are used, each sequence will be
-chain loaded on the device to process the given input.
-Sequences can be obtainer using the <code class="docutils literal notranslate"><span class="pre">Model</span></code>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">Model</span></code> <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.map">.map()</a> might create more
+than one “sequence”. In this case, when inference methods are used, each sequence will be chain
+loaded on the device to process the given input. Sequences can be obtained using the <code class="docutils literal notranslate"><span class="pre">Model</span></code>
 <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.sequences">.sequences()</a>
 property, that will return a list of sequence objects. The program used to load
 one sequence can be obtained programmatically.</p>
@@ -744,12 +742,21 @@ one sequence can be obtained programmatically.</p>
 <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sequence_program</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The number of sequences and program size for each are included in the <code class="docutils literal notranslate"><span class="pre">Model</span></code>
-<a class="reference external" href="../api_reference/aee_apis.html#akida.Model.summary">.summary()</a>
-output after it has been mapped on a device. This information can be used to
+<p>The information found in the <code class="docutils literal notranslate"><span class="pre">Model</span></code> <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.summary">.summary()</a> can be used to
 modify a model to make it fit into less sequences, and program size can be
 used to estimate the flash and memory usage on an embedded system that would
 use the device.</p>
+<p>Once the model has been mapped, the sequences mapped in the Hardware run on the device,
+and the sequences mapped in the Software run on the CPU.</p>
+<p>One can also force the model to be mapped as one sequence in the hardware device
+only by setting the parameter <code class="docutils literal notranslate"><span class="pre">hw_only</span></code> to True (by default the value is False).
+See the <a class="reference external" href="../api_reference/aee_apis.html#akida.Model.map">.map()</a> method API for more details.</p>
+<p>Note: an exception will be raised if the Model cannot be mapped entirely on the device.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once the model has been mapped, the inference happens only on the device, and not on the host
+CPU except for passing inputs and fetching outputs.</p>
 </section>
 </section>
 <section id="id1">
