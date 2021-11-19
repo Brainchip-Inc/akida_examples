@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.0.4
+                MetaTF 2.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -153,7 +153,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api_reference/aee_apis.html">Akida Execution Engine</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparsity">Sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
@@ -170,7 +170,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwdevice">HWDevice</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#socdriver">SocDriver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sequence">Sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#np">NP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#soc">soc</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#powermeter">PowerMeter</a></li>
@@ -542,19 +541,20 @@
             <span class="k">return</span>
         <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sequences</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">sequence</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="n">BackendType</span><span class="o">.</span><span class="n">Hardware</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span>
-                            <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span>
-                            <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span>
-                    <span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_type</span> <span class="o">==</span> <span class="n">PoolType</span><span class="o">.</span><span class="n">Average</span><span class="p">:</span>
-                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                                <span class="s2">&quot;With average pooling, the last 8 filters are &quot;</span>
-                                <span class="s2">&quot;ignored.&quot;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">common</span><span class="o">.</span><span class="n">cnp_is_identity</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                                <span class="s2">&quot;1x1 identity layer might produce wrong results&quot;</span>
-                                <span class="s2">&quot; if the input is too sparse, on  NSoC V1.&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">seq_pass</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">passes</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">seq_pass</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span>
+                                <span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span>
+                                <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span>
+                        <span class="p">]:</span>
+                            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_type</span> <span class="o">==</span> <span class="n">PoolType</span><span class="o">.</span><span class="n">Average</span><span class="p">:</span>
+                                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                                    <span class="s2">&quot;With average pooling, the last 8 filters are &quot;</span>
+                                    <span class="s2">&quot;ignored.&quot;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">common</span><span class="o">.</span><span class="n">cnp_is_identity</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+                                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                                    <span class="s2">&quot;1x1 identity layer might produce wrong results&quot;</span>
+                                    <span class="s2">&quot; if the input is too sparse, on  NSoC V1.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.predict"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.predict">[docs]</a>    <span class="nd">@_inference</span>
     <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -772,55 +772,53 @@
                 <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;NPs&#39;</span><span class="p">)</span>
             <span class="c1"># prepare an empty table</span>
             <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">headers</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
-                <span class="n">config</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">program</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">program</span><span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
-                <span class="c1"># layer name (type)</span>
-                <span class="n">layer_type</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
-                <span class="c1"># kernel shape</span>
-                <span class="k">if</span> <span class="s2">&quot;weights&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">():</span>
-                    <span class="n">kernel_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">kernel_shape</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span>
-                <span class="c1"># Prepare row and add it</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">output_dims</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kernel_shape</span><span class="p">)]</span>
-                <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">:</span>
-                        <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;N/A&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">passes</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+                    <span class="n">nps</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">l</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">nps</span>
+                    <span class="c1"># layer name (type)</span>
+                    <span class="n">layer_type</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span>
+                    <span class="c1"># kernel shape</span>
+                    <span class="k">if</span> <span class="s2">&quot;weights&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable_names</span><span class="p">():</span>
+                        <span class="n">kernel_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
-                <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">:</span>
-                    <span class="c1"># Add pointwise weights on a second line</span>
-                    <span class="n">kernel_pw_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights_pw&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-                    <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">kernel_pw_shape</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">kernel_shape</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span>
+                    <span class="c1"># Prepare row and add it</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">output_dims</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kernel_shape</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="n">nps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">:</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;N/A&#39;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nps</span><span class="p">))</span>
                     <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span><span class="p">:</span>
+                        <span class="c1"># Add pointwise weights on a second line</span>
+                        <span class="n">kernel_pw_shape</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights_pw&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+                        <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">kernel_pw_shape</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">nps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
             <span class="c1"># Get backend info</span>
             <span class="n">backend</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">title</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; (&quot;</span> <span class="o">+</span> <span class="n">backend</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
             <span class="k">if</span> <span class="n">program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">title</span> <span class="o">+=</span> <span class="s2">&quot; - size: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">program</span><span class="o">.</span><span class="n">to_buffer</span><span class="p">()))</span> <span class="o">+</span> <span class="s2">&quot; bytes&quot;</span>
+                <span class="n">title</span> <span class="o">+=</span> <span class="s2">&quot; - size: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">program</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; bytes&quot;</span>
             <span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_learning_summary</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
-            <span class="n">learning_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sequence</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">learning</span><span class="p">]</span>
-            <span class="c1"># If no learning layers, skip this summary and return</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">learning_layers</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_learning_summary</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">learning</span><span class="p">:</span>
                 <span class="k">return</span>
             <span class="c1"># Prepare headers</span>
             <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Learning Layer&quot;</span><span class="p">,</span> <span class="s2">&quot;# Input Conn.&quot;</span><span class="p">,</span> <span class="s2">&quot;# Weights&quot;</span><span class="p">]</span>
             <span class="n">table</span> <span class="o">=</span> <span class="p">[</span><span class="n">headers</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">learning_layers</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span>
-                <span class="c1"># Input connections is the product of input dims</span>
-                <span class="n">input_connections</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">input_dims</span><span class="p">)</span>
-                <span class="c1"># Num non zero weights per neuron (counted on fist neuron)</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span>
-                <span class="n">incoming_conn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">weights</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
-                <span class="c1"># Prepare row and add it</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_connections</span><span class="p">),</span> <span class="n">incoming_conn</span><span class="p">]</span>
-                <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span>
+            <span class="c1"># Input connections is the product of input dims</span>
+            <span class="n">input_connections</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">input_dims</span><span class="p">)</span>
+            <span class="c1"># Num non zero weights per neuron (counted on first neuron)</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span>
+            <span class="n">incoming_conn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">weights</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="c1"># Prepare row and add it</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_connections</span><span class="p">),</span> <span class="n">incoming_conn</span><span class="p">]</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
             <span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s2">&quot;Learning Summary&quot;</span><span class="p">)</span>
 
@@ -830,8 +828,10 @@
             <span class="nb">print</span><span class="p">()</span>
             <span class="c1"># Print sequence summary</span>
             <span class="n">_layers_summary</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
-            <span class="c1"># Print learning summary</span>
-            <span class="n">_learning_summary</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="c1"># Print learning summary if we have more than one input layer</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Only the last layer of a model can learn</span>
+            <span class="n">_learning_summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="nb">print</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Model.add_classes"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.Model.add_classes">[docs]</a>    <span class="k">def</span> <span class="nf">add_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_add_classes</span><span class="p">):</span>
@@ -887,7 +887,7 @@
 
 <span class="k">def</span> <span class="nf">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
     <span class="c1"># Convert to np.array</span>
-    <span class="n">to_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">to_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">otypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">])</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">to_str</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
     <span class="c1"># get column lengths</span>
     <span class="n">str_len_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">cell</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>

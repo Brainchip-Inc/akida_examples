@@ -120,12 +120,6 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 #
 
 ######################################################################
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-######################################################################
 # 3.4 Show predictions for a single image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #

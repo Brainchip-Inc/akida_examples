@@ -243,12 +243,6 @@ print(f"Accuracy: {accuracy_akida*100:.2f} %")
 assert accuracy_akida >= 0.9
 
 ######################################################################
-
-# Print model statistics
-print("Model statistics")
-print(model_akida.statistics)
-
-######################################################################
 # 5.4 Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -37,7 +37,7 @@
             <img src="../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.0.4
+                MetaTF 2.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -156,7 +156,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Akida Execution Engine</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#layer">Layer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#layerstatistics">LayerStatistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sparsity">Sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fullyconnected">FullyConnected</a></li>
@@ -173,7 +173,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#hwdevice">HWDevice</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#socdriver">SocDriver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sequence">Sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#np">NP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#soc">soc</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#powermeter">PowerMeter</a></li>
@@ -954,16 +953,19 @@ bytes buffer.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.learning" title="akida.Layer.learning"><code class="xref py py-obj docutils literal notranslate"><span class="pre">learning</span></code></a></p></td>
 <td><p>The layer learning parameters set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.name" title="akida.Layer.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.mapping" title="akida.Layer.mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mapping</span></code></a></p></td>
+<td><p>The layer hardware mapping.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.name" title="akida.Layer.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
 <td><p>The layer name.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.output_dims" title="akida.Layer.output_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_dims</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.output_dims" title="akida.Layer.output_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_dims</span></code></a></p></td>
 <td><p>The layer output dimensions (width, height, features).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.parameters" title="akida.Layer.parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.parameters" title="akida.Layer.parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></a></p></td>
 <td><p>The layer parameters set.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Layer.variables" title="akida.Layer.variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Layer.variables" title="akida.Layer.variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span></code></a></p></td>
 <td><p>The layer trainable variables.</p></td>
 </tr>
 </tbody>
@@ -1046,6 +1048,12 @@ thresholds used during inference:</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="akida.Layer.mapping">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">mapping</span></span><a class="headerlink" href="#akida.Layer.mapping" title="Permalink to this definition"></a></dt>
+<dd><p>The layer hardware mapping.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="akida.Layer.name">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#akida.Layer.name" title="Permalink to this definition"></a></dt>
 <dd><p>The layer name.</p>
@@ -1101,91 +1109,23 @@ thresholds used during inference:</p>
 </dd></dl>
 
 </section>
-<section id="layerstatistics">
-<h2>LayerStatistics<a class="headerlink" href="#layerstatistics" title="Permalink to this headline"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="akida.LayerStatistics">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">LayerStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_activations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/statistics.html#LayerStatistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.LayerStatistics" title="Permalink to this definition"></a></dt>
-<dd><p>Provides layer statistics:
-(average output sparsity, number of possible spikes, row_sparsity).</p>
-<p><strong>Attributes:</strong></p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.layer_name" title="akida.LayerStatistics.layer_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layer_name</span></code></a></p></td>
-<td><p>Get the name of the corresponding layer.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.output_sparsity" title="akida.LayerStatistics.output_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_sparsity</span></code></a></p></td>
-<td><p>Get average output sparsity for the layer.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.LayerStatistics.possible_spikes" title="akida.LayerStatistics.possible_spikes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">possible_spikes</span></code></a></p></td>
-<td><p>Get possible spikes for the layer.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.LayerStatistics.row_sparsity" title="akida.LayerStatistics.row_sparsity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_sparsity</span></code></a></p></td>
-<td><p>Get kernel row sparsity.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py property">
-<dt class="sig sig-object py" id="akida.LayerStatistics.layer_name">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">layer_name</span></span><a class="headerlink" href="#akida.LayerStatistics.layer_name" title="Permalink to this definition"></a></dt>
-<dd><p>Get the name of the corresponding layer.</p>
+<section id="sparsity">
+<h2>Sparsity<a class="headerlink" href="#sparsity" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="akida.evaluate_sparsity">
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">evaluate_sparsity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/sparsity.html#evaluate_sparsity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.evaluate_sparsity" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate the sparsity of a Model on a set of inputs</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the layer name.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="#akida.Model" title="akida.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a>) – the model to evaluate</p></li>
+<li><p><strong>inputs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – a numpy.ndarray</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary of float sparsity values indexed by layers</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="akida.LayerStatistics.output_sparsity">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">output_sparsity</span></span><a class="headerlink" href="#akida.LayerStatistics.output_sparsity" title="Permalink to this definition"></a></dt>
-<dd><p>Get average output sparsity for the layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the average output sparsity value.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="akida.LayerStatistics.possible_spikes">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">possible_spikes</span></span><a class="headerlink" href="#akida.LayerStatistics.possible_spikes" title="Permalink to this definition"></a></dt>
-<dd><p>Get possible spikes for the layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the possible spike amount value.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="akida.LayerStatistics.row_sparsity">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">row_sparsity</span></span><a class="headerlink" href="#akida.LayerStatistics.row_sparsity" title="Permalink to this definition"></a></dt>
-<dd><p>Get kernel row sparsity.</p>
-<p>Compute row sparsity for kernel weights.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the kernel row sparsity value.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -1855,11 +1795,11 @@ is not a SoC</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sequence.backend" title="akida.Sequence.backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">backend</span></code></a></p></td>
 <td><p>The backend type for this Sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.Sequence.layers" title="akida.Sequence.layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layers</span></code></a></p></td>
-<td><p>Get the list of layers in this sequence.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sequence.name" title="akida.Sequence.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.Sequence.name" title="akida.Sequence.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
 <td><p>The name of the sequence</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Sequence.passes" title="akida.Sequence.passes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">passes</span></code></a></p></td>
+<td><p>Get the list of passes in this sequence.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Sequence.program" title="akida.Sequence.program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">program</span></code></a></p></td>
 <td><p>Get the hardware program for this sequence.</p></td>
@@ -1873,15 +1813,15 @@ is not a SoC</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="akida.Sequence.layers">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">layers</span></span><a class="headerlink" href="#akida.Sequence.layers" title="Permalink to this definition"></a></dt>
-<dd><p>Get the list of layers in this sequence.</p>
-</dd></dl>
-
-<dl class="py property">
 <dt class="sig sig-object py" id="akida.Sequence.name">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#akida.Sequence.name" title="Permalink to this definition"></a></dt>
 <dd><p>The name of the sequence</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.Sequence.passes">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">passes</span></span><a class="headerlink" href="#akida.Sequence.passes" title="Permalink to this definition"></a></dt>
+<dd><p>Get the list of passes in this sequence.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1892,59 +1832,7 @@ is not a SoC</p>
 Device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a <code class="docutils literal notranslate"><span class="pre">Program</span></code> object or None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="program">
-<h2>Program<a class="headerlink" href="#program" title="Permalink to this headline"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="akida.core.Program">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.core.</span></span><span class="sig-name descname"><span class="pre">Program</span></span><a class="headerlink" href="#akida.core.Program" title="Permalink to this definition"></a></dt>
-<dd><p>Represents the hardware program for a sequence of layers.</p>
-<p>It is the result of the mapping of a sequence of layers to a
-specific device, and can be used directly to program the device,
-without requiring the original sequence of layers.</p>
-<p><strong>Methods:</strong></p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.core.Program.config" title="akida.core.Program.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a>(self, layer)</p></td>
-<td><p>Get the hardware Neural Processor configuration for a Layer.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.core.Program.to_buffer" title="akida.core.Program.to_buffer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_buffer</span></code></a>(self)</p></td>
-<td><p>Get this program as a serialized buffer.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py method">
-<dt class="sig sig-object py" id="akida.core.Program.config">
-<span class="sig-name descname"><span class="pre">config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.core.Program" title="akida.core.Program"><span class="pre">akida.core.Program</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.Layer" title="akida.core.Layer"><span class="pre">akida.core.Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">akida.core.NP.Mapping</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#akida.core.Program.config" title="Permalink to this definition"></a></dt>
-<dd><p>Get the hardware Neural Processor configuration for a Layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>layer</strong> (<code class="docutils literal notranslate"><span class="pre">Layer</span></code>) – the layer in the Sequence this program represents</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of <code class="docutils literal notranslate"><span class="pre">NP.Mapping</span></code> objects</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="akida.core.Program.to_buffer">
-<span class="sig-name descname"><span class="pre">to_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.core.Program" title="akida.core.Program"><span class="pre">akida.core.Program</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#akida.core.Program.to_buffer" title="Permalink to this definition"></a></dt>
-<dd><p>Get this program as a serialized buffer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a bytes buffer</p>
+<dd class="field-odd"><p>a bytes buffer or None</p>
 </dd>
 </dl>
 </dd></dl>

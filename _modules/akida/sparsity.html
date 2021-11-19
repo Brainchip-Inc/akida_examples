@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida.input_convolutional &mdash; Akida Examples  documentation</title>
+  <title>akida.sparsity &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
@@ -382,7 +382,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>akida.input_convolutional</li>
+      <li>akida.sparsity</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -391,96 +391,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida.input_convolutional</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">InputLayerParams</span><span class="p">,</span> <span class="n">NumNeuronsParams</span><span class="p">,</span>
-                        <span class="n">ConvolutionKernelParams</span><span class="p">,</span> <span class="n">StrideParams</span><span class="p">,</span>
-                        <span class="n">ActivationsParams</span><span class="p">,</span> <span class="n">WeightBitsParams</span><span class="p">,</span> <span class="n">PoolingParams</span><span class="p">,</span>
-                        <span class="n">InputParams</span><span class="p">,</span> <span class="n">InputConvolutionalParams</span><span class="p">,</span> <span class="n">Padding</span><span class="p">,</span>
-                        <span class="n">PoolType</span><span class="p">)</span>
+  <h1>Source code for akida.sparsity</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">LayerType</span>
+<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">Model</span>
 
 
-<div class="viewcode-block" id="InputConvolutional"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.InputConvolutional">[docs]</a><span class="k">class</span> <span class="nc">InputConvolutional</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The ``InputConvolutional`` layer is an image-specific input layer.</span>
-
-<span class="sd">    It is used if images are sent directly to AEE without using the</span>
-<span class="sd">    event-generating method. If the User applies their own event-generating</span>
-<span class="sd">    method, the resulting events should be sent to an InputData type layer</span>
-<span class="sd">    instead.</span>
-
-<span class="sd">    The InputConvolutional layer accepts images in 8-bit pixels, either</span>
-<span class="sd">    grayscale or RGB. Images are converted to events using a combination of</span>
-<span class="sd">    convolution kernels, activation thresholds and winner-take-all (WTA)</span>
-<span class="sd">    policies. Note that since the layer input is dense, expect approximately one</span>
-<span class="sd">    event per pixel – fewer if there are large contrast-free regions in the</span>
-<span class="sd">    image, such as with the MNIST dataset.</span>
-
-<span class="sd">    Note that this format is not appropriate for neuromorphic camera type input</span>
-<span class="sd">    which data is natively event-based and should be sent to an InputData type</span>
-<span class="sd">    input layer.</span>
+<div class="viewcode-block" id="evaluate_sparsity"><a class="viewcode-back" href="../../api_reference/aee_apis.html#akida.evaluate_sparsity">[docs]</a><span class="k">def</span> <span class="nf">evaluate_sparsity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate the sparsity of a Model on a set of inputs</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple): the 3D input shape.</span>
-<span class="sd">        kernel_size (list): list of 2 integer representing the spatial</span>
-<span class="sd">            dimensions of the convolutional kernel.</span>
-<span class="sd">        filters (int): number of filters.</span>
-<span class="sd">        name (str, optional): name of the layer.</span>
-<span class="sd">        padding (:obj:`Padding`, optional): type of</span>
-<span class="sd">            convolution.</span>
-<span class="sd">        kernel_stride (tuple, optional): tuple of integer representing the</span>
-<span class="sd">            convolution stride (X, Y).</span>
-<span class="sd">        weights_bits (int, optional): number of bits used to quantize weights.</span>
-<span class="sd">        pool_size (list, optional): list of 2 integers, representing the window</span>
-<span class="sd">            size over which to take the maximum or the average (depending on</span>
-<span class="sd">            pool_type parameter).</span>
-<span class="sd">        pool_type (:obj:`PoolType`, optional): pooling type</span>
-<span class="sd">            (None, Max or Average).</span>
-<span class="sd">        pool_stride (list, optional): list of 2 integers representing</span>
-<span class="sd">            the stride dimensions.</span>
-<span class="sd">        activation (bool, optional): enable or disable activation</span>
-<span class="sd">            function.</span>
-<span class="sd">        threshold (int, optional): threshold for neurons to fire or</span>
-<span class="sd">            generate an event.</span>
-<span class="sd">        act_step (float, optional): length of the potential</span>
-<span class="sd">            quantization intervals.</span>
-<span class="sd">        act_bits (int, optional): number of bits used to quantize</span>
-<span class="sd">            the neuron response.</span>
-<span class="sd">        padding_value (int, optional): value used when padding.</span>
+<span class="sd">        model (:obj:`Model`): the model to evaluate</span>
+<span class="sd">        inputs (:obj:`numpy.ndarray`): a numpy.ndarray</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a dictionary of float sparsity values indexed by layers</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">input_shape</span><span class="p">,</span>
-                 <span class="n">kernel_size</span><span class="p">,</span>
-                 <span class="n">filters</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-                 <span class="n">padding</span><span class="o">=</span><span class="n">Padding</span><span class="o">.</span><span class="n">Same</span><span class="p">,</span>
-                 <span class="n">kernel_stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                 <span class="n">weights_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-                 <span class="n">pool_type</span><span class="o">=</span><span class="n">PoolType</span><span class="o">.</span><span class="n">NoPooling</span><span class="p">,</span>
-                 <span class="n">pool_stride</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">act_step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">act_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">padding_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">InputConvolutionalParams</span><span class="p">(</span>
-                <span class="n">InputLayerParams</span><span class="p">(</span><span class="n">InputParams</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)),</span>
-                <span class="n">ConvolutionKernelParams</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">),</span>
-                <span class="n">NumNeuronsParams</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span> <span class="n">StrideParams</span><span class="p">(</span><span class="n">kernel_stride</span><span class="p">),</span>
-                <span class="n">WeightBitsParams</span><span class="p">(</span><span class="n">weights_bits</span><span class="p">),</span>
-                <span class="n">PoolingParams</span><span class="p">(</span><span class="n">pool_size</span><span class="p">,</span> <span class="n">pool_type</span><span class="p">,</span> <span class="n">pool_stride</span><span class="p">),</span>
-                <span class="n">ActivationsParams</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">act_step</span><span class="p">,</span> <span class="n">act_bits</span><span class="p">),</span>
-                <span class="n">padding_value</span><span class="p">)</span>
-
-            <span class="c1"># Call parent constructor to initialize C++ bindings</span>
-            <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>
-            <span class="c1"># specified in pybind documentation</span>
-            <span class="n">Layer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="bp">self</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">raise</span></div>
+    <span class="n">sparsities</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">current_inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">!=</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span> <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">activation</span><span class="p">:</span>
+            <span class="n">sub_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="n">layer</span><span class="p">])</span>
+            <span class="n">current_inputs</span> <span class="o">=</span> <span class="n">sub_model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">current_inputs</span><span class="p">)</span>
+            <span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">current_inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">activations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">current_inputs</span><span class="p">)</span>
+            <span class="n">sparsities</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">activations</span> <span class="o">/</span> <span class="n">output_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sparsities</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">sparsities</span></div>
 </pre></div>
 
            </div>

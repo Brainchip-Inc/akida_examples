@@ -37,7 +37,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.0.4
+                MetaTF 2.0.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -156,7 +156,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../api_reference/aee_apis.html">Akida Execution Engine</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#model">Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layer">Layer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#layerstatistics">LayerStatistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sparsity">Sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputdata">InputData</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#inputconvolutional">InputConvolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#fullyconnected">FullyConnected</a></li>
@@ -173,7 +173,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#hwdevice">HWDevice</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#socdriver">SocDriver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#sequence">Sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#program">Program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#np">NP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#soc">soc</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/aee_apis.html#powermeter">PowerMeter</a></li>
@@ -571,7 +570,7 @@ the <code class="docutils literal notranslate"><span class="pre">akida_models</s
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_edge_backward_follow_forward.pkl
 
  16384/251079 [&gt;.............................] - ETA: 0s
-139264/251079 [===============&gt;..............] - ETA: 0s
+204800/251079 [=======================&gt;......] - ETA: 0s
 253952/251079 [==============================] - 0s 0us/step
 
 262144/251079 [===============================] - 0s 0us/step
@@ -677,8 +676,6 @@ Input shape  Output shape  Sequences  Layers
 [49, 10, 1]  [1, 1, 33]    1          6
 ______________________________________________
 
-/usr/local/lib/python3.6/dist-packages/numpy/core/_asarray.py:83: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify &#39;dtype=object&#39; when creating the ndarray
-  return array(a, dtype, copy=False, order=order)
              SW/conv_0-dense_5 (Software)
 _______________________________________________________
 Layer (type)             Output shape  Kernel shape
@@ -716,9 +713,6 @@ _______________________________________________________
 <span class="n">acc_val_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_ak</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida CNN2SNN validation set accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">acc_val_ak</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
 
-<span class="c1"># Remember model statistics for later purpose</span>
-<span class="n">model_statistics</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">statistics</span>
-
 <span class="c1"># For non-regression purpose</span>
 <span class="k">assert</span> <span class="n">acc_val_ak</span> <span class="o">&gt;</span> <span class="mf">0.88</span>
 </pre></div>
@@ -741,10 +735,15 @@ _______________________________________________________
 <span class="n">model_ak</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layer_fc</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Estimate the number of spikes at the end of the feature extractor.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">evaluate_sparsity</span>
+
+<span class="c1"># Compute sparsity information for the model using 10% of the training data</span>
+<span class="c1"># which is enough for a good estimate</span>
+<span class="n">num_samples</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">sparsities</span> <span class="o">=</span> <span class="n">evaluate_sparsity</span><span class="p">(</span><span class="n">model_ak</span><span class="p">,</span> <span class="n">x_train</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">])</span>
 
 <span class="c1"># Retrieve the number of output spikes from the feature extractor output</span>
-<span class="n">output_density</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">model_statistics</span><span class="p">[</span><span class="s1">&#39;separable_4&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">output_sparsity</span>
+<span class="n">output_density</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">sparsities</span><span class="p">[</span><span class="n">model_ak</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s1">&#39;separable_4&#39;</span><span class="p">)]</span>
 <span class="n">avg_spikes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s1">&#39;separable_4&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">output_density</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average number of spikes: </span><span class="si">{</span><span class="n">avg_spikes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -754,7 +753,7 @@ _______________________________________________________
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Average number of spikes: 23.777337398373987
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Average number of spikes: 23.85412688308933
 The number of weights is then set to: 28
 </pre></div>
 </div>
@@ -799,8 +798,6 @@ Input shape  Output shape  Sequences  Layers
 [49, 10, 1]  [1, 1, 495]   1          6
 ______________________________________________
 
-/usr/local/lib/python3.6/dist-packages/numpy/core/_asarray.py:83: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify &#39;dtype=object&#39; when creating the ndarray
-  return array(a, dtype, copy=False, order=order)
           SW/conv_0-akida_edge_layer (Software)
 __________________________________________________________
 Layer (type)               Output shape  Kernel shape
@@ -851,7 +848,7 @@ ____________________________________________
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida learning with 33 classes...         (this step can take a few minutes)
-Elapsed time for Akida training: 33.35 s
+Elapsed time for Akida training: 33.27 s
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Measure Akida accuracy on validation set</span>
@@ -865,7 +862,7 @@ Elapsed time for Akida training: 33.35 s
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 86.87 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 86.27 %
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -957,10 +954,10 @@ Elapsed time for Akida edge learning: 0.17 s
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy on 3 new keywords:         19/19
-Akida validation set accuracy on 33 old classes:         86.45 %
+Akida validation set accuracy on 33 old classes:         85.82 %
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  45.517 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  51.092 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-1-edge-learning-kws-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/2b41d7b19be0b67175397b3549fe25da/plot_1_edge_learning_kws.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_1_edge_learning_kws.py</span></code></a></p>
