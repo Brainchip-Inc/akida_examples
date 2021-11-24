@@ -57,6 +57,10 @@ Akida Execution Engine API
     Layer parameters
     ================
 
+    LayerType
+    ---------
+    .. autoclass:: LayerType
+
     Padding
     -------
     .. autoclass:: Padding
