@@ -47,11 +47,11 @@ Convolutional
        * a layer with max pooling must be followed by another Convolutional or
          SeparableConvolutional layer.
 
-+-------------------+-------------+-------------+
-|**Average Pooling**|**Width**    |**Height**   |
-+-------------------+-------------+-------------+
-|**Dimensions**     |8, 16, 24, 32|multiple of 8|
-+-------------------+-------------+-------------+
++--------------------------+-------------+-------------+
+|**Global Average Pooling**|**Width**    |**Height**   |
++--------------------------+-------------+-------------+
+|**Dimensions**            |8, 16, 24, 32|multiple of 8|
++--------------------------+-------------+-------------+
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
@@ -81,11 +81,11 @@ SeparableConvolutional
        * a layer with max pooling must be followed by another Convolutional or
          SeparableConvolutional layer.
 
-+-------------------+-------------+-------------+
-|**Average Pooling**|**Width**    |**Height**   |
-+-------------------+-------------+-------------+
-|**Dimensions**     |8, 16, 24, 32|multiple of 8|
-+-------------------+-------------+-------------+
++--------------------------+-------------+-------------+
+|**Global Average Pooling**|**Width**    |**Height**   |
++--------------------------+-------------+-------------+
+|**Dimensions**            |8, 16, 24, 32|multiple of 8|
++--------------------------+-------------+-------------+
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
@@ -169,11 +169,11 @@ Convolutional
        * a layer with max pooling must be followed by another Convolutional or
          SeparableConvolutional layer.
 
-+-------------------+---------+
-|**Average Pooling**|**Width**|
-+-------------------+---------+
-|**Dimensions**     |[1:32]   |
-+-------------------+---------+
++--------------------------+---------+
+|**Global Average Pooling**|**Width**|
++--------------------------+---------+
+|**Dimensions**            |[1:32]   |
++--------------------------+---------+
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
@@ -204,11 +204,11 @@ SeparableConvolutional
        * a layer with max pooling must be followed by another Convolutional or
          SeparableConvolutional layer.
 
-+-------------------+---------+
-|**Average Pooling**|**Width**|
-+-------------------+---------+
-|**Dimensions**     |[1:32]   |
-+-------------------+---------+
++--------------------------+---------+
+|**Global Average Pooling**|**Width**|
++--------------------------+---------+
+|**Dimensions**            |[1:32]   |
++--------------------------+---------+
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
