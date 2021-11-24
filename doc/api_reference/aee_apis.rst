@@ -151,7 +151,12 @@ Akida Execution Engine API
         :members:
     .. autoclass:: akida.NP.Ident
         :members:
-
+    .. autoclass:: akida.NP.Type
+        :members:
+    .. autoclass:: akida.NP.Space
+        :members:
+    .. autoclass:: akida.NP.Mapping
+        :members:
 
     Tools
     =====
