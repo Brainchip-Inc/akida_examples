@@ -20,6 +20,9 @@ Akida Execution Engine API
     .. autoclass:: Layer
         :members:
 
+    .. autoclass:: akida.Layer.Mapping
+        :members:
+
     Sparsity
     ===============
     .. autofunction:: akida.evaluate_sparsity
