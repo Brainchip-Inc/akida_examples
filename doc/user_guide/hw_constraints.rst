@@ -53,6 +53,11 @@ Convolutional
 |**Dimensions**            |8, 16, 24, 32|multiple of 8|
 +--------------------------+-------------+-------------+
 
+.. note::
+       With global average pooling:
+              * num_neurons should be a multiple of 8
+              * the output of the convolution must have at least 3 rows
+
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
 +----------------+---------+-----------+--------------+
@@ -86,6 +91,12 @@ SeparableConvolutional
 +--------------------------+-------------+-------------+
 |**Dimensions**            |8, 16, 24, 32|multiple of 8|
 +--------------------------+-------------+-------------+
+
+.. note::
+       With global average pooling:
+              * num_neurons should be a multiple of 8
+              * the output of the convolution must have at least 3 rows
+              * 1x1 inputs are not supported
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
@@ -175,6 +186,10 @@ Convolutional
 |**Dimensions**            |[1:32]   |
 +--------------------------+---------+
 
+.. note::
+       * with global average pooling the output of the convolution must have at
+         least 3 rows.
+
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
 +----------------+---------+-----------+--------------+
@@ -209,6 +224,11 @@ SeparableConvolutional
 +--------------------------+---------+
 |**Dimensions**            |[1:32]   |
 +--------------------------+---------+
+
+.. note::
+       With global average pooling:
+              * the output of the convolution must have at least 3 rows
+              * 1x1 inputs are not supported
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
