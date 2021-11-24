@@ -54,21 +54,25 @@ Akida Execution Engine API
     .. autoclass:: Concat
         :members:
 
-    BackendType
-    ===========
-    .. autoclass:: BackendType
+    Layer parameters
+    ================
 
     Padding
-    =======
+    -------
     .. autoclass:: Padding
 
     PoolType
-    ========
+    --------
     .. autoclass:: PoolType
 
     LearningType
-    ============
+    ------------
     .. autoclass:: LearningType
+
+
+    BackendType
+    ===========
+    .. autoclass:: BackendType
 
     HwVersion
     =========
