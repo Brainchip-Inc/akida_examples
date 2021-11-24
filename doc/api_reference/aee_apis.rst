@@ -92,6 +92,11 @@ Akida Execution Engine API
     -----------
     .. autoclass:: BackendType
 
+    Pass
+    ----
+    .. autoclass:: Pass
+        :members:
+
 
     Device
     ======
