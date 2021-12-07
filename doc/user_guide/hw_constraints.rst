@@ -13,8 +13,8 @@ model:
 
 .. code-block::
 
-   import akida
-   updated_model = akida.compatibility.create_from_model(incompatible_model, akida.NSoC_v2)
+   import akida.compatibility
+   updated_model = akida.compatibility.create_from_model(incompatible_model)
 
 
 Akida NSoC (Pre-production)
