@@ -60,7 +60,7 @@ Agreement.
 You agree and certify that neither BRAINCHIP's Software, nor any other technical
 data received from BRAINCHIP, nor the direct product thereof, will be shipped,
 transferred, or exported, directly or indirectly, to any country in violation
-of any applicable law.  You agree to comply with all restrictions and export
+of any applicable law. You agree to comply with all restrictions and export
 controls imposed by the laws and regulations of the United States and any other
 applicable jurisdiction.
 
@@ -154,8 +154,7 @@ You acknowledge that you have read and understand this License and agree to be
 bound by these terms and conditions.
 
 Should you have any questions concerning this License, please contact:
-
-Brainchip, Inc., 65 Enterprise, Aliso Viejo, CA 92656 (United States) or write
-to sales@brainchipinc.com
+Brainchip, Inc., 23041 Avenida De La Carlota, Suite 250 Laguna Hills CA 92653
+(United States) or write to sales@brainchipinc.com
 
 Copyright 2020, BrainChip Holdings Ltd. All rights reserved.
