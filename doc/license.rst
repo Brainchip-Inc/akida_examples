@@ -157,4 +157,4 @@ Should you have any questions concerning this License, please contact:
 Brainchip, Inc., 23041 Avenida De La Carlota, Suite 250 Laguna Hills CA 92653
 (United States) or write to sales@brainchipinc.com
 
-Copyright 2020, BrainChip Holdings Ltd. All rights reserved.
+Copyright 2022, BrainChip Holdings Ltd. All rights reserved.
