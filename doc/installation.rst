@@ -5,7 +5,7 @@ Requirements
 ------------
 
 * **Supported operating systems:** Windows 10, Ubuntu 16.04, 18.04 and 20.04
-* **Python version:** python 3.6 to 3.9
+* **Python version:** python 3.7 to 3.9
 * **TensorFlow version:** 2.6.x
 
 .. warning::
@@ -39,7 +39,7 @@ be setup with Python's pip package manager:
 
     .. code-block:: bash
 
-      conda create --name akida_env python=3.6
+      conda create --name akida_env python=3.7
       conda activate akida_env
 
 Running examples
