@@ -56,6 +56,7 @@ native SNN solutions.
 .. figure:: img/Akida_Block_Diagram.png
    :target: _images/Akida_Block_Diagram.png
    :alt: Brainchip
+   :scale: 60%
    :align: center
 
    Figure 1. BrainChip Akida processor
@@ -87,6 +88,7 @@ the application need.
 .. figure:: img/Akida_IP.png
    :target: _images/Akida_IP.png
    :alt: Brainchip
+   :scale: 60%
    :align: center
 
    Figure 2. Akida IP example configurations
@@ -115,6 +117,7 @@ due to their close similarity with the signals exchanged by biological neurons.
 .. figure:: img/metatf.png
    :target: _images/metatf.png
    :alt: Brainchip
+   :scale: 60%
    :align: center
 
    Figure 3. Akida MetaTF ML Framework
@@ -125,14 +128,7 @@ The MetaTF ML framework comprises three main python packages:
   to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the
   development of Akida models without an actual Akida hardware, it includes a
   runtime, an Hardware Abstraction Layer (HAL) and a software backend that
-  simulates the Akida NSoC (see *Figure 4*\ ).
-
-.. figure:: img/akida.png
-   :target: _images/akida.png
-   :alt: Brainchip
-   :align: center
-
-   Figure 4. Akida python package
+  simulates the Akida NSoC (see *Figure 4* and *Figure 5*\).
 
 * the `CNN2SNN tool <https://pypi.org/project/cnn2snn>`_ provides means to
   convert Convolutional Neural Networks (CNN) that were trained using Deep
@@ -142,6 +138,22 @@ The MetaTF ML framework comprises three main python packages:
 * the `Akida model zoo <https://pypi.org/project/akida-models>`_ contains
   pre-created network models built with the Akida sequential API and the
   CNN2SNN tool using quantized Keras models.
+
+.. figure:: img/akida.png
+   :target: _images/akida.png
+   :alt: Brainchip
+   :scale: 60%
+   :align: center
+
+   Figure 4. Akida python package
+
+.. figure:: img/akida_runtime.png
+   :target: _images/akida_runtime.png
+   :alt: Brainchip
+   :scale: 60%
+   :align: center
+
+   Figure 5. Akida runtime configurations
 
 
 The Akida examples
