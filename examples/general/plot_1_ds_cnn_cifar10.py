@@ -168,7 +168,7 @@ model_akida = convert(model_keras_quantized_pretrained)
 # 5.2 Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary <../../api_reference/akida_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 
 model_akida.summary()
@@ -218,7 +218,7 @@ if num_images == 1000:
 ######################################################################
 # Activations sparsity has a great impact on akida inference time. One can have
 # a look at the average input and output sparsity of each layer using
-# `evaluate_sparsity <../../api_reference/aee_apis.html#akida.evaluate_sparsity>`_
+# `evaluate_sparsity <../../api_reference/akida_apis.html#akida.evaluate_sparsity>`_
 #
 
 ######################################################################
@@ -239,8 +239,7 @@ label_names = [
 barWidth = 0.75
 pause_time = 1
 
-fig = plt.figure(num='CIFAR10 Classification by Akida Execution Engine',
-                 figsize=(8, 4))
+fig = plt.figure(num='CIFAR10 Classification by Akida runtime', figsize=(8, 4))
 ax0 = plt.subplot(1, 3, 1)
 imgobj = ax0.imshow(np.zeros((32, 32, 3), dtype=np.uint8))
 ax0.set_axis_off()

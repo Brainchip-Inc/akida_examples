@@ -35,7 +35,7 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # To achieve this using the Akida NSoC, learning occurs in 3 stages:
 #
 # 1. The Akida model preparation: an Akida model must meet specific conditions
-#    to be compatible for `Akida learning <../../user_guide/aee.html#id5>`__.
+#    to be compatible for `Akida learning <../../user_guide/akida.html#id5>`__.
 # 2. The "offline" Akida learning: the last layer of the Akida model is trained
 #    from scratch with a large dataset. In this KWS case, the model is trained
 #    with 32 keywords from the Google "Speech Commands dataset".
@@ -292,20 +292,20 @@ print("The number of weights is then set to:", num_weights)
 # The dataset containing the 33 classes (32 keywords + "silence") is used.
 #
 # Now that the Akida model is ready for training, the hyper-parameters
-# must be set using the `compile <../../api_reference/aee_apis.html#akida.Model.compile>`__
+# must be set using the `compile <../../api_reference/akida_apis.html#akida.Model.compile>`__
 # method of the last layer. Compiling a layer means that this layer is
 # configured for training and ready to be trained. For more information about
-# the learning hyper-parameters, check the `user guide <../../user_guide/aee.html#id5>`__.
+# the learning hyper-parameters, check the `user guide <../../user_guide/akida.html#id5>`__.
 # Note that we set the `learning_competition` to 0.1, which gives a little
 # competition between neurons to prevent learning similar features.
 #
 # Once the last layer is compiled, the
-# `fit <../../api_reference/aee_apis.html#akida.Model.fit>`_ method is used to
+# `fit <../../api_reference/akida_apis.html#akida.Model.fit>`_ method is used to
 # pass the dataset for training. This call is similar to the `fit` method in
 # tf.keras.
 #
 # After training, the model is assessed on the validation set using the
-# `predict <../../api_reference/aee_apis.html#akida.Model.predict>`_ method. It
+# `predict <../../api_reference/akida_apis.html#akida.Model.predict>`_ method. It
 # returns the estimated labels for the validation samples.
 # The model is then saved to a ``.fbz`` file.
 #
@@ -368,12 +368,12 @@ del model_ak
 # classes. Our previously saved Akida model has 33 output classes with learned
 # weights.
 # We now add 3 classes to the existing model using the
-# `add_classes <../../api_reference/aee_apis.html#akida.Model.add_classes>`_ method
+# `add_classes <../../api_reference/akida_apis.html#akida.Model.add_classes>`_ method
 # and learn the 3 new keywords without changing the already learned weights.
 #
 # There is no need to compile the final layer again; the new neurons were
 # initialized along with the old ones, based on the learning hyper-parameters
-# given in the `compile <../../api_reference/aee_apis.html#akida.Model.compile>`_
+# given in the `compile <../../api_reference/akida_apis.html#akida.Model.compile>`_
 # call. The edge learning then uses the same scheme as for the "offline" Akida
 # learning - only the number of samples used is much more restricted.
 #

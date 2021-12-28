@@ -25,7 +25,7 @@ Quick installation
     `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_
     for installation.
 
-The Akida Execution Engine, the CNN2SNN tool, and the Akida models packages can
+The akida, CNN2SNN and akida_models python packages can
 be setup with Python's pip package manager:
 
 .. code-block:: bash

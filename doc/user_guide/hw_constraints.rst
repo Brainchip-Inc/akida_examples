@@ -7,7 +7,7 @@ imposed. When mapping a model to the Akida hardware, not all Model and Layer
 configurations are supported.
 
 When dealing with an unsupported model, one can call `the dedicated Akida helper
-<../api_reference/aee_apis.html#akida.compatibility.create_from_model>`_
+<../api_reference/akida_apis.html#akida.compatibility.create_from_model>`_
 that will try to find workarounds for incompatibilities and build a converted
 model:
 

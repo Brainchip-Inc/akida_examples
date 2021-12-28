@@ -371,8 +371,7 @@ pred_boxes = np.array([[
     box.get_score()
 ] for box in raw_boxes])
 
-fig = plt.figure(
-    num='VOC2012 car and person detection by Akida Execution Engine')
+fig = plt.figure(num='VOC2012 car and person detection by Akida runtime')
 ax = fig.subplots(1)
 img_plot = ax.imshow(np.zeros(raw_image.shape, dtype=np.uint8))
 img_plot.set_data(raw_image)

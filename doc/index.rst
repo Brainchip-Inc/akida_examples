@@ -99,7 +99,7 @@ The Akida Neuromorphic ML Framework (MetaTF) relies on a high-level neural
 networks API, written in Python, and largely inspired by the `Keras API
 <https://keras.io>`_.
 
-The core data structure used by the Akida Execution Engine is a neural network
+The core data structure used by the Akida runtime is a neural network
 **model**\ , which itself is a linear stack of **layers**.
 
 MetaTF leverages the `TensorFlow <https://www.tensorflow.org/>`_ framework and
@@ -121,23 +121,23 @@ due to their close similarity with the signals exchanged by biological neurons.
 
 The MetaTF ML framework comprises three main python packages:
 
-* the `Akida Execution Engine <https://pypi.org/project/akida>`_ is an interface
+* the `Akida python package <https://pypi.org/project/akida>`_ is an interface
   to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the
   development of Akida models without an actual Akida hardware, it includes a
   runtime, an Hardware Abstraction Layer (HAL) and a software backend that
   simulates the Akida NSoC (see *Figure 4*\ ).
 
-.. figure:: img/AEE.png
-   :target: _images/AEE.png
+.. figure:: img/akida.png
+   :target: _images/akida.png
    :alt: Brainchip
    :align: center
 
-   Figure 4. Akida Execution Engine
+   Figure 4. Akida python package
 
 * the `CNN2SNN tool <https://pypi.org/project/cnn2snn>`_ provides means to
   convert Convolutional Neural Networks (CNN) that were trained using Deep
   Learning methods to event domain, low-latency and low-power network for use
-  with the Akida Execution Engine.
+  with the Akida runtime.
 
 * the `Akida model zoo <https://pypi.org/project/akida-models>`_ contains
   pre-created network models built with the Akida sequential API and the

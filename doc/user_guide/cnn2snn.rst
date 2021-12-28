@@ -7,15 +7,15 @@ Overview
 
 The Brainchip CNN2SNN toolkit provides means to convert Convolutional Neural
 Networks (CNN) that were trained using Deep Learning methods to a low-latency
-and low-power Spiking Neural Network (SNN) for use with the Akida Execution
-Engine. This document is a guide to that process.
+and low-power Spiking Neural Network (SNN) for use with the Akida runtime.
+This document is a guide to that process.
 
-The Akida Execution Engine provides Spiking Neural Networks (SNN) in which
+The Akida neuromorphic IP provides Spiking Neural Networks (SNN) in which
 communications between neurons take the form of “spikes” or impulses that are
 generated when a neuron exceeds a threshold level of activation. Neurons that
 do not cross the threshold generate no output and contribute no further
 computational cost downstream. This feature is key to Akida hardware efficiency.
-The Akida Execution Engine further extends this efficiency by operating with low
+The Akida neuromorphic IP further extends this efficiency by operating with low
 bitwidth “synapses” or weights of connections between neurons.
 
 Despite the apparent fundamental differences between SNNs and CNNs, the
@@ -246,13 +246,12 @@ bitwidth of the quantized activations.
 Training-Only Layers
 ^^^^^^^^^^^^^^^^^^^^
 
-The Akida Execution Engine is used in CNN conversion for inference only.
 Training is done within the Keras environment and training-only layers may be
 added at will, such as BatchNormalization or Dropout layers. These are handled
 fully by Keras during the training and do not need to be modified to be
 Akida-compatible for inference.
 
-As regards the implementation within the Akida Execution Engine: it may be
+As regards the implementation within the Akida neuromorphic IP: it may be
 helpful to understand that the associated scaling operations (multiplication and
 shift) are never performed during inference. The computational cost is reduced
 by wrapping the (optional) batch normalization function and quantized activation
@@ -267,20 +266,20 @@ First Layers
 
 Most layers of an Akida model only accept sparse inputs.
 In order to support the most common classes of models in computer vision, a
-special layer (`InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__)
+special layer (`InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__)
 is however able to receive image data (8-bit grayscale or RGB). See the
-`Akida user guide <aee.html>`__ for further details.
+`Akida user guide <akida.html>`__ for further details.
 
 The CNN2SNN toolkit supports any quantization-aware training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
-accept dense inputs, thanks to the special `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__
+accept dense inputs, thanks to the special `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__
 layer.
 
 Input Scaling
 ~~~~~~~~~~~~~
 
-The `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`_
+The `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`_
 layer only receives 8-bit input values:
 
 
@@ -337,7 +336,7 @@ ____
 .. [#fn-2] Check model compatibility must be applied on a quantized model. It
             then requires to quantize the model first.
 .. [#fn-3] The spike value depends on the intensity of the potential, see the
-           `Akida documentation <aee.html>`_ for details on the activation.
+           `Akida documentation <akida.html>`_ for details on the activation.
 .. [#fn-4] See for instance `"Quantizing deep convolutional networks for
            efficient inference: A whitepaper"
            <https://arxiv.org/pdf/1806.08342.pdf>`_

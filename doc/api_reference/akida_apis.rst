@@ -1,6 +1,6 @@
 
-Akida Execution Engine API
-==========================
+Akida runtime API
+=================
 
 .. automodule:: akida
     :members:

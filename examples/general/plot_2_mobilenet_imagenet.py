@@ -63,8 +63,8 @@ for id in range(num_images):
 print(f'{num_images} images loaded and preprocessed.')
 
 ######################################################################
-# .. Note:: Akida Execution Engine is configured to take 8-bit inputs
-#           without rescaling. For conversion, rescaling values used for
+# .. Note:: Akida runtime is configured to take 8-bit inputs without
+#           rescaling. For conversion, rescaling values used for
 #           training the Keras model are needed.
 #
 #
@@ -211,7 +211,7 @@ model_akida = convert(model_keras_quantized_pretrained)
 # 5.2 Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary <../../api_reference/akida_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 
 model_akida.summary()

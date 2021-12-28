@@ -39,7 +39,7 @@ Run the MNIST example below, then visit the `Akida examples <../examples/index.h
 For users familiar with deep-learning
 -------------------------------------
 
-The best place to start is the `Model sequential API <../api_reference/aee_apis.html#model>`_.
+The best place to start is the `Model sequential API <../api_reference/akida_apis.html#model>`_.
 
 As in `Keras <https://keras.io>`_, you can create models by plugging together
 neural layers.

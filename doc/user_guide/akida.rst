@@ -30,11 +30,11 @@ machine learning layers into computation *blocks*:
 
 Three principal layer types are available:
 
-* `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__
+* `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__
   – sometimes described as ‘dense’
-* `Convolutional <../api_reference/aee_apis.html#convolutional>`__
+* `Convolutional <../api_reference/akida_apis.html#convolutional>`__
   – or ‘weight-sharing’
-* `SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__,
+* `SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__,
   - a less computationally intensive convolutional layer.
 
 The weights of Akida layers are N-bit integer: please refer to the `hardware
@@ -68,10 +68,10 @@ layers.
 This feature extractor can either be completely external to the model, or be
 a deep-learning SNN submodel as defined below.
 
-The last `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__ layer
+The last `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__ layer
 of a native SNN model can be trained online from individual samples using Akida
 edge learning algorithm.
-Please refer to `Using Akida Edge Learning <aee.html#id1>`_ for details.
+Please refer to `Using Akida Edge Learning <akida.html#id1>`_ for details.
 
 Deep-learning Spiking Neural Networks
 """""""""""""""""""""""""""""""""""""
@@ -97,14 +97,14 @@ Specifying the model
 Akida models are defined using the sequential API.
 
 This comprises creating a ``Model`` object and adding layers to it using the
-`.add() <../api_reference/aee_apis.html#akida.Model.add>`__ method.
+`.add() <../api_reference/akida_apis.html#akida.Model.add>`__ method.
 
-The available layers are `InputData <../api_reference/aee_apis.html#inputdata>`__,
-`InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__,
-`FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__,
-`Convolutional <../api_reference/aee_apis.html#convolutional>`__,
-`SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__
-and `Concat <../api_reference/aee_apis.html#concat>`__.
+The available layers are `InputData <../api_reference/akida_apis.html#inputdata>`__,
+`InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__,
+`FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__,
+`Convolutional <../api_reference/akida_apis.html#convolutional>`__,
+`SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__
+and `Concat <../api_reference/akida_apis.html#concat>`__.
 
 Layers are built with a name and a list of named parameters that are described
 in the sections below.
@@ -118,7 +118,7 @@ Example of sequential definition of a model:
    model.add(InputData(name="input", input_shape=(32, 32, 1)))
    model.add(FullyConnected(name="fully", units=32, threshold=40))
 
-The ``Model`` `.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__
+The ``Model`` `.summary() <../api_reference/akida_apis.html#akida.Model.summary>`__
 method prints a description of the model architecture.
 
 Accessing layer parameters and weights
@@ -133,7 +133,7 @@ name.
    fc = model.get_layer("fully")
 
 Each layer type has a different set of attributes, available through the ``Layer``
-`.parameters <../api_reference/aee_apis.html#akida.Layer.parameters>`__ member:
+`.parameters <../api_reference/akida_apis.html#akida.Layer.parameters>`__ member:
 
 .. code-block:: python
 
@@ -153,7 +153,7 @@ Some layer types also have variables containing weights and thresholds:
 Inference
 ^^^^^^^^^
 
-The Akida ``Model`` `.forward <../api_reference/aee_apis.html#akida.Model.forward>`__
+The Akida ``Model`` `.forward <../api_reference/akida_apis.html#akida.Model.forward>`__
 method allows to infer the outputs of a specific set of inputs.
 
 Like inference methods in other machine learning frameworks, it simply returns
@@ -171,13 +171,13 @@ the integer potentials or activations of the last layer.
     # Inference
     outputs = model.forward(inputs)
 
-The ``Model`` `.evaluate <../api_reference/aee_apis.html#akida.Model.evaluate>`__
+The ``Model`` `.evaluate <../api_reference/akida_apis.html#akida.Model.evaluate>`__
 method is very similar to the forward method, but is specifically designed to
 replicate the float outputs of a converted CNN: instead of the integer potentials,
 it returns float values representing the integer potentials shifted and rescaled using
 per-axis constants evaluated during the CNN conversion.
 
-After an inference, the ``Model`` `.statistics <../api_reference/aee_apis.html#akida.Model.statistics>`__ member provides relevant inference statistics.
+After an inference, the ``Model`` `.statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__ member provides relevant inference statistics.
 
 .. code-block:: python
 
@@ -196,7 +196,7 @@ Saving and loading
 ^^^^^^^^^^^^^^^^^^
 
 A ``Model`` object can be saved to disk for future use with the
-`.save() <../api_reference/aee_apis.html#akida.Model.save>`__
+`.save() <../api_reference/akida_apis.html#akida.Model.save>`__
 method that needs a path for the model.
 
 The model will be saved as a file with an .fbz extension that describes its
@@ -218,9 +218,9 @@ The first layer of a model must be one of two possible input layer
 types:
 
 
-* `InputData <../api_reference/aee_apis.html#inputdata>`__ – universal
+* `InputData <../api_reference/akida_apis.html#inputdata>`__ – universal
   input layer type.
-* `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__
+* `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__
   - image-specific input layer, taking either RGB or grayscale pixel input.
 
 Data-Processing layer types
@@ -239,19 +239,19 @@ activation function that may or may not emit a spike.
 A data-processing layer can be one of three types:
 
 
-* `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__ –
+* `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__ –
   each neuron is connected to members of the full set of possible inputs –
   hence ‘fully connected’, even though a much smaller number of connections
   are likely to be non-zero.
-* `Convolutional <../api_reference/aee_apis.html#convolutional>`__ –
+* `Convolutional <../api_reference/akida_apis.html#convolutional>`__ –
   each neuron’s connection weights express a localized filter – typically a
   region that is a small fraction of the input’s height and width. This filter
   is tested across all x and y positions.
-* `SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__
-  - a variant of the `Convolutional <../api_reference/aee_apis.html#convolutional>`__
+* `SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__
+  - a variant of the `Convolutional <../api_reference/akida_apis.html#convolutional>`__
   layer that is less computationally intensive due to simplified filters.
 
-The `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__
+The `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__
 layers can be trained using the Akida Edge learning algorithm if they are the
 last layer of a model.
 
@@ -292,16 +292,16 @@ All data-processing layers share the following activation parameters:
 Pooling parameters
 """"""""""""""""""
 
-The `InputConvolutional <../api_reference/aee_apis.html#inputconvolutional>`__,
-`Convolutional <../api_reference/aee_apis.html#convolutional>`__ and
-`SeparableConvolutional <../api_reference/aee_apis.html#separableconvolutional>`__
+The `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__,
+`Convolutional <../api_reference/akida_apis.html#convolutional>`__ and
+`SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__
 layer types share the following pooling parameters:
 
 
 * [optional if ``pool_type = Average``] ``pool_size``: tuple of integer values,
   sets the width and height of the patch used to perform the pooling. If not
   specified it performs a global pooling.
-* [optional] `pool_type`: `PoolType <../api_reference/aee_apis.html#pooltype>`__
+* [optional] `pool_type`: `PoolType <../api_reference/akida_apis.html#pooltype>`__
   Sets the effective pooling type (defaults to `NoPooling`):
 
   * ``NoPooling`` – no pooling.
@@ -326,15 +326,15 @@ In order to perform the inference of a model on hardware, the corresponding
 The Akida ``Device`` object represents an Akida device, which is entirely
 characterized by:
 
-- its `hardware version <../api_reference/aee_apis.html#hwversion>`__,
-- the description of its `mesh <../api_reference/aee_apis.html#akida.NP.Mesh>`__ of
+- its `hardware version <../api_reference/akida_apis.html#hwversion>`__,
+- the description of its `mesh <../api_reference/akida_apis.html#akida.NP.Mesh>`__ of
   processing nodes.
 
 Discovering Hardware Devices
 """"""""""""""""""""""""""""
 
 The list of hardware devices detected on a specific host is available using the
-`devices() <../api_reference/aee_apis.html#akida.devices>`__ method.
+`devices() <../api_reference/akida_apis.html#akida.devices>`__ method.
 
 .. code-block:: python
 
@@ -361,14 +361,14 @@ topology:
     device = Device(NSoC_v2, mesh)
 
 It is possible to build a virtual device for known hardware devices, by calling
-functions `AKD1000() <../api_reference/aee_apis.html#akida.AKD1000>`__ and
-`TwoNodesIP() <../api_reference/aee_apis.html#akida.TwoNodesIP>`__.
+functions `AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__ and
+`TwoNodesIP() <../api_reference/akida_apis.html#akida.TwoNodesIP>`__.
 
 Model mapping
 ^^^^^^^^^^^^^
 
 Mapping a model on a specific device is as simple as calling the ``Model``
-`.map() <../api_reference/aee_apis.html#akida.Model.map>`__ method.
+`.map() <../api_reference/akida_apis.html#akida.Model.map>`__ method.
 
 .. code-block:: python
 
@@ -380,16 +380,16 @@ If the Model contains layers that are not hardware compatible or is too big to f
 the device, it will be split in multiple sequences.
 
 The number of sequences, program size for each and how they are mapped are included in
-the ``Model`` `.summary() <../api_reference/aee_apis.html#akida.Model.summary>`__ output
+the ``Model`` `.summary() <../api_reference/akida_apis.html#akida.Model.summary>`__ output
 after it has been mapped on a device.
 
 Advanced Mapping Details and Hardware Devices Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Calling ``Model`` `.map() <../api_reference/aee_apis.html#akida.Model.map>`__ might create more
+Calling ``Model`` `.map() <../api_reference/akida_apis.html#akida.Model.map>`__ might create more
 than one "sequence". In this case, when inference methods are used, each sequence will be chain
 loaded on the device to process the given input. Sequences can be obtained using the ``Model``
-`.sequences() <../api_reference/aee_apis.html#akida.Model.sequences>`__
+`.sequences() <../api_reference/akida_apis.html#akida.Model.sequences>`__
 property, that will return a list of sequence objects. The program used to load
 one sequence can be obtained programmatically.
 
@@ -405,7 +405,7 @@ one sequence can be obtained programmatically.
     print(len(sequence.program))
 
 The information found in the ``Model`` `.summary()
-<../api_reference/aee_apis.html#akida.Model.summary>`__ can be used to
+<../api_reference/akida_apis.html#akida.Model.summary>`__ can be used to
 modify a model to make it fit into less sequences, and program size can be
 used to estimate the flash and memory usage on an embedded system that would
 use the device.
@@ -415,7 +415,7 @@ and the sequences mapped in the Software run on the CPU.
 
 One can also force the model to be mapped as one sequence in the hardware device
 only by setting the parameter ``hw_only`` to True (by default the value is False).
-See the `.map() <../api_reference/aee_apis.html#akida.Model.map>`__ method API for more details.
+See the `.map() <../api_reference/akida_apis.html#akida.Model.map>`__ method API for more details.
 
 Note: an exception will be raised if the Model cannot be mapped entirely on the device.
 
@@ -445,8 +445,8 @@ Learning constraints
 Only the last layer of a model can be trained with Akida Edge Learning and must
 fulfill the following constraints:
 
-* must be of type `FullyConnected <../api_reference/aee_apis.html#fullyconnected>`__
-  or `Convolutional <../api_reference/aee_apis.html#convolutional>`__,
+* must be of type `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__
+  or `Convolutional <../api_reference/akida_apis.html#convolutional>`__,
 
 * must have binary weight,
 
@@ -456,14 +456,14 @@ Compiling a layer
 ^^^^^^^^^^^^^^^^^
 
 For a layer to learn using Akida Edge Learning, it must first be compiled using
-the ``Model`` `.compile <../api_reference/aee_apis.html#akida.Model.compile>`_ method.
+the ``Model`` `.compile <../api_reference/akida_apis.html#akida.Model.compile>`_ method.
 
 The following learning parameters can be specified when compiling a layer:
 
 * ``num_weights``: integer value which defines the number of connections for
   each neuron and is constant across neurons. When determining a value for
   ``num_weights`` note that the total number of available connections for a
-  `Convolutional <../api_reference/aee_apis.html#convolutional>`__
+  `Convolutional <../api_reference/akida_apis.html#convolutional>`__
   layer is not set by the dimensions of the input to the layer, but by the
   dimensions of the kernel. Total connections = ``kernel_size`` x
   ``num_features``, where ``num_features`` is typically the ``filters`` or
