@@ -36,7 +36,7 @@ training deep learning models.
 #    height x channels matrix.
 #
 # .. Note:: At this point, we'll set aside the raw data for testing our
-#           converted model in the Akida Execution Engine later.
+#           converted model in the Akida runtime later.
 #
 # 2. Rescale the 8-bit loaded data to the range 0-to-1 for training.
 #
@@ -50,7 +50,7 @@ training deep learning models.
 #           to zero-mean) can make a really major difference.
 #
 #           Also note that we store the scaling values ``input_scaling`` for
-#           use when preparing the model for the Akida Execution Engine. The
+#           use when preparing the model for the Akida neuromorphic IP. The
 #           implementation of the Akida neural network allows us to completely
 #           skip the rescaling step (i.e. the Akida model should be fed with
 #           the raw 8-bit values) but that does require information about what
@@ -67,7 +67,7 @@ from tensorflow import keras
 x_train = x_train.reshape(60000, 28, 28, 1)
 x_test = x_test.reshape(10000, 28, 28, 1)
 
-# Set aside raw test data for use with Akida Execution Engine later
+# Set aside raw test data for use with Akida runtime later
 raw_x_test = x_test.astype('uint8')
 raw_y_test = y_test
 
@@ -245,7 +245,7 @@ print('Test accuracy after fine tuning:', score[1])
 # be converted to a model suitable to be used in the Akida NSoC in inference
 # mode. The `convert <../../api_reference/cnn2snn_apis.html#convert>`__
 # function returns a model in Akida format, ready for the Akida NSoC or the
-# Akida Execution Engine.
+# Akida software simulator.
 #
 # .. Note:: One needs to supply the coefficients used to rescale the input
 #           dataset before the training - here ``input_scaling``.

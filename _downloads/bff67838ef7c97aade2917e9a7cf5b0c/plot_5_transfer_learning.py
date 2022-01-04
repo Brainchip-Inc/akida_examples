@@ -314,7 +314,7 @@ print(f"Quantized Keras accuracy: {keras_accuracy*100:.2f} %")
 #     remember that the conversion process needs to know what scaling was
 #     applied during Keras training, in order to compensate (see
 #     `CNN2SNN guide <../../user_guide/cnn2snn.html#input-scaling>`__)
-#   * The Akida `evaluate <../../api_reference/aee_apis.html#akida.Model.evaluate>`__
+#   * The Akida `evaluate <../../api_reference/akida_apis.html#akida.Model.evaluate>`__
 #     function takes a NumPy array containing the images and returns potentials
 #     before the sigmoid activation. We must therefore explicitly apply the
 #     'sigmoid' activation on the model outputs to obtain the Akida

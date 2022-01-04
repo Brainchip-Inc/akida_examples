@@ -91,7 +91,7 @@ model_akida = convert(model_keras)
 # 3.2 Check hardware compliancy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The `Model.summary <../../api_reference/aee_apis.html#akida.Model.summary>`__
+# The `Model.summary <../../api_reference/akida_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 
 model_akida.summary()
