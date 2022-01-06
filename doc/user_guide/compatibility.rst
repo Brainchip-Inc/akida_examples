@@ -10,9 +10,12 @@ Upgrading models with legacy quantizers
 
 The ``WeightQuantizer`` and ``TrainableWeightQuantizer`` objects from the
 CNN2SNN tool have been renamed to ``StdWeightQuantizer`` and
-``TrainableStdWeightQuantizer`` in version **1.8.10**. This introduces an
-incompatibility as models containing object with deprecated names will not be
-recognised anymore and thus cannot be loaded using
+``TrainableStdWeightQuantizer`` in version **1.8.10**.
+
+.. note:: ``TrainableStdWeightQuantizer`` is deprecated since version 2.1.0.
+
+This introduces an incompatibility as models containing object with deprecated
+names will not be recognised anymore and thus cannot be loaded using
 `cnn2snn.load_quantized_model <../api_reference/cnn2snn_apis.html#load-quantized-model>`_.
 
 In fact, loading such models would lead to the following error:

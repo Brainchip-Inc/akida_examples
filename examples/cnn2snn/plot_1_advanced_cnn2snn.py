@@ -45,12 +45,9 @@ customizable quantization of weights and activations.
 # that defines how the weights are discretized for a given bitwidth. Some
 # quantizers are proposed in the CNN2SNN API:
 #
-# * **StdWeightQuantizer** and **TrainableStdWeightQuantizer**: these two
-#   quantizers use the standard deviation of the weights to compute
-#   the range on which weights are discretized. The *StdWeightQuantizer* uses
-#   a range equal to a fixed number of standard deviations. The trainable
-#   version uses a variable number of standard deviations where this number
-#   is a trainable parameter of the model.
+# * **StdWeightQuantizer** : this quantizer use the standard deviation of the
+#   weights to compute the range on which weights are discretized. The range is
+#   equal to a fixed number of standard deviations.
 # * **MaxQuantizer** and **MaxPerAxisQuantizer**: these discretize on
 #   a range based on the maximum of the absolute value of the weights. The
 #   *MaxQuantizer* discretizes all weights within a layer based on their global

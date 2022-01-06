@@ -55,12 +55,6 @@ CNN2SNN Toolkit API
         :members:
         :show-inheritance:
 
-    TrainableStdWeightQuantizer
-    ---------------------------
-    .. autoclass:: TrainableStdWeightQuantizer
-        :members:
-        :show-inheritance:
-
     MaxQuantizer
     ------------
     .. autoclass:: MaxQuantizer
