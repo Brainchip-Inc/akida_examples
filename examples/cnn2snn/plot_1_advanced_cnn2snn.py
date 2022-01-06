@@ -96,28 +96,6 @@ customizable quantization of weights and activations.
 #           `ActivationDiscreteRelu <../../api_reference/cnn2snn_apis.html#activationdiscreterelu>`__
 #           layers.
 #
-# Load pre-trained weights from a native Keras model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# In a standard quantization-aware training workflow, the pre-trained weights
-# from a native Keras model are loaded into the equivalent quantized model.
-# Weight quantizers and activation layers, such as the
-# *TrainableWeightQuantizer* and the *QuantizedReLU*, have trainable variables
-# (also called "weights" in Keras). For example, if a *Conv2D* layer with two
-# weights (convolutional weights and bias) is replaced by a *QuantizedConv2D*
-# with a TrainableWeightQuantizer, the new quantized layer has then three
-# weights: convolutional weights, bias and the quantizer variable.
-# Thus, the total number of weights in the quantized CNN2SNN model is larger,
-# compared to the equivalent native Keras model. Directly loading pre-trained
-# weights from the native Keras model using the Keras ``load_weights`` function
-# will then fail, as it expects that both source and destination models have
-# the same number of weights.
-#
-# To circumvent this issue, the ``cnn2snn.load_partial_weights`` function loads
-# weights, even with extra variables, in the new model, provided that the
-# layer names in the two models are identical. We therefore recommend using the
-# same names in both native and quantized models.
-#
 #
 # Create a quantized model
 # ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -182,17 +160,6 @@ model_quantized = Sequential([
 ])
 
 model_quantized.summary()
-
-######################################################################
-# As detailed in the summary, the *QuantizedReLU* layer has two trainable
-# parameters. The quantized model has then two parameters more than the
-# native Keras model. To load weights from the native model, we then
-# use the provided ``load_partial_weights`` function. Remember that both
-# models must have the same layer names.
-
-from cnn2snn import load_partial_weights
-
-load_partial_weights(model_quantized, model_keras)
 
 ######################################################################
 # .. _weight-quantizer-section:
