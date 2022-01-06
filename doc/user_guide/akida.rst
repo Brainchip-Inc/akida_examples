@@ -445,8 +445,7 @@ Learning constraints
 Only the last layer of a model can be trained with Akida Edge Learning and must
 fulfill the following constraints:
 
-* must be of type `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__
-  or `Convolutional <../api_reference/akida_apis.html#convolutional>`__,
+* must be of type `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__,
 
 * must have binary weight,
 
