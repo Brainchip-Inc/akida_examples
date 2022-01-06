@@ -51,6 +51,12 @@ CNN2SNN Toolkit API
         :members:
         :show-inheritance:
 
+    StdPerAxisQuantizer
+    -------------------
+    .. autoclass:: StdPerAxisQuantizer
+        :members:
+        :show-inheritance:
+
     MaxQuantizer
     ------------
     .. autoclass:: MaxQuantizer
