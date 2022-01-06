@@ -128,11 +128,9 @@ Akida runtime API
     .. autoclass:: akida.core.SocDriver
         :members:
 
-    soc
-    ---
+    ClockMode
+    ---------
     .. autoclass:: akida.core.soc.ClockMode
-    .. autofunction:: akida.core.soc.get_clock_mode
-    .. autofunction:: akida.core.soc.set_clock_mode
 
 
     PowerMeter
