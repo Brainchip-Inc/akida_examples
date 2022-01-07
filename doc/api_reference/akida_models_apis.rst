@@ -51,10 +51,6 @@ Akida models API
     ~~~~~~~~
     .. autofunction:: akida_models.mobilenet_imagenet
     .. autofunction:: akida_models.mobilenet_imagenet_pretrained
-    .. autofunction:: akida_models.mobilenet_imagenette_pretrained
-    .. autofunction:: akida_models.mobilenet_cats_vs_dogs_pretrained
-    .. autofunction:: akida_models.mobilenet_faceidentification_pretrained
-    .. autofunction:: akida_models.mobilenet_faceverification_pretrained
     .. autofunction:: akida_models.mobilenet_edge_imagenet
     .. autofunction:: akida_models.mobilenet_edge_imagenet_pretrained
 
@@ -101,10 +97,6 @@ Akida models API
     ~~~~~~~~
     .. autofunction:: akida_models.vgg_imagenet
     .. autofunction:: akida_models.vgg_imagenet_pretrained
-    .. autofunction:: akida_models.vgg_melanoma_pretrained
-    .. autofunction:: akida_models.vgg_odir5k_pretrained
-    .. autofunction:: akida_models.vgg_retinal_oct_pretrained
-    .. autofunction:: akida_models.vgg_ecg_pretrained
 
     UTK Face
     ~~~~~~~~
