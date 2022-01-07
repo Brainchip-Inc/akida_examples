@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.0.5
+                MetaTF 2.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -127,20 +127,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/hw_constraints.html">Hardware constraints</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#akida-nsoc-pre-production">Akida NSoC (Pre-production)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#inputconvolutional">InputConvolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#convolutional">Convolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#separableconvolutional">SeparableConvolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#fullyconnected">FullyConnected</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#akida-nsoc-production">Akida NSoC (Production)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#id1">InputConvolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#id2">Convolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#id3">SeparableConvolutional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/hw_constraints.html#id4">FullyConnected</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#inputconvolutional">InputConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#convolutional">Convolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#separableconvolutional">SeparableConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#fullyconnected">FullyConnected</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../user_guide/compatibility.html">Akida versions compatibility</a><ul>
@@ -184,7 +174,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#hwdevice">HWDevice</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id4">HWDevice</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#socdriver">SocDriver</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#soc">soc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#clockmode">ClockMode</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
@@ -203,14 +193,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#load-quantized-model">load_quantized_model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#load-partial-weights">load_partial_weights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizers">Quantizers</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#linearweightquantizer">LinearWeightQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#stdweightquantizer">StdWeightQuantizer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#trainablestdweightquantizer">TrainableStdWeightQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#stdperaxisquantizer">StdPerAxisQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#maxquantizer">MaxQuantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#maxperaxisquantizer">MaxPerAxisQuantizer</a></li>
 </ul>
@@ -429,215 +418,10 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;Various utility methods</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">A set of functions to convert a Keras (tf.keras) model to a new</span>
-<span class="sd">equivalent model with different characteristics. Then, the new model</span>
-<span class="sd">can be quantized.</span>
-
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
-                          <span class="n">GlobalAveragePooling2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">load_model</span><span class="p">,</span> <span class="n">model_from_json</span><span class="p">,</span> <span class="n">clone_model</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
-                                  <span class="n">QuantizedDense</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.transforms.sequential</span> <span class="kn">import</span> <span class="n">compute_BN_folded_weights</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
 <span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
-
-
-<span class="k">def</span> <span class="nf">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a new model where pooling and batchnorm layers are inverted.</span>
-<span class="sd">    From a Keras model where pooling layers precede batch normalization</span>
-<span class="sd">    layers, this function places the BN layers before pooling layers. This</span>
-<span class="sd">    is the first step before folding BN layers into neural layers.</span>
-<span class="sd">    Note: inversion of layers is equivalent only if the gammas of BN layers</span>
-<span class="sd">    are positive. The function raises an error if not.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a tf.keras model.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tf.keras.Model`: a keras.Model.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Maps between successive pooling-&gt;batchnorm layers. These pairs will be</span>
-    <span class="c1"># inverted when cloning the model.</span>
-    <span class="n">pool2bn_map</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">bn2pool_map</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="c1"># We map BatchNormalization layers that have only one inbound layer</span>
-        <span class="c1"># being a MaxPool2D or GlobalAveragePooling2D.</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span> <span class="ow">and</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span><span class="p">,</span>
-                           <span class="p">(</span><span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">))):</span>
-            <span class="n">bn2pool_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
-            <span class="n">pool2bn_map</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span>
-
-    <span class="k">def</span> <span class="nf">replace_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">pool2bn_map</span><span class="p">:</span>
-            <span class="c1"># Replace pooling layer with the corresponding BN layer</span>
-            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">pool2bn_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
-            <span class="n">config_bn</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span><span class="p">):</span>
-                <span class="n">config_bn</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">layer_bn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config_bn</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">bn2pool_map</span><span class="p">:</span>
-            <span class="c1"># Replace BN layer with the corresponding pooling layer</span>
-            <span class="n">layer_pool</span> <span class="o">=</span> <span class="n">bn2pool_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">layer_pool</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer_pool</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
-
-    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
-        <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="n">new_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
-
-    <span class="k">return</span> <span class="n">new_model</span>
-
-
-<span class="k">def</span> <span class="nf">fold_batch_norms</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a new model where batchnorm layers are folded into</span>
-<span class="sd">    previous neural layers.</span>
-
-<span class="sd">    From a Keras model where BN layers follow neural layers, this</span>
-<span class="sd">    function removes the BN layers and updates weights and bias</span>
-<span class="sd">    accordingly of the preceding neural layers. The new model is</span>
-<span class="sd">    strictly equivalent to the previous one.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a Keras model.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tf.keras.Model`: a tf.keras.Model.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Copy model in order to modify before cloning.</span>
-    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
-        <span class="n">model_copy</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-    <span class="n">model_copy</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
-
-    <span class="c1"># Get BN layers to fold, mapping with the preceding neural layer and the</span>
-    <span class="c1"># following layer if present.</span>
-    <span class="n">map_neural_layer_to_bn</span><span class="p">,</span> <span class="n">map_bn_to_next_layer</span> <span class="o">=</span> <span class="n">_find_batchnorms_to_fold</span><span class="p">(</span>
-        <span class="n">model_copy</span><span class="p">)</span>
-
-    <span class="c1"># Update model before cloning: remove BN layers, update inbound nodes and</span>
-    <span class="c1"># output layers</span>
-    <span class="n">_prepare_model_to_fold_BN</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span>
-                              <span class="n">map_bn_to_next_layer</span><span class="p">)</span>
-
-    <span class="c1"># Clone model (BN layers will disappear)</span>
-    <span class="k">def</span> <span class="nf">replace_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="c1"># Set use_bias=True in neural layers where BN layers are folded, to</span>
-        <span class="c1"># accept new computed weights</span>
-        <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
-        <span class="n">model_foldBN</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model_copy</span><span class="p">,</span> <span class="n">clone_function</span><span class="o">=</span><span class="n">replace_layer</span><span class="p">)</span>
-
-    <span class="c1"># Set weights in the new model</span>
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model_copy</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="p">:</span>
-            <span class="n">model_foldBN</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Set new weights</span>
-            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">map_neural_layer_to_bn</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
-            <span class="n">new_weights</span> <span class="o">=</span> <span class="n">compute_BN_folded_weights</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layer_bn</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">model_foldBN</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">model_foldBN</span>
-
-
-<span class="k">def</span> <span class="nf">_find_batchnorms_to_fold</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Detect BatchNormalization layers that can be folded.</span>
-
-<span class="sd">    We limit to BN layers that follow supported neural layer types. Moreover,</span>
-<span class="sd">    we only fold BN layers with one inbound/outbound node, in order to avoid</span>
-<span class="sd">    layers with multiple nodes (e.g. layers used multiple times in the model</span>
-<span class="sd">    or in other models).</span>
-
-<span class="sd">    The function returns two maps (dict):</span>
-<span class="sd">    - one between the neural layer and its BN layer to be folded</span>
-<span class="sd">    - one between the BN layer and its following layer (it if exists)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">supported_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">,</span>
-                        <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">)</span>
-
-    <span class="c1"># Map between a neural layer and its following BN layer, and map between</span>
-    <span class="c1"># the BN layer and its next layer.</span>
-    <span class="n">map_neural_layer_to_bn</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">map_bn_to_next_layer</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="c1"># Find triplet &quot;neural layer -&gt; BN -&gt; next layer&quot;</span>
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="c1"># Find a neural layer followed by a BN layer</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">supported_layers</span> <span class="ow">and</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)):</span>
-
-            <span class="n">layer_bn</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span>
-            <span class="c1"># To be folded, BN layer must have only one inbound node and</span>
-            <span class="c1"># no more than one outbound node.</span>
-            <span class="n">bn_outbounds</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">outbound_nodes</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_bn</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn_outbounds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">continue</span>
-
-            <span class="n">map_neural_layer_to_bn</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_bn</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn_outbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">map_bn_to_next_layer</span><span class="p">[</span><span class="n">layer_bn</span><span class="p">]</span> <span class="o">=</span> <span class="n">bn_outbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span>
-
-    <span class="k">return</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span> <span class="n">map_bn_to_next_layer</span>
-
-
-<span class="k">def</span> <span class="nf">_prepare_model_to_fold_BN</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">map_neural_layer_to_bn</span><span class="p">,</span>
-                              <span class="n">map_bn_to_next_layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Prepare model to be cloned with folded BatchNormalization layers.</span>
-
-<span class="sd">    To fold BN layers by using &quot;clone_model&quot;, the model must be prepared by</span>
-<span class="sd">    modifying some internal variables, such as _layers, _output_layers or</span>
-<span class="sd">    _inbound_nodes.</span>
-
-<span class="sd">    Three operations are done here:</span>
-<span class="sd">    1. Remove BN layers from model.layers.</span>
-<span class="sd">    2. Bypass BN layers in the graph by updating inbound nodes of the layers</span>
-<span class="sd">       following the BN layers. The new inbound nodes are the neural layers</span>
-<span class="sd">       preceding the BN layers.</span>
-<span class="sd">    3. If a BN layer is an output layer of the model, the preceding neural</span>
-<span class="sd">       layer must be added to the new output layers.</span>
-
-<span class="sd">    The model instance and the layers are directly modified in this function.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Remove BN layers from model.layers.</span>
-    <span class="k">for</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">_self_tracked_trackables</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">layer_bn</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
-
-    <span class="c1"># Update inbound nodes as there is no BN between neural layer and</span>
-    <span class="c1"># following layer. Inbound nodes are used in &quot;clone_layer&quot; function to</span>
-    <span class="c1"># create the model architecture. Here, we replace the inbound node of the</span>
-    <span class="c1"># next layer with the inbound node of the BN layer, in order to bypass the</span>
-    <span class="c1"># BN layer.</span>
-    <span class="k">for</span> <span class="n">layer_bn</span><span class="p">,</span> <span class="n">next_layer</span> <span class="ow">in</span> <span class="n">map_bn_to_next_layer</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># pylint: disable=protected-access</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">node_index</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="n">next_layer</span><span class="o">.</span><span class="n">_inbound_nodes</span><span class="p">[</span><span class="n">node_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_bn</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="c1"># If BN layer is an output layer, replace it with its</span>
-    <span class="c1"># inbound layer</span>
-    <span class="k">for</span> <span class="n">neural_layer</span><span class="p">,</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">map_neural_layer_to_bn</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># pylint: disable=protected-access</span>
-        <span class="k">if</span> <span class="n">layer_bn</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="p">:</span>
-            <span class="c1"># Replace BN layer in _output_layers and _output_coordinates</span>
-            <span class="n">index_bn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">layer_bn</span><span class="p">)</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">_output_layers</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="n">neural_layer</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">_output_coordinates</span><span class="p">[</span><span class="n">index_bn</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">neural_layer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="load_quantized_model"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.load_quantized_model">[docs]</a><span class="k">def</span> <span class="nf">load_quantized_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compile_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -660,76 +444,6 @@
         <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">all_objects</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">custom_objects</span><span class="p">,</span> <span class="o">**</span><span class="n">cnn2snn_objects</span><span class="p">}</span>
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">all_objects</span><span class="p">,</span> <span class="n">compile_model</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="load_partial_weights"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.load_partial_weights">[docs]</a><span class="k">def</span> <span class="nf">load_partial_weights</span><span class="p">(</span><span class="n">dest_model</span><span class="p">,</span> <span class="n">src_model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loads a subset of weights from one Keras model to another</span>
-
-<span class="sd">    This goes through each layers of the source model, looking for a matching</span>
-<span class="sd">    layer in the destination model.</span>
-<span class="sd">    If a layer with the same name is found, then this method assumes that one</span>
-<span class="sd">    of the two layer has the same set of weights as the other plus some extra</span>
-<span class="sd">    weights at the end, and loads only the first common weights into the</span>
-<span class="sd">    destination layer.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        dest_model(:obj:`keras.Model`): the destination Model</span>
-<span class="sd">        src_model(:obj:`keras.Model`): the source Model</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">src_layer</span> <span class="ow">in</span> <span class="n">src_model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="n">src_weights</span> <span class="o">=</span> <span class="n">src_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-        <span class="n">dest_layer</span> <span class="o">=</span> <span class="n">dest_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">src_layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">dest_weights</span> <span class="o">=</span> <span class="n">dest_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-        <span class="c1"># Take the minimum of the two lists of weights</span>
-        <span class="n">n_weights</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">src_weights</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dest_weights</span><span class="p">))</span>
-        <span class="c1"># Only replace the first weights</span>
-        <span class="n">dest_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_weights</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n_weights</span><span class="p">]</span>
-        <span class="n">dest_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">dest_weights</span><span class="p">)</span></div>
-
-
-<span class="k">def</span> <span class="nf">create_trainable_quantizer_model</span><span class="p">(</span><span class="n">quantized_model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a legacy quantized model to a model using trainable quantizers.</span>
-
-<span class="sd">    Legacy cnn2snn models have fixed quantization schemes. This method converts</span>
-<span class="sd">    such a model to an equivalent model using trainable quantizers.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        quantized_model(str, :obj:`keras.Model`): a keras Model or a</span>
-<span class="sd">        path to a keras Model file</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`keras.Model`: a Keras Model instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantized_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="c1"># Load the model at the specified path</span>
-        <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">quantized_model</span><span class="p">)</span>
-    <span class="c1"># Dump model configuration in a JSON string</span>
-    <span class="n">json_string</span> <span class="o">=</span> <span class="n">quantized_model</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
-    <span class="c1"># Edit the model configuration to replace static quantizers by trainable</span>
-    <span class="c1"># ones</span>
-    <span class="n">json_string</span> <span class="o">=</span> <span class="n">json_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;StdWeightQuantizer&quot;</span><span class="p">,</span>
-                                      <span class="s2">&quot;TrainableStdWeightQuantizer&quot;</span><span class="p">)</span>
-    <span class="n">json_string</span> <span class="o">=</span> <span class="n">json_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;ActivationDiscreteRelu&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">)</span>
-    <span class="c1"># Create a new model from the modified configuration</span>
-    <span class="n">new_model</span> <span class="o">=</span> <span class="n">model_from_json</span><span class="p">(</span><span class="n">json_string</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="n">cnn2snn_objects</span><span class="p">)</span>
-    <span class="c1"># Transfer weights to the new model</span>
-    <span class="n">load_partial_weights</span><span class="p">(</span><span class="n">new_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">new_model</span>
-
-
-<span class="k">def</span> <span class="nf">chain_cloned_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This function creates a hard copy of a layer and apply to it the</span>
-<span class="sd">    tf.Tensor x.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-    <span class="n">new_layer</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">new_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">new_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">out</span>
 </pre></div>
 
            </div>
