@@ -6,8 +6,8 @@ Overview
 --------
 
 Brainchip akida_models package is a model zoo that offers a set of pre-built
-akida compatible models (e.g Mobilenet or VGG), pretrained weights for those
-models and training scripts.
+akida compatible models (e.g Mobilenet, VGG or AkidaNet), pretrained weights for
+those models and training scripts.
 
 See the `model zoo API reference
 <../api_reference/akida_models_apis.html#model-zoo>`_ for a complete list of the
@@ -50,15 +50,15 @@ A model named ``my_vgg_network.h5`` is saved under the models directory
 (providing the directory exists).
 
 Some models come with additional parameters that allow a deeper configuration.
-That is the case for the MobileNet, Mobilenet edge and YOLO models. Examples
-are given below.
+That is the case for the AkidaNet, AkidaNet edge, MobileNet, Mobilenet edge and
+YOLO models. Examples are given below.
 
-To build a MobileNet model with a 64x64 input size, alpha parameter (model
+To build an AkidaNet model with a 64x64 input size, alpha parameter (model
 width) equal to 0.35 and 250 classes:
 
 .. code-block:: bash
 
-    akida_models create mobilenet_imagenet -i 64 -a 0.35 -c 250
+    akida_models create akidanet_imagenet -i 64 -a 0.35 -c 250
 
 To create a YOLO model with 20 classes, 5 anchors and a model width of 0.5:
 
@@ -71,11 +71,11 @@ The full parameter list with description can be obtained using the  ``-h`` or
 
 .. code-block:: bash
 
-    akida_models create mobilenet_imagenet -h
+    akida_models create akidanet_imagenet -h
 
-    usage: akida_models create mobilenet_imagenet [-h]
-                                              [-i {32,64,96,128,160,192,224}]
-                                              [-a ALPHA] [-c CLASSES]
+    usage: akida_models create akidanet_imagenet [-h]
+                                                 [-i {32,64,96,128,160,192,224}]
+                                                 [-a ALPHA] [-c CLASSES]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -93,9 +93,11 @@ Current available models for creation are:
  * vgg_utk_face
  * ds_cnn_kws
  * pointnet_plus_modelnet40
+ * akidanet_imagenet
+ * akidanet_imagenet_edge
  * mobilenet_imagenet
- * vgg_imagenet
  * mobilenet_imagenet_edge
+ * vgg_imagenet
  * yolo_base
  * convtiny_cwru
  * gxnor_mnist
@@ -227,26 +229,26 @@ YOLO training pipeline uses the ``yolo_base`` model and the CNN2SNN
 **Example**
 
 Create a YOLO model for VOC car/person training, use transfer learning from
-MobileNet weights trained on ImageNet and perform step-wise quantization to
+AkidaNet weights trained on ImageNet and perform step-wise quantization to
 obtain a network with 4-bit weights and activations. Note that the backbone
-MobileNet layers are frozen (i.e not trainable) when performing float training
+AkidaNet layers are frozen (i.e not trainable) when performing float training
 using the `--freeze_before` or `-fb` option.
 
 .. code-block:: bash
 
-   wget http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_alpha_50.h5
+   wget http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5
 
-   akida_models create -s yolo_voc.h5 yolo_base -c 2 -bw mobilenet_imagenet_alpha_50.h5
+   akida_models create -s yolo_akidanet_voc.h5 yolo_base -c 2 -bw akidanet_imagenet_alpha_50.h5
 
-   yolo_train train -d voc_preprocessed.pkl -m yolo_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_voc.h5
+   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
 
-   cnn2snn quantize -m yolo_voc.h5 -iq 8 -wq 8 -aq 8
+   cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 8 -aq 8
 
-   yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq8_aq8.h5
+   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq8_aq8.h5
 
-   cnn2snn quantize -m yolo_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
+   cnn2snn quantize -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
 
-   yolo_train train -d voc_preprocessed.pkl -m yolo_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_voc_iq8_wq4_aq4.h5
+   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
 
 
 Command-line interface for model evaluation
