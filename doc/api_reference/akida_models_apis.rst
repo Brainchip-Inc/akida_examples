@@ -44,15 +44,25 @@ Akida models API
     Model zoo
     =========
 
-    Mobilenet
-    ---------
+    AkidaNet
+    --------
 
     ImageNet
     ~~~~~~~~
-    .. autofunction:: akida_models.mobilenet_imagenet
-    .. autofunction:: akida_models.mobilenet_imagenet_pretrained
-    .. autofunction:: akida_models.mobilenet_edge_imagenet
-    .. autofunction:: akida_models.mobilenet_edge_imagenet_pretrained
+    .. autofunction:: akida_models.akidanet_imagenet
+    .. autofunction:: akida_models.akidanet_imagenet_pretrained
+    .. autofunction:: akida_models.akidanet_edge_imagenet
+    .. autofunction:: akida_models.akidanet_edge_imagenet_pretrained
+    .. autofunction:: akida_models.akidanet_imagenette_pretrained
+    .. autofunction:: akida_models.akidanet_cats_vs_dogs_pretrained
+    .. autofunction:: akida_models.akidanet_faceidentification_pretrained
+    .. autofunction:: akida_models.akidanet_faceidentification_edge_pretrained
+    .. autofunction:: akida_models.akidanet_faceverification_pretrained
+    .. autofunction:: akida_models.akidanet_melanoma_pretrained
+    .. autofunction:: akida_models.akidanet_odir5k_pretrained
+    .. autofunction:: akida_models.akidanet_retinal_oct_pretrained
+    .. autofunction:: akida_models.akidanet_ecg_pretrained
+    .. autofunction:: akida_models.akidanet_plantvillage_pretrained
 
     Preprocessing
     *************
@@ -63,6 +73,16 @@ Akida models API
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
     .. autofunction:: akida_models.imagenet.preprocessing.resize_and_crop
+
+    Mobilenet
+    ---------
+
+    ImageNet
+    ~~~~~~~~
+    .. autofunction:: akida_models.mobilenet_imagenet
+    .. autofunction:: akida_models.mobilenet_imagenet_pretrained
+    .. autofunction:: akida_models.mobilenet_edge_imagenet
+    .. autofunction:: akida_models.mobilenet_edge_imagenet_pretrained
 
     DS-CNN
     ------
