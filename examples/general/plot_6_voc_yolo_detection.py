@@ -22,8 +22,8 @@ tackle this object detection problem.
 # Object detection is a computer vision task that combines two elemental tasks:
 #
 #  - object classification that consists in assigning a class label to an image
-#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the `MobileNet
-#    ImageNet <plot_2_mobilenet_imagenet.html>`_ example
+#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the
+#    `AkidaNet/ImageNet inference <plot_2_akidanet_imagenet.html>`_ example
 #  - object localization that consists in drawing a bounding box around one or
 #    several objects in an image
 #

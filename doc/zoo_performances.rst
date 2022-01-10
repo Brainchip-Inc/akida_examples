@@ -21,7 +21,7 @@ Classification
 
 .. |an_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_2_mobilenet_imagenet.html
+   :target: examples/general/plot_2_akidanet_imagenet.html
 
 .. |an_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %

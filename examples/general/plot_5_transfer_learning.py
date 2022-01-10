@@ -46,7 +46,7 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # The base model is a quantized version of MobileNet v1. This
 # model was trained and quantized using the ImageNet dataset. Please refer
-# to the corresponding `example <plot_2_mobilenet_imagenet.html>`__ for
+# to the corresponding `example <plot_2_akidanet_imagenet.html>`__ for
 # more information. The layers have 4-bit weights (except for the first
 # layer having 8-bit weights) and the activations are quantized to 4 bits.
 # This base model ends with a classification layer for 1000 classes. To
@@ -183,8 +183,8 @@ print(f"Test set composed of {num_images} images: "
 #
 # Here, we instantiate a quantized Keras model based on a MobileNet model.
 # This base model was previously trained using the 1000 classes of the
-# ImageNet dataset. For more information, please see the `ImageNet
-# tutorial <plot_2_mobilenet_imagenet.html>`__.
+# ImageNet dataset. For more information, please see the `AkidaNet/ImageNet
+# tutorial <plot_2_akidanet_imagenet.html>`__.
 #
 # The quantized MobileNet model satisfies the Akida NSoC requirements:
 #
