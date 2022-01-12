@@ -36,9 +36,13 @@ platform:
 steps:
 - name: build
   image: bender:5000/doc_build:akida-gpu_tf261
+  privileged: true
   commands:
   - pip install -r requirements.txt
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
+  volumes:
+    - name: akida_chip
+      path: /dev/pedd0
 
 - name: update_gh_pages
   image: bender:5000/drone/git:linux
@@ -58,6 +62,11 @@ steps:
   - git add .
   - git diff --quiet && git diff --staged --quiet || git commit -am "Automated tutorials push"
   - git push origin gh-pages
+
+volumes:
+- name: akida_chip
+  host:
+    path: /dev/pedd0
 
 node:
   hw: gpu
@@ -83,11 +92,20 @@ platform:
 steps:
 - name: build
   image: bender:5000/doc_build:akida-gpu_tf261
+  privileged: true
   commands:
   - pip install -r requirements.txt
   - pip install --index-url http://bender.brainchipinc.local:81/ --trusted-host bender.brainchipinc.local --pre -U cnn2snn
   - pip install --index-url http://bender.brainchipinc.local:81/ --trusted-host bender.brainchipinc.local --pre -U akida_models
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
+  volumes:
+    - name: akida_chip
+      path: /dev/pedd0
+
+volumes:
+- name: akida_chip
+  host:
+    path: /dev/pedd0
 
 node:
   hw: gpu
