@@ -78,12 +78,6 @@ CNN2SNN Toolkit API
         :members:
         :show-inheritance:
 
-    QuantizedDepthwiseConv2D
-    ------------------------
-    .. autoclass:: QuantizedDepthwiseConv2D
-        :members:
-        :show-inheritance:
-
     QuantizedDense
     --------------
     .. autoclass:: QuantizedDense
