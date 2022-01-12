@@ -1,13 +1,13 @@
 """
-MobileNet/ImageNet inference
+AkidaNet/ImageNet inference
 ============================
 
-This CNN2SNN tutorial presents how to convert a MobileNet pre-trained
-model into Akida.
+This CNN2SNN tutorial presents how to convert an AkidaNet pre-trained model into
+Akida.
 
-As ImageNet images are not publicly available, performances
-are assessed using a set of 10 copyright free images that were found on Google
-using ImageNet class names.
+As ImageNet images are not publicly available, performances are assessed using a
+set of 10 copyright free images that were found on Google using ImageNet class
+names.
 
 """
 
@@ -63,11 +63,6 @@ for id in range(num_images):
 print(f'{num_images} images loaded and preprocessed.')
 
 ######################################################################
-# .. Note:: Akida runtime is configured to take 8-bit inputs without
-#           rescaling. For conversion, rescaling values used for
-#           training the Keras model are needed.
-#
-#
 # Labels for test images are stored in the akida_models package. The matching
 # between names (*string*) and labels (*integer*) is given through the
 # ``imagenet.preprocessing.index_to_label`` method.
@@ -88,24 +83,24 @@ for i in range(num_images):
     labels_test[i] = int(validation_labels[x_test_files[i]])
 
 ######################################################################
-# 2. Create a Keras MobileNet model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. Create a Keras AkidaNet model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The MobileNet architecture is available in the Akida model zoo as
-# `mobilenet_imagenet <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_.
+# The AkidaNet architecture is available in the Akida model zoo as
+# `akidanet_imagenet <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_.
 
 from tensorflow.keras.models import load_model
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
-    "mobilenet_imagenet.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224.h5",
-    cache_subdir='models/mobilenet_imagenet')
+    "akidanet_imagenet.h5",
+    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_224.h5",
+    cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# Top-1 accuracy on the actual ImageNet is 71.89%, the perfomance given below
+# Top-1 accuracy on the actual ImageNet is 71.92%, the perfomance given below
 # uses the 10 images subset.
 
 from timeit import default_timer as timer
@@ -148,7 +143,7 @@ check_model_performances(model_keras)
 # +----------------+--------------------+
 # | Float accuracy | Quantized accuracy |
 # +================+====================+
-# |     71.89 %    |        2.70 %      |
+# |     71.92 %    |        28.77 %     |
 # +----------------+--------------------+
 #
 
@@ -166,8 +161,8 @@ check_model_performances(model_keras_quantized)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The Akida models zoo also contains a `pretrained quantized helper
-# <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained>`_
-# that was obtained after fine tuning the model for 30 epochs.
+# <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained>`_
+# that was obtained after fine tuning the model for 10 epochs.
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
 # recover performances up to the initial floating point accuracy.
@@ -177,13 +172,13 @@ check_model_performances(model_keras_quantized)
 # +----------------+--------------------+--------------------+
 # | Float accuracy | Quantized accuracy |     After tuning   |
 # +================+====================+====================+
-# |     71.89 %    |       2.70 %       |       69.62 %      |
+# |     71.92 %    |       28.77 %      |       69.87 %      |
 # +----------------+--------------------+--------------------+
 
-from akida_models import mobilenet_imagenet_pretrained
+from akida_models import akidanet_imagenet_pretrained
 
 # Use a quantized model with pretrained quantized weights
-model_keras_quantized_pretrained = mobilenet_imagenet_pretrained()
+model_keras_quantized_pretrained = akidanet_imagenet_pretrained()
 model_keras_quantized_pretrained.summary()
 
 ######################################################################
@@ -226,7 +221,7 @@ model_akida.summary()
 # +----------------+----------------+
 # | Keras accuracy | Akida accuracy |
 # +================+================+
-# |     69.62 %    |     69.53 %    |
+# |     69.87 %    |     69.65 %    |
 # +----------------+----------------+
 
 # Check Model performance
@@ -240,7 +235,7 @@ accuracy_akida = np.sum(np.equal(preds_akida, labels_test)) / num_images
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
 # For non-regression purpose
-assert accuracy_akida >= 0.9
+assert accuracy_akida == 1
 
 ######################################################################
 # 5.4 Show predictions for a random image

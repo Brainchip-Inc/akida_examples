@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.imagenet.model_mobilenet &mdash; Akida Examples  documentation</title>
+  <title>akida_models.imagenet.model_akidanet &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -392,7 +392,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>akida_models.imagenet.model_mobilenet</li>
+      <li>akida_models.imagenet.model_akidanet</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -401,10 +401,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.imagenet.model_mobilenet</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.imagenet.model_akidanet</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2020 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -419,29 +419,24 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">MobileNet model definition for ImageNet classification.</span>
+<span class="sd">AkidaNet model definition for ImageNet classification.</span>
 
-<span class="sd">MobileNet V1 is a general architecture and can be used for multiple use cases.</span>
+<span class="sd">AkidaNet is an NSoC optimized model inspired from VGG and MobileNet V1</span>
+<span class="sd">architectures. It can be used for multiple use cases through transfer learning.</span>
 
-<span class="sd">This specific version includes parameter options to generate a mobilenet version</span>
-<span class="sd">compatible for Akida with:</span>
-<span class="sd">    - overall architecture compatible with Akida (conv stride 2 replaced with</span>
-<span class="sd">     max pool),</span>
-<span class="sd">    - options to quantize weights and activations,</span>
-<span class="sd">    - different initialization options.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
-<span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">get_file</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span>
 
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/mobilenet/&#39;</span>
+<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/akidanet/&#39;</span>
 
 
 <span class="k">def</span> <span class="nf">_obtain_input_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">default_size</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">include_top</span><span class="p">):</span>
@@ -493,18 +488,16 @@
     <span class="k">return</span> <span class="n">input_shape</span>
 
 
-<div class="viewcode-block" id="mobilenet_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                       <span class="n">dropout</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-                       <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                       <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                       <span class="n">use_stride2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                       <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                       <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                       <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
-    <span class="sd">&quot;&quot;&quot;Instantiates the MobileNet architecture.</span>
+<div class="viewcode-block" id="akidanet_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                      <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                      <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Instantiates the AkidaNet architecture.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple): optional shape tuple.</span>
@@ -516,10 +509,9 @@
 <span class="sd">              in each layer.</span>
 <span class="sd">            * If `alpha` = 1, default number of filters from the paper are used</span>
 <span class="sd">              at each layer.</span>
-<span class="sd">        dropout (float): dropout rate</span>
 <span class="sd">        include_top (bool): whether to include the fully-connected</span>
 <span class="sd">            layer at the top of the model.</span>
-<span class="sd">        pooling (str): Optional pooling mode for feature extraction</span>
+<span class="sd">        pooling (str): optional pooling mode for feature extraction</span>
 <span class="sd">            when `include_top` is `False`.</span>
 
 <span class="sd">            * `None` means that the output of the model will be the 4D tensor</span>
@@ -528,9 +520,7 @@
 <span class="sd">              output of the last convolutional block, and thus the output of the</span>
 <span class="sd">              model will be a 2D tensor.</span>
 <span class="sd">        classes (int): optional number of classes to classify images</span>
-<span class="sd">            into, only to be specified if `include_top` is True.</span>
-<span class="sd">        use_stride2 (bool): optional, replace max pooling operations by stride 2</span>
-<span class="sd">            convolutions in layers separable 2, 4, 6 and 12.</span>
+<span class="sd">            into, only to be specified if `include_top` is `True`.</span>
 <span class="sd">        weight_quantization (int): sets all weights in the model to have</span>
 <span class="sd">            a particular quantization bitwidth except for the weights in the</span>
 <span class="sd">            first layer.</span>
@@ -552,7 +542,7 @@
 <span class="sd">            the scale factor is an integer used as a divider.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras model for MobileNet/ImageNet.</span>
+<span class="sd">        keras.Model: a Keras model for AkidaNet/ImageNet.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: in case of invalid input shape.</span>
@@ -561,17 +551,9 @@
     <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
 
-    <span class="c1"># Define weight regularization, will apply to the first convolutional layer</span>
-    <span class="c1"># and to all pointwise weights of separable convolutional layers.</span>
+    <span class="c1"># Define weight regularization, will apply to the convolutional layers and</span>
+    <span class="c1"># to all pointwise weights of separable convolutional layers.</span>
     <span class="n">weight_regularizer</span> <span class="o">=</span> <span class="n">regularizers</span><span class="o">.</span><span class="n">l2</span><span class="p">(</span><span class="mf">4e-5</span><span class="p">)</span>
-
-    <span class="c1"># Define stride 2 or max pooling</span>
-    <span class="k">if</span> <span class="n">use_stride2</span><span class="p">:</span>
-        <span class="n">sep_conv_pooling</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">strides</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">sep_conv_pooling</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span>
-        <span class="n">strides</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="c1"># Determine proper input shape and default size.</span>
     <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -589,9 +571,6 @@
                                       <span class="n">default_size</span><span class="o">=</span><span class="n">default_size</span><span class="p">,</span>
                                       <span class="n">min_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                                       <span class="n">include_top</span><span class="o">=</span><span class="n">include_top</span><span class="p">)</span>
-
-    <span class="n">rows</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">cols</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
 
@@ -612,45 +591,43 @@
                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_1&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_2&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">pooling</span><span class="o">=</span><span class="n">sep_conv_pooling</span><span class="p">,</span>
-                             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_2&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_3&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">pointwise_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">128</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_3&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">kernel_regularizer</span><span class="o">=</span><span class="n">weight_regularizer</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                              <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">256</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_4&#39;</span><span class="p">,</span>
                              <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">pooling</span><span class="o">=</span><span class="n">sep_conv_pooling</span><span class="p">,</span>
-                             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                             <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                              <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -671,8 +648,7 @@
                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_6&#39;</span><span class="p">,</span>
                              <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">pooling</span><span class="o">=</span><span class="n">sep_conv_pooling</span><span class="p">,</span>
-                             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                             <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                              <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -733,8 +709,7 @@
                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_12&#39;</span><span class="p">,</span>
                              <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">pooling</span><span class="o">=</span><span class="n">sep_conv_pooling</span><span class="p">,</span>
-                             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                             <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                              <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -757,7 +732,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">))</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dropout&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dropout&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                                  <span class="n">filters</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
@@ -775,7 +750,8 @@
     <span class="c1"># Create model.</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span>
                   <span class="n">x</span><span class="p">,</span>
-                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mobilenet_</span><span class="si">%0.2f</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">classes</span><span class="p">))</span>
+                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;akidanet_</span><span class="si">%0.2f</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">classes</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
         <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
@@ -784,31 +760,213 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="mobilenet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<div class="viewcode-block" id="akidanet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Helper method to retrieve a `mobilenet_imagenet` model that was trained on</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    ImageNet dataset.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        alpha (float): width of the model.</span>
+<span class="sd">        alpha (float, optional): width of the model, allowed values in [0.25,</span>
+<span class="sd">            0.5, 1]. Defaults to 1.0.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;7d509ed9156af1b8739537d4b16b64fc6ad7320e94638ec8e554c483f6464aaf&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;1be87e301fe9280d137a821de23fe9ac47c4c7e9ec8405f2279fd0ea02a648c7&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;daa6cb88c0422b8218c6aec97925a790aa08c3d52c14d70aec16ddd73a42fd2b&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;bd9ff5d5944d25d220883d2feaff8d34a6cafd3d8a44d98a3307281410781b6e&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;f90f6730ab02279883e0ae372b4d853b01fcf7fe354f5103685c74f119654492&#39;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;6ee45047b9e283576946d2a65e15411bdc82f1e02faf1b684ed0730089aae69c&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
 
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_cats_vs_dogs_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_cats_vs_dogs_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_cats_vs_dogs_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    Cats vs.Dogs dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_cats_vs_dogs_iq8_wq4_aq4_lwq_float.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;7f5d71f828c379503ed9d1c1a37e13611369ee558655c6b3406186a05340d35a&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_imagenette_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenette_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenette_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve a `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    Imagenette dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        alpha (float, optional): width of the model, allowed values in [0.25,</span>
+<span class="sd">            0.5, 1]. Defaults to 1.0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenette_224_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;c99e1249802bb5b6348ca6746416cc9e903ef5c43f52ea734caef15916494904&#39;</span>
+    <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenette_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;6729a203605f527fd0cff76d76275ef74be2f467cd5e3abc9df3d7df54c1c2c9&#39;</span>
+    <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenette_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;c99e1249802bb5b6348ca6746416cc9e903ef5c43f52ea734caef15916494904&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
+
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_faceidentification_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    CASIA Webface dataset and that performs face identification.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;a50a89a5608c1f01bb9ab70ed214be3e249890bc6a41bc179c2a9427020a2c95&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_faceverification_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceverification_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceverification_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    CASIA Webface dataset and optimized with ArcFace that can perform face</span>
+<span class="sd">    verification on LFW.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceverification_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;8e1c47013dc17745901041f2060aa1e2b5f7222749ec5068b3c9549a42eab070&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_melanoma_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_melanoma_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_melanoma_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    SIIM-ISIC Melanoma Classification dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_melanoma_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;844e56a7f5c642504483a19d307a2524d127716bf1d5a6bd4ead389f23b1e99a&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_odir5k_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_odir5k_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_odir5k_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    ODIR-5K dataset.</span>
+
+<span class="sd">    The model focuses on the following classes that are a part of the original</span>
+<span class="sd">    dataset: normal, cataract, AMD (age related macular degeneration) and</span>
+<span class="sd">    pathological myopia.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_odir5k_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;f8af24f8443191b493c1d82eaf3d8377018d056a936c0e9aea0e4fb701328b09&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_retinal_oct_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_retinal_oct_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_retinal_oct_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    retinal OCT dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_retinal_oct_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;4811d9ec9ba46434074d3edfae7733557d4f3cde473bb2d194d3c3200f060b64&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_ecg_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_ecg_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_ecg_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    ECG classification Physionet2017 dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_ecg_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;d3bf3b598e1e0175873e60f39cd5b6cefa874f4d351518f1a788e402d7bfaa6b&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_plantvillage_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_plantvillage_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_plantvillage_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
+<span class="sd">    PlantVillage dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;beace6e5a23ee690826252124b1da1f523f120cca15b117858adb2ccfd75420d&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

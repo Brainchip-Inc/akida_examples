@@ -54,11 +54,11 @@ plt.show()
 # 2. Prepare Akida model for learning
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-from akida_models import mobilenet_edge_imagenet_pretrained
+from akida_models import akidanet_edge_imagenet_pretrained
 from cnn2snn import convert
 
 # Load a pre-trained model
-model_keras = mobilenet_edge_imagenet_pretrained()
+model_keras = akidanet_edge_imagenet_pretrained()
 
 # Convert it to akida
 model_ak = convert(model_keras)

@@ -22,8 +22,8 @@ tackle this object detection problem.
 # Object detection is a computer vision task that combines two elemental tasks:
 #
 #  - object classification that consists in assigning a class label to an image
-#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the `MobileNet
-#    ImageNet <plot_2_mobilenet_imagenet.html>`_ example
+#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the
+#    `AkidaNet/ImageNet inference <plot_2_akidanet_imagenet.html>`_ example
 #  - object localization that consists in drawing a bounding box around one or
 #    several objects in an image
 #
@@ -122,11 +122,11 @@ anchors_example = generate_anchors(val_data, num_anchors, grid_size)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The `model zoo <../../api_reference/akida_models_apis.html#yolo>`_ contains a
-# YOLO model that is built upon the `MobileNet architecture
-# <../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet>`_
+# YOLO model that is built upon the `AkidaNet architecture
+# <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
 # and 3 separable convolutional layers at the top for bounding box and class
 # estimation followed by a final separable convolutional which is the detection
-# layer. Note that for efficiency, the alpha parameter in MobileNet (network
+# layer. Note that for efficiency, the alpha parameter in AkidaNet (network
 # width or number of filter in each layer) is set to 0.5.
 #
 
@@ -169,18 +169,18 @@ full_model.output
 # 4. Training
 # ~~~~~~~~~~~
 #
-# As the YOLO model relies on Brainchip MobileNet/ImageNet network, it is
+# As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
 # training a YOLO model. See the `cats vs. dogs transfer learning example
-# <plot_5_transfer_learning.html>`_ for a detail explanation on transfer learning
-# principles.
+# <plot_5_transfer_learning.html>`_ for a detail explanation on transfer
+# learning principles.
 #
 # When using transfer learning for YOLO training, we advise to proceed in
 # several steps that include step-wise quantization:
 #
-# * instantiate the `yolo_base` model and load MobileNet/ImageNet pretrained
+# * instantiate the `yolo_base` model and load AkidaNet/ImageNet pretrained
 #   float weights,
-# * freeze the MobileNet layers and perform training,
+# * freeze the AkidaNet layers and perform training,
 # * unfreeze all layers, lower the learning rate and quantize the network (e.g
 #   to 8-bits weights and activations),
 # * quantize to a lower bitwidth until reaching the target bitwidth and retrain.

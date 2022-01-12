@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.kws.model_ds_cnn &mdash; Akida Examples  documentation</title>
+  <title>akida_models.imagenet.model_akidanet_edge &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -392,7 +392,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>akida_models.kws.model_ds_cnn</li>
+      <li>akida_models.imagenet.model_akidanet_edge</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -401,10 +401,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.kws.model_ds_cnn</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.imagenet.model_akidanet_edge</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2020 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -419,161 +419,112 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">DS-CNN model definition for KWS classification.</span>
+<span class="sd">This model is an adaptation of the `akidanet_imagenet` model for edge</span>
+<span class="sd">applications. It is based on AkidaNet with top layers replaced by a quantized</span>
+<span class="sd">spike extractor and a classification layer.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize_layer</span>
 
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
+<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/ds_cnn/&#39;</span>
+<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/akidanet_edge/&#39;</span>
 
 
-<div class="viewcode-block" id="ds_cnn_kws"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.ds_cnn_kws">[docs]</a><span class="k">def</span> <span class="nf">ds_cnn_kws</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">49</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-               <span class="n">classes</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
-               <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-               <span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-               <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-               <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-               <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
-    <span class="sd">&quot;&quot;&quot;Instantiates a MobileNet-like model for the &quot;Keyword Spotting&quot; example.</span>
-
-<span class="sd">    This model is based on the MobileNet architecture, mainly with fewer layers.</span>
-<span class="sd">    The weights and activations are quantized such that it can be converted into</span>
-<span class="sd">    an Akida model.</span>
-
-<span class="sd">    This architecture is originated from https://arxiv.org/pdf/1711.07128.pdf</span>
-<span class="sd">    and was created for the &quot;Keyword Spotting&quot; (KWS) or &quot;Speech Commands&quot;</span>
-<span class="sd">    dataset.</span>
+<div class="viewcode-block" id="akidanet_edge_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_edge_imagenet">[docs]</a><span class="k">def</span> <span class="nf">akidanet_edge_imagenet</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Instantiates an AkidaNet-edge architecture.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple): input shape tuple of the model</span>
-<span class="sd">        classes (int): optional number of classes to classify words into, only</span>
-<span class="sd">            be specified if `include_top` is True.</span>
-<span class="sd">        include_top (bool): whether to include the fully-connected</span>
-<span class="sd">            layer at the top of the model.</span>
-<span class="sd">        weight_quantization (int): sets all weights in the model to have</span>
-<span class="sd">            a particular quantization bitwidth except for the weights in the</span>
-<span class="sd">            first layer.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        activ_quantization (int): sets all activations in the model to have a</span>
-<span class="sd">            particular activation quantization bitwidth.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
-<span class="sd">            * &#39;1&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_weight_quantization (int): sets weight quantization in the first</span>
-<span class="sd">            layer. Defaults to weight_quantization value.</span>
-
-<span class="sd">            * &#39;None&#39; implements the same bitwidth as the other weights.</span>
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
-<span class="sd">            inputs. Defaults to (255, 0). Note that following Akida convention,</span>
-<span class="sd">            the scale factor is an integer used as a divider.</span>
+<span class="sd">        base_model (str/keras.Model): an akidanet_imagenet quantized model.</span>
+<span class="sd">        classes (int) : the number of classes for the edge classifier.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras model for MobileNet/KWS</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Overrides input weight quantization if None</span>
-    <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">base_model</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">include_top</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">classes</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;If &#39;include_top&#39; is True, &#39;classes&#39; must be set.&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Identify the last separable, which is the base model classifier</span>
+        <span class="n">base_classifier</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;separable_14&quot;</span><span class="p">)</span>
+        <span class="c1"># remember the classifier weight bitwidth</span>
+        <span class="n">wq</span> <span class="o">=</span> <span class="n">base_classifier</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">bitwidth</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The base model is not a quantized </span><span class="se">\</span>
+<span class="s2">                          AkidaNet/Imagenet model&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                   <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_0&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
+    <span class="c1"># Recreate a model with all layers up to the classifier</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">base_classifier</span><span class="o">.</span><span class="n">input</span>
+    <span class="c1"># Add the new end layer with kernel_size (3, 3) instead of (1,1) for</span>
+    <span class="c1"># hardware compatibility reasons</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                             <span class="n">filters</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
                              <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                              <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                              <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_1&#39;</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;spike_generator&#39;</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_2&#39;</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Then add the Akida edge learning layer that will be dropped after</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">classes</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;classification_layer&quot;</span><span class="p">,</span>
+                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">classes</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_2&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_3&#39;</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Create model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                  <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                  <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_edge&quot;</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;separable_4&#39;</span><span class="p">,</span>
-                             <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;global_avg&#39;</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Quantize edge layers</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator&#39;</span><span class="p">,</span> <span class="n">wq</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator_relu&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># NOTE: quantization set to 2 here, to be as close as</span>
+    <span class="c1"># possible to the Akida native layer that will replace this one,</span>
+    <span class="c1"># with binary weights.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;classification_layer&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                        <span class="n">units</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_5&#39;</span><span class="p">,</span>
-                        <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ds_cnn_kws&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-        <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
-        <span class="c1"># Converts a standard sequential Keras model to a CNN2SNN Keras</span>
-        <span class="c1"># quantized model, compatible for Akida conversion.</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-                         <span class="n">weight_quantization</span><span class="o">=</span><span class="n">weight_quantization</span><span class="p">,</span>
-                         <span class="n">activ_quantization</span><span class="o">=</span><span class="n">activ_quantization</span><span class="p">,</span>
-                         <span class="n">input_weight_quantization</span><span class="o">=</span><span class="n">input_weight_quantization</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="ds_cnn_kws_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.ds_cnn_kws_pretrained">[docs]</a><span class="k">def</span> <span class="nf">ds_cnn_kws_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Helper method to retrieve a `ds_cnn_kws` model that was trained on</span>
-<span class="sd">    KWS dataset.</span>
+<div class="viewcode-block" id="akidanet_edge_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_edge_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_edge_imagenet_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `akidanet_edge_imagenet` model that was</span>
+<span class="sd">    trained on ImageNet dataset.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;6b8a7c2f74de1dc3ad18cbb7746910f069b2d56fbc9b2c40180599bf2bc78edf&#39;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;6c33cfcf11e8200d0436c8fb18e9ec088f55ab729fa27fe1f497a8976a9b48fc&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="akidanet_faceidentification_edge_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_edge_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_edge_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to retrieve an `akidanet_edge_imagenet` model that was trained</span>
+<span class="sd">    on CASIA Webface dataset and that performs face identification.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: a Keras Model instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_iq8_wq4_aq4.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;b39a3d7ca48e7cd55287233aa18f029a7dc91a29bdec99178c26c55c5becf90e&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                           <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                           <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

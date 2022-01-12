@@ -1,6 +1,6 @@
 """
-Transfer learning with MobileNet for cats vs. dogs
-==================================================
+Transfer learning with AkidaNet for cats vs. dogs
+=================================================
 
 This tutorial presents a demonstration of how transfer learning is applied
 with our quantized models to get an Akida model.
@@ -8,8 +8,8 @@ with our quantized models to get an Akida model.
 The transfer learning example is derived from the `Tensorflow
 tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 
-    * Our base model is an Akida-compatible version of **MobileNet v1**,
-      trained on ImageNet.
+    * Our base model is AkidaNet (inspired from MobileNet v1) trained on
+      ImageNet.
     * The new dataset for transfer learning is **cats vs. dogs**
       (`link <https://www.tensorflow.org/datasets/catalog/cats_vs_dogs>`__).
     * We use transfer learning to customize the model to the new task of
@@ -38,17 +38,17 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 #
 # The model is composed of:
 #
-#   * a base quantized MobileNet model used to extract image features
+#   * a base quantized AkidaNet model used to extract image features
 #   * a top layer to classify cats and dogs
 #   * a sigmoid activation function to interpret model outputs as a probability
 #
 # **Base model**
 #
-# The base model is a quantized version of MobileNet v1. This
-# model was trained and quantized using the ImageNet dataset. Please refer
-# to the corresponding `example <plot_2_mobilenet_imagenet.html>`__ for
-# more information. The layers have 4-bit weights (except for the first
-# layer having 8-bit weights) and the activations are quantized to 4 bits.
+# The base model is a quantized version of AkidaNet. This model was trained and
+# quantized using the ImageNet dataset. Please refer to the corresponding
+# `example <plot_2_akidanet_imagenet.html>`__ for more information.
+# The layers have 4-bit weights (except for the first layer having 8-bit
+# weights) and the activations are quantized to 4 bits.
 # This base model ends with a classification layer for 1000 classes. To
 # classify cats and dogs, the feature extractor is preserved but the
 # classification layer must be removed to be replaced by a new top layer
@@ -57,15 +57,13 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 # In our transfer learning process, the base model is frozen, i.e., the
 # weights are not updated during training. Pre-trained weights for the
 # frozen quantized model are provided on our
-# `data server <http://data.brainchip.com/models/mobilenet/>`__.
+# `data server <http://data.brainchip.com/models/akidanet/>`__.
 #
 # **Top layer**
 #
 # While a fully-connected top layer is added in the Tensorflow tutorial, we
 # decided to use a separable convolutional layer with one output neuron for the
-# top layer of our model. The reason is that the separable convolutional layer
-# is the only Akida layer supporting 4-bit weights (see `hardware compatibility
-# <../../user_guide/hw_constraints.html>`__).
+# top layer of our model.
 #
 # **Training process**
 #
@@ -110,25 +108,20 @@ tutorial <https://www.tensorflow.org/tutorials/images/transfer_learning>`__:
 
 import tensorflow_datasets as tfds
 
-splits = ['train[:80%]', 'train[80%:90%]', 'train[90%:]']
-
 tfds.disable_progress_bar()
-(raw_train, raw_validation,
- raw_test), metadata = tfds.load('cats_vs_dogs:4.0.0',
-                                 split=splits,
-                                 with_info=True,
-                                 as_supervised=True)
+(raw_train, raw_validation, raw_test), metadata = tfds.load(
+    'cats_vs_dogs',
+    split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
+    with_info=True,
+    as_supervised=True)
 
 ######################################################################
 # 1.B - Preprocess the test set
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We must apply the same preprocessing as for training: rescaling and
-# resizing. Since Akida models directly accept integer-valued images, we
-# also define a preprocessing function for Akida:
-#
-#   - for Keras: images are rescaled between 0 and 1, and resized to 160x160
-#   - for Akida: images are only resized to 160x160 (uint8 values).
+# We must apply preprocessing for training: rescaling and resizing. While
+# rescaling between 0 and 1 in done by a rescaling layer in the model, resizing
+# is done in a preprocesing step.
 #
 # Keras and Akida models require 4-dimensional (N,H,W,C) arrays as inputs.
 # We must then create batches of images to feed the model. For inference,
@@ -181,12 +174,12 @@ print(f"Test set composed of {num_images} images: "
 # 2.A - Instantiate a Keras base model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Here, we instantiate a quantized Keras model based on a MobileNet model.
+# Here, we instantiate a quantized Keras model based on an AkidaNet model.
 # This base model was previously trained using the 1000 classes of the
-# ImageNet dataset. For more information, please see the `ImageNet
-# tutorial <plot_2_mobilenet_imagenet.html>`__.
+# ImageNet dataset. For more information, please see the `AkidaNet/ImageNet
+# tutorial <plot_2_akidanet_imagenet.html>`__.
 #
-# The quantized MobileNet model satisfies the Akida NSoC requirements:
+# The quantized AkidaNet model satisfies the Akida NSoC requirements:
 #
 #   * The model relies on a convolutional layer (first layer) and separable
 #     convolutional layers, all being Akida-compatible.
@@ -194,20 +187,20 @@ print(f"Test set composed of {num_images} images: "
 #     convolutional layer has 8-bit weights.
 #   * The activations are quantized with 4 bits.
 
-from akida_models import mobilenet_imagenet
+from akida_models import akidanet_imagenet
 
-# Instantiate a quantized MobileNet model
-base_model_keras = mobilenet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
-                                      weight_quantization=4,
-                                      activ_quantization=4,
-                                      input_weight_quantization=8)
+# Instantiate a quantized AkidaNet model
+base_model_keras = akidanet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
+                                     weight_quantization=4,
+                                     activ_quantization=4,
+                                     input_weight_quantization=8,
+                                     alpha=0.5)
 
 # Load pre-trained weights for the base model
 pretrained_weights = tf.keras.utils.get_file(
-    "mobilenet_imagenet_iq8_wq4_aq4.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5",
-    file_hash="d9eabb514a7db6d823ab108b0fbc64fe2872ad1113bd6c04c9a3329b6a41e135",
-    cache_subdir='models/mobilenet')
+    "akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5",
+    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5",
+    cache_subdir='models/akidanet_imagenet')
 base_model_keras.load_weights(pretrained_weights)
 
 base_model_keras.summary()
@@ -260,13 +253,10 @@ model_keras.summary()
 # Freeze the base model part of the new model
 base_model_keras.trainable = False
 
-# Load pre-trained weights
-pretrained_weights = tf.keras.utils.get_file(
-    "mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
-    "http://data.brainchip.com/models/mobilenet/mobilenet_cats_vs_dogs_iq8_wq4_aq4.h5",
-    file_hash="b021fccaba676de9549430336ff27875a85b2aea7ca767a5e70a76185362fa4b",
-    cache_subdir='models')
-model_keras.load_weights(pretrained_weights)
+# Load model with pretrained weights
+from akida_models import akidanet_cats_vs_dogs_pretrained
+
+model_keras = akidanet_cats_vs_dogs_pretrained()
 
 ######################################################################
 
@@ -277,8 +267,8 @@ _, keras_accuracy = model_keras.evaluate(test_batches)
 print(f"Keras accuracy (float top layer): {keras_accuracy*100:.2f} %")
 
 ######################################################################
-# 4 Quantize the top layer
-# ------------------------
+# 4. Quantize the top layer
+# -------------------------
 #
 # To get an Akida-compatible model, the float top layer must be quantized.
 # We decide to quantize its weights to 4 bits. The performance of the
@@ -310,10 +300,7 @@ print(f"Quantized Keras accuracy: {keras_accuracy*100:.2f} %")
 # Performance of the Akida model is then computed. Compared to Keras inference,
 # remember that:
 #
-#   * Input images in Akida are uint8 and not scaled like Keras inputs. But
-#     remember that the conversion process needs to know what scaling was
-#     applied during Keras training, in order to compensate (see
-#     `CNN2SNN guide <../../user_guide/cnn2snn.html#input-scaling>`__)
+#   * Input images in Akida are uint8
 #   * The Akida `evaluate <../../api_reference/akida_apis.html#akida.Model.evaluate>`__
 #     function takes a NumPy array containing the images and returns potentials
 #     before the sigmoid activation. We must therefore explicitly apply the
@@ -358,7 +345,7 @@ akida_accuracy = np.mean(np.equal(preds_akida, labels))
 print(f"Akida accuracy: {akida_accuracy*100:.2f} %")
 
 # For non-regression purpose
-assert akida_accuracy > 0.97
+assert akida_accuracy > 0.96
 
 ######################################################################
 # Let's summarize the accuracy for the quantized Keras and the Akida model.
@@ -366,9 +353,9 @@ assert akida_accuracy > 0.97
 # +-----------------+----------+
 # | Model           | Accuracy |
 # +=================+==========+
-# | quantized Keras | 98.28 %  |
+# | quantized Keras | 96.43 %  |
 # +-----------------+----------+
-# | Akida           | 98.32 %  |
+# | Akida           | 96.60 %  |
 # +-----------------+----------+
 
 ######################################################################
