@@ -424,6 +424,31 @@ Note: an exception will be raised if the Model cannot be mapped entirely on the 
 Once the model has been mapped, the inference happens only on the device, and not on the host
 CPU except for passing inputs and fetching outputs.
 
+Performances measurement
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to retrieve fps and power performances when inference happens on
+a device.
+
+Enabling power measurement is simply done by:
+
+.. code-block:: python
+
+  device.soc.power_measurement_enabled = True
+
+After sending data for inference and performances measurements can be retrieved
+from the `model statistics
+<../api_reference/akida_apis.html#akida.Model.statistics>`__.
+
+.. code-block:: python
+
+  model_akida.forward(data)
+  print(model.statistics)
+
+An example of power and fps performances is given in the `AkidaNet/ImageNet
+tutorial <../examples/general/plot_2_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
+
+
 Using Akida Edge learning
 -------------------------
 
