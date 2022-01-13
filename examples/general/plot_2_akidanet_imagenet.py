@@ -373,3 +373,50 @@ ax1.set_yticklabels(class_name, rotation='horizontal', size=9)
 update_bars_chart(rects, yvals, true_label)
 fig.canvas.draw()
 plt.show()
+
+######################################################################
+# 6. Hardware mapping and performance
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+######################################################################
+# 6.1. Map on hardware
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# List Akida available devices and check that an NSoC V2 (production chip) is
+# available
+
+import akida
+
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+device = devices[0]
+assert device.version == akida.NSoC_v2
+
+######################################################################
+# Map the model on the device
+
+model_akida.map(device)
+
+# Check model mapping: NP allocation and binary size
+model_akida.summary()
+
+######################################################################
+# 6.2. Performances measurement
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Power measurement must be enabled on the device' soc (disabled by default).
+# After sending data for inference, performances measurements are available in
+# the `model statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__.
+
+# Enable power measurement
+device.soc.power_measurement_enabled = True
+
+# Send data for inference
+_ = model_akida.forward(x_test)
+
+# Display floor current
+floor_power = device.soc.power_meter.floor
+print(f'Floor power: {floor_power:.2f} mW')
+
+# Retrieve statistics
+print(model_akida.statistics)
