@@ -205,16 +205,13 @@ from cnn2snn import convert
 model_akida = convert(model_keras_quantized_pretrained)
 
 ######################################################################
-# 5.2 Check hardware compliancy
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 # The `Model.summary <../../api_reference/akida_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 
 model_akida.summary()
 
 ######################################################################
-# 5.3 Check performance
+# 5.2 Check performance
 # ^^^^^^^^^^^^^^^^^^^^^
 #
 # While we compute accuracy for the 10 images set in the next cell, the
@@ -240,7 +237,7 @@ print(f"Accuracy: {accuracy_akida*100:.2f} %")
 assert accuracy_akida == 0.9
 
 ######################################################################
-# 5.4 Show predictions for a random image
+# 5.3 Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 import matplotlib.pyplot as plt
