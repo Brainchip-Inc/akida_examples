@@ -399,8 +399,6 @@ one sequence can be obtained programmatically.
     print(len(model.sequences))
     # Assume there is at least one sequence.
     sequence = model.sequences[0]
-    # Check which layers have been mapped in this sequence
-    print(sequence.layers)
     # Check program size
     print(len(sequence.program))
 
