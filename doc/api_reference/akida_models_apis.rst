@@ -40,6 +40,13 @@ Akida models API
     .. autofunction:: akida_models.prune_model
     .. autofunction:: akida_models.delete_filters
 
+    Training
+    ========
+
+    .. autofunction:: akida_models.training.freeze_model_before
+    .. autofunction:: akida_models.training.evaluate_model
+    .. autofunction:: akida_models.training.evaluate_akida_model
+    .. autofunction:: akida_models.training.compile_model
 
     Model zoo
     =========
