@@ -88,19 +88,21 @@ for i in range(num_images):
 #
 # The AkidaNet architecture is available in the Akida model zoo as
 # `akidanet_imagenet <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_.
+# In this tutorial, the alpha = 0.5 version of AkidaNet will be used, where
+# alpha is the parameter controlling the width of the model.
 
 from tensorflow.keras.models import load_model
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
-    "akidanet_imagenet.h5",
-    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_224.h5",
+    "akidanet_imagenet_224_alpha_50.h5",
+    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# Top-1 accuracy on the actual ImageNet is 71.92%, the perfomance given below
+# Top-1 accuracy on the actual ImageNet is 64.58%, the perfomance given below
 # uses the 10 images subset.
 
 from timeit import default_timer as timer
@@ -143,7 +145,7 @@ check_model_performances(model_keras)
 # +----------------+--------------------+
 # | Float accuracy | Quantized accuracy |
 # +================+====================+
-# |     71.92 %    |        28.77 %     |
+# |     64.58 %    |        1.00 %      |
 # +----------------+--------------------+
 #
 
@@ -172,13 +174,13 @@ check_model_performances(model_keras_quantized)
 # +----------------+--------------------+--------------------+
 # | Float accuracy | Quantized accuracy |     After tuning   |
 # +================+====================+====================+
-# |     71.92 %    |       28.77 %      |       69.87 %      |
+# |     64.58 %    |       1.00 %       |       61.30 %      |
 # +----------------+--------------------+--------------------+
 
 from akida_models import akidanet_imagenet_pretrained
 
 # Use a quantized model with pretrained quantized weights
-model_keras_quantized_pretrained = akidanet_imagenet_pretrained()
+model_keras_quantized_pretrained = akidanet_imagenet_pretrained(0.5)
 model_keras_quantized_pretrained.summary()
 
 ######################################################################
@@ -203,16 +205,13 @@ from cnn2snn import convert
 model_akida = convert(model_keras_quantized_pretrained)
 
 ######################################################################
-# 5.2 Check hardware compliancy
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 # The `Model.summary <../../api_reference/akida_apis.html#akida.Model.summary>`__
 # method provides a detailed description of the Model layers.
 
 model_akida.summary()
 
 ######################################################################
-# 5.3 Check performance
+# 5.2 Check performance
 # ^^^^^^^^^^^^^^^^^^^^^
 #
 # While we compute accuracy for the 10 images set in the next cell, the
@@ -221,7 +220,7 @@ model_akida.summary()
 # +----------------+----------------+
 # | Keras accuracy | Akida accuracy |
 # +================+================+
-# |     69.87 %    |     69.65 %    |
+# |     61.30 %    |     61.37 %    |
 # +----------------+----------------+
 
 # Check Model performance
@@ -235,10 +234,10 @@ accuracy_akida = np.sum(np.equal(preds_akida, labels_test)) / num_images
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
 # For non-regression purpose
-assert accuracy_akida == 1
+assert accuracy_akida == 0.9
 
 ######################################################################
-# 5.4 Show predictions for a random image
+# 5.3 Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 import matplotlib.pyplot as plt
@@ -371,3 +370,50 @@ ax1.set_yticklabels(class_name, rotation='horizontal', size=9)
 update_bars_chart(rects, yvals, true_label)
 fig.canvas.draw()
 plt.show()
+
+######################################################################
+# 6. Hardware mapping and performance
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+######################################################################
+# 6.1. Map on hardware
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# List Akida available devices and check that an NSoC V2 (production chip) is
+# available
+
+import akida
+
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+device = devices[0]
+assert device.version == akida.NSoC_v2
+
+######################################################################
+# Map the model on the device
+
+model_akida.map(device)
+
+# Check model mapping: NP allocation and binary size
+model_akida.summary()
+
+######################################################################
+# 6.2. Performances measurement
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Power measurement must be enabled on the device' soc (disabled by default).
+# After sending data for inference, performances measurements are available in
+# the `model statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__.
+
+# Enable power measurement
+device.soc.power_measurement_enabled = True
+
+# Send data for inference
+_ = model_akida.forward(x_test)
+
+# Display floor current
+floor_power = device.soc.power_meter.floor
+print(f'Floor power: {floor_power:.2f} mW')
+
+# Retrieve statistics
+print(model_akida.statistics)
