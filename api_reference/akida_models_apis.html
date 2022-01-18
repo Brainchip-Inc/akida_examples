@@ -232,6 +232,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#knowledge-distillation">Knowledge distillation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pruning">Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#training">Training</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#model-zoo">Model zoo</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#akidanet">AkidaNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mobilenet">Mobilenet</a></li>
@@ -288,14 +289,15 @@
 <li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_4_regression.html#estimate-age-on-a-single-image">5. Estimate age on a single image</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html">Transfer learning with AkidaNet for cats vs. dogs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html">Transfer learning with AkidaNet for PlantVillage</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#transfer-learning-process">Transfer learning process</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#load-and-preprocess-data">1. Load and preprocess data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#modify-a-pre-trained-base-keras-model">2. Modify a pre-trained base Keras model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#train-the-transferred-model-for-the-new-task">3. Train the transferred model for the new task</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#quantize-the-top-layer">4. Quantize the top layer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#convert-to-akida">5. Convert to Akida</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#plot-confusion-matrix">6. Plot confusion matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#dataset-preparation">1. Dataset preparation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#get-a-trained-akidanet-base-model">2. Get a trained AkidaNet base model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#add-a-float-classification-head-to-the-model">3. Add a float classification head to the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#freeze-the-base-model">4. Freeze the base model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#train-for-a-few-epochs">5. Train for a few epochs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#quantize-the-classification-head">6. Quantize the classification head</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_5_transfer_learning.html#compute-accuracy">7. Compute accuracy</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_6_voc_yolo_detection.html">YOLO/PASCAL-VOC detection tutorial</a><ul>
@@ -770,6 +772,88 @@ layer.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>keras.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.training.freeze_model_before">
+<span class="sig-prename descclassname"><span class="pre">akida_models.training.</span></span><span class="sig-name descname"><span class="pre">freeze_model_before</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_before</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/training.html#freeze_model_before"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.training.freeze_model_before" title="Permalink to this definition"></a></dt>
+<dd><p>Freezes the model before the given layer name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em>) – the model to freeze</p></li>
+<li><p><strong>freeze_before</strong> (<em>str</em>) – name of the layer from which the model will not be
+frozen</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if the provided layer name was not found in the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.training.evaluate_model">
+<span class="sig-prename descclassname"><span class="pre">akida_models.training.</span></span><span class="sig-name descname"><span class="pre">evaluate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/training.html#evaluate_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.training.evaluate_model" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluates model performances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em>) – the model to evaluate</p></li>
+<li><p><strong>x</strong> (<em>tf.Dataset</em><em>, </em><em>np.array</em><em> or </em><em>generator</em>) – evaluation input data</p></li>
+<li><p><strong>y</strong> (<em>tf.Dataset</em><em>, </em><em>np.array</em><em> or </em><em>generator</em><em>, </em><em>optional</em>) – evaluation target
+data. Defaults to None.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – the batch size. Defaults to None.</p></li>
+<li><p><strong>steps</strong> (<em>int</em><em>, </em><em>optional</em>) – total number of steps before declaring the
+evaluation round finished. Defaults to None.</p></li>
+<li><p><strong>print_history</strong> (<em>bool</em><em>, </em><em>optional</em>) – either to print all history or just
+accuracy. Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.training.evaluate_akida_model">
+<span class="sig-prename descclassname"><span class="pre">akida_models.training.</span></span><span class="sig-name descname"><span class="pre">evaluate_akida_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/training.html#evaluate_akida_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.training.evaluate_akida_model" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluates Akida model and return predictions and labels to compute
+accuracy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="akida_apis.html#akida.Model" title="akida.Model"><em>akida.Model</em></a>) – the model to evaluate</p></li>
+<li><p><strong>x</strong> (<em>tf.Dataset</em><em>, </em><em>np.array</em><em> or </em><em>generator</em>) – evaluation input data</p></li>
+<li><p><strong>activation</strong> (<em>str</em>) – activation function to apply to potentials</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>predictions and labels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array, np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.training.compile_model">
+<span class="sig-prename descclassname"><span class="pre">akida_models.training.</span></span><span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'categorical_crossentropy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/training.html#compile_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.training.compile_model" title="Permalink to this definition"></a></dt>
+<dd><p>Compiles the model using Adam optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em>) – the model to compile</p></li>
+<li><p><strong>learning_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – the learning rate. Defaults to 1e-3.</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em> or </em><em>function</em><em>, </em><em>optional</em>) – the loss function. Defaults to
+‘categorical_crossentropy’.</p></li>
+<li><p><strong>metrics</strong> (<em>list</em><em>, </em><em>optional</em>) – list of metrics to be evaluated during
+training and testing. Defaults to None.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

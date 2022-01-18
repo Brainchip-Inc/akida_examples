@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida.concat &mdash; Akida Examples  documentation</title>
+  <title>akida_models.training &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
@@ -396,7 +396,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>akida.concat</li>
+      <li>akida_models.training</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -405,52 +405,262 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida.concat</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">ConcatParams</span><span class="p">,</span> <span class="n">ActivationsParams</span><span class="p">)</span>
+  <h1>Source code for akida_models.training</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#    http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Common utility methods used by the training scripts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">keras.preprocessing.image</span> <span class="kn">import</span> <span class="n">DirectoryIterator</span>
+<span class="kn">from</span> <span class="nn">keras.optimizer_v2.adam</span> <span class="kn">import</span> <span class="n">Adam</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Activation</span>
 
 
-<div class="viewcode-block" id="Concat"><a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.Concat">[docs]</a><span class="k">class</span> <span class="nc">Concat</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Concatenates its inputs along the last dimension</span>
-
-<span class="sd">    It takes as input a list of tensors, all of the same shape except for the</span>
-<span class="sd">    last dimension, and returns a single tensor that is the concatenation</span>
-<span class="sd">    of all inputs.</span>
-
-<span class="sd">    It accepts as inputs either potentials or activations.</span>
-
-<span class="sd">    It can perform an activation on the concatenated output with its own set of</span>
-<span class="sd">    activation parameters and variables.</span>
+<div class="viewcode-block" id="compile_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.compile_model">[docs]</a><span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                  <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                  <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;categorical_crossentropy&#39;</span><span class="p">,</span>
+                  <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Compiles the model using Adam optimizer.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        name (str, optional): name of the layer.</span>
-<span class="sd">        activation (bool, optional): enable or disable activation</span>
-<span class="sd">            function.</span>
-<span class="sd">        threshold (int, optional): threshold for neurons to fire or</span>
-<span class="sd">            generate an event.</span>
-<span class="sd">        act_step (float, optional): length of the potential</span>
-<span class="sd">            quantization intervals.</span>
-<span class="sd">        act_bits (int, optional): number of bits used to</span>
-<span class="sd">            quantize the neuron response.</span>
+<span class="sd">        model (keras.Model): the model to compile</span>
+<span class="sd">        learning_rate (float, optional): the learning rate. Defaults to 1e-3.</span>
+<span class="sd">        loss (str or function, optional): the loss function. Defaults to</span>
+<span class="sd">            &#39;categorical_crossentropy&#39;.</span>
+<span class="sd">        metrics (list, optional): list of metrics to be evaluated during</span>
+<span class="sd">            training and testing. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span>
 
+    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">Adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">),</span>
+                  <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+                  <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="freeze_model_before"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.freeze_model_before">[docs]</a><span class="k">def</span> <span class="nf">freeze_model_before</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">freeze_before</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Freezes the model before the given layer name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the model to freeze</span>
+<span class="sd">        freeze_before (str): name of the layer from which the model will not be</span>
+<span class="sd">            frozen</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if the provided layer name was not found in the model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">freeze_before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">trainable</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">freeze_before</span><span class="p">:</span>
+                <span class="n">trainable</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="n">trainable</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">trainable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No such layer </span><span class="si">{</span><span class="n">freeze_before</span><span class="si">}</span><span class="s2"> in model.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="evaluate_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.evaluate_model">[docs]</a><span class="k">def</span> <span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                   <span class="n">x</span><span class="p">,</span>
+                   <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">print_history</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Evaluates model performances.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the model to evaluate</span>
+<span class="sd">        x (tf.Dataset, np.array or generator): evaluation input data</span>
+<span class="sd">        y (tf.Dataset, np.array or generator, optional): evaluation target</span>
+<span class="sd">            data. Defaults to None.</span>
+<span class="sd">        batch_size (int, optional): the batch size. Defaults to None.</span>
+<span class="sd">        steps (int, optional): total number of steps before declaring the</span>
+<span class="sd">            evaluation round finished. Defaults to None.</span>
+<span class="sd">        print_history (bool, optional): either to print all history or just</span>
+<span class="sd">            accuracy. Defaults to False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                             <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                             <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+                             <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">print_history</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Validation history: &#39;</span><span class="p">,</span> <span class="n">history</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Validation accuracy: &#39;</span><span class="p">,</span> <span class="n">history</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="evaluate_akida_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.evaluate_akida_model">[docs]</a><span class="k">def</span> <span class="nf">evaluate_akida_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">activation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Evaluates Akida model and return predictions and labels to compute</span>
+<span class="sd">    accuracy.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (akida.Model): the model to evaluate</span>
+<span class="sd">        x (tf.Dataset, np.array or generator): evaluation input data</span>
+<span class="sd">        activation (str): activation function to apply to potentials</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.array, np.array: predictions and labels</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">act_step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">act_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">ConcatParams</span><span class="p">(</span>
-                <span class="n">ActivationsParams</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">act_step</span><span class="p">,</span> <span class="n">act_bits</span><span class="p">))</span>
+    <span class="c1"># Initialize to None to allow different shapes depending on the caller</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">pots</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="c1"># Call parent constructor to initialize C++ bindings</span>
-            <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>
-            <span class="c1"># specified in pybind documentation</span>
-            <span class="n">Layer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="bp">self</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">raise</span></div>
+    <span class="c1"># Datasets created as ImageDataGenerator will be looped over indefinitely,</span>
+    <span class="c1"># they thus need a special treatment</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DirectoryIterator</span><span class="p">):</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">samples</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">label_batch</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">pots_batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">label_batch</span>
+            <span class="n">pots</span> <span class="o">=</span> <span class="n">pots_batch</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">labels</span><span class="p">,</span> <span class="n">label_batch</span><span class="p">))</span>
+            <span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">pots</span><span class="p">,</span> <span class="n">pots_batch</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()))</span>
+
+        <span class="c1"># End the for loop if the number of batches has reached the number of</span>
+        <span class="c1"># steps</span>
+        <span class="k">if</span> <span class="n">steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">total_batches_seen</span> <span class="o">==</span> <span class="n">steps</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">Activation</span><span class="p">(</span><span class="n">activation</span><span class="p">)(</span><span class="n">pots</span><span class="p">),</span> <span class="n">labels</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_training_parser</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span>
+                        <span class="n">tune</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">freeze_before</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">global_batch_size</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">global_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Instantiates a base arguments parser for training scripts.</span>
+
+<span class="sd">    The returned parser comes with train, tune and eval actions as subparsers</span>
+<span class="sd">    (with default parameters) for which one can add arguments if required.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        batch_size (int): batch size default value</span>
+<span class="sd">        tune (bool, optional): either to add a tune action or not. Default to</span>
+<span class="sd">            False.</span>
+<span class="sd">        freeze_before (bool, optional): either to add a &quot;--freeze_before&quot;</span>
+<span class="sd">            parameter in train and tune actions or not. Default to False.</span>
+<span class="sd">        global_batch_size (bool, optional): either to add batch size as a</span>
+<span class="sd">            global parser parameter or for train/tune actions only. Default to</span>
+<span class="sd">            True.</span>
+<span class="sd">        global_parser (argparse.ArgumentParser, optional): global parser with</span>
+<span class="sd">            custom parameters. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        argparse.ArgumentParser, argparse.ArgumentParser,</span>
+<span class="sd">        argparse.ArgumentParser, argparse.ArgumentParser,</span>
+<span class="sd">        argparse._SubParsersAction: main parser and train, tune and eval actions</span>
+<span class="sd">            subparsers and the subparser object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define a strictly positive int type for parameters</span>
+    <span class="k">def</span> <span class="nf">positive_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="n">ivalue</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ivalue</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is an invalid value, must be &gt;0.&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ivalue</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+
+    <span class="c1"># Base arguments</span>
+    <span class="k">if</span> <span class="n">global_parser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">global_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">global_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-m&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;--model&quot;</span><span class="p">,</span>
+                               <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                               <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Model to load&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">global_batch_size</span><span class="p">:</span>
+        <span class="n">global_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-b&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;--batch_size&quot;</span><span class="p">,</span>
+                                   <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                                   <span class="n">default</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                   <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The batch size&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create an action subparser</span>
+    <span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">&quot;Desired action to perform&quot;</span><span class="p">,</span>
+                                       <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;action&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create parent subparser for arguments shared between train and tune</span>
+    <span class="c1"># actions</span>
+    <span class="n">parent_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                            <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">global_parser</span><span class="p">])</span>
+    <span class="n">parent_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;--savemodel&quot;</span><span class="p">,</span>
+                               <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                               <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save model with the specified name&quot;</span><span class="p">)</span>
+    <span class="n">parent_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;--epochs&quot;</span><span class="p">,</span>
+                               <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                               <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The number of training epochs&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">global_batch_size</span><span class="p">:</span>
+        <span class="n">parent_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-b&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;--batch_size&quot;</span><span class="p">,</span>
+                                   <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                                   <span class="n">default</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                   <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The batch size&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">freeze_before</span><span class="p">:</span>
+        <span class="n">parent_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;-fb&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--freeze_before&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Freeze the layers of the model before this </span><span class="se">\</span>
+<span class="s2">                                layer&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Subparsers based on parent</span>
+    <span class="n">train_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+                                         <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">parent_parser</span><span class="p">],</span>
+                                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Train a Keras model&quot;</span><span class="p">)</span>
+    <span class="n">tune_parser</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">tune</span><span class="p">:</span>
+        <span class="n">tune_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;tune&quot;</span><span class="p">,</span>
+                                            <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">parent_parser</span><span class="p">],</span>
+                                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tune a Keras model)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Other subparsers</span>
+    <span class="n">eval_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;eval&quot;</span><span class="p">,</span>
+                                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Evaluate a model&quot;</span><span class="p">,</span>
+                                        <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">global_parser</span><span class="p">])</span>
+
+    <span class="n">eval_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-ak&quot;</span><span class="p">,</span>
+                             <span class="s2">&quot;--akida&quot;</span><span class="p">,</span>
+                             <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Converts to an Akida model and evaluate&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parser</span><span class="p">,</span> <span class="n">train_parser</span><span class="p">,</span> <span class="n">tune_parser</span><span class="p">,</span> <span class="n">eval_parser</span><span class="p">,</span> <span class="n">subparsers</span>
 </pre></div>
 
            </div>
