@@ -403,7 +403,7 @@ model_akida.summary()
 #
 # Power measurement must be enabled on the device' soc (disabled by default).
 # After sending data for inference, performances measurements are available in
-# the `model statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__.
+# the `model statistics <../../api_reference/akida_apis.html#akida.Model.statistics>`__.
 
 # Enable power measurement
 device.soc.power_measurement_enabled = True
