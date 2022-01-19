@@ -426,4 +426,4 @@ print(f"Akida validation set accuracy on 33 old classes: \
         {100 * acc_val_old_ak:.2f} %")
 
 # For non-regression purpose
-assert acc_val_old_ak > 0.85
+assert acc_val_old_ak > 0.82
