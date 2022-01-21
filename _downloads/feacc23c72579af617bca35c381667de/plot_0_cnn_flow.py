@@ -94,12 +94,12 @@ x_test = (x_test - b) / a
 #
 
 model_keras = keras.models.Sequential([
-    keras.layers.Conv2D(filters=32, kernel_size=3, input_shape=(28, 28, 1)),
-    keras.layers.MaxPool2D(),
+    keras.layers.Conv2D(
+        filters=32, kernel_size=3, input_shape=(28, 28, 1), strides=2),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
-    keras.layers.SeparableConv2D(filters=64, kernel_size=3, padding='same'),
-    keras.layers.MaxPool2D(padding='same'),
+    keras.layers.SeparableConv2D(
+        filters=64, kernel_size=3, padding='same', strides=2),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),
     keras.layers.Flatten(),
@@ -135,8 +135,8 @@ print("Model compatible for Akida conversion:",
 # ~~~~~~~~~~~~~~~~~
 #
 # Before going any further, train the model and get its performance.
-# The created model should have achieved a test accuracy a little over 99% after
-# 10 epochs.
+# The created model should have achieved a test accuracy over 98% after 10
+# epochs.
 #
 
 model_keras.compile(
@@ -147,7 +147,6 @@ model_keras.compile(
 model_keras.fit(x_train, y_train, epochs=10, validation_split=0.1)
 
 score = model_keras.evaluate(x_test, y_test, verbose=0)
-print('Test score:', score[0])
 print('Test accuracy:', score[1])
 
 ######################################################################
