@@ -275,7 +275,7 @@ sparsities = evaluate_sparsity(model_ak, x_train[:num_samples])
 
 # Retrieve the number of output spikes from the feature extractor output
 output_density = 1 - sparsities[model_ak.get_layer('separable_4')]
-avg_spikes = model.get_layer('separable_4').output_shape[-1] * output_density
+avg_spikes = model_ak.get_layer('separable_4').output_dims[-1] * output_density
 print(f"Average number of spikes: {avg_spikes}")
 
 # Fix the number of weights to 1.2 times the average number of output spikes
