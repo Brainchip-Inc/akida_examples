@@ -122,8 +122,8 @@ Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the cnn2snn programming API, the CNN2SNN toolkit also provides a
-command-line interface to perform quantization and conversion to an Akida NSoC
-compatible model.
+command-line interface to perform quantization, conversion to an Akida NSoC
+compatible model or model reshape.
 
 Quantizing a standard Keras model or a CNN2SNN quantized model using the CLI
 makes use of the ``cnn2snn.quantize`` Python function. The same arguments, i.e.
@@ -167,6 +167,22 @@ Convert a quantized model with input scaling of (255, 0) and with sparse inputs:
 .. code-block:: bash
 
     cnn2snn convert -m model_keras_iq2_wq2_aq2.h5 -sc 255 -sh 0 -sp True
+
+A model can be reshaped (change of input shape) using CNN2SNN CLI that makes
+use of the ``cnn2snn.transforms.reshape`` function. This will only apply to
+Sequential models, a `sequentialize helper
+<../api_reference/cnn2snn_apis.html#cnn2snn.transforms.sequentialize>`__ is
+provided for convenience.
+
+**Examples**
+
+Reshape a model to 160x96:
+
+.. code-block:: bash
+
+    cnn2snn reshape -m model_keras.h5 -iw 160 -ih 96
+
+A reshaped model will be saved as ``model_keras_160_96.h5``.
 
 Layers Considerations
 ---------------------
