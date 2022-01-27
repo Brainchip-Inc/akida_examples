@@ -30,6 +30,18 @@ CNN2SNN Toolkit API
     --------------------
     .. autofunction:: load_quantized_model
 
+    Transforms
+    ----------
+    .. autofunction:: cnn2snn.transforms.sequentialize
+    .. autofunction:: cnn2snn.transforms.syncretize
+    .. autofunction:: cnn2snn.transforms.invert_batchnorm_pooling
+    .. autofunction:: cnn2snn.transforms.fold_batchnorm
+    .. autofunction:: cnn2snn.transforms.cross_layer_scaling
+    .. autofunction:: cnn2snn.transforms.weights_homogeneity
+    .. autofunction:: cnn2snn.transforms.normalize_separable_layer
+    .. autofunction:: cnn2snn.transforms.normalize_separable_model
+    .. autofunction:: cnn2snn.transforms.reshape
+
     Quantizers
     ==========
 
