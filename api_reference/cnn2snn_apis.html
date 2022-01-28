@@ -37,7 +37,7 @@
             <img src="../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.1
+                MetaTF 2.1.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -197,6 +197,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#convert">convert</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#load-quantized-model">load_quantized_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transforms">Transforms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#quantizers">Quantizers</a><ul>
@@ -767,6 +768,197 @@ custom classes or functions to be considered during deserialization.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="transforms">
+<h3>Transforms<a class="headerlink" href="#transforms" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.sequentialize">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">sequentialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/sequential.html#sequentialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.sequentialize" title="Permalink to this definition"></a></dt>
+<dd><p>Transform a Model into Sequential sub-models and Concatenate layers.</p>
+<p>This function returns an equivalent model where all linear branches are
+replaced by a Sequential sub-model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Keras model</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Keras model with Sequential sub-models</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.syncretize">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">syncretize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/sequential.html#syncretize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.syncretize" title="Permalink to this definition"></a></dt>
+<dd><p>Align all linear branches of a Model with akida layer sequences.</p>
+<p>The input model must be composed of Sequential submodels and Concatenate
+layers. This function will apply transformations on every Sequential
+submodel and returns an equivalent functional model with akida compatible
+sequences of layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Keras model with Sequential submodels.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>a Keras model with akida-compatible Sequential</dt><dd><p>submodels.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.invert_batchnorm_pooling">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">invert_batchnorm_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/batch_normalization.html#invert_batchnorm_pooling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.invert_batchnorm_pooling" title="Permalink to this definition"></a></dt>
+<dd><p>Inverts pooling and BatchNormalization layers in a Sequential model to
+have BN layer before pooling.</p>
+<p>Having pool-&gt;BN or BN-&gt;pool is equivalent only if BN layer has no negative
+gammas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Sequential Keras model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Sequential Keras model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.fold_batchnorm">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">fold_batchnorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/batch_normalization.html#fold_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.fold_batchnorm" title="Permalink to this definition"></a></dt>
+<dd><p>Folds BatchNormalization layers into the preceding neural layers of
+a Sequential model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Sequential Keras model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Sequential Keras model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.cross_layer_scaling">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">cross_layer_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/equalization.html#cross_layer_scaling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.cross_layer_scaling" title="Permalink to this definition"></a></dt>
+<dd><p>Equalize weights between neural layers.</p>
+<p>This is an implementation of “Cross-layer range equalization”, described
+in paragraph 4.1 of “Data-Free Quantization Through Weight Equalization
+and Bias Correction”.
+Markus Nagel, Mart van Baalen, Tijmen Blankevoort, Max Welling
+<a class="reference external" href="https://arxiv.org/abs/1906.04721">https://arxiv.org/abs/1906.04721</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Keras model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new Keras model with normalized depthwise
+weights in SeparableConv2D layers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.weights_homogeneity">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">weights_homogeneity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/equalization.html#weights_homogeneity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.weights_homogeneity" title="Permalink to this definition"></a></dt>
+<dd><p>Give an estimation of the homogeneity of layer weights</p>
+<p>For each Conv or Dense layer in the model, this compares the ranges of
+the weights for each filter with the range of the tensor.
+The score for each filter is expressed as an homogeneity rate (1 is the
+maximum), and the layer homogeneity rate is the mean of all filter rates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Keras model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rates indexed by layer names.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.normalize_separable_layer">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">normalize_separable_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/equalization.html#normalize_separable_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.normalize_separable_layer" title="Permalink to this definition"></a></dt>
+<dd><p>This normalizes the depthwise weights of a SeparableConv2D.</p>
+<blockquote>
+<div><p>In order to limit the quantization error when using a per-tensor
+quantization of depthwise weights, this rescales all depthwise weights
+to fit within the [-1, 1] range.
+To preserve the output of the layer, each depthwise kernel is rescaled
+independently to the [-1, 1] interval by dividing all weights by the
+absolute maximum value, and inversely, all pointwise filters ‘looking’
+at these kernels are multiplied by the same value.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.layers.SeparableConv2D</span></code>) – a Keras SeparableConv2D</p></li>
+<li><p><strong>layer.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.normalize_separable_model">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">normalize_separable_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/equalization.html#normalize_separable_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.normalize_separable_model" title="Permalink to this definition"></a></dt>
+<dd><p>This normalizes the depthwise weights of all SeparableConv2D in a Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – a Keras model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new Keras model with normalized depthwise
+weights in SeparableConv2D layers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cnn2snn.transforms.reshape">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.transforms.</span></span><span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_keras</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_width</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/transforms/reshape.html#reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.transforms.reshape" title="Permalink to this definition"></a></dt>
+<dd><p>Rescales the model by changing its input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_keras</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – Keras model to rescale</p></li>
+<li><p><strong>input_height</strong> (<em>int</em>) – desired model input height</p></li>
+<li><p><strong>input_width</strong> (<em>int</em>) – desired model input width</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the rescaled model</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>keras.Model</p>
 </dd>
 </dl>
 </dd></dl>

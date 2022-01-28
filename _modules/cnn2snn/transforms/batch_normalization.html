@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.mnist.model_gxnor &mdash; Akida Examples  documentation</title>
+  <title>cnn2snn.transforms.batch_normalization &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -397,7 +397,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>akida_models.mnist.model_gxnor</li>
+      <li>cnn2snn.transforms.batch_normalization</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -406,7 +406,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.mnist.model_gxnor</h1><div class="highlight"><pre>
+  <h1>Source code for cnn2snn.transforms.batch_normalization</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
@@ -423,130 +423,187 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;BatchNormalization transformations for Keras/CNN2SNN Sequential models.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">GXNOR model definition for MNIST classification.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Rescaling</span>
-<span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">Input</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
+                          <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
+<span class="kn">from</span> <span class="nn">..quantization_ops</span> <span class="kn">import</span> <span class="n">MaxPerAxisQuantizer</span><span class="p">,</span> <span class="n">StdPerAxisQuantizer</span>
+<span class="kn">from</span> <span class="nn">..quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
+                                   <span class="n">QuantizedDense</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.clone</span> <span class="kn">import</span> <span class="n">clone_layer</span><span class="p">,</span> <span class="n">clone_layer_and_add_to_model</span>
 
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/gxnor/&#39;</span>
+<div class="viewcode-block" id="invert_batchnorm_pooling"><a class="viewcode-back" href="../../../api_reference/cnn2snn_apis.html#cnn2snn.transforms.invert_batchnorm_pooling">[docs]</a><span class="k">def</span> <span class="nf">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Inverts pooling and BatchNormalization layers in a Sequential model to</span>
+<span class="sd">    have BN layer before pooling.</span>
 
-
-<div class="viewcode-block" id="gxnor_mnist"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist</span><span class="p">(</span><span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Instantiates a Keras GXNOR model with an additional dense layer to make</span>
-<span class="sd">    better classification.</span>
-
-<span class="sd">    The paper describing the original model can be found `here</span>
-<span class="sd">    &lt;https://www.sciencedirect.com/science/article/pii/S0893608018300108&gt;`_.</span>
+<span class="sd">    Having pool-&gt;BN or BN-&gt;pool is equivalent only if BN layer has no negative</span>
+<span class="sd">    gammas.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        weight_quantization (int, optional): sets all weights in the model to</span>
-<span class="sd">            have a particular quantization bitwidth except for the weights in</span>
-<span class="sd">            the first layer. Defaults to 0.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        activ_quantization (int, optional): sets all activations in the model to</span>
-<span class="sd">            have a particular activation quantization bitwidth. Defaults to 0.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_weight_quantization(int, optional): sets weight quantization in</span>
-<span class="sd">            the first layer. Defaults to weight_quantization value.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-
+<span class="sd">        model (:obj:`tf.keras.Model`): a Sequential Keras model.</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras model for GXNOR/MNIST</span>
+<span class="sd">        :obj:`tf.keras.Model`: a Sequential Keras model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># check if overrides have been provided and override</span>
-    <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">)</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mi">255</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+    <span class="n">new_model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+    <span class="n">new_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Input</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">))</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)):</span>
+            <span class="n">gammas</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="c1"># It is impossible to invert MaxPool-&gt;BN with gammas &lt;= 0</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gammas</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> negative &quot;</span>
+                                   <span class="s2">&quot;gammas in the batch norm layer &quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Negative gammas are &quot;</span>
+                                   <span class="s2">&quot;not supported.&quot;</span><span class="p">)</span>
+            <span class="c1"># GlobalAveragePooling2D brings a change on axis for the batch norm.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">):</span>
+                <span class="n">bn_config</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+                <span class="n">bn_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">bn_layer_clone</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">bn_config</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bn_layer_clone</span> <span class="o">=</span> <span class="n">clone_layer</span><span class="p">(</span><span class="n">next_layer</span><span class="p">)</span>
+            <span class="n">new_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bn_layer_clone</span><span class="p">)</span>
+            <span class="n">bn_layer_clone</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>
+            <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">new_model</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">new_model</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="c1"># Block 1</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block1_conv1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+        <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">new_model</span><span class="p">)</span>
 
-    <span class="c1"># Block 2</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block2_conv1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="c1"># Classification block</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flatten&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc1&#39;</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;predictions&#39;</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-    <span class="c1"># Create model</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gxnor_mnist&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-        <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weight_quantization</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">,</span>
-                        <span class="n">input_weight_quantization</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">model</span></div>
+    <span class="k">return</span> <span class="n">new_model</span></div>
 
 
-<div class="viewcode-block" id="gxnor_mnist_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `gxnor_mnist` model that was trained on</span>
-<span class="sd">    MNIST dataset.</span>
+<span class="k">def</span> <span class="nf">_compute_BN_folded_weights</span><span class="p">(</span><span class="n">neural_layer</span><span class="p">,</span> <span class="n">bn_layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the new weights of a neural layer after folding BN layer.</span>
 
-<span class="sd">    This model was trained with the distillation knowledge method, using</span>
-<span class="sd">    the EfficientNet model from `this repository</span>
-<span class="sd">    &lt;https://github.com/EscVM/Efficient-CapsNet&gt;`_ and the `Distiller` class from</span>
-<span class="sd">    the knowledge distillation toolkit (`akida_models.distiller`).</span>
-
-<span class="sd">    The float training was done for 30 epochs with a learning rate of 1e-4</span>
-<span class="sd">    After that we gradually quantize the model from:</span>
-<span class="sd">    8-4-4 --&gt; 4-4-4 --&gt; 4-4-2 --&gt; 2-2-2 --&gt; 2-2-1 tuning the model at each step</span>
-<span class="sd">    with the same distillation training method for 5 epochs and a learning rate</span>
-<span class="sd">    of 5e-5.</span>
-
+<span class="sd">    Args:</span>
+<span class="sd">        neural_layer (:obj:`tf.keras.Layer`): a neural layer where BN will be</span>
+<span class="sd">            folded.</span>
+<span class="sd">        bn_layer (:obj:`tf.keras.Layer`): the BatchNormalization layer to fold</span>
+<span class="sd">            into the neural layer.</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras Model instance.</span>
+<span class="sd">        list: a list of the new weights to set in the new folded neural layer.</span>
+<span class="sd">        list: a list of positive scale factors introduced by the folding.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_iq2_wq2_aq1.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;83405feaab26ed62fcf20f50eb10b93ad696f15ed6a37b54cc97ea6ed996ef36&#39;</span>
-    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
-                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+
+    <span class="c1"># Get kernel and bias weights of the neural layer</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">neural_layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">):</span>
+        <span class="n">kernel_position</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">bias_position</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kernel_position</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">bias_position</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">neural_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">kernel_position</span><span class="p">]</span>
+    <span class="n">bias</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">bias_position</span><span class="p">]</span> <span class="k">if</span> <span class="n">neural_layer</span><span class="o">.</span><span class="n">use_bias</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c1"># Get BN weights</span>
+    <span class="n">gamma</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="n">bn_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
+    <span class="n">scale_BN</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="n">bn_layer</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+
+    <span class="c1"># Compute new folded kernel and bias</span>
+    <span class="n">new_kernel</span> <span class="o">=</span> <span class="n">kernel</span> <span class="o">*</span> <span class="n">scale_BN</span>
+    <span class="n">new_bias</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">+</span> <span class="p">(</span><span class="n">bias</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_BN</span>
+
+    <span class="c1"># Return all weights with modified ones</span>
+    <span class="n">new_weights</span> <span class="o">=</span> <span class="n">weights</span>
+    <span class="n">new_weights</span><span class="p">[</span><span class="n">kernel_position</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_kernel</span>
+    <span class="k">if</span> <span class="n">neural_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">:</span>
+        <span class="n">new_weights</span><span class="p">[</span><span class="n">bias_position</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_bias</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_weights</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">bias_position</span><span class="p">,</span> <span class="n">new_bias</span><span class="p">)</span>
+
+    <span class="c1"># Absolute value of scale_BN is returned because we no longer need its sign.</span>
+    <span class="c1"># It is later used to rescale the scale factors which are always positive.</span>
+    <span class="k">return</span> <span class="n">new_weights</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">scale_BN</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="fold_batchnorm"><a class="viewcode-back" href="../../../api_reference/cnn2snn_apis.html#cnn2snn.transforms.fold_batchnorm">[docs]</a><span class="k">def</span> <span class="nf">fold_batchnorm</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Folds BatchNormalization layers into the preceding neural layers of</span>
+<span class="sd">    a Sequential model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`tf.keras.Model`): a Sequential Keras model.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        :obj:`tf.keras.Model`: a Sequential Keras model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">)</span>
+
+    <span class="n">quantized_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
+                        <span class="n">QuantizedDense</span><span class="p">)</span>
+    <span class="n">neural_layers</span> <span class="o">=</span> <span class="n">quantized_layers</span> <span class="o">+</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">)</span>
+
+    <span class="n">new_model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+    <span class="n">new_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Input</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">neural_layers</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)):</span>
+
+            <span class="c1"># Check BN axis parameter</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span>
+                    <span class="n">next_layer</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer &quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be applied on the &quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;last axis. Receives </span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If the layer has been quantized, check quantizer</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantized_layers</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">quantizer</span><span class="p">,</span>
+                                  <span class="p">(</span><span class="n">MaxPerAxisQuantizer</span><span class="p">,</span> <span class="n">StdPerAxisQuantizer</span><span class="p">)):</span>
+                    <span class="n">shift_for_sepconv</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span>
+                                                   <span class="n">QuantizedSeparableConv2D</span><span class="p">)</span>
+                    <span class="n">w</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span> <span class="o">+</span> <span class="n">shift_for_sepconv</span><span class="p">]</span>
+                    <span class="n">scale_factors</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">scale_factors</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;The BatchNormalization layer </span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+                            <span class="s2">&quot;can only be folded into a quantized layer that &quot;</span>
+                            <span class="s2">&quot;uses a quantizer per axis.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Add new neural layer with bias</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">new_layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">new_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_layer</span><span class="p">)</span>
+            <span class="n">new_weights</span><span class="p">,</span> <span class="n">scale_BN</span> <span class="o">=</span> <span class="n">_compute_BN_folded_weights</span><span class="p">(</span>
+                <span class="n">layer</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">scale_BN</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="c1"># Zero gammas are not supported: once folded, new kernel is zero</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">scale_BN</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> null &quot;</span>
+                                   <span class="s2">&quot;gammas in the batch norm layer &quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. Null gammas are not &quot;</span>
+                                   <span class="s2">&quot;supported.&quot;</span><span class="p">)</span>
+            <span class="n">new_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">new_model</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+        <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">new_model</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_model</span></div>
 </pre></div>
 
            </div>

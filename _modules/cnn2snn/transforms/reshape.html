@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.mnist.model_gxnor &mdash; Akida Examples  documentation</title>
+  <title>cnn2snn.transforms.reshape &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -397,7 +397,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>akida_models.mnist.model_gxnor</li>
+      <li>cnn2snn.transforms.reshape</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -406,10 +406,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.mnist.model_gxnor</h1><div class="highlight"><pre>
+  <h1>Source code for cnn2snn.transforms.reshape</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2021 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2022 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -423,130 +423,35 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;Input layer size reshaping for Keras/CNN2SNN Sequential models.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">GXNOR model definition for MNIST classification.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Rescaling</span>
-<span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">Input</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
-
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
-
-<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/gxnor/&#39;</span>
+<span class="kn">from</span> <span class="nn">.clone</span> <span class="kn">import</span> <span class="n">clone_model_with_weights</span>
 
 
-<div class="viewcode-block" id="gxnor_mnist"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist</span><span class="p">(</span><span class="n">weight_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">activ_quantization</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">input_weight_quantization</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Instantiates a Keras GXNOR model with an additional dense layer to make</span>
-<span class="sd">    better classification.</span>
-
-<span class="sd">    The paper describing the original model can be found `here</span>
-<span class="sd">    &lt;https://www.sciencedirect.com/science/article/pii/S0893608018300108&gt;`_.</span>
+<div class="viewcode-block" id="reshape"><a class="viewcode-back" href="../../../api_reference/cnn2snn_apis.html#cnn2snn.transforms.reshape">[docs]</a><span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_height</span><span class="p">,</span> <span class="n">input_width</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Rescales the model by changing its input size.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        weight_quantization (int, optional): sets all weights in the model to</span>
-<span class="sd">            have a particular quantization bitwidth except for the weights in</span>
-<span class="sd">            the first layer. Defaults to 0.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        activ_quantization (int, optional): sets all activations in the model to</span>
-<span class="sd">            have a particular activation quantization bitwidth. Defaults to 0.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_weight_quantization(int, optional): sets weight quantization in</span>
-<span class="sd">            the first layer. Defaults to weight_quantization value.</span>
-
-<span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
-<span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
+<span class="sd">        model_keras (:obj:`tf.keras.Model`): Keras model to rescale</span>
+<span class="sd">        input_height (int): desired model input height</span>
+<span class="sd">        input_width (int): desired model input width</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras model for GXNOR/MNIST</span>
+<span class="sd">        keras.Model: the rescaled model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The reshape function is restricted to Sequential models only</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">)</span>
 
-    <span class="c1"># check if overrides have been provided and override</span>
-    <span class="k">if</span> <span class="n">input_weight_quantization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">input_weight_quantization</span> <span class="o">=</span> <span class="n">weight_quantization</span>
+    <span class="c1"># Create the desired input</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_height</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">new_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mi">255</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
-
-    <span class="c1"># Block 1</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block1_conv1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="c1"># Block 2</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                   <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block2_conv1&#39;</span><span class="p">,</span>
-                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
-                   <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-
-    <span class="c1"># Classification block</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flatten&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc1&#39;</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;predictions&#39;</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-    <span class="c1"># Create model</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gxnor_mnist&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="p">((</span><span class="n">weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">activ_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-        <span class="p">(</span><span class="n">input_weight_quantization</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weight_quantization</span><span class="p">,</span> <span class="n">activ_quantization</span><span class="p">,</span>
-                        <span class="n">input_weight_quantization</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">model</span></div>
-
-
-<div class="viewcode-block" id="gxnor_mnist_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained">[docs]</a><span class="k">def</span> <span class="nf">gxnor_mnist_pretrained</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `gxnor_mnist` model that was trained on</span>
-<span class="sd">    MNIST dataset.</span>
-
-<span class="sd">    This model was trained with the distillation knowledge method, using</span>
-<span class="sd">    the EfficientNet model from `this repository</span>
-<span class="sd">    &lt;https://github.com/EscVM/Efficient-CapsNet&gt;`_ and the `Distiller` class from</span>
-<span class="sd">    the knowledge distillation toolkit (`akida_models.distiller`).</span>
-
-<span class="sd">    The float training was done for 30 epochs with a learning rate of 1e-4</span>
-<span class="sd">    After that we gradually quantize the model from:</span>
-<span class="sd">    8-4-4 --&gt; 4-4-4 --&gt; 4-4-2 --&gt; 2-2-2 --&gt; 2-2-1 tuning the model at each step</span>
-<span class="sd">    with the same distillation training method for 5 epochs and a learning rate</span>
-<span class="sd">    of 5e-5.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a Keras Model instance.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_iq2_wq2_aq1.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;83405feaab26ed62fcf20f50eb10b93ad696f15ed6a37b54cc97ea6ed996ef36&#39;</span>
-    <span class="n">model_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">origin</span><span class="o">=</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
-                          <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
-                          <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
+    <span class="c1"># Clone the model and replace input layer</span>
+    <span class="n">clone</span> <span class="o">=</span> <span class="n">clone_model_with_weights</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">input_tensors</span><span class="o">=</span><span class="n">new_input</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">clone</span></div>
 </pre></div>
 
            </div>

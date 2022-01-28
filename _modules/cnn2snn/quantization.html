@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.1
+                MetaTF 2.1.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -194,6 +194,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#convert">convert</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#load-quantized-model">load_quantized_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#transforms">Transforms</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizers">Quantizers</a><ul>
@@ -431,7 +432,8 @@
 <span class="kn">from</span> <span class="nn">.quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
                                   <span class="n">QuantizedDense</span><span class="p">,</span> <span class="n">ActivationDiscreteRelu</span><span class="p">,</span>
                                   <span class="n">QuantizedActivation</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">sequentialize</span><span class="p">,</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batchnorm</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sequentialize</span><span class="p">,</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span>
+                         <span class="n">fold_batchnorm</span><span class="p">,</span> <span class="n">normalize_separable_layer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
 
 <span class="n">keras_neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">)</span>
@@ -668,6 +670,8 @@
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;quantizer_dw&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="c1"># Normalize depthwise weights (i.e. equalize kernel ranges)</span>
+            <span class="n">normalize_separable_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
             <span class="n">quantizer</span> <span class="o">=</span> <span class="n">MaxQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">quantizer_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">quantizer</span> <span class="o">=</span> <span class="n">quantizer_function</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">)</span>
