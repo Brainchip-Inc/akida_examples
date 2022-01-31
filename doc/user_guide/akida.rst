@@ -436,6 +436,16 @@ Enabling power measurement is simply done by:
 
   device.soc.power_measurement_enabled = True
 
+The device clock configuration can be set using the `clock_mode
+<../api_reference/akida_apis.html#akida.core.soc.ClockMode>`__ property that
+takes values defined by `ClockMode
+<../api_reference/akida_apis.html#akida.core.soc.ClockMode>`__.
+
+.. code-block:: python
+
+  device.soc.clock_mode = akida.soc.ClockMode.Performance
+
+
 After sending data for inference and performances measurements can be retrieved
 from the `model statistics
 <../api_reference/akida_apis.html#akida.Model.statistics>`__.
