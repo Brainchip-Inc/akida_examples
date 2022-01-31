@@ -82,8 +82,8 @@ customizable quantization of weights and activations.
 # the native ReLU layers:
 #
 # * **ActivationDiscreteRelu**: a linear quantizer for ReLU, clipped at value 6.
-# * **QuantizedRelu**: a trainable activation layer where the activation threshold
-#   and the max clipping value are learned.
+# * **QuantizedRelu**: a configurable activation layer where max clipping value
+#   is a parameter.
 #
 # It is also possible to define a custom quantized activation layer. Details
 # are given in the section :ref:`activation-section`.
@@ -93,7 +93,7 @@ customizable quantization of weights and activations.
 #           counterparts, using
 #           `MaxPerAxisQuantizer <../../api_reference/cnn2snn_apis.html#maxperaxisquantizer>`__.
 #           The ReLU layers are substituted by
-#           `ActivationDiscreteRelu <../../api_reference/cnn2snn_apis.html#activationdiscreterelu>`__
+#           `QuantizedRelu <../../api_reference/cnn2snn_apis.html#cnn2snn.QuantizedReLU>`__
 #           layers.
 #
 #
@@ -350,11 +350,8 @@ plot_discretized_weights(w, wq)
 ######################################################################
 # .. _activation-section:
 #
-# 3. Quantized Activation Layer Details
+# 3. Understanding quantized activation
 # -------------------------------------
-#
-# How a quantized activation works
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # A quantized activation layer works as a ReLU layer with an additional
 # quantization step. It can then be seen as a succession of two operations:
@@ -369,8 +366,6 @@ plot_discretized_weights(w, wq)
 #
 # - the activation threshold: the value above which a neuron fires
 # - the maximum activation value: any activation above will be clipped
-# - the slope of the linear function: unlike a ReLU function with a fixed
-#   slope of 1, the CNN2SNN quantized activation accepts a different value.
 #
 # The quantization operation is defined by one parameter: the bitwidth. The
 # activation function is quantized using the ceiling operator on
@@ -380,8 +375,8 @@ plot_discretized_weights(w, wq)
 # line in the graph).
 #
 #
-# .. image:: ../../img/custom_activation.jpg
-#   :scale: 75 %
+# .. image:: ../../img/custom_activation.png
+#   :scale: 35 %
 #
 # During training, the ceiling quantization is performed in the forward pass:
 # the activations are discretized and then transferred to the next layer.
@@ -391,116 +386,6 @@ plot_discretized_weights(w, wq)
 # quantizers, this STE estimator is done using the ``tf.stop_gradient``
 # function.
 #
-#
-# How to create a custom quantized activation layer
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# The ``QuantizedActivation`` base class lets users easily create custom
-# quantized activation layers. Three property functions must be overridden
-# and return scalar Tensorflow objects (tf.constant, tf.Variable):
-#
-# - the ``threshold`` property, returning the activation threshold
-# - the ``step_height`` property, returning the step height between two
-#   activation levels. It is defined as the maximum activation value divided
-#   by the number of activation levels (i.e. *2^bitwidth - 1*)
-# - the ``step_width`` property, returning the step width as shown in the
-#   above figure. It is computed as: *max_value / slope / (2^bitwidth - 1)*
-#
-# Note that the slope of the linear activation function is equal to
-# *step_height/step_width*.
-#
-# Why use a different quantized activation
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# The default *ActivationDiscreteRelu* layer does not allow choosing a maximum
-# activation value. For instance, a 4-bit *ActivationDiscreteRelu* layer clips
-# activations to 6. In use cases where input potentials are rather small,
-# let's say smaller than 3, clipping to 6 means that the input potentials will
-# be quantized only on the first half of the possible activation levels. Let's
-# see an example.
-
-# Create an ActivationDiscreteRelu layer
-act_layer = qlayers.ActivationDiscreteRelu(bitwidth=4)
-print(f"Activation step height: {act_layer.step_height.numpy():.2f}")
-
-# Compute quantized activations for input potentials between -1 and 7
-input_potentials = np.arange(-1, 7, 0.01).astype(np.float32)
-activations = act_layer(input_potentials)
-
-# Plot quantized activations
-plt.plot(input_potentials, activations.numpy(), '.')
-plt.vlines(3, 0, 6, 'k', (0, (1, 5)))
-plt.title("Quantized activations with ActivationDiscreteRelu")
-plt.tight_layout()
-plt.show()
-
-######################################################################
-# We can see that, with input potentials smaller than 3, shown by the dotted
-# vertical line, the output quantized activations only takes 7 levels, with a
-# step height of 0.4. We don't benefit from all the quantization levels.
-#
-# One option is to define a custom quantized activation layer where we can set
-# the maximum activation value. In our use case, we can set it to 3, in order
-# to take advantage of all the quantization levels by reducing the step height.
-# We suppose a slope of 1 and a threshold of half the step width (as set in
-# *ActivationDiscreteRelu*). We then override the three property functions.
-
-
-class CustomQuantizedActivation(qlayers.QuantizedActivation):
-
-    def __init__(self, bitwidth, max_value, **kwargs):
-        super().__init__(bitwidth, **kwargs)
-        self.max_value = max_value
-        self.step_height_ = tf.constant(max_value / self.levels)
-
-    @property
-    def step_height(self):
-        return self.step_height_
-
-    @property
-    def step_width(self):
-        return self.step_height_
-
-    @property
-    def threshold(self):
-        return 0.5 * self.step_height_
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({'max_value': self.max_value})
-        return config
-
-
-# Create a custom quantized activation layer
-custom_act_layer = CustomQuantizedActivation(bitwidth=4, max_value=3)
-print(f"Custom activation step height: "
-      f"{custom_act_layer.step_height.numpy():.2f}")
-
-# Compute new quantized activations
-new_activations = custom_act_layer(input_potentials)
-
-# Plot new quantized activations
-plt.plot(input_potentials, activations.numpy(), '.')
-plt.plot(input_potentials, new_activations.numpy(), '.')
-plt.vlines(3, 0, 6, 'k', (0, (1, 5)))
-plt.legend(["ActivationDiscreteRelu", "CustomQuantizedActivation"])
-plt.title("Quantized activations with CustomQuantizedActivation")
-plt.tight_layout()
-plt.show()
-
-######################################################################
-# The quantized activations are clipped to 3 as expected, and the step height
-# is now 0.2. The activations between 0 and 3 are then discretized on 15
-# activation levels, versus 7 with *ActivationDiscreteRelu*. This new layer
-# gives a finer discretization and is better adjusted to our use case with
-# small potentials.
-#
-# Besides, in the *QuantizedReLU* layer provided in the CNN2SNN toolkit, there
-# are two trainable variables that learn the activation threshold and the
-# step width. The step height is set to the step width, to preserve a slope of
-# 1, as in the standard ReLU layer. This can be a suitable activation layer for
-# use cases where the maximum activation value is not known. The layer can learn
-# what are the best values to adapt to the input potentials.
 
 ######################################################################
 # .. _high_scale_factors:
