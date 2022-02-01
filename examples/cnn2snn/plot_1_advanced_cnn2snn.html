@@ -37,7 +37,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.2
+                MetaTF 2.1.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -325,7 +325,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Advanced CNN2SNN tutorial</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#design-a-cnn2snn-quantized-model">1. Design a CNN2SNN quantized model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#weight-quantizer-details">2. Weight Quantizer Details</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#quantized-activation-layer-details">3. Quantized Activation Layer Details</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#understanding-quantized-activation">3. Understanding quantized activation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#how-to-deal-with-too-high-scale-factors">4. How to deal with too high scale factors</a></li>
 </ul>
 </li>
@@ -487,11 +487,11 @@ on a uniform grid. Two quantized activation layers are provided to replace
 the native ReLU layers:</p>
 <ul class="simple">
 <li><p><strong>ActivationDiscreteRelu</strong>: a linear quantizer for ReLU, clipped at value 6.</p></li>
-<li><p><strong>QuantizedRelu</strong>: a trainable activation layer where the activation threshold
-and the max clipping value are learned.</p></li>
+<li><p><strong>QuantizedRelu</strong>: a configurable activation layer where max clipping value
+is a parameter.</p></li>
 </ul>
 <p>It is also possible to define a custom quantized activation layer. Details
-are given in the section <a class="reference internal" href="#activation-section"><span class="std std-ref">3. Quantized Activation Layer Details</span></a>.</p>
+are given in the section <a class="reference internal" href="#activation-section"><span class="std std-ref">3. Understanding quantized activation</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">quantize</span></code> function is a high-level helper that automatically
@@ -499,7 +499,7 @@ replaces the neural layers with their corresponding quantized
 counterparts, using
 <a class="reference external" href="../../api_reference/cnn2snn_apis.html#maxperaxisquantizer">MaxPerAxisQuantizer</a>.
 The ReLU layers are substituted by
-<a class="reference external" href="../../api_reference/cnn2snn_apis.html#activationdiscreterelu">ActivationDiscreteRelu</a>
+<a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.QuantizedReLU">QuantizedRelu</a>
 layers.</p>
 </div>
 </section>
@@ -601,7 +601,7 @@ max_pooling2d (MaxPooling2D) (None, 13, 13, 8)         0
 _________________________________________________________________
 batch_normalization_2 (Batch (None, 13, 13, 8)         32
 _________________________________________________________________
-re_lu_2 (QuantizedReLU)      (None, 13, 13, 8)         2
+re_lu_2 (QuantizedReLU)      (None, 13, 13, 8)         0
 _________________________________________________________________
 flatten_1 (Flatten)          (None, 1352)              0
 _________________________________________________________________
@@ -609,8 +609,8 @@ dense_1 (QuantizedDense)     (None, 10)                13530
 _________________________________________________________________
 softmax (Softmax)            (None, 10)                0
 =================================================================
-Total params: 13,644
-Trainable params: 13,628
+Total params: 13,642
+Trainable params: 13,626
 Non-trainable params: 16
 _________________________________________________________________
 </pre></div>
@@ -792,10 +792,8 @@ use cases, especially for post-training quantization, which is why it is the
 default quantizer.</p>
 </section>
 </section>
-<section id="quantized-activation-layer-details">
-<span id="activation-section"></span><h2>3. Quantized Activation Layer Details<a class="headerlink" href="#quantized-activation-layer-details" title="Permalink to this headline"></a></h2>
-<section id="how-a-quantized-activation-works">
-<h3>How a quantized activation works<a class="headerlink" href="#how-a-quantized-activation-works" title="Permalink to this headline"></a></h3>
+<section id="understanding-quantized-activation">
+<span id="activation-section"></span><h2>3. Understanding quantized activation<a class="headerlink" href="#understanding-quantized-activation" title="Permalink to this headline"></a></h2>
 <p>A quantized activation layer works as a ReLU layer with an additional
 quantization step. It can then be seen as a succession of two operations:</p>
 <ul class="simple">
@@ -809,8 +807,6 @@ below):</p>
 <ul class="simple">
 <li><p>the activation threshold: the value above which a neuron fires</p></li>
 <li><p>the maximum activation value: any activation above will be clipped</p></li>
-<li><p>the slope of the linear function: unlike a ReLU function with a fixed
-slope of 1, the CNN2SNN quantized activation accepts a different value.</p></li>
 </ul>
 <p>The quantization operation is defined by one parameter: the bitwidth. The
 activation function is quantized using the ceiling operator on
@@ -818,7 +814,7 @@ activation function is quantized using the ceiling operator on
 activation gives 15 activation levels (plus the zero activation) uniformly
 distributed between zero and the maximum activation value (cf. the orange
 line in the graph).</p>
-<a class="reference internal image-reference" href="../../_images/custom_activation.jpg"><img alt="../../_images/custom_activation.jpg" src="../../_images/custom_activation.jpg" style="width: 861.75px; height: 428.25px;" /></a>
+<a class="reference internal image-reference" href="../../_images/custom_activation.png"><img alt="../../_images/custom_activation.png" src="../../_images/custom_activation.png" style="width: 795.9px; height: 595.3499999999999px;" /></a>
 <p>During training, the ceiling quantization is performed in the forward pass:
 the activations are discretized and then transferred to the next layer.
 However, during the back-propagation phase, the gradient is computed as if
@@ -826,118 +822,6 @@ there were no quantization: only the gradient of the clipped linear
 activation function (blue line above) is back-propagated. Like for weight
 quantizers, this STE estimator is done using the <code class="docutils literal notranslate"><span class="pre">tf.stop_gradient</span></code>
 function.</p>
-</section>
-<section id="how-to-create-a-custom-quantized-activation-layer">
-<h3>How to create a custom quantized activation layer<a class="headerlink" href="#how-to-create-a-custom-quantized-activation-layer" title="Permalink to this headline"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">QuantizedActivation</span></code> base class lets users easily create custom
-quantized activation layers. Three property functions must be overridden
-and return scalar Tensorflow objects (tf.constant, tf.Variable):</p>
-<ul class="simple">
-<li><p>the <code class="docutils literal notranslate"><span class="pre">threshold</span></code> property, returning the activation threshold</p></li>
-<li><p>the <code class="docutils literal notranslate"><span class="pre">step_height</span></code> property, returning the step height between two
-activation levels. It is defined as the maximum activation value divided
-by the number of activation levels (i.e. <em>2^bitwidth - 1</em>)</p></li>
-<li><p>the <code class="docutils literal notranslate"><span class="pre">step_width</span></code> property, returning the step width as shown in the
-above figure. It is computed as: <em>max_value / slope / (2^bitwidth - 1)</em></p></li>
-</ul>
-<p>Note that the slope of the linear activation function is equal to
-<em>step_height/step_width</em>.</p>
-</section>
-<section id="why-use-a-different-quantized-activation">
-<h3>Why use a different quantized activation<a class="headerlink" href="#why-use-a-different-quantized-activation" title="Permalink to this headline"></a></h3>
-<p>The default <em>ActivationDiscreteRelu</em> layer does not allow choosing a maximum
-activation value. For instance, a 4-bit <em>ActivationDiscreteRelu</em> layer clips
-activations to 6. In use cases where input potentials are rather small,
-let’s say smaller than 3, clipping to 6 means that the input potentials will
-be quantized only on the first half of the possible activation levels. Let’s
-see an example.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an ActivationDiscreteRelu layer</span>
-<span class="n">act_layer</span> <span class="o">=</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">ActivationDiscreteRelu</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Activation step height: </span><span class="si">{</span><span class="n">act_layer</span><span class="o">.</span><span class="n">step_height</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="c1"># Compute quantized activations for input potentials between -1 and 7</span>
-<span class="n">input_potentials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-<span class="n">activations</span> <span class="o">=</span> <span class="n">act_layer</span><span class="p">(</span><span class="n">input_potentials</span><span class="p">)</span>
-
-<span class="c1"># Plot quantized activations</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">input_potentials</span><span class="p">,</span> <span class="n">activations</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Quantized activations with ActivationDiscreteRelu&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img src="../../_images/sphx_glr_plot_1_advanced_cnn2snn_003.png" srcset="../../_images/sphx_glr_plot_1_advanced_cnn2snn_003.png" alt="Quantized activations with ActivationDiscreteRelu" class = "sphx-glr-single-img"/><p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Activation step height: 0.40
-</pre></div>
-</div>
-<p>We can see that, with input potentials smaller than 3, shown by the dotted
-vertical line, the output quantized activations only takes 7 levels, with a
-step height of 0.4. We don’t benefit from all the quantization levels.</p>
-<p>One option is to define a custom quantized activation layer where we can set
-the maximum activation value. In our use case, we can set it to 3, in order
-to take advantage of all the quantization levels by reducing the step height.
-We suppose a slope of 1 and a threshold of half the step width (as set in
-<em>ActivationDiscreteRelu</em>). We then override the three property functions.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CustomQuantizedActivation</span><span class="p">(</span><span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedActivation</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span> <span class="n">max_value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bitwidth</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span> <span class="o">=</span> <span class="n">max_value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">step_height_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">max_value</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">step_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_height_</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">step_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_height_</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_height_</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;max_value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">config</span>
-
-
-<span class="c1"># Create a custom quantized activation layer</span>
-<span class="n">custom_act_layer</span> <span class="o">=</span> <span class="n">CustomQuantizedActivation</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Custom activation step height: &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">custom_act_layer</span><span class="o">.</span><span class="n">step_height</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="c1"># Compute new quantized activations</span>
-<span class="n">new_activations</span> <span class="o">=</span> <span class="n">custom_act_layer</span><span class="p">(</span><span class="n">input_potentials</span><span class="p">)</span>
-
-<span class="c1"># Plot new quantized activations</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">input_potentials</span><span class="p">,</span> <span class="n">activations</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">input_potentials</span><span class="p">,</span> <span class="n">new_activations</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">&quot;ActivationDiscreteRelu&quot;</span><span class="p">,</span> <span class="s2">&quot;CustomQuantizedActivation&quot;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Quantized activations with CustomQuantizedActivation&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img src="../../_images/sphx_glr_plot_1_advanced_cnn2snn_004.png" srcset="../../_images/sphx_glr_plot_1_advanced_cnn2snn_004.png" alt="Quantized activations with CustomQuantizedActivation" class = "sphx-glr-single-img"/><p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Custom activation step height: 0.20
-</pre></div>
-</div>
-<p>The quantized activations are clipped to 3 as expected, and the step height
-is now 0.2. The activations between 0 and 3 are then discretized on 15
-activation levels, versus 7 with <em>ActivationDiscreteRelu</em>. This new layer
-gives a finer discretization and is better adjusted to our use case with
-small potentials.</p>
-<p>Besides, in the <em>QuantizedReLU</em> layer provided in the CNN2SNN toolkit, there
-are two trainable variables that learn the activation threshold and the
-step width. The step height is set to the step width, to preserve a slope of
-1, as in the standard ReLU layer. This can be a suitable activation layer for
-use cases where the maximum activation value is not known. The layer can learn
-what are the best values to adapt to the input potentials.</p>
-</section>
 </section>
 <section id="how-to-deal-with-too-high-scale-factors">
 <span id="high-scale-factors"></span><h2>4. How to deal with too high scale factors<a class="headerlink" href="#how-to-deal-with-too-high-scale-factors" title="Permalink to this headline"></a></h2>
@@ -968,7 +852,7 @@ be applied on the Keras float (or quantized) model before folding BN layers.</p>
 <p>The new model can then be trained using <code class="docutils literal notranslate"><span class="pre">compile()</span></code> and <code class="docutils literal notranslate"><span class="pre">fit()</span></code> and
 quantized if needed. The trained model will not have BN gammas less than 1e-2,
 which is valuable to avoid very high scale factors.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.447 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.298 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-cnn2snn-plot-1-advanced-cnn2snn-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/fd3541eadb2a3e014de84358069874b2/plot_1_advanced_cnn2snn.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_1_advanced_cnn2snn.py</span></code></a></p>
