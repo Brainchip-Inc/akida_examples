@@ -116,7 +116,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
-# performance of around 99% (99.24% if you run all 10000 samples).
+# performance of around 99% (99.20% if you run all 10000 samples).
 #
 
 ######################################################################
