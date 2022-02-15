@@ -42,6 +42,12 @@ CNN2SNN Toolkit API
     .. autofunction:: cnn2snn.transforms.normalize_separable_model
     .. autofunction:: cnn2snn.transforms.reshape
 
+    Calibration
+    -----------
+    .. autofunction:: cnn2snn.calibration.QuantizationSampler
+    .. autofunction:: cnn2snn.calibration.bias_correction
+    .. autofunction:: cnn2snn.calibration.adaround
+
     Quantizers
     ==========
 
