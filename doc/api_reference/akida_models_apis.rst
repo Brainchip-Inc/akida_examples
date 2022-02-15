@@ -71,6 +71,7 @@ Akida models API
     .. autofunction:: akida_models.akidanet_ecg_pretrained
     .. autofunction:: akida_models.akidanet_plantvillage_pretrained
     .. autofunction:: akida_models.akidanet_cifar10_pretrained
+    .. autofunction:: akida_models.akidanet_vww_pretrained
 
     Preprocessing
     *************
