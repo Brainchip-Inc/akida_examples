@@ -389,12 +389,8 @@ input_image = image[np.newaxis, :].astype(np.uint8)
 pots = model_akida.evaluate(input_image)[0]
 
 # Reshape the potentials to prepare for decoding
-w, h, c = pots.shape
-pots = pots.reshape((w, h, len(anchors), 4 + 1 + len(labels)))
-
-# Akida potentials are transposed because they are given in (W,H) format while
-# the decode_output API uses the Keras-style (H,W).
-pots = pots.transpose((1, 0, 2, 3))
+h, w, c = pots.shape
+pots = pots.reshape((h, w, len(anchors), 4 + 1 + len(labels)))
 
 # Decode potentials into bounding boxes
 raw_boxes = decode_output(pots, anchors, len(labels))
