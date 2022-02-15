@@ -70,6 +70,7 @@ Akida models API
     .. autofunction:: akida_models.akidanet_retinal_oct_pretrained
     .. autofunction:: akida_models.akidanet_ecg_pretrained
     .. autofunction:: akida_models.akidanet_plantvillage_pretrained
+    .. autofunction:: akida_models.akidanet_cifar10_pretrained
 
     Preprocessing
     *************
@@ -94,11 +95,6 @@ Akida models API
     DS-CNN
     ------
 
-    CIFAR-10
-    ~~~~~~~~
-    .. autofunction:: akida_models.ds_cnn_cifar10
-    .. autofunction:: akida_models.ds_cnn_cifar10_pretrained
-
     KWS
     ~~~
     .. autofunction:: akida_models.ds_cnn_kws
@@ -114,11 +110,6 @@ Akida models API
 
     VGG
     ---
-
-    CIFAR-10
-    ~~~~~~~~
-    .. autofunction:: akida_models.vgg_cifar10
-    .. autofunction:: akida_models.vgg_cifar10_pretrained
 
     ImageNet
     ~~~~~~~~
