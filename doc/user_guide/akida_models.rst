@@ -31,23 +31,13 @@ programming interface with default values. To quantize a given model, the
 
 **Examples**
 
-Instantiate a DS-CNN (MobileNet inspired) network for CIFAR10 (object
-classification):
+Instantiate a DS-CNN network for KWS (keyword spotting):
 
 .. code-block:: bash
 
-    akida_models create ds_cnn_cifar10
+    akida_models create ds_cnn_kws
 
-The model is automatically saved to ``ds_cnn_cifar10.h5``.
-
-Instantiate a VGG model for CIFAR10 and save it to a specific location:
-
-.. code-block:: bash
-
-    akida_models create -s ./models/my_vgg_network.h5 vgg_cifar10
-
-A model named ``my_vgg_network.h5`` is saved under the models directory
-(providing the directory exists).
+The model is automatically saved to ``ds_cnn_kws.h5``.
 
 Some models come with additional parameters that allow a deeper configuration.
 That is the case for the AkidaNet, AkidaNet edge, MobileNet, Mobilenet edge and
@@ -88,8 +78,6 @@ The full parameter list with description can be obtained using the  ``-h`` or
 
 Current available models for creation are:
 
- * ds_cnn_cifar10
- * vgg_cifar10
  * vgg_utk_face
  * ds_cnn_kws
  * pointnet_plus_modelnet40
@@ -118,45 +106,6 @@ If the quantized model offers acceptable performance, it can be converted into
 an Akida model, ready to be loaded on the Akida NSoC using the
 `CNN2SNN convert CLI <cnn2snn.html#command-line-interface>`_.
 
-CIFAR10 training and tuning
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Two different network architectures are provided for CIFAR10 object
-classification, namely ``ds_cnn_cifar10`` and ``vgg_cifar10`` and both can be
-trained using the ``cifar10_train`` CLI.
-
-``cifar10_train`` offers two actions:
-
- * ``train`` integrates data augmentation and a decreasing learning rate. It
-   will generally be used for a large number of epochs on a model that has not
-   been quantized yet.
- * ``tune`` has a lower learning rate and will early stop when loss reaches a
-   plateau. It is intended for re-training after quantization.
-
-See `typical training scenario <cnn2snn.html#typical-training-scenario>`_ for
-more details about quantization aware training.
-
-**Example**
-
-Apply quantization-aware training to a VGG model for the CIFAR10 dataset by:
-
- * creating the model
- * training the full-precision model for 100 epochs
- * quantizing weights and activations to 4 bits
- * tuning the 8-4-4 quantized model for 15 epochs
-
-.. code-block:: bash
-
-    akida_models create -s vgg_cifar10.h5 vgg_cifar10
-
-    cifar10_train train -m vgg_cifar10.h5 -s vgg_cifar10.h5 -e 100
-
-    cnn2snn quantize -m vgg_cifar10.h5 -wq 4 -aq 4
-
-    cifar10_train tune -m vgg_cifar10_iq4_wq4_aq4.h5 -s vgg_cifar10_iq4_wq4_aq4.h5 -e 15
-
-
-Note that the model is saved and reloaded at each step.
 
 UTK Face training
 ^^^^^^^^^^^^^^^^^
@@ -260,9 +209,9 @@ once converted to Akida.
 
 .. code-block:: bash
 
-   cifar10_train eval -m vgg_cifar10_iq4_wq4_aq4.h5
+   kws_train eval -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5
 
-   cifar10_train eval -m vgg_cifar10_iq4_wq4_aq4.h5 -ak
+   kws_train eval -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -ak
 
 
 Layer Blocks
