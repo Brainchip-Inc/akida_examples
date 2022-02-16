@@ -171,7 +171,7 @@ full_model.output
 #
 # As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
-# training a YOLO model. See the `cats vs. dogs transfer learning example
+# training a YOLO model. See the `PlantVillage transfer learning example
 # <plot_5_transfer_learning.html>`_ for a detail explanation on transfer
 # learning principles.
 #
