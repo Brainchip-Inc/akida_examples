@@ -163,3 +163,4 @@ Akida runtime API
     Compatibility
     -------------
     .. autofunction:: akida.compatibility.create_from_model
+    .. autofunction:: akida.compatibility.transpose
