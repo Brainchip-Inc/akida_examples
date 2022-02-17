@@ -171,7 +171,7 @@ full_model.output
 #
 # As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
-# training a YOLO model. See the `cats vs. dogs transfer learning example
+# training a YOLO model. See the `PlantVillage transfer learning example
 # <plot_5_transfer_learning.html>`_ for a detail explanation on transfer
 # learning principles.
 #
@@ -180,10 +180,46 @@ full_model.output
 #
 # * instantiate the `yolo_base` model and load AkidaNet/ImageNet pretrained
 #   float weights,
+#
+# .. code-block:: bash
+#
+#       akida_models create -s yolo_akidanet_voc.h5 yolo_base --classes 2 \
+#                --base_weights akidanet_imagenet_224_alpha_50.h5
+#
 # * freeze the AkidaNet layers and perform training,
+#
+# .. code-block:: bash
+#
+#       yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 \
+#           -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
+#
 # * unfreeze all layers, lower the learning rate and quantize the network (e.g
 #   to 8-bits weights and activations),
+#
+# .. code-block:: bash
+#
+#       cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 8 -aq 8
+#       yolo_train train -d voc_preprocessed.pkl \
+#           -m yolo_akidanet_voc_iq8_wq8_aq8.h5 \
+#           -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq8_aq8.h5
+#
 # * quantize to a lower bitwidth until reaching the target bitwidth and retrain.
+#
+# .. code-block:: bash
+#
+#       cnn2snn quantize -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
+#       yolo_train train -d voc_preprocessed.pkl \
+#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5 \
+#           -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+#
+# .. Note::
+#
+#       - ``voc_anchors.pkl`` is obtained saving the output of the
+#         `generate_anchors` call to a pickle file,
+#       - ``voc_preprocessed.pkl`` is obtained saving training data, validation
+#         data (obtained using `parse_voc_annotations`) and labels list (i.e
+#         ["car", "person"]) into a pickle file.
+#
 #
 # Even if transfer learning should be the preferred way to train a YOLO model, it
 # has been observed that for some datasets training all layers from scratch
