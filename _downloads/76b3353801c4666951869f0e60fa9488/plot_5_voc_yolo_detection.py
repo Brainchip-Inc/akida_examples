@@ -22,8 +22,8 @@ tackle this object detection problem.
 # Object detection is a computer vision task that combines two elemental tasks:
 #
 #  - object classification that consists in assigning a class label to an image
-#    like shown in the `DS-CNN CIFAR10 <plot_1_ds_cnn_cifar10.html>`_ or the
-#    `AkidaNet/ImageNet inference <plot_2_akidanet_imagenet.html>`_ example
+#    like shown in the `AkidaNet/ImageNet inference <plot_2_akidanet_imagenet.html>`_
+#    example
 #  - object localization that consists in drawing a bounding box around one or
 #    several objects in an image
 #
@@ -389,12 +389,8 @@ input_image = image[np.newaxis, :].astype(np.uint8)
 pots = model_akida.evaluate(input_image)[0]
 
 # Reshape the potentials to prepare for decoding
-w, h, c = pots.shape
-pots = pots.reshape((w, h, len(anchors), 4 + 1 + len(labels)))
-
-# Akida potentials are transposed because they are given in (W,H) format while
-# the decode_output API uses the Keras-style (H,W).
-pots = pots.transpose((1, 0, 2, 3))
+h, w, c = pots.shape
+pots = pots.reshape((h, w, len(anchors), 4 + 1 + len(labels)))
 
 # Decode potentials into bounding boxes
 raw_boxes = decode_output(pots, anchors, len(labels))
