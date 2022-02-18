@@ -23,7 +23,7 @@ target dataset is `PlantVillage
 #
 # The base model is a quantized version of AkidaNet 0.5 that was trained on the
 # ImageNet dataset. Please refer to the `dedicated example
-# <plot_2_akidanet_imagenet.html>`__ for more information on the model
+# <plot_1_akidanet_imagenet.html>`__ for more information on the model
 # architecture and performances.
 #
 # Layers of this model have 4-bit weights (except for the first layer having
