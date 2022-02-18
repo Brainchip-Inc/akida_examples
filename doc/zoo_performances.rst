@@ -21,7 +21,7 @@ Classification
 
 .. |an_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_2_akidanet_imagenet.html
+   :target: examples/general/plot_1_akidanet_imagenet.html
 
 .. |an_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -101,7 +101,7 @@ Classification
 
 .. |an_pv_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_5_transfer_learning.html
+   :target: examples/general/plot_4_transfer_learning.html
 
 .. |an_cvd_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -220,7 +220,7 @@ Object detection
 
 .. |yl_voc_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_6_voc_yolo_detection.html
+   :target: examples/general/plot_5_voc_yolo_detection.html
 
 .. |yl_voc_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -245,7 +245,7 @@ Regression
 
 .. |reg_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_4_regression.html
+   :target: examples/general/plot_3_regression.html
 
 .. |reg_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -298,7 +298,7 @@ Keyword spotting
 
 .. |kws_ex| image:: ./img/link_icon.png
    :scale: 4 %
-   :target: examples/general/plot_3_ds_cnn_kws.html
+   :target: examples/general/plot_2_ds_cnn_kws.html
 
 .. |kws_dl| image:: ./img/download_icon.png
    :scale: 4 %

@@ -456,7 +456,7 @@ from the `model statistics
   print(model.statistics)
 
 An example of power and fps performances is given in the `AkidaNet/ImageNet
-tutorial <../examples/general/plot_2_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
+tutorial <../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
 
 
 Using Akida Edge learning
