@@ -160,8 +160,8 @@ The Akida examples
 ------------------
 
 The `examples section <examples/index.html>`_ comprises a zoo of event-based CNN
-and SNN tutorials. One can check models performances against MNIST, CIFAR10,
-ImageNet and Google Speech Commands (KWS) datasets.
+and SNN tutorials. One can check models performances against MNIST, ImageNet and
+Google Speech Commands (KWS) datasets.
 
 .. note::
     | While the Akida examples are provided under an
