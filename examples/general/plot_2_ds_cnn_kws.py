@@ -194,7 +194,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 # Create confusion matrix
-cm = confusion_matrix(y_valid, preds_akida, list(word_to_index.values()))
+cm = confusion_matrix(y_valid, preds_akida, labels=list(word_to_index.values()))
 
 # Normalize
 cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
