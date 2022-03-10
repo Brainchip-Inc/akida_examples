@@ -54,12 +54,6 @@ Akida runtime API
     .. autoclass:: SeparableConvolutional
         :members:
 
-    Concat
-    ======
-    .. autoclass:: Concat
-        :members:
-
-
     Layer parameters
     ================
 

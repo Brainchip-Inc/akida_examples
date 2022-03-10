@@ -102,9 +102,8 @@ This comprises creating a ``Model`` object and adding layers to it using the
 The available layers are `InputData <../api_reference/akida_apis.html#inputdata>`__,
 `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__,
 `FullyConnected <../api_reference/akida_apis.html#fullyconnected>`__,
-`Convolutional <../api_reference/akida_apis.html#convolutional>`__,
-`SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__
-and `Concat <../api_reference/akida_apis.html#concat>`__.
+`Convolutional <../api_reference/akida_apis.html#convolutional>`__, and
+`SeparableConvolutional <../api_reference/akida_apis.html#separableconvolutional>`__.
 
 Layers are built with a name and a list of named parameters that are described
 in the sections below.

@@ -213,7 +213,6 @@ Keras layer types:
   * Flatten
   * Reshape
   * Input
-  * Concatenate
 
 CNN2SNN Quantization-aware layers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
