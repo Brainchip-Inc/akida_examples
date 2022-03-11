@@ -241,7 +241,7 @@ preds_ak = np.zeros(y_val.shape[0])
 num_batches_val = ceil(x_val.shape[0] / batch_size)
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_ak[s] = model_ak.predict(x_val[s])
+    preds_ak[s] = model_ak.predict_classes(x_val[s])
 
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
@@ -342,7 +342,8 @@ print(f"Elapsed time for Akida training: {end-start:.2f} s")
 preds_val_ak = np.zeros(y_val.shape[0])
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_val_ak[s] = model_ak.predict(x_val[s], num_classes=num_classes)
+    preds_val_ak[s] = model_ak.predict_classes(x_val[s],
+                                               num_classes=num_classes)
 
 acc_val_ak = np.sum(preds_val_ak == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy: {100 * acc_val_ak:.2f} %")
@@ -409,7 +410,8 @@ print(f"Elapsed time for Akida edge learning: {end-start:.2f} s")
 ##############################################################################
 
 # Predict on the new validation set
-preds_ak_new = model_edge.predict(x_val_new, num_classes=num_classes + 3)
+preds_ak_new = model_edge.predict_classes(x_val_new,
+                                          num_classes=num_classes + 3)
 good_preds_val_new_ak = np.sum(preds_ak_new == y_val_new)
 print(f"Akida validation set accuracy on 3 new keywords: \
         {good_preds_val_new_ak}/{y_val_new.shape[0]}")
@@ -419,7 +421,8 @@ print(f"Akida validation set accuracy on 3 new keywords: \
 preds_ak_old = np.zeros(y_val.shape[0])
 for i in range(num_batches_val):
     s = slice(i * batch_size, (i + 1) * batch_size)
-    preds_ak_old[s] = model_edge.predict(x_val[s], num_classes=num_classes + 3)
+    preds_ak_old[s] = model_edge.predict_classes(x_val[s],
+                                                 num_classes=num_classes + 3)
 
 acc_val_old_ak = np.sum(preds_ak_old == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy on 33 old classes: \

@@ -113,8 +113,9 @@ for i in range(len(object_ids)):
     predictions = np.zeros(len(test_images))
     for j in range(len(test_images)):
         padded_image = resize_with_crop_or_pad(test_images[j], 224, 224)
-        predictions[j] = model_ak.predict(np.expand_dims(padded_image, axis=0),
-                                          num_classes=num_classes)
+        predictions[j] = model_ak.predict_classes(np.expand_dims(padded_image,
+                                                                 axis=0),
+                                                  num_classes=num_classes)
     accuracy.append(100 * np.sum(predictions == i) / len(test_images))
     print(f'Accuracy testing object {object_ids[i]} (class {i}) with \
             {len(test_images)} sample(s): {accuracy[i]:.2f}%')

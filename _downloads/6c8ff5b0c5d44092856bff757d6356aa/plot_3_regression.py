@@ -137,7 +137,7 @@ model_akida.summary()
 import numpy as np
 
 # Check Akida model performance
-y_akida = model_akida.evaluate(x_test_akida)
+y_akida = model_akida.predict(x_test_akida)
 
 # Compute and display the MAE
 mae_akida = np.sum(np.abs(y_test.squeeze() - y_akida.squeeze())) / len(y_test)

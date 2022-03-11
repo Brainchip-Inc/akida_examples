@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.6
+                MetaTF 2.2.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -152,7 +152,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#separableconvolutional">SeparableConvolutional</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
@@ -417,10 +416,13 @@
 <span class="sd">&quot;&quot;&quot;Quantized model calibration tools&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="kn">from</span> <span class="nn">..quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedReLU</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">,</span>
                                    <span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..quantization_ops</span> <span class="kn">import</span> <span class="n">WeightQuantizer</span>
+
+<span class="kn">from</span> <span class="nn">..transforms.clone</span> <span class="kn">import</span> <span class="n">clone_model_with_weights</span>
 
 
 <span class="k">def</span> <span class="nf">create_submodel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">first_layer</span><span class="p">,</span> <span class="n">last_layer</span><span class="p">):</span>
@@ -576,9 +578,9 @@
 <span class="sd">        ...                                    weight_quantization=4,</span>
 <span class="sd">        ...                                    activ_quantization=4)</span>
 <span class="sd">        &gt;&gt;&gt; # Instantiate a QuantizationSampler with a few dataset samples</span>
-<span class="sd">        &gt;&gt;&gt; sampler = QuantizationSampler(model, samples)</span>
+<span class="sd">        &gt;&gt;&gt; sampler = QuantizationSampler(model_quantized, samples)</span>
 <span class="sd">        &gt;&gt;&gt; # Select the quantized layer</span>
-<span class="sd">        &gt;&gt;&gt; sampler.select_layer(model.layers[0])</span>
+<span class="sd">        &gt;&gt;&gt; sampler.select_layer(model_quantized.layers[0])</span>
 <span class="sd">        &gt;&gt;&gt; # Evaluate the Mean Squared Error</span>
 <span class="sd">        &gt;&gt;&gt; m = keras.metrics.MeanSquaredError()</span>
 <span class="sd">        &gt;&gt;&gt; mse = sampler.quantization_error(m)</span>
@@ -668,7 +670,7 @@
 <span class="sd">            batch_index (int): the samples batch index</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            the Metric results (usually a single float)</span>
+<span class="sd">            :obj:`tf.Tensor`: the quantized outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submodel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s2">&quot;Set output layer before requesting data&quot;</span><span class="p">)</span>
@@ -698,6 +700,54 @@
             <span class="n">metric</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">float_outputs</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">quantized_outputs</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">metric</span><span class="o">.</span><span class="n">result</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">previous_neural</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the previous neural layer before the specified layer</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        layer (:obj:`keras.Layer`): the layer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :obj:`keras.Layer`: the next activation layer or None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inbound_nodes</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">inbound_nodes</span><span class="p">:</span>
+        <span class="n">previous_layer</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">inbound_layers</span>
+        <span class="k">if</span> <span class="n">is_quantized_neural</span><span class="p">(</span><span class="n">previous_layer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">previous_layer</span>
+        <span class="n">neural_layer</span> <span class="o">=</span> <span class="n">previous_neural</span><span class="p">(</span><span class="n">previous_layer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">neural_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">neural_layer</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">activations_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;iterate over the layers of a quantized model, evaluating</span>
+<span class="sd">    the pre-activations before each QuantizedReLu layer,</span>
+<span class="sd">    and adjusting the max_value parameter of each QuantizedReLu</span>
+<span class="sd">    accordingly.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`keras.Model`): a Keras Model</span>
+<span class="sd">        samples (:obj:`np.ndarray`): a set of calibration samples</span>
+<span class="sd">        batch_size (int): the batch size used for evaluation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clone_model</span> <span class="o">=</span> <span class="n">clone_model_with_weights</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">QuantizationSampler</span><span class="p">(</span><span class="n">clone_model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">clone_model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">QuantizedReLU</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">previous_neural_layer</span> <span class="o">=</span> <span class="n">previous_neural</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">sampler</span><span class="o">.</span><span class="n">select_layer</span><span class="p">(</span><span class="n">previous_neural_layer</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">float_output</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">float_outputs</span><span class="p">()</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">float_output</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_val</span> <span class="o">&lt;</span> <span class="n">layer</span><span class="o">.</span><span class="n">max_value_</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">max_value_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">clone_model</span>
 </pre></div>
 
            </div>

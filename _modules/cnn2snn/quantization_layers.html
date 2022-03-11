@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.6
+                MetaTF 2.2.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -152,7 +152,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#separableconvolutional">SeparableConvolutional</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
@@ -422,8 +421,8 @@
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span>
 <span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">serialize_keras_object</span>
-<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">conv_utils</span>  <span class="c1"># pylint: disable=no-name-in-module</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">nn</span>  <span class="c1"># pylint: disable=no-name-in-module</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">conv_utils</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span> <span class="nn">.quantization_ops</span> <span class="kn">import</span> <span class="n">get</span> <span class="k">as</span> <span class="n">get_quantizer</span>
 <span class="kn">from</span> <span class="nn">.quantization_ops</span> <span class="kn">import</span> <span class="n">ceil_through</span>
 
@@ -541,10 +540,8 @@
                                           <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
                                           <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tf_data_format</span><span class="p">)</span>
 
-                <span class="n">outputs</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">squeeze_batch_dims</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span>
-                                                        <span class="n">_apply_fn</span><span class="p">,</span>
-                                                        <span class="n">inner_rank</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span>
-                                                        <span class="mi">1</span><span class="p">)</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">squeeze_batch_dims</span><span class="p">(</span>
+                    <span class="n">outputs</span><span class="p">,</span> <span class="n">_apply_fn</span><span class="p">,</span> <span class="n">inner_rank</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
@@ -730,7 +727,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">base_dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_dtype_object</span><span class="o">.</span><span class="n">base_dtype</span><span class="p">:</span>
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_dtype_object</span><span class="p">)</span>  <span class="c1"># pylint: disable=unexpected-keyword-arg, no-value-for-parameter</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_dtype_object</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">RaggedTensor</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The inputs of a Dense Layer must be a uniform </span><span class="se">\</span>
@@ -838,7 +835,6 @@
                  <span class="n">pointwise_constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">bias_constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="c1"># pylint: disable=too-many-locals</span>
 
         <span class="n">_check_unsupported_args</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsupported_args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quantizer</span> <span class="o">=</span> <span class="n">get_quantizer</span><span class="p">(</span><span class="n">quantizer</span><span class="p">)</span>
@@ -1036,9 +1032,10 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bitwidth</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># The max_value defaults to None for ReLU, which means unclipped.</span>
-        <span class="c1"># For QuantizedReLU we need to set a value, and align on ReLU6.</span>
+        <span class="c1"># For QuantizedReLU we need to set a value, by default we align</span>
+        <span class="c1"># on the bitwidth.</span>
         <span class="k">if</span> <span class="n">max_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">max_value</span> <span class="o">=</span> <span class="mf">6.</span>
+            <span class="n">max_value</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">**</span><span class="n">bitwidth</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_value_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">max_value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="c1"># Evaluate the quantization step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_value_</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span>

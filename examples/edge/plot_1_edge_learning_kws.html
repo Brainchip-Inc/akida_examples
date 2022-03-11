@@ -37,7 +37,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.6
+                MetaTF 2.2.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -155,7 +155,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#separableconvolutional">SeparableConvolutional</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
@@ -715,7 +714,7 @@ _______________________________________________________
 <span class="n">num_batches_val</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">x_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_batches_val</span><span class="p">):</span>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="n">preds_ak</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">])</span>
+    <span class="n">preds_ak</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">predict_classes</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">])</span>
 
 <span class="n">acc_val_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_ak</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida CNN2SNN validation set accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">acc_val_ak</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
@@ -855,21 +854,22 @@ ____________________________________________
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida learning with 33 classes...         (this step can take a few minutes)
-Elapsed time for Akida training: 34.90 s
+Elapsed time for Akida training: 33.66 s
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Measure Akida accuracy on validation set</span>
 <span class="n">preds_val_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_batches_val</span><span class="p">):</span>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="n">preds_val_ak</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">)</span>
+    <span class="n">preds_val_ak</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_ak</span><span class="o">.</span><span class="n">predict_classes</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">],</span>
+                                               <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">)</span>
 
 <span class="n">acc_val_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_val_ak</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida validation set accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">acc_val_ak</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 85.71 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy: 86.38 %
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -939,7 +939,8 @@ Elapsed time for Akida edge learning: 0.18 s
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Predict on the new validation set</span>
-<span class="n">preds_ak_new</span> <span class="o">=</span> <span class="n">model_edge</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val_new</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">preds_ak_new</span> <span class="o">=</span> <span class="n">model_edge</span><span class="o">.</span><span class="n">predict_classes</span><span class="p">(</span><span class="n">x_val_new</span><span class="p">,</span>
+                                          <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
 <span class="n">good_preds_val_new_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_ak_new</span> <span class="o">==</span> <span class="n">y_val_new</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida validation set accuracy on 3 new keywords: </span><span class="se">\</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">good_preds_val_new_ak</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">y_val_new</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -949,7 +950,8 @@ Elapsed time for Akida edge learning: 0.18 s
 <span class="n">preds_ak_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_batches_val</span><span class="p">):</span>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="n">preds_ak_old</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_edge</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">preds_ak_old</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_edge</span><span class="o">.</span><span class="n">predict_classes</span><span class="p">(</span><span class="n">x_val</span><span class="p">[</span><span class="n">s</span><span class="p">],</span>
+                                                 <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
 
 <span class="n">acc_val_old_ak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">preds_ak_old</span> <span class="o">==</span> <span class="n">y_val</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Akida validation set accuracy on 33 old classes: </span><span class="se">\</span>
@@ -961,10 +963,10 @@ Elapsed time for Akida edge learning: 0.18 s
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida validation set accuracy on 3 new keywords:         19/19
-Akida validation set accuracy on 33 old classes:         85.34 %
+Akida validation set accuracy on 33 old classes:         85.89 %
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  53.352 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  51.596 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-1-edge-learning-kws-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/2b41d7b19be0b67175397b3549fe25da/plot_1_edge_learning_kws.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_1_edge_learning_kws.py</span></code></a></p>

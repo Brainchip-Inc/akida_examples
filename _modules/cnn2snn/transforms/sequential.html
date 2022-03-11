@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.1.6
+                MetaTF 2.2.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -152,7 +152,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#fullyconnected">FullyConnected</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#convolutional">Convolutional</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#separableconvolutional">SeparableConvolutional</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#concat">Concat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
@@ -476,8 +475,7 @@
     <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">next_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">))</span> <span class="ow">and</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">)):</span>
             <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">new_model</span><span class="p">)</span>
             <span class="n">clone_layer_and_add_to_model</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">new_model</span><span class="p">)</span>
             <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
@@ -574,7 +572,7 @@
                            <span class="sa">f</span><span class="s2">&quot;axis=-1. Receives axis=</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbound_layers</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">inbound_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
+        <span class="n">inbound_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The Concatenate layer &#39;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must have &quot;</span>
                            <span class="sa">f</span><span class="s2">&quot;exactly two inbound layers. Receives inbound &quot;</span>
                            <span class="sa">f</span><span class="s2">&quot;layers </span><span class="si">{</span><span class="n">inbound_names</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -619,7 +617,6 @@
 
         <span class="c1"># Do not visit this layer if all inbound layers were not visited yet</span>
         <span class="c1"># (e.g. for Concatenate inbounds)</span>
-        <span class="c1"># pylint: disable=duplicate-code</span>
         <span class="n">inbound_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">layer</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent_nodes</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">inbound_layers</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">visited_layers</span><span class="p">):</span>
             <span class="k">return</span>
@@ -632,7 +629,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">):</span>
             <span class="n">_check_concat_layer_compatibility</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">inbound_layers</span><span class="p">)</span>
             <span class="c1"># Get input tensors of Concatenate layer</span>
-            <span class="n">concat_input_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
+            <span class="n">concat_input_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
             <span class="c1"># Add Concatenate layer to the graph</span>
             <span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">concat_input_tensors</span><span class="p">)</span>
 
@@ -644,8 +641,8 @@
             <span class="c1"># - current layer has multiple outbounds (split connections)</span>
             <span class="c1"># - current layer has no outbound (output layer of the model)</span>
             <span class="c1"># - next layer is Concatenate</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">)):</span>
 
                 <span class="n">parent_nodes</span> <span class="o">=</span> <span class="n">current_branch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent_nodes</span>
                 <span class="n">input_tensor</span> <span class="o">=</span> <span class="n">output_tensors</span><span class="p">[</span><span class="n">parent_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">]</span>
@@ -722,7 +719,6 @@
 
         <span class="c1"># Do not visit this layer if all inbound layers were not visited yet</span>
         <span class="c1"># (e.g. for Concatenate inbounds)</span>
-        <span class="c1"># pylint: disable=duplicate-code</span>
         <span class="n">inbound_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">layer</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent_nodes</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">inbound_layers</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">visited_layers</span><span class="p">):</span>
             <span class="k">return</span>
@@ -734,7 +730,7 @@
             <span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_clone</span><span class="o">.</span><span class="n">output</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">):</span>
             <span class="c1"># Get input tensors of Concatenate layer</span>
-            <span class="n">concat_input_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
+            <span class="n">concat_input_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">inbound_layers</span><span class="p">]</span>
             <span class="c1"># Add Concatenate layer to the graph</span>
             <span class="n">concat_clone</span> <span class="o">=</span> <span class="n">clone_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
             <span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">concat_clone</span><span class="p">(</span><span class="n">concat_input_tensors</span><span class="p">)</span>
@@ -746,7 +742,6 @@
             <span class="n">new_submodel</span> <span class="o">=</span> <span class="n">syncretize_sequential</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
             <span class="n">output_tensors</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_submodel</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># pylint: disable=duplicate-code</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layer </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> of type &quot;</span>
                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is not supported &quot;</span>
                                <span class="sa">f</span><span class="s2">&quot;here.&quot;</span><span class="p">)</span>
