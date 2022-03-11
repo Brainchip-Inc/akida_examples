@@ -170,7 +170,7 @@ the integer potentials or activations of the last layer.
     # Inference
     outputs = model.forward(inputs)
 
-The ``Model`` `.evaluate <../api_reference/akida_apis.html#akida.Model.evaluate>`__
+The ``Model`` `.predict <../api_reference/akida_apis.html#akida.Model.predict>`__
 method is very similar to the forward method, but is specifically designed to
 replicate the float outputs of a converted CNN: instead of the integer potentials,
 it returns float values representing the integer potentials shifted and rescaled using
@@ -188,7 +188,7 @@ After an inference, the ``Model`` `.statistics <../api_reference/akida_apis.html
     input_shape = (1,) + tuple(model.input_shape)
     inputs = np.ones(input_shape, dtype=np.uint8)
     # Inference
-    outputs = model.evaluate(inputs)
+    outputs = model.predict(inputs)
     assert outputs.dtype == np.float32
 
 Saving and loading

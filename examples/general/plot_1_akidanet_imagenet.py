@@ -225,12 +225,9 @@ model_akida.summary()
 
 # Check Model performance
 start = timer()
-preds_akida = model_akida.predict(x_test)
+accuracy_akida = model_akida.evaluate(x_test, labels_test)
 end = timer()
 print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
-
-accuracy_akida = np.sum(np.equal(preds_akida, labels_test)) / num_images
-
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
 # For non-regression purpose
@@ -357,8 +354,8 @@ fig, imgobj, ax1, rects = prepare_plots()
 img = np.random.randint(num_images)
 
 # Predict image class
-potentials_akida = model_akida.evaluate(np.expand_dims(x_test[img],
-                                                       axis=0)).squeeze()
+potentials_akida = model_akida.predict(np.expand_dims(x_test[img],
+                                                      axis=0)).squeeze()
 
 # Get top 5 prediction labels and associated names
 true_label = int(validation_labels[x_test_files[img]])

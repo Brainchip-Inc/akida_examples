@@ -26,14 +26,14 @@ Run the MNIST example below, then visit the `Akida examples <../examples/index.h
 
    # Load pre-trained MNIST model
    model_file = get_file("gxnor_mnist.fbz",
-                         "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
-                         cache_subdir='models/gxnor')
+                           "http://data.brainchip.com/models/gxnor/gxnor_mnist.fbz",
+                           cache_subdir='models/gxnor')
    model = Model(model_file)
 
    # Test the first image of the test set
    sample_image = 0
    image = test_set[sample_image]
-   labels = model.predict(image.reshape(1,28,28,1))
+   labels = model.predict_classes(image.reshape(1,28,28,1))
    assert labels[0] == test_label[sample_image]
 
 For users familiar with deep-learning

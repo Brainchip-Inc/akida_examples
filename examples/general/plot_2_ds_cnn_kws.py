@@ -165,7 +165,7 @@ model_akida.summary()
 ######################################################################
 
 # Check Akida model performance
-preds_akida = model_akida.predict(x_valid, num_classes=num_classes)
+preds_akida = model_akida.predict_classes(x_valid, num_classes=num_classes)
 
 accuracy = accuracy_score(y_valid, preds_akida)
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")

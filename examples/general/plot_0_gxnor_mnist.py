@@ -105,7 +105,7 @@ from sklearn.metrics import accuracy_score
 # Check performance against num_samples samples
 num_samples = 10000
 
-results = model_akida.predict(test_set[:num_samples])
+results = model_akida.predict_classes(test_set[:num_samples])
 accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
 
 # For non-regression purpose
@@ -130,7 +130,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # Test a single example
 sample_image = 0
 image = test_set[sample_image]
-outputs = model_akida.evaluate(image.reshape(1, 28, 28, 1))
+outputs = model_akida.predict(image.reshape(1, 28, 28, 1))
 print('Input Label: %i' % test_label[sample_image])
 
 # sphinx_gallery_thumbnail_number = 2

@@ -258,9 +258,7 @@ from cnn2snn import convert
 model_akida = convert(model_quantized, input_scaling=input_scaling)
 model_akida.summary()
 
-results = model_akida.predict(raw_x_test)
-accuracy = (raw_y_test == results).mean()
-
+accuracy = model_akida.evaluate(raw_x_test, raw_y_test)
 print('Test accuracy after conversion:', accuracy)
 
 # For non-regression purpose
