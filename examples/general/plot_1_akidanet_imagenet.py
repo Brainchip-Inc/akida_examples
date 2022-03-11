@@ -231,7 +231,7 @@ print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
 # For non-regression purpose
-assert accuracy_akida == 0.9
+assert accuracy_akida >= 0.89
 
 ######################################################################
 # 5.3 Show predictions for a random image
