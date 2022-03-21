@@ -262,7 +262,7 @@ accuracy = model_akida.evaluate(raw_x_test, raw_y_test)
 print('Test accuracy after conversion:', accuracy)
 
 # For non-regression purpose
-assert accuracy > 0.97
+assert accuracy > 0.96
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
