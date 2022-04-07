@@ -19,6 +19,8 @@ for edge learning documentation, parameters fine tuning and steps details.
 # 1. Dataset preparation
 # ~~~~~~~~~~~~~~~~~~~~~~
 
+from akida import FullyConnected
+
 import tensorflow_datasets as tfds
 
 # Retrieve TensorFlow `coil100 <https://www.tensorflow.org/datasets/catalog/coil100>`__
@@ -64,8 +66,6 @@ model_keras = akidanet_edge_imagenet_pretrained()
 model_ak = convert(model_keras)
 
 ##############################################################################
-
-from akida import FullyConnected
 
 # Replace the last layer by a classification layer
 num_classes = len(object_dict)

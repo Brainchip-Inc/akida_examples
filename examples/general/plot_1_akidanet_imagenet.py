@@ -23,6 +23,7 @@ names.
 # .. Note:: Input size is here set to 224x224x3 as this is what is used by the
 #           model presented in the next section.
 
+import akida
 import os
 import numpy as np
 
@@ -378,8 +379,6 @@ plt.show()
 #
 # List Akida available devices and check that an NSoC V2 (production chip) is
 # available
-
-import akida
 
 devices = akida.devices()
 print(f'Available devices: {[dev.desc for dev in devices]}')

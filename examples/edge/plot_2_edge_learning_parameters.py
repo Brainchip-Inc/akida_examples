@@ -48,6 +48,8 @@ for a first approach about Akida learning.
 # convert it to an Akida model. We then remove the last layer to get the
 # feature extractor.
 
+from akida import Model, InputData, FullyConnected
+
 import pickle
 
 from tensorflow.keras.utils import get_file
@@ -155,8 +157,6 @@ print(f"The number of weights is then set to: {num_weights}")
 # number of neurons per class provides a similar analysis.
 #
 # In this tutorial, we only present this analysis for one class (word 'six').
-
-from akida import Model, InputData, FullyConnected
 
 
 def compute_losses(model,
