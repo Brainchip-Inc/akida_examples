@@ -40,8 +40,7 @@ from tensorflow.keras.utils import get_file
 # Fetch pre-processed data for 32 keywords
 fname = get_file(
     fname='kws_preprocessed_all_words_except_backward_follow_forward.pkl',
-    origin=
-    "http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
+    origin="http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
     [_, _, x_valid, y_valid, _, _, word_to_index, _] = pickle.load(f)
@@ -194,7 +193,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 # Create confusion matrix
-cm = confusion_matrix(y_valid, preds_akida, labels=list(word_to_index.values()))
+cm = confusion_matrix(y_valid, preds_akida,
+                      labels=list(word_to_index.values()))
 
 # Normalize
 cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
