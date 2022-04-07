@@ -41,3 +41,11 @@ examples will be executed for a nicer rendering but it will take much more time.
 * Open *.build/index.html* once done
 
 ## Style check
+
+Style check is based on [flake8](https://flake8.pycqa.org/en/latest/).
+
+To align examples with python formatting rules:
+
+```
+autopep8 --ignore E402,E501 --in-place --recursive examples/
+```
