@@ -157,6 +157,8 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # The pre-processed utility methods to generate these MFCC data are available in
 # the ``akida_models`` package.
 
+from akida import FullyConnected, evaluate_sparsity, Model
+
 import pickle
 
 from tensorflow.keras.utils import get_file
@@ -251,8 +253,6 @@ assert acc_val_ak > 0.88
 
 ######################################################################
 
-from akida import FullyConnected
-
 # Replace the last layer by a classification layer with binary weights
 # Here, we choose to set 15 neurons per class.
 num_classes = 33
@@ -265,8 +265,6 @@ layer_fc = FullyConnected(name='akida_edge_layer',
 model_ak.add(layer_fc)
 
 ######################################################################
-
-from akida import evaluate_sparsity
 
 # Compute sparsity information for the model using 10% of the training data
 # which is enough for a good estimate
@@ -393,8 +391,6 @@ y_train_new += num_classes
 y_val_new += num_classes
 
 ##############################################################################
-
-from akida import Model
 
 # Load the pre-trained model (no need to compile it again)
 model_edge = Model(model_file)
