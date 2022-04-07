@@ -57,7 +57,6 @@ training deep learning models.
 #           scaling was applied prior to training - see below for more details.
 #
 
-import tensorflow as tf
 from tensorflow import keras
 
 # Load MNIST dataset
