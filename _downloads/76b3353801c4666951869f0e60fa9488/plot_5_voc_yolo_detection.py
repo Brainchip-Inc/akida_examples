@@ -98,7 +98,8 @@ data_path = get_file(
 data_dir = os.path.dirname(data_path)
 gt_folder = os.path.join(data_dir, 'voc_test_car_person', 'Annotations')
 image_folder = os.path.join(data_dir, 'voc_test_car_person', 'JPEGImages')
-file_path = os.path.join(data_dir, 'voc_test_car_person', 'test_car_person.txt')
+file_path = os.path.join(
+    data_dir, 'voc_test_car_person', 'test_car_person.txt')
 labels = ['car', 'person']
 
 val_data = parse_voc_annotations(gt_folder, image_folder, file_path, labels)
@@ -325,7 +326,7 @@ model_akida.summary()
 
 ######################################################################
 # 6.1 Check performance
-#^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^
 #
 # Akida model accuracy is tested on the first *n* images of the validation set.
 #

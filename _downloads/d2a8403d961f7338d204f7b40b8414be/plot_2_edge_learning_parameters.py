@@ -57,8 +57,7 @@ from tensorflow.keras.utils import get_file
 # Fetch pre-processed data for 32 keywords
 fname = get_file(
     fname='kws_preprocessed_all_words_except_backward_follow_forward.pkl',
-    origin=
-    "http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
+    origin="http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
     [x_train, y_train, _, _, _, _, word_to_index, _] = pickle.load(f)

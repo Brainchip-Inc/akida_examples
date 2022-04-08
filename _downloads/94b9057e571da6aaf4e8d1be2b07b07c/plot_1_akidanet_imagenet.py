@@ -312,7 +312,6 @@ def prepare_plots():
     ax1.xaxis.set_ticks([])
     adjust_spines(ax1, 'left')
     ax1.add_line(lines.Line2D((0, 0), (-0.5, 6.5), color=(0.0, 0.0, 0.0)))
-    txt_axlbl = ax1.text(-1, -1, 'Top 5 Predictions:', size=12)
     # Adjust Plot Positions
     ax0.set_position([0.05, 0.055, 0.3, 0.9])
     l1, b1, w1, h1 = ax1.get_position().bounds
