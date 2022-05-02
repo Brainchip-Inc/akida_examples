@@ -181,7 +181,9 @@ Create a YOLO model for VOC car/person training, use transfer learning from
 AkidaNet weights trained on ImageNet and perform step-wise quantization to
 obtain a network with 4-bit weights and activations. Note that the backbone
 AkidaNet layers are frozen (i.e not trainable) when performing float training
-using the `--freeze_before` or `-fb` option.
+using the `--freeze_before` or `-fb` option. Accuracy lost when quantizing is
+partially recovered using Adaround calibration from CNN2SNN CLI, then tuning
+is applied.
 
 .. code-block:: bash
 
@@ -191,13 +193,13 @@ using the `--freeze_before` or `-fb` option.
 
    yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
 
-   cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 8 -aq 8
+   cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 4 -aq 4
 
-   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq8_aq8.h5
+   yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b 1024 -o voc_samples.npz -m yolo_akidanet_voc_iq8_wq4_aq4.h5
 
-   cnn2snn quantize -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
+   cnn2snn calibrate adaround -sa voc_samples.npz -b 128 -e 500 -lr 1e-3 -m yolo_akidanet_voc_iq8_wq4_aq4.h5
 
-   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+   yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl -e 10 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
 
 
 Command-line interface for model evaluation
