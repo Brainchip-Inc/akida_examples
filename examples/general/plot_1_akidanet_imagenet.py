@@ -16,9 +16,8 @@ names.
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # Test images all have at least 256 pixels in the smallest dimension. They must
-# be preprocessed to fit in the model. The
-# ``imagenet.preprocessing.resize_and_crop`` function decodes, crops and
-# extracts a square 224x224x3 patch from an input image.
+# be preprocessed to fit in the model. The ``imagenet.preprocessing.preprocess_image``
+# function decodes, crops and extracts a square 224x224x3 patch from an input image.
 #
 # .. Note:: Input size is here set to 224x224x3 as this is what is used by the
 #           model presented in the next section.
@@ -28,6 +27,7 @@ import os
 import numpy as np
 
 from tensorflow.io import read_file
+from tensorflow.image import decode_jpeg
 from tensorflow.keras.utils import get_file
 
 from akida_models.imagenet import preprocessing
@@ -55,10 +55,8 @@ for id in range(num_images):
     x_test_files.append(test_file)
     img_path = os.path.join(data_folder, test_file)
     base_image = read_file(img_path)
-    image = preprocessing.resize_and_crop(image_buffer=base_image,
-                                          output_width=IMAGE_SIZE,
-                                          output_height=IMAGE_SIZE,
-                                          num_channels=NUM_CHANNELS)
+    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
+    image = preprocessing.preprocess_image(image, IMAGE_SIZE)
     x_test[id, :, :, :] = np.expand_dims(image, axis=0)
 
 print(f'{num_images} images loaded and preprocessed.')
