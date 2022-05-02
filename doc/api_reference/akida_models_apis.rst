@@ -75,13 +75,8 @@ Akida models API
 
     Preprocessing
     *************
-    .. autofunction:: akida_models.imagenet.preprocessing.process_record_dataset
-    .. autofunction:: akida_models.imagenet.preprocessing.get_filenames
-    .. autofunction:: akida_models.imagenet.preprocessing.parse_record
-    .. autofunction:: akida_models.imagenet.preprocessing.input_fn
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
-    .. autofunction:: akida_models.imagenet.preprocessing.resize_and_crop
 
     Mobilenet
     ---------
