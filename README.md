@@ -8,7 +8,7 @@ can be generated locally from the repository top.
 
 ## Requirements:
 * Python version: python 3.7 to 3.8
-* Tensorflow version >= 2.6.1
+* Tensorflow version >= 2.8.x
 * Sphinx version 2.1 or above
 
 ## Build steps
