@@ -202,6 +202,30 @@ is applied.
    yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl -e 10 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
 
 
+AkidaNet training
+^^^^^^^^^^^^^^^^^
+
+AkidaNet training pipeline uses the ``akidanet_imagenet`` model and the CNN2SNN
+``quantize`` CLI. Dataset loading and preprocessing is done within the
+training script called by the ``imagenet_train`` CLI. Note that ImageNet data must be downloaded
+from `<https://www.image-net.org/>`__ first.
+
+**Example**
+
+Create an AkidaNet 0.5 with resolution 160, perform float training then quantize to 4-bit weights
+and activations.
+
+.. code-block:: bash
+
+   akida_models create -s akidanet_imagenet_160_alpha_50.h5 akidanet_imagenet -a 0.5 -i 160
+
+   imagenet_train train -d path/to/imagenet/ -e 90 -m akidanet_imagenet_160_alpha_50.h5 -s akidanet_imagenet_160_alpha_50.h5
+
+   cnn2snn quantize -m akidanet_imagenet_160_alpha_50.h5 -iq 8 -wq 4 -aq 4
+
+   imagenet_train tune -d path/to/imagenet/ -e 10 -m akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5 -s akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+
+
 Command-line interface for model evaluation
 -------------------------------------------
 
