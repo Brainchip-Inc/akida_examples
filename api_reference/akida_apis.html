@@ -37,7 +37,7 @@
             <img src="../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.1
+                MetaTF 2.2.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -118,6 +118,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#utk-face-training">UTK Face training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#kws-training">KWS training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/akida_models.html#akidanet-training">AkidaNet training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
@@ -1215,29 +1216,12 @@ thresholds used during inference:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.InputData">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">InputData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/input_data.html#InputData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.InputData" title="Permalink to this definition"></a></dt>
-<dd><p>This is the general purpose input layer. It takes events in a simple
-address-event data format; that is, each event is characterized by a trio
-of values giving x, y and channel values.</p>
-<p>Regarding the input dimension values, note that AEE expects inputs with
-zero-based indexing, i.e., if input_x is defined as 12, then the model
-expects all input events to have x-values in the range 0–11.</p>
-<p>Where possible:</p>
-<ul class="simple">
-<li><p>The x and y dimensions should be used for discretely-sampled continuous
-domains such as space (e.g., images) or time-series (e.g., an audio
-signal).</p></li>
-<li><p>The c dimension should be used for ‘category indices’, where there is no
-particular relationship between neighboring values.</p></li>
-</ul>
-<p>The input dimension values are used for:</p>
-<ul class="simple">
-<li><p>Error checking – input events are checked and if any fall outside the
-defined input range, then the whole set of events sent on that
-processing call is rejected. An error will also be generated if the
-defined values are larger than the true input dimensions.</p></li>
-<li><p>Configuring the input and output dimensions of subsequent layers in the
-model.</p></li>
-</ul>
+<dd><p>This layer is used to specify the input dimensions of a low bitwidth Model.</p>
+<p>Models accepting 8-bit images must start with an InputConvolutional layer,
+but layers accepting integer inputs with a lower bitwidth (i.e. not images)
+must start instead with an InputData layer.
+This layer does not modify its inputs: it just allows to define the Model
+input dimensions and bitwidth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1256,19 +1240,18 @@ model.</p></li>
 <dt class="sig sig-object py" id="akida.InputConvolutional">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">InputConvolutional</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">input_shape</span></em>, <em class="sig-param"><span class="pre">kernel_size</span></em>, <em class="sig-param"><span class="pre">filters</span></em>, <em class="sig-param"><span class="pre">name=''</span></em>, <em class="sig-param"><span class="pre">padding=&lt;Padding.Same:</span> <span class="pre">1&gt;</span></em>, <em class="sig-param"><span class="pre">kernel_stride=(1</span></em>, <em class="sig-param"><span class="pre">1)</span></em>, <em class="sig-param"><span class="pre">weights_bits=1</span></em>, <em class="sig-param"><span class="pre">pool_size=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">pool_type=&lt;PoolType.NoPooling:</span> <span class="pre">0&gt;</span></em>, <em class="sig-param"><span class="pre">pool_stride=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">activation=True</span></em>, <em class="sig-param"><span class="pre">threshold=0</span></em>, <em class="sig-param"><span class="pre">act_step=1</span></em>, <em class="sig-param"><span class="pre">act_bits=1</span></em>, <em class="sig-param"><span class="pre">padding_value=0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/input_convolutional.html#InputConvolutional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.InputConvolutional" title="Permalink to this definition"></a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">InputConvolutional</span></code> layer is an image-specific input layer.</p>
-<p>It is used if images are sent directly to AEE without using the
-event-generating method. If the User applies their own event-generating
-method, the resulting events should be sent to an InputData type layer
-instead.</p>
 <p>The InputConvolutional layer accepts images in 8-bit pixels, either
-grayscale or RGB. Images are converted to events using a combination of
-convolution kernels, activation thresholds and winner-take-all (WTA)
-policies. Note that since the layer input is dense, expect approximately one
-event per pixel – fewer if there are large contrast-free regions in the
-image, such as with the MNIST dataset.</p>
-<p>Note that this format is not appropriate for neuromorphic camera type input
-which data is natively event-based and should be sent to an InputData type
-input layer.</p>
+grayscale or RGB.
+It is the only akida layer with 8-bit weights.
+It applies a ‘convolution’ (actually a cross-correlation) optionally
+followed by a pooling operation to the input images.
+It can optionally apply a step-wise ReLU activation to its outputs.
+The layer expects a 4D tensor whose first dimension is the sample index
+representing the 8-bit images as input.
+It returns a 4D tensor whose first dimension is the sample index and the
+last dimension is the number of convolution filters.
+The order of the input spatial dimensions is preserved, but their value may
+change according to the convolution and pooling parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1309,15 +1292,13 @@ the neuron response.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.FullyConnected">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">FullyConnected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/fully_connected.html#FullyConnected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.FullyConnected" title="Permalink to this definition"></a></dt>
-<dd><p>This is used for most processing purposes, since any neuron in the layer
-can be connected to any input channel.</p>
-<p>Outputs are returned from FullyConnected layers as a list of events, that
-is, as a triplet of x, y and feature values. However, FullyConnected
-models by definition have no intrinsic spatial organization. Thus, all
-output events have x and y values of zero with only the f value being
-meaningful – corresponding to the index of the event-generating neuron.
-Note that each neuron can only generate a single event for each packet of
-inputs processed.</p>
+<dd><p>This represents a Dense or Linear neural layer.</p>
+<p>The FullyConnected layer accepts 1-bit, 2-bit or 4-bit input tensors.
+The FullyConnected can be configured with 1-bit, 2-bit or 4-bit weights.
+It multiplies the inputs by its internal unit weights, returning a 4D
+tensor of values whose first dimension is the number of samples and the
+last dimension represents the number of units.
+It can optionally apply a step-wise ReLU activation to its outputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1343,22 +1324,19 @@ quantize the neuron response.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.Convolutional">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">Convolutional</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">kernel_size</span></em>, <em class="sig-param"><span class="pre">filters</span></em>, <em class="sig-param"><span class="pre">name=''</span></em>, <em class="sig-param"><span class="pre">padding=&lt;Padding.Same:</span> <span class="pre">1&gt;</span></em>, <em class="sig-param"><span class="pre">kernel_stride=(1</span></em>, <em class="sig-param"><span class="pre">1)</span></em>, <em class="sig-param"><span class="pre">weights_bits=1</span></em>, <em class="sig-param"><span class="pre">pool_size=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">pool_type=&lt;PoolType.NoPooling:</span> <span class="pre">0&gt;</span></em>, <em class="sig-param"><span class="pre">pool_stride=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">activation=True</span></em>, <em class="sig-param"><span class="pre">threshold=0</span></em>, <em class="sig-param"><span class="pre">act_step=1</span></em>, <em class="sig-param"><span class="pre">act_bits=1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/convolutional.html#Convolutional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.Convolutional" title="Permalink to this definition"></a></dt>
-<dd><p>Convolutional or “weight-sharing” layers are commonly used in visual
-processing. However, the convolution operation is extremely useful in any
-domain where translational invariance is required – that is, where localized
-patterns may be of interest regardless of absolute position within the
-input. The convolution implemented here is typical of that used in visual
-processing, i.e., it is a 2D convolution (across the x- and y-dimensions),
-but a 3D input with a 3D filter. No convolution occurs across the third
-dimension; events from input feature 1 only interact with connections to
-input feature 1 – likewise for input feature 2 and so on. Typically,
-the input feature is the identity of the event-emitting neuron in the
-previous layer.</p>
-<p>Outputs are returned from convolutional layers as a list of events, that is,
-as a triplet of x, y and feature (neuron index) values. Note that for a
-single packet processed, each neuron can only generate a single event at a
-given location, but can generate events at multiple different locations and
-that multiple neurons may all generate events at a single location.</p>
+<dd><p>This represents a standard Convolutional layer.</p>
+<p>The Convolutional layer accepts 1-bit, 2-bit or 4-bit 3D input tensors with
+an arbitrary number of channels.
+The Convolutional layer can be configured with 1-bit, 2-bit or 4-bit weights.
+It applies a convolution (not a cross-correlation) optionally followed by a
+pooling operation to the input tensors.
+It can optionally apply a step-wise ReLU activation to its outputs.
+The layer expects a 4D tensor whose first dimension is the sample index
+as input.
+It returns a 4D tensor whose first dimension is the sample index and the
+last dimension is the number of convolution filters.
+The order of the input spatial dimensions is preserved, but their value may
+change according to the convolution and pooling parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1396,14 +1374,21 @@ the neuron response.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.SeparableConvolutional">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">SeparableConvolutional</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">kernel_size</span></em>, <em class="sig-param"><span class="pre">filters</span></em>, <em class="sig-param"><span class="pre">name=''</span></em>, <em class="sig-param"><span class="pre">padding=&lt;Padding.Same:</span> <span class="pre">1&gt;</span></em>, <em class="sig-param"><span class="pre">kernel_stride=(1</span></em>, <em class="sig-param"><span class="pre">1)</span></em>, <em class="sig-param"><span class="pre">weights_bits=2</span></em>, <em class="sig-param"><span class="pre">pool_size=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">pool_type=&lt;PoolType.NoPooling:</span> <span class="pre">0&gt;</span></em>, <em class="sig-param"><span class="pre">pool_stride=(-1</span></em>, <em class="sig-param"><span class="pre">-1)</span></em>, <em class="sig-param"><span class="pre">activation=True</span></em>, <em class="sig-param"><span class="pre">threshold=0</span></em>, <em class="sig-param"><span class="pre">act_step=1</span></em>, <em class="sig-param"><span class="pre">act_bits=1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/separable_convolutional.html#SeparableConvolutional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.SeparableConvolutional" title="Permalink to this definition"></a></dt>
-<dd><p>Separable convolutions consist in first performing a depthwise spatial
+<dd><p>This represents a separable convolution layer.</p>
+<p>This layer accepts 1-bit, 2-bit or 4-bit 3D input tensors with an arbitrary
+number of channels.
+It can be configured with 1-bit, 2-bit or 4-bit weights.
+Separable convolutions consist in first performing a depthwise spatial
 convolution (which acts on each input channel separately) followed by a
 pointwise convolution which mixes together the resulting output channels.
-Intuitively, separable convolutions can be understood as a way to factorize
-a convolution kernel into two smaller kernels, thus decreasing the number of
-computations required to evaluate the output potentials. The
-<code class="docutils literal notranslate"><span class="pre">SeparableConvolutional</span></code> layer can also integrate a final pooling
-operation to reduce its spatial output dimensions.</p>
+Note: this layer applies a real convolution, and not a cross-correlation.
+It can optionally apply a step-wise ReLU activation to its outputs.
+The layer expects a 4D tensor whose first dimension is the sample index
+as input.
+It returns a 4D tensor whose first dimension is the sample index and the
+last dimension is the number of convolution filters.
+The order of the input spatial dimensions is preserved, but their value may
+change according to the convolution and pooling parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1767,13 +1752,16 @@ NSoC.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HardwareDevice.forward" title="akida.HardwareDevice.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(self, arg0)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HardwareDevice.fit" title="akida.HardwareDevice.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Overloaded function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.HardwareDevice.forward" title="akida.HardwareDevice.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>(self, arg0)</p></td>
 <td><p>Processes inputs on a programmed device.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#akida.HardwareDevice.predict" title="akida.HardwareDevice.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(self, arg0)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HardwareDevice.predict" title="akida.HardwareDevice.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(self, arg0)</p></td>
 <td><p>Processes inputs on a programmed device, returns a float array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.HardwareDevice.unprogram" title="akida.HardwareDevice.unprogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unprogram</span></code></a>(self)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.HardwareDevice.unprogram" title="akida.HardwareDevice.unprogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unprogram</span></code></a>(self)</p></td>
 <td><p>Clear current program from hardware device, restoring its initial state</p></td>
 </tr>
 </tbody>
@@ -1808,6 +1796,24 @@ NSoC.</p>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="akida.HardwareDevice.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.HardwareDevice.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>fit(self: akida.core.HardwareDevice, inputs: numpy.ndarray[numpy.uint8], input_labels: float) -&gt; numpy.ndarray</p></li>
+</ol>
+<p>Learn from inputs on a programmed device.</p>
+<ol class="arabic simple" start="2">
+<li><p>fit(self: akida.core.HardwareDevice, inputs: numpy.ndarray[numpy.uint8], input_labels: numpy.ndarray) -&gt; numpy.ndarray</p></li>
+</ol>
+<p>Learn from inputs on a programmed device.</p>
+<ol class="arabic simple" start="3">
+<li><p>fit(self: akida.core.HardwareDevice, inputs: numpy.ndarray[numpy.uint8], input_labels: list = []) -&gt; numpy.ndarray</p></li>
+</ol>
+<p>Learn from inputs on a programmed device.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="akida.HardwareDevice.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.HardwareDevice" title="akida.core.HardwareDevice"><span class="pre">akida.core.HardwareDevice</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.uint8</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="headerlink" href="#akida.HardwareDevice.forward" title="Permalink to this definition"></a></dt>

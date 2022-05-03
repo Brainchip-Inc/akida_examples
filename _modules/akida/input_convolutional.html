@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.1
+                MetaTF 2.2.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -115,6 +115,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#utk-face-training">UTK Face training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#kws-training">KWS training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#akidanet-training">AkidaNet training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
@@ -408,21 +409,18 @@
 <div class="viewcode-block" id="InputConvolutional"><a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.InputConvolutional">[docs]</a><span class="k">class</span> <span class="nc">InputConvolutional</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The ``InputConvolutional`` layer is an image-specific input layer.</span>
 
-<span class="sd">    It is used if images are sent directly to AEE without using the</span>
-<span class="sd">    event-generating method. If the User applies their own event-generating</span>
-<span class="sd">    method, the resulting events should be sent to an InputData type layer</span>
-<span class="sd">    instead.</span>
-
 <span class="sd">    The InputConvolutional layer accepts images in 8-bit pixels, either</span>
-<span class="sd">    grayscale or RGB. Images are converted to events using a combination of</span>
-<span class="sd">    convolution kernels, activation thresholds and winner-take-all (WTA)</span>
-<span class="sd">    policies. Note that since the layer input is dense, expect approximately one</span>
-<span class="sd">    event per pixel – fewer if there are large contrast-free regions in the</span>
-<span class="sd">    image, such as with the MNIST dataset.</span>
-
-<span class="sd">    Note that this format is not appropriate for neuromorphic camera type input</span>
-<span class="sd">    which data is natively event-based and should be sent to an InputData type</span>
-<span class="sd">    input layer.</span>
+<span class="sd">    grayscale or RGB.</span>
+<span class="sd">    It is the only akida layer with 8-bit weights.</span>
+<span class="sd">    It applies a &#39;convolution&#39; (actually a cross-correlation) optionally</span>
+<span class="sd">    followed by a pooling operation to the input images.</span>
+<span class="sd">    It can optionally apply a step-wise ReLU activation to its outputs.</span>
+<span class="sd">    The layer expects a 4D tensor whose first dimension is the sample index</span>
+<span class="sd">    representing the 8-bit images as input.</span>
+<span class="sd">    It returns a 4D tensor whose first dimension is the sample index and the</span>
+<span class="sd">    last dimension is the number of convolution filters.</span>
+<span class="sd">    The order of the input spatial dimensions is preserved, but their value may</span>
+<span class="sd">    change according to the convolution and pooling parameters.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple): the 3D input shape.</span>

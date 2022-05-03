@@ -37,7 +37,7 @@
             <img src="../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.1
+                MetaTF 2.2.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -118,6 +118,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#utk-face-training">UTK Face training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#kws-training">KWS training</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#yolo-training">YOLO training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#akidanet-training">AkidaNet training</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
@@ -548,20 +549,41 @@ kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1
 AkidaNet weights trained on ImageNet and perform step-wise quantization to
 obtain a network with 4-bit weights and activations. Note that the backbone
 AkidaNet layers are frozen (i.e not trainable) when performing float training
-using the <cite>–freeze_before</cite> or <cite>-fb</cite> option.</p>
+using the <cite>–freeze_before</cite> or <cite>-fb</cite> option. Accuracy lost when quantizing is
+partially recovered using Adaround calibration from CNN2SNN CLI, then tuning
+is applied.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5
 
 akida_models create -s yolo_akidanet_voc.h5 yolo_base -c <span class="m">2</span> -bw akidanet_imagenet_alpha_50.h5
 
 yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 -ap voc_anchors.pkl -e <span class="m">25</span> -fb 1conv -s yolo_akidanet_voc.h5
 
-cnn2snn quantize -m yolo_akidanet_voc.h5 -iq <span class="m">8</span> -wq <span class="m">8</span> -aq <span class="m">8</span>
+cnn2snn quantize -m yolo_akidanet_voc.h5 -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
 
-yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_akidanet_voc_iq8_wq8_aq8.h5
+yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b <span class="m">1024</span> -o voc_samples.npz -m yolo_akidanet_voc_iq8_wq4_aq4.h5
 
-cnn2snn quantize -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+cnn2snn calibrate adaround -sa voc_samples.npz -b <span class="m">128</span> -e <span class="m">500</span> -lr 1e-3 -m yolo_akidanet_voc_iq8_wq4_aq4.h5
 
-yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4.h5 -ap voc_anchors.pkl -e <span class="m">20</span> -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl -e <span class="m">10</span> -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+</pre></div>
+</div>
+</section>
+<section id="akidanet-training">
+<h3>AkidaNet training<a class="headerlink" href="#akidanet-training" title="Permalink to this headline"></a></h3>
+<p>AkidaNet training pipeline uses the <code class="docutils literal notranslate"><span class="pre">akidanet_imagenet</span></code> model and the CNN2SNN
+<code class="docutils literal notranslate"><span class="pre">quantize</span></code> CLI. Dataset loading and preprocessing is done within the
+training script called by the <code class="docutils literal notranslate"><span class="pre">imagenet_train</span></code> CLI. Note that ImageNet data must be downloaded
+from <a class="reference external" href="https://www.image-net.org/">https://www.image-net.org/</a> first.</p>
+<p><strong>Example</strong></p>
+<p>Create an AkidaNet 0.5 with resolution 160, perform float training then quantize to 4-bit weights
+and activations.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create -s akidanet_imagenet_160_alpha_50.h5 akidanet_imagenet -a <span class="m">0</span>.5 -i <span class="m">160</span>
+
+imagenet_train train -d path/to/imagenet/ -e <span class="m">90</span> -m akidanet_imagenet_160_alpha_50.h5 -s akidanet_imagenet_160_alpha_50.h5
+
+cnn2snn quantize -m akidanet_imagenet_160_alpha_50.h5 -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+
+imagenet_train tune -d path/to/imagenet/ -e <span class="m">10</span> -m akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5 -s akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
 </pre></div>
 </div>
 </section>
