@@ -177,7 +177,7 @@ full_model.output
 # learning principles.
 #
 # When using transfer learning for YOLO training, we advise to proceed in
-# several steps that include step-wise quantization:
+# several steps that include model calibration:
 #
 # * instantiate the `yolo_base` model and load AkidaNet/ImageNet pretrained
 #   float weights,
@@ -194,24 +194,23 @@ full_model.output
 #       yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 \
 #           -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
 #
-# * unfreeze all layers, lower the learning rate and quantize the network (e.g
-#   to 8-bits weights and activations),
+# * quantize the network, create data for calibration and calibrate,
 #
 # .. code-block:: bash
 #
-#       cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 8 -aq 8
-#       yolo_train train -d voc_preprocessed.pkl \
-#           -m yolo_akidanet_voc_iq8_wq8_aq8.h5 \
-#           -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq8_aq8.h5
+#       cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 4 -aq 4
+#       yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b 1024 -o voc_samples.npz \
+#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5
+#       cnn2snn calibrate adaround -sa voc_samples.npz -b 128 -e 500 -lr 1e-3 \
+#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5
 #
-# * quantize to a lower bitwidth until reaching the target bitwidth and retrain.
+# * tune the model to recover accuracy.
 #
 # .. code-block:: bash
 #
-#       cnn2snn quantize -m yolo_akidanet_voc_iq8_wq8_aq8.h5 -iq 8 -wq 4 -aq 4
-#       yolo_train train -d voc_preprocessed.pkl \
-#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5 \
-#           -ap voc_anchors.pkl -e 20 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+#       yolo_train tune -d voc_preprocessed.pkl \
+#           -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl \
+#           -e 10 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
 #
 # .. Note::
 #
@@ -254,11 +253,11 @@ full_model.output
 #
 # Reported performanced for all training steps are as follows:
 #
-# +------------+-----------+-------------+-------------+
-# |            |   Float   | 8-bit/8-bit | 4-bit/4-bit |
-# +============+===========+=============+=============+
-# | Global mAP |  42.07 %  |   41.45 %   |   30.23 %   |
-# +------------+-----------+-------------+-------------+
+# +------------+-----------+------------------+-------------+
+# |            |   Float   | 8/4/4 Calibrated | 8/4/4 Tuned |
+# +============+===========+==================+=============+
+# | Global mAP |  38.38 %  | 32.88 %          | 38.83 %     |
+# +------------+-----------+------------------+-------------+
 
 from timeit import default_timer as timer
 from akida_models import yolo_voc_pretrained
@@ -335,11 +334,11 @@ model_akida.summary()
 # +---------+-----------+-----------+
 # | #Images | Keras mAP | Akida mAP |
 # +=========+===========+===========+
-# | 100     |  27.82 %  |  27.18 %  |
+# | 100     |  38.80 %  |  34.26 %  |
 # +---------+-----------+-----------+
-# | 1000    |  30.65 %  |  30.83 %  |
+# | 1000    |  40.11 %  |  39.35 %  |
 # +---------+-----------+-----------+
-# | 2500    |  30.23 %  |  29.39 %  |
+# | 2500    |  38.83 %  |  38.85 %  |
 # +---------+-----------+-----------+
 #
 
