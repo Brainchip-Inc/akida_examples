@@ -489,7 +489,9 @@ Compiling a layer
 For a layer to learn using Akida Edge Learning, it must first be compiled using
 the ``Model`` `.compile <../api_reference/akida_apis.html#akida.Model.compile>`_ method.
 
-The following learning parameters can be specified when compiling a layer:
+There is only one optimizer available for the compile method which is
+`AkidaUnsupervised <../api_reference/akida_apis.html#akida.AkidaUnsupervised>`_ and it offers the
+following learning parameters that can be specified when compiling a layer:
 
 * ``num_weights``: integer value which defines the number of connections for
   each neuron and is constant across neurons. When determining a value for

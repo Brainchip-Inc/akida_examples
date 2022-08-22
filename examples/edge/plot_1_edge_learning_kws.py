@@ -311,9 +311,10 @@ print("The number of weights is then set to:", num_weights)
 # learning in the next stage passes completely new data in the network.
 
 # Compile Akida model with learning parameters
-model_ak.compile(num_weights=num_weights,
-                 num_classes=num_classes,
-                 learning_competition=0.1)
+from akida import AkidaUnsupervised
+model_ak.compile(optimizer=AkidaUnsupervised(num_weights=num_weights,
+                                             num_classes=num_classes,
+                                             learning_competition=0.1))
 model_ak.summary()
 
 ##############################################################################

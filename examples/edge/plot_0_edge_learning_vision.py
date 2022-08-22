@@ -67,6 +67,8 @@ model_ak = convert(model_keras)
 
 ##############################################################################
 
+from akida import AkidaUnsupervised
+
 # Replace the last layer by a classification layer
 num_classes = len(object_dict)
 num_neurons_per_class = 1
@@ -76,9 +78,9 @@ layer_fc = FullyConnected(name='akida_edge_layer',
                           units=num_classes * num_neurons_per_class,
                           activation=False)
 model_ak.add(layer_fc)
-model_ak.compile(num_weights=num_weights,
-                 num_classes=num_classes,
-                 learning_competition=0.1)
+model_ak.compile(optimizer=AkidaUnsupervised(num_weights=num_weights,
+                                             num_classes=num_classes,
+                                             learning_competition=0.1))
 model_ak.summary()
 
 ##############################################################################
