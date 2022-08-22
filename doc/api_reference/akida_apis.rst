@@ -69,6 +69,13 @@ Akida runtime API
     --------
     .. autoclass:: PoolType
 
+    Optimizers
+    ==========
+
+    .. autoclass:: akida.core.Optimizer
+        :members:
+    .. autoclass:: AkidaUnsupervised
+
     Sequence
     ========
 
