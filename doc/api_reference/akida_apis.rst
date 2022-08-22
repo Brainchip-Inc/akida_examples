@@ -69,11 +69,6 @@ Akida runtime API
     --------
     .. autoclass:: PoolType
 
-    LearningType
-    ------------
-    .. autoclass:: LearningType
-
-
     Sequence
     ========
 
