@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -418,9 +418,15 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Layers blocks definitions.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span>
-                          <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">AvgPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
+                          <span class="n">AvgPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">LayerNormalization</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Add</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span>
+<span class="kn">from</span> <span class="nn">keras.initializers</span> <span class="kn">import</span> <span class="n">TruncatedNormal</span>
+<span class="kn">from</span> <span class="nn">tensorflow_addons.layers</span> <span class="kn">import</span> <span class="n">GELU</span><span class="p">,</span> <span class="n">GroupNormalization</span>
+
+<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">LayerMadNormalization</span>
 
 
 <span class="k">def</span> <span class="nf">_add_pooling_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pooling_type</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">layer_base_name</span><span class="p">):</span>
@@ -610,6 +616,175 @@
         <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">dense_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">x</span></div>
+
+
+<span class="k">def</span> <span class="nf">act_to_layer</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get activation layer from string.</span>
+
+<span class="sd">    This is needed because one cannot serialize a class in layer.get_config, the string is thus</span>
+<span class="sd">    serialized instead.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        act (str): string that values in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] and that allows to choose from</span>
+<span class="sd">            GeLU, ReLUx or swish activation inside MLP.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.layers: the activation layer class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">act</span> <span class="o">==</span> <span class="s1">&#39;GeLU&#39;</span><span class="p">:</span>
+        <span class="n">act_funct</span> <span class="o">=</span> <span class="n">GELU</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s1">&#39;ReLU&#39;</span> <span class="ow">in</span> <span class="n">act</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">act</span> <span class="o">==</span> <span class="s1">&#39;ReLU&#39;</span><span class="p">:</span>
+            <span class="n">max_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">max_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">act</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ReLU must be in the form &#39;ReLUx&#39;, where x is the max-value&quot;</span><span class="p">)</span>
+        <span class="n">act_funct</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="n">max_value</span><span class="o">=</span><span class="n">max_value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">act</span> <span class="o">==</span> <span class="s1">&#39;swish&#39;</span><span class="p">:</span>
+        <span class="n">act_funct</span> <span class="o">=</span> <span class="n">swish</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;act should be in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] but received </span><span class="si">{</span><span class="n">act</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">act_funct</span>
+
+
+<span class="k">def</span> <span class="nf">norm_to_layer</span><span class="p">(</span><span class="n">norm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get normalization layer from string.</span>
+
+<span class="sd">    This is needed because one cannot serialize a class in layer.get_config, the string is thus</span>
+<span class="sd">    serialized instead.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        norm (str): string that values in [&#39;LN&#39;, &#39;GN1&#39;, &#39;BN&#39;, &#39;LMN&#39;] and that allows to choose from</span>
+<span class="sd">            LayerNormalization, GroupNormalization(groups=1, ...), BatchNormalization or</span>
+<span class="sd">            LayerMadNormalization layers respectively in the model.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.layers: the normalization layer class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;LN&#39;</span><span class="p">:</span>
+        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">LayerNormalization</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;GN1&#39;</span><span class="p">:</span>
+        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">GroupNormalization</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;BN&#39;</span><span class="p">:</span>
+        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">BatchNormalization</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;LMN&#39;</span><span class="p">:</span>
+        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">LayerMadNormalization</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;norm should be in [&#39;LN&#39;, &#39;GN1&#39;, &#39;BN&#39;, &#39;LMN&#39;]&quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot; but received </span><span class="si">{</span><span class="n">norm</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">norm_funct</span>
+
+
+<span class="k">def</span> <span class="nf">mlp_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">mlp_dim</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">mlp_act</span><span class="o">=</span><span class="s2">&quot;GeLU&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; MLP block definition.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs (tf.Tensor): inputs</span>
+<span class="sd">        mlp_dim (int): number of units in the first dense layer</span>
+<span class="sd">        dropout (float): dropout rate</span>
+<span class="sd">        name (str): used as a base name for the layers in the block</span>
+<span class="sd">        mlp_act (str, optional): string that values in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] and that allows to</span>
+<span class="sd">            choose from GeLU, ReLUx or swish activation. Defaults to &quot;GeLU&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Tensor: MLP block outputs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">initializer</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+        <span class="s2">&quot;bias_initializer&quot;</span><span class="p">:</span> <span class="s2">&quot;zeros&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span>
+        <span class="n">mlp_dim</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/Dense_0&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">initializer</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">act_to_layer</span><span class="p">(</span><span class="n">mlp_act</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/activation&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/Dense_1&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">initializer</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">outputs</span>
+
+
+<span class="k">def</span> <span class="nf">multi_head_attention</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multi-head attention block definition.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (tf.Tensor): inputs</span>
+<span class="sd">        num_heads (int): the number of attention heads</span>
+<span class="sd">        hidden_size (int): query, key and value dense layers representation size (units)</span>
+<span class="sd">        name (str): used as a base name for the layers in the block</span>
+<span class="sd">        softmax (str, optional): string with values in [&#39;softmax&#39;, &#39;softmax2&#39;] that allows to choose</span>
+<span class="sd">            between softmax and softmax2 activation. Defaults to &#39;softmax&#39;.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if hidden_size is not a multiple of num_heads</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (tf.Tensor, tf.Tensor): block outputs and attention softmaxed scores</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">hidden_size</span> <span class="o">%</span> <span class="n">num_heads</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Embedding dimension = </span><span class="si">{</span><span class="n">hidden_size</span><span class="si">}</span><span class="s2"> should be divisible &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;by number of heads = </span><span class="si">{</span><span class="n">num_heads</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">initializer</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+        <span class="s2">&quot;bias_initializer&quot;</span><span class="p">:</span> <span class="s2">&quot;zeros&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/query&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">initializer</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/key&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">initializer</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/value&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">initializer</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">attention</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">Attention</span><span class="p">(</span><span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span><span class="p">,</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/attention&quot;</span><span class="p">)([</span><span class="n">query</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">])</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">Dense</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/out&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">initializer</span><span class="p">)(</span><span class="n">attention</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">weights</span>
+
+
+<span class="k">def</span> <span class="nf">transformer_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">mlp_dim</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+                      <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">mlp_act</span><span class="o">=</span><span class="s2">&quot;GeLU&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transformer block definition.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs (tf.Tensor): inputs</span>
+<span class="sd">        num_heads (int): the number of attention heads</span>
+<span class="sd">        hidden_size (int): multi-head attention block internal size</span>
+<span class="sd">        mlp_dim (int): MLP block internal size</span>
+<span class="sd">        dropout (float): dropout rate</span>
+<span class="sd">        name (str): used as a base name for the layers in the block</span>
+<span class="sd">        norm (str, optional): string that values in [&#39;LN&#39;, &#39;GN1&#39;, &#39;BN&#39;, &#39;LMN&#39;] and that allows to</span>
+<span class="sd">            choose from LayerNormalization, GroupNormalization(groups=1, ...), BatchNormalization</span>
+<span class="sd">            or LayerMadNormalization layers respectively in the block. Defaults to &#39;LN&#39;.</span>
+<span class="sd">        softmax (str, optional): string with values in [&#39;softmax&#39;, &#39;softmax2&#39;] that allows to choose</span>
+<span class="sd">            between softmax and softmax2 activation in attention. Defaults to &#39;softmax&#39;.</span>
+<span class="sd">        mlp_act (str, optional): string that values in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] and that allows to</span>
+<span class="sd">            choose from GeLU, ReLUx or swish activation in the MLP block. Defaults to &quot;GeLU&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (tf.Tensor, (tf.Tensor tf.Tensor)): block outputs and (attention softmaxed scores, the</span>
+<span class="sd">            normalized sum of inputs and attention outputs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">norm_to_layer</span><span class="p">(</span><span class="n">norm</span><span class="p">)(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/LayerNorm_0&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">multi_head_attention</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                                      <span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span>
+                                      <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/MultiHeadDotProductAttention_1&quot;</span><span class="p">,</span>
+                                      <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span>
+                                      <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x_norm2</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/add_1&quot;</span><span class="p">)([</span><span class="n">x</span><span class="p">,</span> <span class="n">inputs</span><span class="p">])</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">norm_to_layer</span><span class="p">(</span><span class="n">norm</span><span class="p">)(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/LayerNorm_2&quot;</span><span class="p">)(</span><span class="n">x_norm2</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">mlp_block</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">mlp_dim</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/MlpBlock&quot;</span><span class="p">,</span> <span class="n">mlp_act</span><span class="p">)</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/add_2&quot;</span><span class="p">)([</span><span class="n">x_norm2</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">x_norm2</span><span class="p">)</span>
 </pre></div>
 
            </div>

@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -399,11 +399,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for akida.input_convolutional</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">InputLayerParams</span><span class="p">,</span> <span class="n">NumNeuronsParams</span><span class="p">,</span>
-                        <span class="n">ConvolutionKernelParams</span><span class="p">,</span> <span class="n">StrideParams</span><span class="p">,</span>
-                        <span class="n">ActivationsParams</span><span class="p">,</span> <span class="n">WeightBitsParams</span><span class="p">,</span> <span class="n">PoolingParams</span><span class="p">,</span>
-                        <span class="n">InputParams</span><span class="p">,</span> <span class="n">InputConvolutionalParams</span><span class="p">,</span> <span class="n">Padding</span><span class="p">,</span>
-                        <span class="n">PoolType</span><span class="p">)</span>
+<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">Padding</span><span class="p">,</span> <span class="n">PoolType</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="InputConvolutional"><a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.InputConvolutional">[docs]</a><span class="k">class</span> <span class="nc">InputConvolutional</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
@@ -442,10 +438,6 @@
 <span class="sd">            the stride dimensions.</span>
 <span class="sd">        activation (bool, optional): enable or disable activation</span>
 <span class="sd">            function.</span>
-<span class="sd">        threshold (int, optional): threshold for neurons to fire or</span>
-<span class="sd">            generate an event.</span>
-<span class="sd">        act_step (float, optional): length of the potential</span>
-<span class="sd">            quantization intervals.</span>
 <span class="sd">        act_bits (int, optional): number of bits used to quantize</span>
 <span class="sd">            the neuron response.</span>
 <span class="sd">        padding_value (int, optional): value used when padding.</span>
@@ -462,22 +454,38 @@
                  <span class="n">weights_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
                  <span class="n">pool_type</span><span class="o">=</span><span class="n">PoolType</span><span class="o">.</span><span class="n">NoPooling</span><span class="p">,</span>
-                 <span class="n">pool_stride</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                 <span class="n">pool_stride</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                  <span class="n">activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">act_step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">act_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">padding_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">InputConvolutionalParams</span><span class="p">(</span>
-                <span class="n">InputLayerParams</span><span class="p">(</span><span class="n">InputParams</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)),</span>
-                <span class="n">ConvolutionKernelParams</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">),</span>
-                <span class="n">NumNeuronsParams</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span> <span class="n">StrideParams</span><span class="p">(</span><span class="n">kernel_stride</span><span class="p">),</span>
-                <span class="n">WeightBitsParams</span><span class="p">(</span><span class="n">weights_bits</span><span class="p">),</span>
-                <span class="n">PoolingParams</span><span class="p">(</span><span class="n">pool_size</span><span class="p">,</span> <span class="n">pool_type</span><span class="p">,</span> <span class="n">pool_stride</span><span class="p">),</span>
-                <span class="n">ActivationsParams</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">act_step</span><span class="p">,</span> <span class="n">act_bits</span><span class="p">),</span>
-                <span class="n">padding_value</span><span class="p">)</span>
-
+            <span class="n">pooling_stride_x</span> <span class="o">=</span> <span class="n">pool_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">pool_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pooling_stride_x</span> <span class="o">=</span> <span class="n">pool_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">pooling_stride_y</span> <span class="o">=</span> <span class="n">pool_stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">pool_stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pooling_stride_y</span> <span class="o">=</span> <span class="n">pool_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">LayerParams</span><span class="p">(</span>
+                <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="s2">&quot;input_width&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s2">&quot;input_height&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="s2">&quot;input_channels&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                    <span class="s2">&quot;kernel_width&quot;</span><span class="p">:</span> <span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s2">&quot;kernel_height&quot;</span><span class="p">:</span> <span class="n">kernel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="s2">&quot;padding&quot;</span><span class="p">:</span> <span class="n">padding</span><span class="p">,</span>
+                    <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
+                    <span class="s2">&quot;stride_x&quot;</span><span class="p">:</span> <span class="n">kernel_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s2">&quot;stride_y&quot;</span><span class="p">:</span> <span class="n">kernel_stride</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="s2">&quot;weights_bits&quot;</span><span class="p">:</span> <span class="n">weights_bits</span><span class="p">,</span>
+                    <span class="s2">&quot;pooling_width&quot;</span><span class="p">:</span> <span class="n">pool_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s2">&quot;pooling_height&quot;</span><span class="p">:</span> <span class="n">pool_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="s2">&quot;pool_type&quot;</span><span class="p">:</span> <span class="n">pool_type</span><span class="p">,</span>
+                    <span class="s2">&quot;pooling_stride_x&quot;</span><span class="p">:</span> <span class="n">pooling_stride_x</span><span class="p">,</span>
+                    <span class="s2">&quot;pooling_stride_y&quot;</span><span class="p">:</span> <span class="n">pooling_stride_y</span><span class="p">,</span>
+                    <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">activation</span><span class="p">,</span>
+                    <span class="s2">&quot;act_bits&quot;</span><span class="p">:</span> <span class="n">act_bits</span><span class="p">,</span>
+                    <span class="s2">&quot;padding_value&quot;</span><span class="p">:</span> <span class="n">padding_value</span>
+                <span class="p">})</span>
             <span class="c1"># Call parent constructor to initialize C++ bindings</span>
             <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>
             <span class="c1"># specified in pybind documentation</span>

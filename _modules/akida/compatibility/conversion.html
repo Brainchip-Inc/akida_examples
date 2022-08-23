@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -412,6 +412,8 @@
     <span class="n">nb_chan</span> <span class="o">=</span> <span class="n">out_dims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
     <span class="n">dw_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">nb_chan</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
     <span class="n">pw_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nb_chan</span><span class="p">,</span> <span class="n">nb_chan</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">act_step_val</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">act_bits</span> <span class="o">/</span> <span class="mi">16</span>
+    <span class="n">act_step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">nb_chan</span><span class="p">),</span> <span class="n">act_step_val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_chan</span><span class="p">):</span>
         <span class="n">dw_weights</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">pw_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
@@ -421,10 +423,9 @@
         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_pooling&quot;</span><span class="p">,</span>
         <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
         <span class="n">filters</span><span class="o">=</span><span class="n">nb_chan</span><span class="p">,</span>
-        <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">act_bits</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">act_bits</span><span class="p">,</span>
-        <span class="n">act_step</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">act_bits</span> <span class="o">/</span> <span class="mi">16</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">identity_layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span> <span class="n">dw_weights</span><span class="p">,</span> <span class="n">pw_weights</span>
+        <span class="n">act_bits</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">act_bits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span>
+        <span class="n">identity_layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span> <span class="n">dw_weights</span><span class="p">,</span> <span class="n">pw_weights</span><span class="p">,</span> <span class="n">act_step</span>
 
 
 <span class="k">def</span> <span class="nf">_copy_layer_variables</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">copied_layer</span><span class="p">):</span>
@@ -435,12 +436,12 @@
 <span class="k">def</span> <span class="nf">_copy_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
     <span class="n">new_layer</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_layer</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">learning</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">learning</span><span class="p">:</span>
         <span class="c1"># Recompile model with layer parameters</span>
         <span class="n">learn_params</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">attr</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">learning</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">learning</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attr</span> <span class="ow">and</span> <span class="s1">&#39;learning_type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attr</span>
+            <span class="n">attr</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">learning</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">learning</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attr</span>
         <span class="p">}</span>
         <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="o">**</span><span class="n">learn_params</span><span class="p">)</span>
     <span class="n">_copy_layer_variables</span><span class="p">(</span><span class="n">new_layer</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
@@ -450,18 +451,19 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adds the layer and an identity CNP to the model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ident_params</span><span class="p">,</span> <span class="n">ident_dw_weights</span><span class="p">,</span> <span class="n">ident_pw_weights</span> <span class="o">=</span> <span class="n">_get_weights_params_identity</span><span class="p">(</span>
-        <span class="n">layer</span><span class="p">)</span>
+    <span class="n">ident_params</span><span class="p">,</span> <span class="n">ident_dw_weights</span><span class="p">,</span> <span class="n">ident_pw_weights</span><span class="p">,</span> <span class="n">act_step</span> <span class="o">=</span> \
+        <span class="n">_get_weights_params_identity</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
     <span class="n">identity_layer</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">ident_params</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_identity&quot;</span><span class="p">)</span>
     <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">identity_layer</span><span class="p">)</span>
     <span class="n">identity_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">,</span> <span class="n">ident_dw_weights</span><span class="p">)</span>
     <span class="n">identity_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;weights_pw&quot;</span><span class="p">,</span> <span class="n">ident_pw_weights</span><span class="p">)</span>
+    <span class="n">identity_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;act_step&quot;</span><span class="p">,</span> <span class="n">act_step</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_cnp_max_pooling</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span>
         <span class="n">akida</span><span class="o">.</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Convolutional</span><span class="p">,</span> <span class="n">akida</span><span class="o">.</span><span class="n">LayerType</span><span class="o">.</span><span class="n">SeparableConvolutional</span>
-    <span class="p">]</span> <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_type</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">PoolType</span><span class="o">.</span><span class="n">Max</span>
+    <span class="p">]</span> <span class="ow">and</span> <span class="n">akida</span><span class="o">.</span><span class="n">PoolType</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_type</span><span class="p">)</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">PoolType</span><span class="o">.</span><span class="n">Max</span>
 
 
 <span class="k">def</span> <span class="nf">_cnp_pooling_needs_identity_cnp</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">):</span>
@@ -503,8 +505,8 @@
     <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layer_conv</span><span class="p">)</span>
     <span class="n">_copy_layer_variables</span><span class="p">(</span><span class="n">layer_conv</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
     <span class="c1"># 2nd layer is an identity conv with pooling</span>
-    <span class="n">pool_params</span><span class="p">,</span> <span class="n">pool_dw_weights</span><span class="p">,</span> <span class="n">pool_pw_weights</span> <span class="o">=</span> <span class="n">_get_weights_params_identity</span><span class="p">(</span>
-        <span class="n">layer</span><span class="p">)</span>
+    <span class="n">pool_params</span><span class="p">,</span> <span class="n">pool_dw_weights</span><span class="p">,</span> <span class="n">pool_pw_weights</span><span class="p">,</span> <span class="n">act_step</span> <span class="o">=</span> \
+        <span class="n">_get_weights_params_identity</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
     <span class="n">pool_params</span><span class="o">.</span><span class="n">pool_type</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">PoolType</span><span class="o">.</span><span class="n">Max</span>
     <span class="n">pool_params</span><span class="o">.</span><span class="n">pool_size</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_size</span>
     <span class="n">pool_params</span><span class="o">.</span><span class="n">pool_stride</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">pool_stride</span>
@@ -512,6 +514,7 @@
     <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pool_layer</span><span class="p">)</span>
     <span class="n">pool_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;weights&quot;</span><span class="p">,</span> <span class="n">pool_dw_weights</span><span class="p">)</span>
     <span class="n">pool_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;weights_pw&quot;</span><span class="p">,</span> <span class="n">pool_pw_weights</span><span class="p">)</span>
+    <span class="n">pool_layer</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span><span class="s2">&quot;act_step&quot;</span><span class="p">,</span> <span class="n">act_step</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="create_from_model"><a class="viewcode-back" href="../../../api_reference/akida_apis.html#akida.compatibility.create_from_model">[docs]</a><span class="k">def</span> <span class="nf">create_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>

@@ -157,6 +157,8 @@ print(f"The number of weights is then set to: {num_weights}")
 #
 # In this tutorial, we only present this analysis for one class (word 'six').
 
+from akida import AkidaUnsupervised
+
 
 def compute_losses(model,
                    samples,
@@ -196,8 +198,8 @@ def compute_losses(model,
                                   units=units,
                                   activation=False)
         model_fc.add(layer_fc)
-        model_fc.compile(num_weights=num_weights,
-                         learning_competition=learning_competition)
+        model_fc.compile(optimizer=AkidaUnsupervised(num_weights=num_weights,
+                                                     learning_competition=learning_competition))
         return model_fc
 
     losses = np.zeros((len(neurons_per_class), num_repetitions))

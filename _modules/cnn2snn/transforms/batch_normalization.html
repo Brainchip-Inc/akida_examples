@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -427,6 +427,7 @@
 <span class="kn">from</span> <span class="nn">..quantization_ops</span> <span class="kn">import</span> <span class="n">MaxPerAxisQuantizer</span><span class="p">,</span> <span class="n">StdPerAxisQuantizer</span>
 <span class="kn">from</span> <span class="nn">..quantization_layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
                                    <span class="n">QuantizedDense</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
 <span class="kn">from</span> <span class="nn">.clone</span> <span class="kn">import</span> <span class="n">clone_layer</span><span class="p">,</span> <span class="n">clone_layer_and_add_to_model</span>
 
 
@@ -464,7 +465,8 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">):</span>
                 <span class="n">bn_config</span> <span class="o">=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
                 <span class="n">bn_config</span><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">bn_layer_clone</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">bn_config</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">custom_object_scope</span><span class="p">(</span><span class="n">cnn2snn_objects</span><span class="p">):</span>
+                    <span class="n">bn_layer_clone</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">bn_config</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">bn_layer_clone</span> <span class="o">=</span> <span class="n">clone_layer</span><span class="p">(</span><span class="n">next_layer</span><span class="p">)</span>
             <span class="n">new_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bn_layer_clone</span><span class="p">)</span>

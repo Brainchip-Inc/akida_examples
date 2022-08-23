@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -429,51 +429,6 @@
 <span class="kn">from</span> <span class="nn">.clone</span> <span class="kn">import</span> <span class="n">clone_model_with_weights</span>
 
 
-<span class="k">def</span> <span class="nf">_is_fused</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_get_unique_source_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
-
-
-<span class="k">def</span> <span class="nf">_is_scalable</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="n">scalable_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">,</span>
-                       <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">scalable_layers</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_is_neutral</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="n">neutral_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">GlobalAvgPool2D</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">neutral_layers</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="c1"># ReLU is neutral only if it is zero-centered and unlimited</span>
-    <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">threshold</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">max_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_identify_scalable_layer_pairs</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="n">scalable_pairs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">destination_layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="c1"># First, identify a scalable destination layer</span>
-        <span class="k">if</span> <span class="n">_is_scalable</span><span class="p">(</span><span class="n">destination_layer</span><span class="p">):</span>
-            <span class="n">source_layer</span> <span class="o">=</span> <span class="n">_get_unique_source_layer</span><span class="p">(</span><span class="n">destination_layer</span><span class="p">)</span>
-            <span class="c1"># Climb model until we find another scalable layer</span>
-            <span class="k">while</span> <span class="n">source_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_scalable</span><span class="p">(</span><span class="n">source_layer</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">_is_neutral</span><span class="p">(</span><span class="n">source_layer</span><span class="p">):</span>
-                    <span class="c1"># This layer can be safely ignored</span>
-                    <span class="n">source_layer</span> <span class="o">=</span> <span class="n">_get_unique_source_layer</span><span class="p">(</span><span class="n">source_layer</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># An incompatible layer got in the way: abort search</span>
-                    <span class="n">source_layer</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">source_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># We found a valid pair of scalable layers</span>
-                <span class="n">scalable_pairs</span><span class="p">[</span><span class="n">source_layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">destination_layer</span>
-    <span class="k">return</span> <span class="n">scalable_pairs</span>
-
-
 <span class="k">def</span> <span class="nf">_get_filter_max_values</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
         <span class="c1"># Layer &quot;weights&quot; are filters, biases</span>
@@ -484,7 +439,8 @@
         <span class="c1"># Layer &quot;weights&quot; are depthwise filters, pointwise filters, biases</span>
         <span class="c1"># We are only interested in rescaling pointwise filters</span>
         <span class="n">filters</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="c1"># Pointwise filters are HWCN, i.e. the filter index is the last dimension</span>
+        <span class="c1"># Pointwise filters are HWCN, i.e. the filter index is the last</span>
+        <span class="c1"># dimension</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">filters</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
         <span class="c1"># Layer &quot;weights&quot; are filters, biases</span>
@@ -513,30 +469,6 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">_get_optimal_scales</span><span class="p">(</span><span class="n">source_max</span><span class="p">,</span> <span class="n">destination_max</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">source_max</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">destination_max</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incompatible source and destination for equalization&quot;</span><span class="p">)</span>
-    <span class="c1"># By default, do not rescale</span>
-    <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">source_max</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">source_max</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="n">destination_max</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># Apply the formula from equation (11) in paragraph 4.1</span>
-            <span class="c1"># From &quot;Data-Free Quantization Through Weight Equalization and Bias</span>
-            <span class="c1"># Correction&quot;</span>
-            <span class="c1"># Markus Nagel, Mart van Baalen, Tijmen Blankevoort, Max Welling</span>
-            <span class="c1"># https://arxiv.org/abs/1906.04721</span>
-            <span class="n">scales</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">source_max</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">destination_max</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">scales</span>
-
-
-<span class="k">def</span> <span class="nf">_get_optimal_fused_layer_scales</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="n">source_max</span> <span class="o">=</span> <span class="n">_get_channel_max_values</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-    <span class="n">pw_filters</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="c1"># Pointwise filters are HWCN, i.e. channel index is the third dimension</span>
-    <span class="n">destination_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pw_filters</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">_get_optimal_scales</span><span class="p">(</span><span class="n">source_max</span><span class="p">,</span> <span class="n">destination_max</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">_rescale_fused_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">):</span>
     <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">):</span>
@@ -551,98 +483,6 @@
         <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">pw_filters</span>
         <span class="c1"># Update layer weights</span>
         <span class="n">layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_get_optimal_cross_layer_scales</span><span class="p">(</span><span class="n">source_layer</span><span class="p">,</span> <span class="n">destination_layer</span><span class="p">):</span>
-    <span class="n">source_max</span> <span class="o">=</span> <span class="n">_get_filter_max_values</span><span class="p">(</span><span class="n">source_layer</span><span class="p">)</span>
-    <span class="n">destination_max</span> <span class="o">=</span> <span class="n">_get_channel_max_values</span><span class="p">(</span><span class="n">destination_layer</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_get_optimal_scales</span><span class="p">(</span><span class="n">source_max</span><span class="p">,</span> <span class="n">destination_max</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_rescale_source_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">):</span>
-    <span class="k">assert</span> <span class="n">_is_scalable</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-    <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">)):</span>
-        <span class="c1"># Layer &quot;weights&quot; are filters, biases</span>
-        <span class="n">filters</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">biases</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">):</span>
-        <span class="c1"># Layer &quot;weights&quot; are depthwise filters, pointwise filters, biases</span>
-        <span class="n">filters</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">biases</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="c1"># Divide filters by scales (broadcast on the filters last dimension)</span>
-    <span class="n">scaled_weights</span> <span class="o">=</span> <span class="n">filters</span> <span class="o">/</span> <span class="n">scales</span>
-    <span class="c1"># Divide biases by scales (element-wise)</span>
-    <span class="n">scaled_biases</span> <span class="o">=</span> <span class="n">biases</span> <span class="o">/</span> <span class="n">scales</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">)):</span>
-        <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaled_weights</span>
-        <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaled_biases</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">):</span>
-        <span class="n">weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaled_weights</span>
-        <span class="n">weights</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaled_biases</span>
-    <span class="c1"># Update layer weights</span>
-    <span class="n">layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_rescale_destination_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">):</span>
-    <span class="n">weights</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
-    <span class="c1"># Extract filters (resp. depthwise filters)</span>
-    <span class="n">filters</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SeparableConv2D</span><span class="p">)):</span>
-        <span class="c1"># Mutiply each channel (third dimension) by scale</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">filters</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">filters</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">scales</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
-        <span class="c1"># Mutiply each channel (first dimension) by scale</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">filters</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">filters</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">scales</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="c1"># Update layer weights</span>
-    <span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">filters</span>
-    <span class="n">layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_adjust_fused_layer_weights</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
-    <span class="n">scales</span> <span class="o">=</span> <span class="n">_get_optimal_fused_layer_scales</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-    <span class="n">_rescale_fused_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_adjust_consecutive_layer_weights</span><span class="p">(</span><span class="n">source_layer</span><span class="p">,</span> <span class="n">destination_layer</span><span class="p">):</span>
-    <span class="n">scales</span> <span class="o">=</span> <span class="n">_get_optimal_cross_layer_scales</span><span class="p">(</span><span class="n">source_layer</span><span class="p">,</span> <span class="n">destination_layer</span><span class="p">)</span>
-    <span class="n">_rescale_source_layer</span><span class="p">(</span><span class="n">source_layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-    <span class="n">_rescale_destination_layer</span><span class="p">(</span><span class="n">destination_layer</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="cross_layer_scaling"><a class="viewcode-back" href="../../../api_reference/cnn2snn_apis.html#cnn2snn.transforms.cross_layer_scaling">[docs]</a><span class="k">def</span> <span class="nf">cross_layer_scaling</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equalize weights between neural layers.</span>
-
-<span class="sd">    This is an implementation of &quot;Cross-layer range equalization&quot;, described</span>
-<span class="sd">    in paragraph 4.1 of &quot;Data-Free Quantization Through Weight Equalization</span>
-<span class="sd">    and Bias Correction&quot;.</span>
-<span class="sd">    Markus Nagel, Mart van Baalen, Tijmen Blankevoort, Max Welling</span>
-<span class="sd">    https://arxiv.org/abs/1906.04721</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a Keras model.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tf.keras.Model`: a new Keras model with normalized weights</span>
-<span class="sd">        to minimize differences between channel scales.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Clone model</span>
-    <span class="n">new_model</span> <span class="o">=</span> <span class="n">clone_model_with_weights</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Identify scalable pairs</span>
-    <span class="n">scalable_pairs</span> <span class="o">=</span> <span class="n">_identify_scalable_layer_pairs</span><span class="p">(</span><span class="n">new_model</span><span class="p">)</span>
-
-    <span class="c1"># Rescale layer weights</span>
-    <span class="k">for</span> <span class="n">source_layer</span> <span class="ow">in</span> <span class="n">new_model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">_is_fused</span><span class="p">(</span><span class="n">source_layer</span><span class="p">):</span>
-            <span class="n">_adjust_fused_layer_weights</span><span class="p">(</span><span class="n">source_layer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">source_layer</span> <span class="ow">in</span> <span class="n">scalable_pairs</span><span class="p">:</span>
-            <span class="n">destination_layer</span> <span class="o">=</span> <span class="n">scalable_pairs</span><span class="p">[</span><span class="n">source_layer</span><span class="p">]</span>
-            <span class="n">_adjust_consecutive_layer_weights</span><span class="p">(</span><span class="n">source_layer</span><span class="p">,</span> <span class="n">destination_layer</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">new_model</span></div>
 
 
 <span class="k">def</span> <span class="nf">_get_homogeneity_rate</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>

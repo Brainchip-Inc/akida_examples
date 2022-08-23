@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.2
+                MetaTF 2.2.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -157,9 +157,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#learningtype">LearningType</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id2">Sequence</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
@@ -557,12 +557,12 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        batch_size (int): batch size default value</span>
-<span class="sd">        tune (bool, optional): either to add a tune action or not. Default to</span>
+<span class="sd">        tune (bool, optional): either to add a tune action or not. Defaults to</span>
 <span class="sd">            False.</span>
 <span class="sd">        freeze_before (bool, optional): either to add a &quot;--freeze_before&quot;</span>
-<span class="sd">            parameter in train and tune actions or not. Default to False.</span>
+<span class="sd">            parameter in train and tune actions or not. Defaults to False.</span>
 <span class="sd">        global_batch_size (bool, optional): either to add batch size as a</span>
-<span class="sd">            global parser parameter or for train/tune actions only. Default to</span>
+<span class="sd">            global parser parameter or for train/tune actions only. Defaults to</span>
 <span class="sd">            True.</span>
 <span class="sd">        global_parser (argparse.ArgumentParser, optional): global parser with</span>
 <span class="sd">            custom parameters. Defaults to None.</span>
@@ -654,6 +654,22 @@
                              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Converts to an Akida model and evaluate&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">parser</span><span class="p">,</span> <span class="n">train_parser</span><span class="p">,</span> <span class="n">tune_parser</span><span class="p">,</span> <span class="n">eval_parser</span><span class="p">,</span> <span class="n">subparsers</span>
+
+
+<span class="k">def</span> <span class="nf">print_history_stats</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a basic statistics of the training/eval history.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        history (keras.callbacks.History): history of the training/eval process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">History statistics:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">max_len_metric</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">clean_history</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">max_len_metric</span><span class="p">):</span> <span class="n">values</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parameter:&quot;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">max_len_metric</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">clean_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>
