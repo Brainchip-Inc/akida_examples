@@ -115,7 +115,7 @@ Example of sequential definition of a model:
    from akida import Model, InputData, FullyConnected
    model = Model()
    model.add(InputData(name="input", input_shape=(32, 32, 1)))
-   model.add(FullyConnected(name="fully", units=32, threshold=40))
+   model.add(FullyConnected(name="fully", units=32))
 
 The ``Model`` `.summary() <../api_reference/akida_apis.html#akida.Model.summary>`__
 method prints a description of the model architecture.
