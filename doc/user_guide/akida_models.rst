@@ -240,6 +240,17 @@ once converted to Akida.
    kws_train eval -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -ak
 
 
+Command-line interface to evaluate model MACS
+---------------------------------------------
+
+CLI comes with a ``macs`` action that allows to compute the number of multiply and accumulate (MACS)
+in a model.
+
+.. code-block:: bash
+
+   akida_models macs -m akidanet_imagenet_224_alpha_50.h5 -v
+
+
 Layer Blocks
 ------------
 
