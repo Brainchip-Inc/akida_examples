@@ -44,6 +44,11 @@ Akida runtime API
     .. autoclass:: FullyConnected
         :members:
 
+    Dense2D
+    =======
+    .. autoclass:: Dense2D
+        :members:
+
     Convolutional
     =============
     .. autoclass:: Convolutional
@@ -52,6 +57,16 @@ Akida runtime API
     SeparableConvolutional
     ======================
     .. autoclass:: SeparableConvolutional
+        :members:
+
+    Shiftmax
+    ========
+    .. autoclass:: Shiftmax
+        :members:
+
+    Add
+    ===
+    .. autoclass:: Add
         :members:
 
     Layer parameters
