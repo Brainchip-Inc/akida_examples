@@ -20,6 +20,31 @@ Akida models API
     -----------
     .. autofunction:: akida_models.layer_blocks.dense_block
 
+    mlp_block
+    ---------
+    .. autofunction:: akida_models.layer_blocks.mlp_block
+
+    multi_head_attention
+    --------------------
+    .. autofunction:: akida_models.layer_blocks.multi_head_attention
+
+    transformer_block
+    -----------------
+    .. autofunction:: akida_models.layer_blocks.transformer_block
+
+    conv_transpose_block
+    --------------------
+    .. autofunction:: akida_models.layer_blocks.conv_transpose_block
+
+    sepconv_transpose_block
+    -----------------------
+    .. autofunction:: akida_models.layer_blocks.sepconv_transpose_block
+
+    tools
+    -----
+    .. autofunction:: akida_models.layer_blocks.act_to_layer
+    .. autofunction:: akida_models.layer_blocks.norm_to_layer
+
     Helpers
     =======
 
@@ -31,7 +56,7 @@ Akida models API
     ======================
 
     .. autoclass:: akida_models.distiller.Distiller
-        :members:
+    .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
     Pruning
@@ -47,6 +72,15 @@ Akida models API
     .. autofunction:: akida_models.training.evaluate_model
     .. autofunction:: akida_models.training.evaluate_akida_model
     .. autofunction:: akida_models.training.compile_model
+
+    MACS
+    ====
+    .. autofunction:: akida_models.macs.get_flops
+    .. autofunction:: akida_models.macs.display_macs
+
+    Utils
+    =====
+    .. autofunction:: akida_models.utils.fetch_file
 
     Model zoo
     =========
