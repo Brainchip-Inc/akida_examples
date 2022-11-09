@@ -131,9 +131,9 @@ QuantizeML API
         :members:
         :show-inheritance:
 
-    FixedPointQuantizer
-    ~~~~~~~~~~~~~~~~~~~
-    .. autoclass:: quantizeml.layers.FixedPointQuantizer
+    OutputQuantizer
+    ~~~~~~~~~~~~~~~
+    .. autoclass:: quantizeml.layers.OutputQuantizer
         :members:
         :show-inheritance:
 
