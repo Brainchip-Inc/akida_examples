@@ -112,6 +112,13 @@ Akida models API
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
 
+    AkidaUNet
+    ---------
+
+    Portait128
+    ~~~~~~~~~~
+    .. autofunction:: akida_models.akida_unet_portrait128
+
     Mobilenet
     ---------
 
@@ -212,3 +219,16 @@ Akida models API
     ~~~~~
     .. autofunction:: akida_models.gxnor_mnist
     .. autofunction:: akida_models.gxnor_mnist_pretrained
+
+    Transformers
+    ------------
+
+    ImageNet
+    ~~~~~~~~
+    .. autofunction:: akida_models.deit_imagenet
+    .. autofunction:: akida_models.bc_deit_ti16
+    .. autofunction:: akida_models.bc_deit_ti16_imagenet_pretrained
+    .. autofunction:: akida_models.bc_deit_dist_ti16_imagenet_pretrained
+    .. autofunction:: akida_models.vit_imagenet
+    .. autofunction:: akida_models.bc_vit_ti16
+    .. autofunction:: akida_models.bc_vit_ti16_imagenet_pretrained
