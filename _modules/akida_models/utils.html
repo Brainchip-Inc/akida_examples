@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cnn2snn.utils &mdash; Akida Examples  documentation</title>
+  <title>akida_models.utils &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
@@ -362,7 +362,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>cnn2snn.utils</li>
+      <li>akida_models.utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -371,10 +371,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for cnn2snn.utils</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.utils</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2019 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2022 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -388,32 +388,113 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="sd">&quot;&quot;&quot;Various utility methods</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
-<span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
+<span class="sd">Utilities for akida_models package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+
+<span class="kn">from</span> <span class="nn">six.moves.urllib.parse</span> <span class="kn">import</span> <span class="n">urlsplit</span>
+
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
+<span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">validate_file</span><span class="p">,</span> <span class="n">_extract_archive</span>
+<span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">Progbar</span>
 
 
-<div class="viewcode-block" id="load_quantized_model"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.load_quantized_model">[docs]</a><span class="k">def</span> <span class="nf">load_quantized_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compile_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loads a quantized model saved in TF or HDF5 format.</span>
+<div class="viewcode-block" id="fetch_file"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.utils.fetch_file">[docs]</a><span class="k">def</span> <span class="nf">fetch_file</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_subdir</span><span class="o">=</span><span class="s2">&quot;datasets&quot;</span><span class="p">,</span> <span class="n">extract</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Downloads a file from a URL if it is not already in the cache.</span>
 
-<span class="sd">    If the model was compiled and trained before saving, its training state</span>
-<span class="sd">    will be loaded as well.</span>
-<span class="sd">    This function is a wrapper of `tf.keras.models.load_model`.</span>
+<span class="sd">    Reimplements `keras.utils.get_file` without raising an error when detecting a file_hash</span>
+<span class="sd">    mismatch (it will just re-download the model).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        filepath (string): path to the saved model.</span>
-<span class="sd">        custom_objects (dict): optional dictionary mapping names (strings) to</span>
-<span class="sd">            custom classes or functions to be considered during deserialization.</span>
-<span class="sd">        compile_model (bool): whether to compile the model after loading.</span>
+<span class="sd">        origin (str): original URL of the file.</span>
+<span class="sd">        fname (str, optional): name of the file. If an absolute path `/path/to/file.txt` is</span>
+<span class="sd">            specified the file will be saved at that location. If `None`, the name of the file at</span>
+<span class="sd">            `origin` will be used. Defaults to None.</span>
+<span class="sd">        file_hash (str, optional): the expected hash string of the file after download. Defaults to</span>
+<span class="sd">            None.</span>
+<span class="sd">        cache_subdir (str, optional): subdirectory under the Keras cache dir where the file is</span>
+<span class="sd">            saved. If an absolute path `/path/to/folder` is specified the file will be saved at that</span>
+<span class="sd">            location. Defaults to &#39;datasets&#39;.</span>
+<span class="sd">        extract (bool, optional): True tries extracting the file as an Archive, like tar or zip.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        cache_dir (str, optional): location to store cached files, when None it defaults to the</span>
+<span class="sd">            default directory `~/.keras/`. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        :obj:`keras.Model`: a Keras model instance.</span>
+<span class="sd">        str: path to the downloaded file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">custom_objects</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">all_objects</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">custom_objects</span><span class="p">,</span> <span class="o">**</span><span class="n">cnn2snn_objects</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">all_objects</span><span class="p">,</span> <span class="n">compile_model</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">),</span> <span class="s2">&quot;.keras&quot;</span><span class="p">)</span>
+
+    <span class="n">datadir_base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">datadir_base</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">W_OK</span><span class="p">):</span>
+        <span class="n">datadir_base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span> <span class="s2">&quot;.keras&quot;</span><span class="p">)</span>
+    <span class="n">datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datadir_base</span><span class="p">,</span> <span class="n">cache_subdir</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">io_utils</span><span class="o">.</span><span class="n">path_to_string</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="p">:</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">urlsplit</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Can&#39;t parse the file name from the origin provided: &#39;</span><span class="si">{</span><span class="n">origin</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                             <span class="s2">&quot;Please specify the `fname` as the input param.&quot;</span><span class="p">)</span>
+
+    <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+
+    <span class="n">download</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+        <span class="c1"># File found, verify integrity if a hash was provided.</span>
+        <span class="k">if</span> <span class="n">file_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">validate_file</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">file_hash</span><span class="p">):</span>
+            <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="s2">&quot;A local file was found, but it seems to be incomplete or outdated&quot;</span>
+                               <span class="s2">&quot;because the file hash does not match the original value of &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_hash</span><span class="si">}</span><span class="s2"> so we will re-download the data.&quot;</span><span class="p">)</span>
+            <span class="n">download</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">download</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">download</span><span class="p">:</span>
+        <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading data from </span><span class="si">{</span><span class="n">origin</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">DLProgbar</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Manage progress bar state for use in urlretrieve.&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">progbar</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_num</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">total_size</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">progbar</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">total_size</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">total_size</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">progbar</span> <span class="o">=</span> <span class="n">Progbar</span><span class="p">(</span><span class="n">total_size</span><span class="p">)</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="n">block_num</span> <span class="o">*</span> <span class="n">block_size</span>
+                <span class="k">if</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">total_size</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">progbar</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;URL fetch failure on </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> -- </span><span class="si">{}</span><span class="s2">&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">DLProgbar</span><span class="p">())</span>
+            <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">URLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">reason</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="k">if</span> <span class="n">extract</span><span class="p">:</span>
+        <span class="n">_extract_archive</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">datadir</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fpath</span></div>
 </pre></div>
 
            </div>

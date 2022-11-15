@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cnn2snn.utils &mdash; Akida Examples  documentation</title>
+  <title>akida_models.macs &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
@@ -362,7 +362,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>cnn2snn.utils</li>
+      <li>akida_models.macs</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -371,49 +371,84 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for cnn2snn.utils</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/env python</span>
-<span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2019 Brainchip Holdings Ltd.</span>
-<span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
-<span class="c1"># you may not use this file except in compliance with the License.</span>
-<span class="c1"># You may obtain a copy of the License at</span>
-<span class="c1">#</span>
-<span class="c1">#    http://www.apache.org/licenses/LICENSE-2.0</span>
-<span class="c1">#</span>
-<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
-<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span class="c1"># See the License for the specific language governing permissions and</span>
-<span class="c1"># limitations under the License.</span>
-<span class="c1"># ******************************************************************************</span>
-<span class="sd">&quot;&quot;&quot;Various utility methods</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
-<span class="kn">from</span> <span class="nn">.cnn2snn_objects</span> <span class="kn">import</span> <span class="n">cnn2snn_objects</span>
+  <h1>Source code for akida_models.macs</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework.convert_to_constants</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">convert_variables_to_constants_v2_as_graph</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">load_model</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span>
 
 
-<div class="viewcode-block" id="load_quantized_model"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.load_quantized_model">[docs]</a><span class="k">def</span> <span class="nf">load_quantized_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compile_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loads a quantized model saved in TF or HDF5 format.</span>
+<div class="viewcode-block" id="get_flops"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.macs.get_flops">[docs]</a><span class="k">def</span> <span class="nf">get_flops</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate FLOPS for a tf.keras.Model or tf.keras.Sequential model in inference mode.</span>
 
-<span class="sd">    If the model was compiled and trained before saving, its training state</span>
-<span class="sd">    will be loaded as well.</span>
-<span class="sd">    This function is a wrapper of `tf.keras.models.load_model`.</span>
+<span class="sd">    It uses tf.compat.v1.profiler under the hood.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        filepath (string): path to the saved model.</span>
-<span class="sd">        custom_objects (dict): optional dictionary mapping names (strings) to</span>
-<span class="sd">            custom classes or functions to be considered during deserialization.</span>
-<span class="sd">        compile_model (bool): whether to compile the model after loading.</span>
+<span class="sd">        model (:obj:`keras.Model`): the model to evaluate</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        :obj:`keras.Model`: a Keras model instance.</span>
+<span class="sd">        :obj:`tf.compat.v1.profiler.GraphNodeProto`: object containing the FLOPS</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">custom_objects</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">all_objects</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">custom_objects</span><span class="p">,</span> <span class="o">**</span><span class="n">cnn2snn_objects</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">all_objects</span><span class="p">,</span> <span class="n">compile_model</span><span class="p">)</span></div>
+    <span class="c1"># Prepare a constant input to pass to the profiler</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
+    <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Calculating FLOPS is only supported for `tf.keras.Model`&quot;</span>
+                         <span class="s2">&quot;and `tf.keras.Sequential` instances.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># convert tf.keras model into frozen graph to count FLOPs about operations used at inference</span>
+    <span class="n">real_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">frozen_func</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">convert_variables_to_constants_v2_as_graph</span><span class="p">(</span><span class="n">real_model</span><span class="p">)</span>
+    <span class="c1"># Calculate FLOPs with tf.profiler</span>
+    <span class="n">run_meta</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">RunMetadata</span><span class="p">()</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">ProfileOptionBuilder</span><span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">ProfileOptionBuilder</span><span class="p">()</span><span class="o">.</span><span class="n">float_operation</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">with_empty_output</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">flops</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">=</span><span class="n">frozen_func</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">run_meta</span><span class="o">=</span><span class="n">run_meta</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;scope&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opts</span>
+    <span class="p">)</span>
+
+    <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">reset_default_graph</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">flops</span></div>
+
+
+<div class="viewcode-block" id="display_macs"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.macs.display_macs">[docs]</a><span class="k">def</span> <span class="nf">display_macs</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Displays the MACs for a keras model</span>
+
+<span class="sd">    By default it displays only the total MACS.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`keras.Model`): the model to evaluate</span>
+<span class="sd">        verbose (bool): display MACS for each operation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+    <span class="n">flops</span> <span class="o">=</span> <span class="n">get_flops</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">display_children_macs</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">total_float_ops</span> <span class="o">/</span> <span class="mi">2</span><span class="si">:</span><span class="s2">e</span><span class="si">}</span><span class="s2"> MACS&quot;</span><span class="p">)</span>
+                <span class="n">display_children_macs</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+        <span class="c1"># Recursively display MACS by node (i.e. operation)</span>
+        <span class="n">display_children_macs</span><span class="p">(</span><span class="n">flops</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+
+    <span class="c1"># We divide FLOPS by 2 to obtain an estimate of Multiply and Accumulate (MACS)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total: </span><span class="si">{</span><span class="n">flops</span><span class="o">.</span><span class="n">total_float_ops</span> <span class="o">/</span> <span class="mi">2</span><span class="si">:</span><span class="s2">e</span><span class="si">}</span><span class="s2"> MACS&quot;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

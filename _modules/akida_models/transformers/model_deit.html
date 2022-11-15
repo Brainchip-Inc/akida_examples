@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>quantizeml.tensors.qtensor &mdash; Akida Examples  documentation</title>
+  <title>akida_models.transformers.model_deit &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -362,7 +362,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>quantizeml.tensors.qtensor</li>
+      <li>akida_models.transformers.model_deit</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -371,7 +371,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for quantizeml.tensors.qtensor</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.transformers.model_deit</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2022 Brainchip Holdings Ltd.</span>
@@ -388,183 +388,240 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ViT model definition.</span>
+<span class="sd">Inspired from https://github.com/faustomorales/vit-keras/blob/master/vit_keras/vit.py.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+
+<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">AddPositionEmbs</span><span class="p">,</span> <span class="n">ClassToken</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">ExtractToken</span>
+<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">load_model</span>
+
+<span class="kn">from</span> <span class="nn">.model_vit</span> <span class="kn">import</span> <span class="n">CONFIG_TI</span><span class="p">,</span> <span class="n">CONFIG_S</span><span class="p">,</span> <span class="n">CONFIG_B</span><span class="p">,</span> <span class="n">_get_quant_config</span>
+<span class="kn">from</span> <span class="nn">..imagenet.imagenet_utils</span> <span class="kn">import</span> <span class="n">IMAGENET_MEAN</span><span class="p">,</span> <span class="n">IMAGENET_STD</span>
+<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">norm_to_layer</span><span class="p">,</span> <span class="n">transformer_block</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span>
+
+<span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/deit/&#39;</span>
 
 
-<span class="kn">from</span> <span class="nn">..debugging</span> <span class="kn">import</span> <span class="n">assert_equal</span>
-
-
-<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
-<span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">round_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">rounded</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">upstream</span>
-    <span class="k">return</span> <span class="n">rounded</span><span class="p">,</span> <span class="n">grad</span>
-
-
-<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
-<span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">floor_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">floored</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">upstream</span>
-    <span class="k">return</span> <span class="n">floored</span><span class="p">,</span> <span class="n">grad</span>
-
-
-<span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
-<span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">ceil_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">ceiled</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">upstream</span>
-    <span class="k">return</span> <span class="n">ceiled</span><span class="p">,</span> <span class="n">grad</span>
-
-
-<div class="viewcode-block" id="QTensor"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor">[docs]</a><span class="k">class</span> <span class="nc">QTensor</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">ExtensionType</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract class to exchange quantized tensors between layers</span>
-
-<span class="sd">    The QTensor values are actually stored as integer, but it provides a</span>
-<span class="sd">    conversion method to project these values into a float representation.</span>
-
-<span class="sd">    The value_bits parameter sets the maximum integer values that can be stored:</span>
-
-<span class="sd">        int_max = 2^bits - 1.</span>
-
-<span class="sd">    When a QTensor is created, its values are clipped to [-int_max-1, int_max].</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">values</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">value_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
-    <span class="n">shape</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorShape</span>  <span class="c1"># Required to convert to a KerasTensor</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns if QTensor is quantized per-tensor</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: True if QTensor is quantized per-tensor or False on per-axis case.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-
-<div class="viewcode-block" id="QTensor.to_float"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.to_float">[docs]</a>    <span class="k">def</span> <span class="nf">to_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a float representation of the QTensor</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            :obj:`tensorflow.Tensor`: the float representation.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
-
-<div class="viewcode-block" id="QTensor.clone"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a copy of the QTensor</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            :obj:`QTensor`: the copy.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">x_float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;QTensor: </span><span class="si">{</span><span class="n">x_float</span><span class="si">}</span><span class="s2">&quot;</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">int_max</span><span class="p">(</span><span class="n">value_bits</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">value_bits</span> <span class="o">-</span> <span class="mi">1</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">clamp</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">):</span>
-        <span class="n">int_max</span> <span class="o">=</span> <span class="n">QTensor</span><span class="o">.</span><span class="n">int_max</span><span class="p">(</span><span class="n">value_bits</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="o">-</span><span class="n">int_max</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">int_max</span><span class="p">)</span>
-
-<div class="viewcode-block" id="QTensor.assert_per_tensor"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.assert_per_tensor">[docs]</a>    <span class="k">def</span> <span class="nf">assert_per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Asserts that a QTensor is quantized per-tensor&quot;&quot;&quot;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">assert_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not per-tensor.&quot;</span><span class="p">)</span></div></div>
-
-
-<span class="k">def</span> <span class="nf">pow2</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the power of two of an integer</span>
-
-<span class="sd">    Note that this goes through a float64 operation to obtain a float32 tensor.</span>
-<span class="sd">    This makes sure the operation can run on a GPU without losing precision.</span>
+<div class="viewcode-block" id="deit_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.deit_imagenet">[docs]</a><span class="k">def</span> <span class="nf">deit_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span>
+                  <span class="n">num_layers</span><span class="p">,</span>
+                  <span class="n">hidden_size</span><span class="p">,</span>
+                  <span class="n">num_heads</span><span class="p">,</span>
+                  <span class="n">name</span><span class="p">,</span>
+                  <span class="n">mlp_dim</span><span class="p">,</span>
+                  <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                  <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                  <span class="n">dropout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                  <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">,</span>
+                  <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span>
+                  <span class="n">act</span><span class="o">=</span><span class="s2">&quot;GeLU&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a DeiT model.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        n (`tf.tensor`, int): the positive or negative exponent</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tensorflow.Tensor`: a float tensor containing the PoT of the input.</span>
+<span class="sd">        input_shape (tuple): image shape tuple</span>
+<span class="sd">        num_layers (int): the number of transformer layers to use.</span>
+<span class="sd">        hidden_size (int): the number of filters to use</span>
+<span class="sd">        num_heads (int): the number of transformer heads</span>
+<span class="sd">        name (str): the model name</span>
+<span class="sd">        mlp_dim (int): the number of dimensions for the MLP output in the transformers.</span>
+<span class="sd">        patch_size (int, optional): the size of each patch (must fit evenly in image size). Defaults</span>
+<span class="sd">            to 16.</span>
+<span class="sd">        classes (int, optional): number of classes to classify images into, only to be specified if</span>
+<span class="sd">            `include_top` is True. Defaults to 1000.</span>
+<span class="sd">        dropout (float, optional): fraction of the units to drop for dense layers. Defaults to 0.1.</span>
+<span class="sd">        include_top (bool, optional): Whether to include the final classification layer. If not,</span>
+<span class="sd">            the output will have dimensions (batch_size, hidden_size). Defaults to True.</span>
+<span class="sd">        distilled (bool, optional): Build model append a distilled token. Defaults to False.</span>
+<span class="sd">        norm (str, optional): string that values in [&#39;LN&#39;, &#39;GN1&#39;, &#39;BN&#39;, &#39;LMN&#39;] and that allows to</span>
+<span class="sd">            choose from LayerNormalization, GroupNormalization(groups=1, ...), BatchNormalization</span>
+<span class="sd">            or LayerMadNormalization layers respectively in the model. Defaults to &#39;LN&#39;.</span>
+<span class="sd">        softmax (str, optional): string with values in [&#39;softmax&#39;, &#39;softmax2&#39;]</span>
+<span class="sd">            that allows to choose between softmax and softmax2 in MHA. Defaults</span>
+<span class="sd">            to &#39;softmax&#39;.</span>
+<span class="sd">        act (str, optional): string that values in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] and that allows to</span>
+<span class="sd">            choose from GeLU, ReLUx or swish activation in MLP block. Defaults to &#39;GeLU&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">**</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">((</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">patch_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">patch_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)),</span> <span class="s2">&quot;image size must be a multiple of patch_size&quot;</span>
+
+    <span class="c1"># Normalize image adding rescaling layer</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">255</span> <span class="o">/</span> <span class="n">std</span> <span class="k">for</span> <span class="n">std</span> <span class="ow">in</span> <span class="n">IMAGENET_STD</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">mean</span> <span class="o">/</span> <span class="n">std</span> <span class="k">for</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">IMAGENET_MEAN</span><span class="p">,</span> <span class="n">IMAGENET_STD</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rescale&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># Build model</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="n">patch_size</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="n">patch_size</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Embedding&quot;</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+        <span class="n">bias_initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span>
+    <span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">hidden_size</span><span class="p">))(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">distilled</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">ClassToken</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;DistToken&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ClassToken</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ClassToken&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">AddPositionEmbs</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Transformer/PosEmbed&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">):</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">transformer_block</span><span class="p">(</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">mlp_dim</span><span class="o">=</span><span class="n">mlp_dim</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Transformer/EncoderBlock_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+            <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span><span class="p">,</span>
+            <span class="n">mlp_act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">norm_to_layer</span><span class="p">(</span><span class="n">norm</span><span class="p">)(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Transformer/EncoderNorm&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">distilled</span><span class="p">:</span>
+        <span class="n">yd</span> <span class="o">=</span> <span class="n">ExtractToken</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ExtractToken_Dist&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ExtractToken</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ExtractToken&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Head&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">distilled</span><span class="p">:</span>
+            <span class="n">yd</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DistHead&quot;</span><span class="p">)(</span><span class="n">yd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">distilled</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Add&quot;</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">)([</span><span class="n">y</span><span class="p">,</span> <span class="n">yd</span><span class="p">])</span>
+
+    <span class="c1"># Add distilled flag</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">isdistilled</span> <span class="o">=</span> <span class="n">distilled</span>
+    <span class="k">return</span> <span class="n">model</span></div>
 
 
-<span class="k">def</span> <span class="nf">ceil_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
-
-<span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
-<span class="sd">    to the closest power-of-two higher than the input.</span>
-
-<span class="sd">    In hardware, if the inputs are represented as integer, this operation can</span>
-<span class="sd">    be implemented by identifying the leading bit index and increment the result</span>
-<span class="sd">    by 1.</span>
-
-<span class="sd">    Example: ceil_log2(7) = ceil_log2(0b00000111) = 2 + 1 = 3</span>
+<span class="k">def</span> <span class="nf">deit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">,</span>
+              <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="s1">&#39;GeLU&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build DeiT-Tiny.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x (:obj:`tensorflow.tensor`): the source tensor</span>
+<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
+<span class="sd">        classes (int, optional): number of classes. Defaults to 1000.</span>
+<span class="sd">        distilled (bool, optional): build model appending a distilled token. Defaults to False.</span>
+<span class="sd">        norm (str, optional): string that values in [&#39;LN&#39;, &#39;GN1&#39;, &#39;BN&#39;, &#39;LMN&#39;] and that allows to</span>
+<span class="sd">            choose from LayerNormalization, GroupNormalization(groups=1, ...), BatchNormalization</span>
+<span class="sd">            or LayerMadNormalization layers respectively in the model. Defaults to &#39;LN&#39;.</span>
+<span class="sd">        softmax (str, optional): string with values in [&#39;softmax&#39;, &#39;softmax2&#39;] that allows to choose</span>
+<span class="sd">            between softmax and softmax2 in attention block. Defaults to &#39;softmax&#39;.</span>
+<span class="sd">        act (str, optional): string that values in [&#39;GeLU&#39;, &#39;ReLUx&#39;, &#39;swish&#39;] and that allows to</span>
+<span class="sd">            choose from GeLU, ReLUx or swish activation inside MLP. Defaults to &#39;GeLU&#39;.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tensorflow.Tensor`: a float tensor containing integer values</span>
-<span class="sd">            representing the closest PoT exponents.</span>
+<span class="sd">        keras.Model: the requested model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">ceil_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">deit_imagenet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;deit-tiny&quot;</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+        <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
+        <span class="n">distilled</span><span class="o">=</span><span class="n">distilled</span><span class="p">,</span>
+        <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+        <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span>
+        <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">CONFIG_TI</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">floor_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
-
-<span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
-<span class="sd">    to the closest power-of-two lower than the input (except if x &lt; 1).</span>
-
-<span class="sd">    In hardware, if the inputs are represented as integer, this operation can</span>
-<span class="sd">    be implemented by identifying the leading bit index.</span>
-
-<span class="sd">    Example: floor_log2(7) = floor_pow2(0b00000111) = 2</span>
+<div class="viewcode-block" id="bc_deit_ti16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_ti16">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build DeiT-Tiny, changing all LN by LMN, using softmax2 and ReLU8.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x (:obj:`tensorflow.tensor`): the source tensor</span>
+<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
+<span class="sd">        classes (int, optional): number of classes. Defaults to 1000.</span>
+<span class="sd">        distilled (bool, optional): build model appending a distilled token. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tensorflow.Tensor`: a float tensor containing integer values</span>
-<span class="sd">            representing the closest PoT exponents.</span>
+<span class="sd">        keras.Model: the requested model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">floor_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">deit_imagenet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;deit-tiny&quot;</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+        <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
+        <span class="n">distilled</span><span class="o">=</span><span class="n">distilled</span><span class="p">,</span>
+        <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;LMN&quot;</span><span class="p">,</span>
+        <span class="n">softmax</span><span class="o">=</span><span class="s2">&quot;softmax2&quot;</span><span class="p">,</span>
+        <span class="n">act</span><span class="o">=</span><span class="s2">&quot;ReLU8&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">CONFIG_TI</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">round_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
+<div class="viewcode-block" id="bc_deit_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_ti16_imagenet_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `bc_deit_ti16` model that was trained on ImageNet dataset.</span>
 
-<span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
-<span class="sd">    to the closest power-of-two.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model, dict: a Keras Model instance and the quantization configuration as a JSON</span>
+<span class="sd">        formatted dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;bc_deit_ti16_224_quant_config_8bit.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;70923a62a2d3622e3eaeb3c9ce1804a9bdfcc9fd2f8a6f28d3e8e44970b60fa9&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                            <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                            <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                            <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">),</span> <span class="n">_get_quant_config</span><span class="p">()</span></div>
 
-<span class="sd">    In hardware, if the inputs are represented as integer, this operation can</span>
-<span class="sd">    be implemented by:</span>
-<span class="sd">    - identifying the leading bit index,</span>
-<span class="sd">    - increment by 1 if the previous bit is 1 also.</span>
 
-<span class="sd">    Example: round_log2(7) = round_log2(0b00000111) = 2 + 1 = 3</span>
-<span class="sd">             round_log2(5) = round_log2(0b00000101) = 2</span>
+<div class="viewcode-block" id="bc_deit_dist_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_dist_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_dist_ti16_imagenet_pretrained</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve a `bc_deit_dist_ti16` model that was trained on ImageNet dataset.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model, dict: a Keras Model instance and the quantization configuration as a JSON</span>
+<span class="sd">        formatted dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;bc_deit_dist_ti16_224_quant_config_8bit.h5&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;857f0250ed6026bc04a993206179cdbe8339f8f5be4c572739dd376ed4bd0cfb&#39;</span>
+    <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">BASE_WEIGHT_PATH</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
+                            <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+                            <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
+                            <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">),</span> <span class="n">_get_quant_config</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">deit_s16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build DeiT-Small.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x (:obj:`tensorflow.tensor`): the source tensor</span>
+<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
+<span class="sd">        classes (int, optional): number of classes. Defaults to 1000.</span>
+<span class="sd">        distilled (bool, optional): build model appending a distilled token. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        :obj:`tensorflow.Tensor`: a float tensor containing integer values</span>
-<span class="sd">            representing the closest PoT exponents.</span>
+<span class="sd">        keras.Model: the requested model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">round_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">deit_imagenet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;deit-small&quot;</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+        <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
+        <span class="n">distilled</span><span class="o">=</span><span class="n">distilled</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">CONFIG_S</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">deit_b16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build DeiT-B16.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
+<span class="sd">        classes (int, optional): number of classes. Defaults to 1000.</span>
+<span class="sd">        distilled (bool, optional): build model appending a distilled token. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: the requested model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">deit_imagenet</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;deit-base&quot;</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+        <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
+        <span class="n">distilled</span><span class="o">=</span><span class="n">distilled</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">CONFIG_B</span><span class="p">,</span>
+    <span class="p">)</span>
 </pre></div>
 
            </div>
