@@ -20,31 +20,6 @@ Akida models API
     -----------
     .. autofunction:: akida_models.layer_blocks.dense_block
 
-    mlp_block
-    ---------
-    .. autofunction:: akida_models.layer_blocks.mlp_block
-
-    multi_head_attention
-    --------------------
-    .. autofunction:: akida_models.layer_blocks.multi_head_attention
-
-    transformer_block
-    -----------------
-    .. autofunction:: akida_models.layer_blocks.transformer_block
-
-    conv_transpose_block
-    --------------------
-    .. autofunction:: akida_models.layer_blocks.conv_transpose_block
-
-    sepconv_transpose_block
-    -----------------------
-    .. autofunction:: akida_models.layer_blocks.sepconv_transpose_block
-
-    tools
-    -----
-    .. autofunction:: akida_models.layer_blocks.act_to_layer
-    .. autofunction:: akida_models.layer_blocks.norm_to_layer
-
     Helpers
     =======
 
@@ -56,7 +31,6 @@ Akida models API
     ======================
 
     .. autoclass:: akida_models.distiller.Distiller
-    .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
     Pruning
@@ -111,13 +85,6 @@ Akida models API
     *************
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
-
-    AkidaUNet
-    ---------
-
-    Portait128
-    ~~~~~~~~~~
-    .. autofunction:: akida_models.akida_unet_portrait128
 
     Mobilenet
     ---------
@@ -219,16 +186,3 @@ Akida models API
     ~~~~~
     .. autofunction:: akida_models.gxnor_mnist
     .. autofunction:: akida_models.gxnor_mnist_pretrained
-
-    Transformers
-    ------------
-
-    ImageNet
-    ~~~~~~~~
-    .. autofunction:: akida_models.deit_imagenet
-    .. autofunction:: akida_models.bc_deit_ti16
-    .. autofunction:: akida_models.bc_deit_ti16_imagenet_pretrained
-    .. autofunction:: akida_models.bc_deit_dist_ti16_imagenet_pretrained
-    .. autofunction:: akida_models.vit_imagenet
-    .. autofunction:: akida_models.bc_vit_ti16
-    .. autofunction:: akida_models.bc_vit_ti16_imagenet_pretrained
