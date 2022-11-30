@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YOLO/PASCAL-VOC detection tutorial &mdash; Akida Examples  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CNN2SNN tutorials" href="../cnn2snn/index.html" />
+    <link rel="prev" title="Transfer learning with AkidaNet for PlantVillage" href="plot_4_transfer_learning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #78b3ff" >
+            <a href="../../index.html">
+            <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                MetaTF 2.2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#quick-installation">Quick installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#running-examples">Running examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/user_guide.html">User guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/getting_started.html">Getting started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/getting_started.html#for-beginners">For beginners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/getting_started.html#for-users-familiar-with-deep-learning">For users familiar with deep-learning</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/akida.html">Akida user guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida.html#introduction">Introduction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#akida-layers">Akida layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#input-format">Input Format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#a-versatile-machine-learning-framework">A versatile machine learning framework</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida.html#the-sequential-model">The Sequential model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#specifying-the-model">Specifying the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#accessing-layer-parameters-and-weights">Accessing layer parameters and weights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#inference">Inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#saving-and-loading">Saving and loading</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#input-layer-types">Input layer types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#data-processing-layer-types">Data-Processing layer types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida.html#model-hardware-mapping">Model Hardware Mapping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#devices">Devices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#model-mapping">Model mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#advanced-mapping-details-and-hardware-devices-usage">Advanced Mapping Details and Hardware Devices Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#performances-measurement">Performances measurement</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida.html#id1">Using Akida Edge learning</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#learning-constraints">Learning constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida.html#compiling-a-layer">Compiling a layer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/cnn2snn.html">CNN2SNN toolkit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/cnn2snn.html#overview">Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#conversion-workflow">Conversion workflow</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#typical-training-scenario">Typical training scenario</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#quantization-compatibility-constraints">Quantization compatibility constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#command-line-interface">Command-line interface</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#supported-layer-types">Supported layer types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#cnn2snn-quantization-aware-layers">CNN2SNN Quantization-aware layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#training-only-layers">Training-Only Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#first-layers">First Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#id6">Final Layers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/akida_models.html">Akida models zoo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-creation">Command-line interface for model creation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-training">Command-line interface for model training</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#utk-face-training">UTK Face training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#kws-training">KWS training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#yolo-training">YOLO training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#akidanet-training">AkidaNet training</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#id1">Layer Blocks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#conv-block"><code class="docutils literal notranslate"><span class="pre">conv_block</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#dense-block"><code class="docutils literal notranslate"><span class="pre">dense_block</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/akida_models.html#separable-conv-block"><code class="docutils literal notranslate"><span class="pre">separable_conv_block</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/hw_constraints.html">Hardware constraints</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#inputconvolutional">InputConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#convolutional">Convolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#separableconvolutional">SeparableConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/hw_constraints.html#fullyconnected">FullyConnected</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/compatibility.html">Akida versions compatibility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/compatibility.html#upgrading-models-with-legacy-quantizers">Upgrading models with legacy quantizers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference/akida_apis.html">Akida runtime</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#model">Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer">Layer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id1">Layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#mapping">Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#inputdata">InputData</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#inputconvolutional">InputConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#fullyconnected">FullyConnected</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#convolutional">Convolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#separableconvolutional">SeparableConvolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#optimizers">Optimizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#sequence">Sequence</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id2">Sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#backendtype">BackendType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pass">Pass</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#device">Device</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id3">Device</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#hwversion">HwVersion</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#hwdevice">HWDevice</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#id4">HWDevice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#socdriver">SocDriver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#clockmode">ClockMode</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#tools">Tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#compatibility">Compatibility</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html">CNN2SNN</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#tool-functions">Tool functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantize">quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantize-layer">quantize_layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#convert">convert</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#check-model-compatibility">check_model_compatibility</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#load-quantized-model">load_quantized_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#transforms">Transforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#calibration">Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizers">Quantizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#linearweightquantizer">LinearWeightQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#stdweightquantizer">StdWeightQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#stdperaxisquantizer">StdPerAxisQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#maxquantizer">MaxQuantizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#maxperaxisquantizer">MaxPerAxisQuantizer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantized-layers">Quantized layers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizedconv2d">QuantizedConv2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizeddense">QuantizedDense</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizedseparableconv2d">QuantizedSeparableConv2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizedactivation">QuantizedActivation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#activationdiscreterelu">ActivationDiscreteRelu</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/cnn2snn_apis.html#quantizedrelu">QuantizedReLU</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference/akida_models_apis.html">Akida models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#layer-blocks">Layer blocks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#conv-block">conv_block</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#separable-conv-block">separable_conv_block</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#dense-block">dense_block</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#batchnormalization-gamma-constraint">BatchNormalization gamma constraint</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#knowledge-distillation">Knowledge distillation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#pruning">Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#training">Training</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#macs">MACS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#utils">Utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#model-zoo">Model zoo</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akidanet">AkidaNet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#mobilenet">Mobilenet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#ds-cnn">DS-CNN</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#vgg">VGG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#yolo">YOLO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#convtiny">ConvTiny</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#pointnet">PointNet++</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#gxnor">GXNOR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#general-examples">General examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#cnn2snn-tutorials">CNN2SNN tutorials</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#edge-examples">Edge examples</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html">General examples</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="plot_0_gxnor_mnist.html">GXNOR/MNIST inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_1_akidanet_imagenet.html">AkidaNet/ImageNet inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_2_ds_cnn_kws.html">DS-CNN/KWS inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_3_regression.html">Regression tutorial</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_4_transfer_learning.html">Transfer learning with AkidaNet for PlantVillage</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">YOLO/PASCAL-VOC detection tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../cnn2snn/index.html">CNN2SNN tutorials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../cnn2snn/plot_0_cnn_flow.html">CNN conversion flow tutorial</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cnn2snn/plot_1_advanced_cnn2snn.html">Advanced CNN2SNN tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../edge/index.html">Edge examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../edge/plot_0_edge_learning_vision.html">Akida vision edge learning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../edge/plot_1_edge_learning_kws.html">Akida edge learning for keyword spotting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../edge/plot_2_edge_learning_parameters.html">Tips to set Akida learning parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zoo_performances.html">Model zoo performances</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../zoo_performances.html#image-icon-ref-image-domain"> Image domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#classification">Classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#object-detection">Object detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#regression">Regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#face-recognition">Face recognition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../zoo_performances.html#audio-icon-ref-audio-domain"> Audio domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#keyword-spotting">Keyword spotting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../zoo_performances.html#time-icon-ref-time-domain"> Time domain</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#fault-detection">Fault detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#id1">Classification</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../zoo_performances.html#pointcloud-icon-ref-point-cloud"> Point cloud</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../zoo_performances.html#id2">Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Brainchip-Inc/akida_examples/releases">Changelog</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://support.brainchip.com/portal/home">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #78b3ff" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Akida Examples</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Akida examples</a> &raquo;</li>
+          <li><a href="index.html">General examples</a> &raquo;</li>
+      <li>YOLO/PASCAL-VOC detection tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-examples-general-plot-5-voc-yolo-detection-py"><span class="std std-ref">here</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="yolo-pascal-voc-detection-tutorial">
+<span id="sphx-glr-examples-general-plot-5-voc-yolo-detection-py"></span><h1>YOLO/PASCAL-VOC detection tutorial<a class="headerlink" href="#yolo-pascal-voc-detection-tutorial" title="Permalink to this headline"></a></h1>
+<p>This tutorial demonstrates that Akida can perform object detection using a
+state-of-the-art model architecture. This is illustrated using a subset of the
+<a class="reference external" href="http://host.robots.ox.ac.uk/pascal/VOC/voc2007/htmldoc/index.html">PASCAL-VOC 2007 dataset</a>
+with “car” and “person” classes only. The YOLOv2 architecture from
+<a class="reference external" href="https://arxiv.org/pdf/1506.02640.pdf">Redmon et al (2016)</a> has been chosen to
+tackle this object detection problem.</p>
+<section id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h2>
+<section id="object-detection">
+<h3>1.1 Object detection<a class="headerlink" href="#object-detection" title="Permalink to this headline"></a></h3>
+<p>Object detection is a computer vision task that combines two elemental tasks:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>object classification that consists in assigning a class label to an image
+like shown in the <a class="reference external" href="plot_1_akidanet_imagenet.html">AkidaNet/ImageNet inference</a>
+example</p></li>
+<li><p>object localization that consists in drawing a bounding box around one or
+several objects in an image</p></li>
+</ul>
+</div></blockquote>
+<p>One can learn more about the subject reading this <a class="reference external" href="https://machinelearningmastery.com/object-recognition-with-deep-learning/">introduction to object
+detection blog article</a>.</p>
+</section>
+<section id="yolo-key-concepts">
+<h3>1.2 YOLO key concepts<a class="headerlink" href="#yolo-key-concepts" title="Permalink to this headline"></a></h3>
+<p>You Only Look Once (YOLO) is a deep neural network architecture dedicated to
+object detection.</p>
+<p>As opposed to classic networks that handle object detection, YOLO predicts
+bounding boxes (localization task) and class probabilities (classification
+task) from a single neural network in a single evaluation. The object
+detection task is reduced to a regression problem to spatially separated boxes
+and associated class probabilities.</p>
+<p>YOLO base concept is to divide an input image into regions, forming a grid,
+and to predict bounding boxes and probabilities for each region. The bounding
+boxes are weighted by the prediction probabilities.</p>
+<p>YOLO also uses the concept of “anchors boxes” or “prior boxes”. The network
+does not actually predict the actual bounding boxes but offsets from anchors
+boxes which are templates (width/height ratio) computed by clustering the
+dimensions of the ground truth boxes from the training dataset. The anchors
+then represent the average shape and size of the objects to detect. More
+details on the anchors boxes concept are given in <a class="reference external" href="https://medium.com/&#64;andersasac/anchor-boxes-the-key-to-quality-object-detection-ddf9d612d4f9">this blog article</a>.</p>
+<p>Additional information about YOLO can be found on the <a class="reference external" href="https://pjreddie.com/darknet/yolov2/">Darknet website</a> and source code for the preprocessing
+and postprocessing functions that are included in akida_models package (see
+the <a class="reference external" href="../../api_reference/akida_models_apis.html#processing">processing section</a>
+in the model zoo) is largely inspired from
+<a class="reference external" href="https://github.com/experiencor/keras-yolo2">experiencor github</a>.</p>
+</section>
+</section>
+<section id="preprocessing-tools">
+<h2>2. Preprocessing tools<a class="headerlink" href="#preprocessing-tools" title="Permalink to this headline"></a></h2>
+<p>As this example focuses on car and person detection only, a subset of VOC has
+been prepared with test images from VOC2007 that contains at least one
+of the occurence of the two classes. Just like the VOC dataset, the subset
+contains an image folder, an annotation folder and a text file listing the
+file names of interest.</p>
+<p>The <a class="reference external" href="../../api_reference/akida_models_apis.html#yolo-toolkit">YOLO toolkit</a>
+offers several methods to prepare data for processing, see
+<a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image">load_image</a>,
+<a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image">preprocess_image</a>
+or <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_voc_annotations">parse_voc_annotations</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
+<span class="kn">from</span> <span class="nn">akida_models.detection.processing</span> <span class="kn">import</span> <span class="n">parse_voc_annotations</span>
+
+<span class="c1"># Download validation set from Brainchip data server</span>
+<span class="n">data_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span>
+    <span class="s2">&quot;voc_test_car_person.tar.gz&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz&quot;</span><span class="p">,</span>
+    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/voc&#39;</span><span class="p">,</span>
+    <span class="n">extract</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+<span class="n">gt_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;voc_test_car_person&#39;</span><span class="p">,</span> <span class="s1">&#39;Annotations&#39;</span><span class="p">)</span>
+<span class="n">image_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;voc_test_car_person&#39;</span><span class="p">,</span> <span class="s1">&#39;JPEGImages&#39;</span><span class="p">)</span>
+<span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;voc_test_car_person&#39;</span><span class="p">,</span> <span class="s1">&#39;test_car_person.txt&#39;</span><span class="p">)</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">]</span>
+
+<span class="n">val_data</span> <span class="o">=</span> <span class="n">parse_voc_annotations</span><span class="p">(</span><span class="n">gt_folder</span><span class="p">,</span> <span class="n">image_folder</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loaded VOC2007 test data for car and person classes: &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">val_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> images.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Anchors can also be computed easily using YOLO toolkit.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The following code is given as an example. In a real use case
+scenario, anchors are computed on the training dataset.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models.detection.generate_anchors</span> <span class="kn">import</span> <span class="n">generate_anchors</span>
+
+<span class="n">num_anchors</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">grid_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="n">anchors_example</span> <span class="o">=</span> <span class="n">generate_anchors</span><span class="p">(</span><span class="n">val_data</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="model-architecture">
+<h2>3. Model architecture<a class="headerlink" href="#model-architecture" title="Permalink to this headline"></a></h2>
+<p>The <a class="reference external" href="../../api_reference/akida_models_apis.html#yolo">model zoo</a> contains a
+YOLO model that is built upon the <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet">AkidaNet architecture</a>
+and 3 separable convolutional layers at the top for bounding box and class
+estimation followed by a final separable convolutional which is the detection
+layer. Note that for efficiency, the alpha parameter in AkidaNet (network
+width or number of filter in each layer) is set to 0.5.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">yolo_base</span>
+
+<span class="c1"># Create a yolo model for 2 classes with 5 anchors and grid size of 7</span>
+<span class="n">classes</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">yolo_base</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                  <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
+                  <span class="n">nb_box</span><span class="o">=</span><span class="n">num_anchors</span><span class="p">,</span>
+                  <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The model output can be reshaped to a more natural shape of:</p>
+<blockquote>
+<div><p>(grid_height, grid_width, anchors_box, 4 + 1 + num_classes)</p>
+</div></blockquote>
+<p>where the “4 + 1” term represents the coordinates of the estimated bounding
+boxes (top left x, top left y, width and height) and a confidence score. In
+other words, the output channels are actually grouped by anchor boxes, and in
+each group one channel provides either a coordinate, a global confidence score
+or a class confidence score. This process is done automatically in the
+<a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output">decode_output</a>
+function.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Reshape</span>
+
+<span class="c1"># Define a reshape output to be added to the YOLO model</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">classes</span><span class="p">),</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;YOLO_output&quot;</span><span class="p">)(</span><span class="n">model</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+
+<span class="c1"># Build the complete model</span>
+<span class="n">full_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+<span class="n">full_model</span><span class="o">.</span><span class="n">output</span>
+</pre></div>
+</div>
+</section>
+<section id="training">
+<h2>4. Training<a class="headerlink" href="#training" title="Permalink to this headline"></a></h2>
+<p>As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
+possible to perform transfer learning from ImageNet pretrained weights when
+training a YOLO model. See the <a class="reference external" href="plot_4_transfer_learning.html">PlantVillage transfer learning example</a> for a detail explanation on transfer
+learning principles.</p>
+<p>When using transfer learning for YOLO training, we advise to proceed in
+several steps that include model calibration:</p>
+<ul class="simple">
+<li><p>instantiate the <cite>yolo_base</cite> model and load AkidaNet/ImageNet pretrained
+float weights,</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida_models create -s yolo_akidanet_voc.h5 yolo_base --classes <span class="m">2</span> <span class="se">\</span>
+         --base_weights akidanet_imagenet_224_alpha_50.h5
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>freeze the AkidaNet layers and perform training,</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 <span class="se">\</span>
+    -ap voc_anchors.pkl -e <span class="m">25</span> -fb 1conv -s yolo_akidanet_voc.h5
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>quantize the network, create data for calibration and calibrate,</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cnn2snn quantize -m yolo_akidanet_voc.h5 -iq <span class="m">8</span> -wq <span class="m">4</span> -aq <span class="m">4</span>
+yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b <span class="m">1024</span> -o voc_samples.npz <span class="se">\</span>
+    -m yolo_akidanet_voc_iq8_wq4_aq4.h5
+cnn2snn calibrate adaround -sa voc_samples.npz -b <span class="m">128</span> -e <span class="m">500</span> -lr 1e-3 <span class="se">\</span>
+    -m yolo_akidanet_voc_iq8_wq4_aq4.h5
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>tune the model to recover accuracy.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>yolo_train tune -d voc_preprocessed.pkl <span class="se">\</span>
+    -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl <span class="se">\</span>
+    -e <span class="m">10</span> -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">voc_anchors.pkl</span></code> is obtained saving the output of the
+<cite>generate_anchors</cite> call to a pickle file,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">voc_preprocessed.pkl</span></code> is obtained saving training data, validation
+data (obtained using <cite>parse_voc_annotations</cite>) and labels list (i.e
+[“car”, “person”]) into a pickle file.</p></li>
+</ul>
+</div>
+<p>Even if transfer learning should be the preferred way to train a YOLO model, it
+has been observed that for some datasets training all layers from scratch
+gives better results. That is the case for our <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained">YOLO WiderFace model</a>
+to detect faces. In such a case, the training pipeline to follow is described
+in the <a class="reference external" href="../../user_guide/cnn2snn.html#typical-training-scenario">typical training scenario</a>.</p>
+</section>
+<section id="performance">
+<h2>5. Performance<a class="headerlink" href="#performance" title="Permalink to this headline"></a></h2>
+<p>The model zoo also contains an <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained">helper method</a>
+that allows to create a YOLO model for VOC and load pretrained weights for the
+car and person detection task and the corresponding anchors. The anchors are
+used to interpret the model outputs.</p>
+<p>The metric used to evaluate YOLO is the mean average precision (mAP) which is
+the percentage of correct prediction and is given for an intersection over
+union (IoU) ratio. Scores in this example are given for the standard IoU of
+0.5 meaning that a detection is considered valid if the intersection over
+union ratio with its ground truth equivalent is above 0.5.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A call to <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map">evaluate_map</a>
+will preprocess the images, make the call to <code class="docutils literal notranslate"><span class="pre">Model.predict</span></code> and
+use <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output">decode_output</a>
+before computing precision for all classes.</p>
+</div>
+</div></blockquote>
+<p>Reported performanced for all training steps are as follows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 20%" />
+<col style="width: 33%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Float</p></th>
+<th class="head"><p>8/4/4 Calibrated</p></th>
+<th class="head"><p>8/4/4 Tuned</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Global mAP</p></td>
+<td><p>38.38 %</p></td>
+<td><p>32.88 %</p></td>
+<td><p>38.83 %</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
+<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">yolo_voc_pretrained</span>
+<span class="kn">from</span> <span class="nn">akida_models.detection.map_evaluation</span> <span class="kn">import</span> <span class="n">MapEvaluation</span>
+
+<span class="c1"># Load the pretrained model along with anchors</span>
+<span class="n">model_keras</span><span class="p">,</span> <span class="n">anchors</span> <span class="o">=</span> <span class="n">yolo_voc_pretrained</span><span class="p">()</span>
+
+<span class="c1"># Define the final reshape and build the model</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">classes</span><span class="p">),</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;YOLO_output&quot;</span><span class="p">)(</span><span class="n">model_keras</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+<span class="n">model_keras</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model_keras</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+<span class="c1"># Create the mAP evaluator object</span>
+<span class="n">num_images</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">map_evaluator</span> <span class="o">=</span> <span class="n">MapEvaluation</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="n">val_data</span><span class="p">[:</span><span class="n">num_images</span><span class="p">],</span> <span class="n">labels</span><span class="p">,</span>
+                              <span class="n">anchors</span><span class="p">)</span>
+
+<span class="c1"># Compute the scores for all validation images</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+<span class="n">mAP</span><span class="p">,</span> <span class="n">average_precisions</span> <span class="o">=</span> <span class="n">map_evaluator</span><span class="o">.</span><span class="n">evaluate_map</span><span class="p">()</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">average_precision</span> <span class="ow">in</span> <span class="n">average_precisions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">average_precision</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mAP: </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mAP</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Keras inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="conversion-to-akida">
+<h2>6. Conversion to Akida<a class="headerlink" href="#conversion-to-akida" title="Permalink to this headline"></a></h2>
+<section id="convert-to-akida-model">
+<h3>6.1 Convert to Akida model<a class="headerlink" href="#convert-to-akida-model" title="Permalink to this headline"></a></h3>
+<p>Check model compatibility before akida conversion</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">check_model_compatibility</span>
+
+<span class="n">compat</span> <span class="o">=</span> <span class="n">check_model_compatibility</span><span class="p">(</span><span class="n">model_keras</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last YOLO_output layer that was added for splitting channels into values
+for each box must be removed before akida conversion.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Rebuild a model without the last layer</span>
+<span class="n">compatible_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">model_keras</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When converting to an Akida model, we just need to pass the Keras model
+and the input scaling that was used during training to <a class="reference external" href="../../api_reference/cnn2snn_apis.html#convert">cnn2snn.convert</a>. In YOLO
+<a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image">preprocess_image</a>
+function, images are zero centered and normalized between [-1, 1] hence the
+scaling values.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+
+<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">compatible_model</span><span class="p">)</span>
+<span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="check-performance">
+<h3>6.1 Check performance<a class="headerlink" href="#check-performance" title="Permalink to this headline"></a></h3>
+<p>Akida model accuracy is tested on the first <em>n</em> images of the validation set.</p>
+<p>The table below summarizes the expected results:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 35%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>#Images</p></th>
+<th class="head"><p>Keras mAP</p></th>
+<th class="head"><p>Akida mAP</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>100</p></td>
+<td><p>38.80 %</p></td>
+<td><p>34.26 %</p></td>
+</tr>
+<tr class="row-odd"><td><p>1000</p></td>
+<td><p>40.11 %</p></td>
+<td><p>39.35 %</p></td>
+</tr>
+<tr class="row-even"><td><p>2500</p></td>
+<td><p>38.83 %</p></td>
+<td><p>38.85 %</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create the mAP evaluator object</span>
+<span class="n">map_evaluator_ak</span> <span class="o">=</span> <span class="n">MapEvaluation</span><span class="p">(</span><span class="n">model_akida</span><span class="p">,</span>
+                                 <span class="n">val_data</span><span class="p">[:</span><span class="n">num_images</span><span class="p">],</span>
+                                 <span class="n">labels</span><span class="p">,</span>
+                                 <span class="n">anchors</span><span class="p">,</span>
+                                 <span class="n">is_keras_model</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Compute the scores for all validation images</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+<span class="n">mAP_ak</span><span class="p">,</span> <span class="n">average_precisions_ak</span> <span class="o">=</span> <span class="n">map_evaluator_ak</span><span class="o">.</span><span class="n">evaluate_map</span><span class="p">()</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">average_precision</span> <span class="ow">in</span> <span class="n">average_precisions_ak</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">average_precision</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mAP: </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mAP_ak</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Akida inference on </span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images took </span><span class="si">{</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> s.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="show-predictions-for-a-random-image">
+<h3>6.2 Show predictions for a random image<a class="headerlink" href="#show-predictions-for-a-random-image" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
+
+<span class="kn">from</span> <span class="nn">akida_models.detection.processing</span> <span class="kn">import</span> <span class="n">load_image</span><span class="p">,</span> <span class="n">preprocess_image</span><span class="p">,</span> <span class="n">decode_output</span>
+
+<span class="c1"># Take a random test image</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val_data</span><span class="p">))</span>
+
+<span class="n">input_shape</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">input_dims</span>
+
+<span class="c1"># Load the image</span>
+<span class="n">raw_image</span> <span class="o">=</span> <span class="n">load_image</span><span class="p">(</span><span class="n">val_data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;image_path&#39;</span><span class="p">])</span>
+
+<span class="c1"># Keep the original image size for later bounding boxes rescaling</span>
+<span class="n">raw_height</span><span class="p">,</span> <span class="n">raw_width</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">raw_image</span><span class="o">.</span><span class="n">shape</span>
+
+<span class="c1"># Pre-process the image</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">preprocess_image</span><span class="p">(</span><span class="n">raw_image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+<span class="n">input_image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+<span class="c1"># Call evaluate on the image</span>
+<span class="n">pots</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Reshape the potentials to prepare for decoding</span>
+<span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">pots</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">pots</span> <span class="o">=</span> <span class="n">pots</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">),</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)))</span>
+
+<span class="c1"># Decode potentials into bounding boxes</span>
+<span class="n">raw_boxes</span> <span class="o">=</span> <span class="n">decode_output</span><span class="p">(</span><span class="n">pots</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+
+<span class="c1"># Rescale boxes to the original image size</span>
+<span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span>
+    <span class="n">box</span><span class="o">.</span><span class="n">x1</span> <span class="o">*</span> <span class="n">raw_width</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y1</span> <span class="o">*</span> <span class="n">raw_height</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">x2</span> <span class="o">*</span> <span class="n">raw_width</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">.</span><span class="n">y2</span> <span class="o">*</span> <span class="n">raw_height</span><span class="p">,</span>
+    <span class="n">box</span><span class="o">.</span><span class="n">get_label</span><span class="p">(),</span>
+    <span class="n">box</span><span class="o">.</span><span class="n">get_score</span><span class="p">()</span>
+<span class="p">]</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">raw_boxes</span><span class="p">])</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="s1">&#39;VOC2012 car and person detection by Akida runtime&#39;</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">img_plot</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">raw_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+<span class="n">img_plot</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">raw_image</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">pred_boxes</span><span class="p">:</span>
+    <span class="n">rect</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                             <span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                             <span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                             <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span>
+                             <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+    <span class="n">class_score</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                          <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">5</span><span class="p">,</span>
+                          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">4</span><span class="p">])]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">box</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-5-voc-yolo-detection-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/76b3353801c4666951869f0e60fa9488/plot_5_voc_yolo_detection.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_5_voc_yolo_detection.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/3b533646d733864cad4180378c9f4d7e/plot_5_voc_yolo_detection.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_5_voc_yolo_detection.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot_4_transfer_learning.html" class="btn btn-neutral float-left" title="Transfer learning with AkidaNet for PlantVillage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../cnn2snn/index.html" class="btn btn-neutral float-right" title="CNN2SNN tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BrainChip Holdings Ltd. All Rights Reserved.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
