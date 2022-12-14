@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.5
+                MetaTF 2.2.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -385,6 +385,10 @@
     <span class="k">def</span> <span class="nf">base_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_model</span><span class="o">.</span><span class="n">layers</span>
+
     <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">optimizer</span><span class="p">,</span>
                 <span class="n">metrics</span><span class="p">,</span>
@@ -557,21 +561,20 @@
             <span class="n">student_loss_fn</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_loss_forward</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">student_loss_fn</span><span class="p">)</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">student_loss_fn</span><span class="p">,</span> <span class="n">distillation_loss_fn</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_update_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
+        <span class="c1"># Rename keys in the result dictionary for a more explicit display</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_1_&#39;</span><span class="p">,</span> <span class="s1">&#39;head_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_2_&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_head_&#39;</span><span class="p">)</span>
+                 <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_3_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
     <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="c1"># Rename output_3_XX keys to XX in the result dictionary for a nicer display,</span>
-        <span class="c1"># and leave this metric as the main one.</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_3_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="k">return</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metrics</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="c1"># Rename output_3_XX keys to XX in the result dictionary for a nicer display,</span>
-        <span class="c1"># and leave this metric as the main one.</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_3_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="k">return</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metrics</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="KLDistillationLoss"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.KLDistillationLoss">[docs]</a><span class="k">class</span> <span class="nc">KLDistillationLoss</span><span class="p">(</span><span class="n">KLDivergence</span><span class="p">):</span>

@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.5
+                MetaTF 2.2.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -356,8 +356,7 @@
 <span class="kn">from</span> <span class="nn">keras.preprocessing.image</span> <span class="kn">import</span> <span class="n">DirectoryIterator</span>
 <span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="kn">import</span> <span class="n">Adam</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Activation</span>
-<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="kn">import</span> <span class="n">Callback</span>
-
+<span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">Progbar</span>
 <span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">set_calibrate</span>
 
 
@@ -402,6 +401,31 @@
             <span class="n">layer</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="n">trainable</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">trainable</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No such layer </span><span class="si">{</span><span class="n">freeze_before</span><span class="si">}</span><span class="s2"> in model.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calibrate_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.calibrate_model">[docs]</a><span class="k">def</span> <span class="nf">calibrate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calibrates model</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the model to calibrate</span>
+<span class="sd">        x (tf.Dataset, np.array or generator): train input data</span>
+<span class="sd">        num_samples (int): total number of samples before declaring the calibration round finished.</span>
+<span class="sd">        batch_size (int, optional): the batch size. Defaults to None.</span>
+<span class="sd">        epochs (int, optional): the number of epochs. Defaults to 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">num_samples</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;The batch size should be strictly positive.&quot;</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">set_calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">progbar</span> <span class="o">=</span> <span class="n">Progbar</span><span class="p">(</span><span class="n">epochs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">finalize</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
+    <span class="n">set_calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="evaluate_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.evaluate_model">[docs]</a><span class="k">def</span> <span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -480,6 +504,7 @@
 
 
 <span class="k">def</span> <span class="nf">get_training_parser</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span>
+                        <span class="n">calibrate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">tune</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">freeze_before</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">global_batch_size</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -491,6 +516,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        batch_size (int): batch size default value</span>
+<span class="sd">        calibrate (bool, optional): either to add a calibrate action or not. Defaults to</span>
+<span class="sd">            False.</span>
 <span class="sd">        tune (bool, optional): either to add a tune action or not. Defaults to</span>
 <span class="sd">            False.</span>
 <span class="sd">        freeze_before (bool, optional): either to add a &quot;--freeze_before&quot;</span>
@@ -504,7 +531,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        argparse.ArgumentParser, argparse.ArgumentParser,</span>
 <span class="sd">        argparse.ArgumentParser, argparse.ArgumentParser,</span>
-<span class="sd">        argparse._SubParsersAction: main parser and train, tune and eval actions</span>
+<span class="sd">        argparse.ArgumentParser,</span>
+<span class="sd">        argparse._SubParsersAction: main parser and train, calibrate, tune and eval actions</span>
 <span class="sd">            subparsers and the subparser object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -578,6 +606,17 @@
                                             <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tune a Keras model&quot;</span><span class="p">)</span>
 
     <span class="c1"># Other subparsers</span>
+    <span class="n">calibrate_parser</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">calibrate</span><span class="p">:</span>
+        <span class="n">calibrate_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;calibrate&quot;</span><span class="p">,</span>
+                                                 <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">parent_parser</span><span class="p">],</span>
+                                                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Calibrate a Keras model&quot;</span><span class="p">)</span>
+        <span class="n">calibrate_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-ns&quot;</span><span class="p">,</span>
+                                      <span class="s2">&quot;--num_samples&quot;</span><span class="p">,</span>
+                                      <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                                      <span class="n">default</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+                                      <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of samples to use for calibration&quot;</span><span class="p">)</span>
+
     <span class="n">eval_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s2">&quot;eval&quot;</span><span class="p">,</span>
                                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Evaluate a model&quot;</span><span class="p">,</span>
                                         <span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">global_parser</span><span class="p">])</span>
@@ -587,7 +626,7 @@
                              <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
                              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Converts to an Akida model and evaluate&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">parser</span><span class="p">,</span> <span class="n">train_parser</span><span class="p">,</span> <span class="n">tune_parser</span><span class="p">,</span> <span class="n">eval_parser</span><span class="p">,</span> <span class="n">subparsers</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="p">,</span> <span class="n">train_parser</span><span class="p">,</span> <span class="n">tune_parser</span><span class="p">,</span> <span class="n">eval_parser</span><span class="p">,</span> <span class="n">calibrate_parser</span><span class="p">,</span> <span class="n">subparsers</span>
 
 
 <span class="k">def</span> <span class="nf">print_history_stats</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
@@ -604,28 +643,6 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">clean_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">EarlyStoppingCalibration</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A callback that limits the number of epochs to calibrate the model,</span>
-<span class="sd">        increasing the speed of the training.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        trigger_epoch (int, optional): epoch at which to end the calibration.</span>
-<span class="sd">            Defaults to calibrate until the end of the training.</span>
-
-<span class="sd">    Notes:</span>
-<span class="sd">        If the :attr:`trigger_epoch` is set to 0, the model will never be calibrated</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger_epoch</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">trigger_epoch</span> <span class="o">=</span> <span class="n">trigger_epoch</span>
-
-    <span class="k">def</span> <span class="nf">on_epoch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">calibrate</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_epoch</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">trigger_epoch</span> <span class="o">&lt;</span> <span class="mi">0</span>
-        <span class="n">set_calibrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">calibrate</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">logs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logs</span><span class="p">[</span><span class="s2">&quot;calibrating&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">calibrate</span>
 </pre></div>
 
            </div>
