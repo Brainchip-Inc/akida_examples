@@ -46,6 +46,7 @@ Akida models API
     .. autofunction:: akida_models.training.evaluate_model
     .. autofunction:: akida_models.training.evaluate_akida_model
     .. autofunction:: akida_models.training.compile_model
+    .. autofunction:: akida_models.training.calibrate_model
 
     MACS
     ====
