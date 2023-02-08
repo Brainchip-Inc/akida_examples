@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.6
+                MetaTF 2.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -353,12 +353,13 @@
 
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span>
                           <span class="n">AvgPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">LayerNormalization</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span>
-                          <span class="n">Conv2DTranspose</span><span class="p">)</span>
+                          <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span>
 <span class="kn">from</span> <span class="nn">keras.initializers</span> <span class="kn">import</span> <span class="n">TruncatedNormal</span>
 <span class="kn">from</span> <span class="nn">tensorflow_addons.layers</span> <span class="kn">import</span> <span class="n">GELU</span><span class="p">,</span> <span class="n">GroupNormalization</span>
 
-<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">LayerMadNormalization</span><span class="p">,</span> <span class="n">SeparableConv2DTranspose</span>
+<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Attention</span><span class="p">,</span> <span class="n">LayerMadNormalization</span><span class="p">,</span> <span class="n">SeparableConv2DTranspose</span><span class="p">,</span>
+                               <span class="n">ExtractToken</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_add_pooling_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pooling_type</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">layer_base_name</span><span class="p">):</span>
@@ -790,12 +791,62 @@
     <span class="n">x</span> <span class="o">=</span> <span class="n">sepconv_trans_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">add_batchnorm</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">sepconv_trans_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_BN&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">sepconv_trans_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/BN&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">add_activation</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">sepconv_trans_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">sepconv_trans_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">yolo_head_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_boxes</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the `YOLOv2 detection head &lt;https://arxiv.org/pdf/1612.08242.pdf&gt;`_, at the output</span>
+<span class="sd">    of a model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (:obj:`tf.Tensor`): input tensor of shape `(rows, cols, channels)`.</span>
+<span class="sd">        num_boxes (int): number of boxes.</span>
+<span class="sd">        classes (int): number of classes.</span>
+<span class="sd">        filters (int, optional): number of filters in hidden layers. Defaults to 1024.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :obj:`tf.Tensor`: output tensor of yolo detection head block.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        This block replaces conv layers by separable_conv, to decrease the amount of parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;1conv&#39;</span><span class="p">,</span>
+                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;2conv&#39;</span><span class="p">,</span>
+                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;3conv&#39;</span><span class="p">,</span>
+                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="p">(</span><span class="n">num_boxes</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">classes</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;detection_layer&#39;</span><span class="p">,</span>
+                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">vit_extract_feature_map</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">feat_shape</span><span class="p">,</span> <span class="n">num_non_patch</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a ExtractToken + Reshape layers to convert the plain ViT output into a feature map.</span>
+
+<span class="sd">    All tokens will be extracted except those considered as class tokens (``num_non_patch``)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y (:obj:`tf.Tensor`): output of ViT classifier model.</span>
+<span class="sd">        feat_shape (tuple of int): height/width desired output size</span>
+<span class="sd">        num_non_patch (int, optional): number of non-patch tokens to exclude on the final output.</span>
+<span class="sd">            Defaults to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :obj:`keras.Model`: ViT with new layers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ExtractToken</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;extract_features&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_non_patch</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])))(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">(</span><span class="n">target_shape</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">feat_shape</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;features&quot;</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
 </pre></div>
 
            </div>

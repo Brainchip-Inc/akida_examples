@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.6
+                MetaTF 2.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -350,14 +350,17 @@
 <span class="sd">Common utility methods used by the training scripts.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">keras.preprocessing.image</span> <span class="kn">import</span> <span class="n">DirectoryIterator</span>
 <span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="kn">import</span> <span class="n">Adam</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Activation</span>
+<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="kn">import</span> <span class="n">ModelCheckpoint</span>
 <span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">Progbar</span>
-<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">set_calibrate</span>
+<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">calibration</span>
 
 
 <div class="viewcode-block" id="compile_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.compile_model">[docs]</a><span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -418,14 +421,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;The batch size should be strictly positive.&quot;</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="n">set_calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">progbar</span> <span class="o">=</span> <span class="n">Progbar</span><span class="p">(</span><span class="n">epochs</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
-        <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">finalize</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
-    <span class="n">set_calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+    <span class="k">with</span> <span class="n">calibration</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">progbar</span> <span class="o">=</span> <span class="n">Progbar</span><span class="p">(</span><span class="n">epochs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+            <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">progbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epochs</span><span class="p">,</span> <span class="n">finalize</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="evaluate_model"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.training.evaluate_model">[docs]</a><span class="k">def</span> <span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -643,6 +645,38 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">clean_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">f</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">RestoreBest</span><span class="p">(</span><span class="n">ModelCheckpoint</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Keep best weights on training</span>
+
+<span class="sd">    This tool uses a ModelCheckPoint callback to save the best weights during the training and</span>
+<span class="sd">    restore them in the model when training is complete. The best model is saved to a</span>
+<span class="sd">    temporary directory. So if the training does not go to the end, this model can be used for</span>
+<span class="sd">    start a new one.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the model to load the best weights</span>
+<span class="sd">        monitor (str, optional): the metric name to monitor. Defaults to &#39;val_accuracy&#39;.</span>
+<span class="sd">        mode (str, optional): one of {&#39;auto&#39;, &#39;min&#39;, &#39;max&#39;}. The decision to overwrite the current</span>
+<span class="sd">            save model is made based on either the maximization or the minimization of the monitored</span>
+<span class="sd">            quantity. Defaults to &#39;max&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_accuracy&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;best_model.h5&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best model saved as </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span>
+                         <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span>
+                         <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                         <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="c1"># Clean temp directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
 </pre></div>
 
            </div>

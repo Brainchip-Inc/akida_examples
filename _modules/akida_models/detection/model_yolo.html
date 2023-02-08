@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.6
+                MetaTF 2.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -358,7 +358,7 @@
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span><span class="p">,</span> <span class="n">quantize</span>
 
-<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span>
+<span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">yolo_head_block</span>
 <span class="kn">from</span> <span class="nn">..imagenet.model_akidanet</span> <span class="kn">import</span> <span class="n">akidanet_imagenet</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span>
 
@@ -418,40 +418,7 @@
 
     <span class="c1"># Add YOLO top layers to the base model</span>
     <span class="n">input_shape</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">input_shape</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;1conv&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;2conv&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;3conv&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">separable_conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                             <span class="n">filters</span><span class="o">=</span><span class="p">(</span><span class="n">nb_box</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">classes</span><span class="p">)),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;detection_layer&#39;</span><span class="p">,</span>
-                             <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                             <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
-                             <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">add_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
+    <span class="n">x</span> <span class="o">=</span> <span class="n">yolo_head_block</span><span class="p">(</span><span class="n">base_model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">num_boxes</span><span class="o">=</span><span class="n">nb_box</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">classes</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;yolo_base&#39;</span><span class="p">)</span>
 
     <span class="c1"># Initialize detection layer weights</span>
@@ -527,7 +494,7 @@
         <span class="n">anchors</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 
     <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;01f6ed4bc802ffb3cca71b5ba281925de1bb92bcd14aea562336366c6a44eab3&#39;</span>
+    <span class="n">file_hash</span> <span class="o">=</span> <span class="s1">&#39;e65b0b6bd4b08c2796c3bbea89343748195e29e240ce28e70489c53d06ca69d9&#39;</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="s1">&#39;http://data.brainchip.com/models/yolo/&#39;</span> <span class="o">+</span> <span class="n">model_name</span><span class="p">,</span>
                             <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                             <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

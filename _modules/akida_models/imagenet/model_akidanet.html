@@ -34,7 +34,7 @@
             <img src="../../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.6
+                MetaTF 2.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -354,66 +354,16 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
-
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">load_quantized_model</span>
 
+<span class="kn">from</span> <span class="nn">.imagenet_utils</span> <span class="kn">import</span> <span class="n">obtain_input_shape</span>
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span>
 
 <span class="n">BASE_WEIGHT_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://data.brainchip.com/models/akidanet/&#39;</span>
-
-
-<span class="k">def</span> <span class="nf">_obtain_input_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">default_size</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">include_top</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Internal utility to compute/validate a model&#39;s input shape.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        input_shape: either None (will return the default model input shape),</span>
-<span class="sd">            or a user-provided shape to be validated.</span>
-<span class="sd">        default_size: default input width/height for the model.</span>
-<span class="sd">        min_size: minimum input width/height accepted by the model.</span>
-<span class="sd">        include_top: whether the model is expected to</span>
-<span class="sd">            be linked to a classifier via a Flatten layer.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tuple of integers: input shape (may include None entries).</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: in case of invalid argument values.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">}:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;This model usually expects 1 or 3 input channels. &#39;</span>
-                          <span class="s1">&#39;However, it was passed an input_shape with &#39;</span> <span class="o">+</span>
-                          <span class="nb">str</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; input channels.&#39;</span><span class="p">)</span>
-        <span class="n">default_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">default_size</span><span class="p">,</span> <span class="n">default_size</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">default_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">default_size</span><span class="p">,</span> <span class="n">default_size</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">input_shape</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;`input_shape` must be a tuple of three integers.&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">((</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_size</span><span class="p">)</span> <span class="ow">or</span>
-                    <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_size</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input size must be at least &#39;</span> <span class="o">+</span>
-                                 <span class="nb">str</span><span class="p">(</span><span class="n">min_size</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;x&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">min_size</span><span class="p">)</span> <span class="o">+</span>
-                                 <span class="s1">&#39;; got `input_shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;`&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
-            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">default_shape</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
-        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">input_shape</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If `include_top` is True, &#39;</span>
-                             <span class="s1">&#39;you should specify a static `input_shape`. &#39;</span>
-                             <span class="s1">&#39;Got `input_shape=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;`&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">input_shape</span>
 
 
 <div class="viewcode-block" id="akidanet_imagenet"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -428,8 +378,9 @@
     <span class="sd">&quot;&quot;&quot;Instantiates the AkidaNet architecture.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple): optional shape tuple.</span>
-<span class="sd">        alpha (float): controls the width of the model.</span>
+<span class="sd">        input_shape (tuple, optional): shape tuple. Defaults to None.</span>
+<span class="sd">        alpha (float, optional): controls the width of the model.</span>
+<span class="sd">            Defaults to 1.0.</span>
 
 <span class="sd">            * If `alpha` &lt; 1.0, proportionally decreases the number of filters</span>
 <span class="sd">              in each layer.</span>
@@ -437,30 +388,33 @@
 <span class="sd">              in each layer.</span>
 <span class="sd">            * If `alpha` = 1, default number of filters from the paper are used</span>
 <span class="sd">              at each layer.</span>
-<span class="sd">        include_top (bool): whether to include the fully-connected</span>
-<span class="sd">            layer at the top of the model.</span>
-<span class="sd">        pooling (str): optional pooling mode for feature extraction</span>
+<span class="sd">        include_top (bool, optional): whether to include the fully-connected</span>
+<span class="sd">            layer at the top of the model. Defaults to True.</span>
+<span class="sd">        pooling (str, optional): optional pooling mode for feature extraction</span>
 <span class="sd">            when `include_top` is `False`.</span>
+<span class="sd">            Defaults to None.</span>
 
 <span class="sd">            * `None` means that the output of the model will be the 4D tensor</span>
 <span class="sd">              output of the last convolutional block.</span>
 <span class="sd">            * `avg` means that global average pooling will be applied to the</span>
 <span class="sd">              output of the last convolutional block, and thus the output of the</span>
 <span class="sd">              model will be a 2D tensor.</span>
-<span class="sd">        classes (int): optional number of classes to classify images</span>
-<span class="sd">            into, only to be specified if `include_top` is `True`.</span>
-<span class="sd">        weight_quantization (int): sets all weights in the model to have</span>
+<span class="sd">        classes (int, optional): optional number of classes to classify images</span>
+<span class="sd">            into, only to be specified if `include_top` is `True`. Defaults to 1000.</span>
+<span class="sd">        weight_quantization (int, optional): sets all weights in the model to have</span>
 <span class="sd">            a particular quantization bitwidth except for the weights in the</span>
 <span class="sd">            first layer.</span>
+<span class="sd">            Defaults to 0.</span>
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        activ_quantization: sets all activations in the model to have a</span>
+<span class="sd">        activ_quantization (int, optional): sets all activations in the model to have a</span>
 <span class="sd">            particular activation quantization bitwidth.</span>
+<span class="sd">            Defaults to 0.</span>
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit activations.</span>
 <span class="sd">            * &#39;2&#39; through &#39;8&#39; implements n-bit weights where n is from 2-8 bits.</span>
-<span class="sd">        input_weight_quantization: sets weight quantization in the first layer.</span>
+<span class="sd">        input_weight_quantization (int, optional): sets weight quantization in the first layer.</span>
 <span class="sd">            Defaults to weight_quantization value.</span>
 
 <span class="sd">            * &#39;0&#39; implements floating point 32-bit weights.</span>
@@ -495,10 +449,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">default_size</span> <span class="o">=</span> <span class="mi">224</span>
 
-    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">_obtain_input_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span>
-                                      <span class="n">default_size</span><span class="o">=</span><span class="n">default_size</span><span class="p">,</span>
-                                      <span class="n">min_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                                      <span class="n">include_top</span><span class="o">=</span><span class="n">include_top</span><span class="p">)</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">obtain_input_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span>
+                                     <span class="n">default_size</span><span class="o">=</span><span class="n">default_size</span><span class="p">,</span>
+                                     <span class="n">min_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                                     <span class="n">include_top</span><span class="o">=</span><span class="n">include_top</span><span class="p">)</span>
 
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
 

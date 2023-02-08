@@ -34,7 +34,7 @@
             <img src="../../_static/akida.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                MetaTF 2.2.6
+                MetaTF 2.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -352,12 +352,18 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">time</span>
 
 <span class="kn">from</span> <span class="nn">six.moves.urllib.parse</span> <span class="kn">import</span> <span class="n">urlsplit</span>
 
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">io_utils</span>
 <span class="kn">from</span> <span class="nn">keras.utils.data_utils</span> <span class="kn">import</span> <span class="n">validate_file</span><span class="p">,</span> <span class="n">_extract_archive</span>
 <span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">Progbar</span>
+<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="kn">import</span> <span class="n">TensorBoard</span>
+
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">load_quantized_model</span>
+<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">load_model</span> <span class="k">as</span> <span class="n">qml_load_model</span>
 
 
 <div class="viewcode-block" id="fetch_file"><a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.utils.fetch_file">[docs]</a><span class="k">def</span> <span class="nf">fetch_file</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_subdir</span><span class="o">=</span><span class="s2">&quot;datasets&quot;</span><span class="p">,</span> <span class="n">extract</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -453,6 +459,57 @@
         <span class="n">_extract_archive</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">datadir</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">fpath</span></div>
+
+
+<span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Combine the cnn2snn.load_quantized_model and quantizeml.load_model</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_path (str): model path</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: the load model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_quantized_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">qml_load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="s1">&#39;Cannot load provided model.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+
+<span class="k">def</span> <span class="nf">get_tensorboard_callback</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">histogram_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a Tensorboard call, pointing to the output directory</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        out_dir (str): parent directory of the folder to create</span>
+<span class="sd">        histogram_freq (int, optional): frequency to export logs. Defaults to 1.</span>
+<span class="sd">        prefix (str, optional): prefix name. Defaults to &#39;&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_create_log_dir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">prefix</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">+=</span> <span class="s1">&#39;_&#39;</span>
+        <span class="n">base_name</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y_%m_</span><span class="si">%d</span><span class="s1">.%H_%M_%S&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">())</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Saving tensorboard and checkpoint information to:&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">log_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Directory&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="s1">&#39;created ...&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Directory&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="s1">&#39;already exists ...&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_dir</span>
+
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">_create_log_dir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+    <span class="n">file_writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">create_file_writer</span><span class="p">(</span><span class="n">log_dir</span> <span class="o">+</span> <span class="s2">&quot;/metrics&quot;</span><span class="p">)</span>
+    <span class="n">file_writer</span><span class="o">.</span><span class="n">set_as_default</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">TensorBoard</span><span class="p">(</span><span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">,</span>
+                       <span class="n">histogram_freq</span><span class="o">=</span><span class="n">histogram_freq</span><span class="p">,</span>
+                       <span class="n">update_freq</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span>
+                       <span class="n">write_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">profile_batch</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 
            </div>
