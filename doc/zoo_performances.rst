@@ -49,27 +49,27 @@ Classification
 
 .. |mb_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_160_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_160_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_160_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_160_iq8_wq4_aq4.h5
 
 .. |mb_224_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_224_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_224_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/mobilenet/stride2/mobilenet_imagenet_224_iq8_wq4_aq4.h5
 
 .. |ane_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -191,17 +191,17 @@ Classification
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | AkidaNet 0.25    | 96         | Visual Wake Words  | 8/4/4        | 84.77%         |             | 229K    | 179.2     | 16  | |vww_dl|       |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.25 | 160        | ImageNet           | 8/4/4        | 40.86%         |             | 467K    | 365.4     | 23  | |mb_160_25_dl| |
+| MobileNetV1 0.25 | 160        | ImageNet           | 8/4/4        | 36.05%         |             | 467K    | 365.4     | 23  | |mb_160_25_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.5  | 160        | ImageNet           | 8/4/4        | 55.94%         |             | 1.3M    | 1017.1    | 30  | |mb_160_50_dl| |
+| MobileNetV1 0.5  | 160        | ImageNet           | 8/4/4        | 54.59%         |             | 1.3M    | 1017.1    | 30  | |mb_160_50_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1      | 160        | ImageNet           | 8/4/4        | 66.40%         |             | 4.2M    | 3554.5    | 78  | |mb_160_dl|    |
+| MobileNetV1      | 160        | ImageNet           | 8/4/4        | 65.47%         |             | 4.2M    | 3554.5    | 78  | |mb_160_dl|    |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.25 | 224        | ImageNet           | 8/4/4        | 45.12%         |             | 467K    | 366.9     | 25  | |mb_224_25_dl| |
+| MobileNetV1 0.25 | 224        | ImageNet           | 8/4/4        | 39.73%         |             | 467K    | 366.9     | 25  | |mb_224_25_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.5  | 224        | ImageNet           | 8/4/4        | 59.76%         |             | 1.3M    | 1075.4    | 38  | |mb_224_50_dl| |
+| MobileNetV1 0.5  | 224        | ImageNet           | 8/4/4        | 58.50%         |             | 1.3M    | 1075.4    | 38  | |mb_224_50_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1      | 224        | ImageNet           | 8/4/4        | 69.53%         |             | 4.2M    | 5251.8    | 123 | |mb_224_dl|    |
+| MobileNetV1      | 224        | ImageNet           | 8/4/4        | 68.76%         |             | 4.2M    | 5251.8    | 123 | |mb_224_dl|    |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | MobileNetV1 0.5  | 160        | ImageNet           | 8/4/4        | 49.69%         |             | 3.9M    | 1935.1    | 38  | |mbe_160_dl|   |
 | edge             |            |                    |              |                |             |         |           |     |                |
