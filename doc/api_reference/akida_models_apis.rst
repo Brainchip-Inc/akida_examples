@@ -94,8 +94,6 @@ Akida models API
     ~~~~~~~~
     .. autofunction:: akida_models.mobilenet_imagenet
     .. autofunction:: akida_models.mobilenet_imagenet_pretrained
-    .. autofunction:: akida_models.mobilenet_edge_imagenet
-    .. autofunction:: akida_models.mobilenet_edge_imagenet_pretrained
 
     DS-CNN
     ------

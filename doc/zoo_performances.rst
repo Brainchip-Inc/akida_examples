@@ -83,14 +83,6 @@ Classification
    :scale: 4 %
    :target: http://data.brainchip.com/models/akidanet_edge/akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5
 
-.. |mbe_160_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet_edge/mobilenet_imagenet_160_alpha_50_edge_iq8_wq4_aq4.h5
-
-.. |mbe_224_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/mobilenet_edge/mobilenet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5
-
 .. |vgg11_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: http://data.brainchip.com/models/vgg/vgg11_imagenet_224_iq8_wq4_aq4.h5
@@ -202,12 +194,6 @@ Classification
 | MobileNetV1 0.5  | 224        | ImageNet           | 8/4/4        | 58.50%         |             | 1.3M    | 1075.4    | 38  | |mb_224_50_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | MobileNetV1      | 224        | ImageNet           | 8/4/4        | 68.76%         |             | 4.2M    | 5251.8    | 123 | |mb_224_dl|    |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.5  | 160        | ImageNet           | 8/4/4        | 49.69%         |             | 3.9M    | 1935.1    | 38  | |mbe_160_dl|   |
-| edge             |            |                    |              |                |             |         |           |     |                |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| MobileNetV1 0.5  | 224        | ImageNet           | 8/4/4        | 51.83%         |             | 3.9M    | 1993.4    | 46  | |mbe_224_dl|   |
-| edge             |            |                    |              |                |             |         |           |     |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | VGG11            | 224        | ImageNet           | 8/4/4        | 52.22%         |             | 47.1M   | 34825.2   | 21  | |vgg11_dl|     |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
