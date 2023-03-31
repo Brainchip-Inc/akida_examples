@@ -83,45 +83,9 @@ Classification
    :scale: 4 %
    :target: http://data.brainchip.com/models/akidanet_edge/akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5
 
-.. |vgg11_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/vgg/vgg11_imagenet_224_iq8_wq4_aq4.h5
-
-.. |an_c10_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_cifar10_iq8_wq4_aq4.h5
-
 .. |an_pv_ex| image:: ./img/link_icon.png
    :scale: 4 %
    :target: examples/general/plot_4_transfer_learning.html
-
-.. |an_cvd_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_cats_vs_dogs_iq8_wq4_aq4.h5
-
-.. |an_ite_25_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_imagenette_224_alpha_25_iq8_wq4_aq4.h5
-
-.. |an_ite_50_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_imagenette_224_alpha_50_iq8_wq4_aq4.h5
-
-.. |an_ite_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_imagenette_224_iq8_wq4_aq4.h5
-
-.. |an_mel_del| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_melanoma_iq8_wq4_aq4.h5
-
-.. |an_odir_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_odir5k_iq8_wq4_aq4.h5
-
-.. |an_oct_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_retinal_oct_iq8_wq4_aq4.h5
 
 .. |gx_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -160,26 +124,7 @@ Classification
 | AkidaNet 0.5     | 224        | ImageNet           | 8/4/4        | 54.03%         | |ane_ex|    | 4.0M    | 2130.1    | 46  | |ane_224_dl|   |
 | edge             |            |                    |              |                |             |         |           |     |                |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 160        | Cats vs dogs       | 8/4/4        | 96.60%         |             | 868K    | 698.4     | 24  | |an_cvd_dl|    |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.25    | 224        | Imagenette         | 8/4/4        | 91.54%         |             | 227K    | 203.9     | 22  | |an_ite_25_dl| |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 224        | Imagenette         | 8/4/4        | 95.67%         |             | 873K    | 815.5     | 32  | |an_ite_50_dl| |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet         | 224        | Imagenette         | 8/4/4        | 97.58%         |             | 3.4M    | 5544.2    | 116 | |an_ite_dl|    |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 224        | SIIM-ISIC Melanoma | 8/4/4        | 98.31% -       |             | 868K    | 811.4     | 32  | |an_mel_del|   |
-|                  |            | Classification     |              | AUROC 0.7969   |             |         |           |     |                |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 224        | ODIR-5K Ocular     | 8/4/4        | 92.42% -       |             | 870K    | 811.4     | 32  | |an_odir_dl|   |
-|                  |            | disease recognition|              | AUROC 0.9847   |             |         |           |     |                |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 224        | Retinal OCT ocular | 8/4/4        | 81.10% -       |             | 870K    | 811.4     | 32  | |an_oct_dl|    |
-|                  |            | disease recognition|              | AUROC 0.9662   |             |         |           |     |                |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | AkidaNet 0.5     | 224        | PlantVillage       | 8/4/4        | 97.92%         | |an_pv_ex|  | 1.1M    | 1018.8    | 33  | |an_pv_dl|     |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| AkidaNet 0.5     | 224        | CIFAR10            | 8/4/4        | 92.89%         |             | 896K    | 829.3     | 33  | |an_c10_dl|    |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | AkidaNet 0.25    | 96         | Visual Wake Words  | 8/4/4        | 84.77%         |             | 229K    | 179.2     | 16  | |vww_dl|       |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
@@ -194,8 +139,6 @@ Classification
 | MobileNetV1 0.5  | 224        | ImageNet           | 8/4/4        | 58.50%         |             | 1.3M    | 1075.4    | 38  | |mb_224_50_dl| |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | MobileNetV1      | 224        | ImageNet           | 8/4/4        | 68.76%         |             | 4.2M    | 5251.8    | 123 | |mb_224_dl|    |
-+------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
-| VGG11            | 224        | ImageNet           | 8/4/4        | 52.22%         |             | 47.1M   | 34825.2   | 21  | |vgg11_dl|     |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
 | GXNOR            | 28         | MNIST              | 2/2/1        | 98.03%         | |gx_ex|     | 1.6M    | 412.6     | 3   | |gx_dl|        |
 +------------------+------------+--------------------+--------------+----------------+-------------+---------+-----------+-----+----------------+
@@ -255,10 +198,6 @@ Face recognition
    :scale: 4 %
    :target: http://data.brainchip.com/models/akidanet_edge/akidanet_faceidentification_edge_iq8_wq4_aq4.h5
 
-.. |fver_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_faceverification_iq8_wq4_aq4.h5
-
 +--------------+------------+----------------------+--------------+----------+---------+-----------+-----+-----------+
 | Architecture | Resolution | Dataset              | Quantization | Accuracy | #Params | Size (KB) | NPs | Download  |
 +==============+============+======================+==============+==========+=========+===========+=====+===========+
@@ -267,9 +206,6 @@ Face recognition
 +--------------+------------+----------------------+--------------+----------+---------+-----------+-----+-----------+
 | AkidaNet 0.5 | 112x96     | CASIA Webface        | 8/4/4        | 71.13%   | 23.6M   | 6979.6    | 35  | |fide_dl| |
 | edge         |            | face identification  |              |          |         |           |     |           |
-+--------------+------------+----------------------+--------------+----------+---------+-----------+-----+-----------+
-| AkidaNet 0.5 | 112x96     | LFW                  | 8/4/4        | 97.25%   | 933K    | 691.2     | 20  | |fver_dl| |
-|              |            | face verification    |              |          |         |           |     |           |
 +--------------+------------+----------------------+--------------+----------+---------+-----------+-----+-----------+
 
 
@@ -295,42 +231,6 @@ Keyword spotting
 +==============+=======================+==============+================+==========+=========+===========+=====+==========+
 | DS-CNN       | Google speech command | 8/4/4        | 91.72%         | |kws_ex| | 22.7K   | 22.8      | 5   | |kws_dl| |
 +--------------+-----------------------+--------------+----------------+----------+---------+-----------+-----+----------+
-
-
-.. |time_icon_ref| image:: ./img/time_icon.png
-   :scale: 5 %
-
-|time_icon_ref| Time domain
----------------------------
-
-Fault detection
-~~~~~~~~~~~~~~~
-
-.. |cwru_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/convtiny/convtiny_cwru_iq8_wq2_aq4.h5
-
-+--------------+--------------------------+--------------+----------+---------+-----------+-----+-----------+
-| Architecture | Dataset                  | Quantization | Accuracy | #Params | Size (KB) | NPs | Download  |
-+==============+==========================+==============+==========+=========+===========+=====+===========+
-| Convtiny     | CWRU Electric Motor Ball | 8/2/4        | 99.3%    | 59K     | 25.3      | 3   | |cwru_dl| |
-|              | Bearing Fault Diagnosis  |              |          |         |           |     |           |
-+--------------+--------------------------+--------------+----------+---------+-----------+-----+-----------+
-
-Classification
-~~~~~~~~~~~~~~
-
-.. |ecg_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: http://data.brainchip.com/models/akidanet/akidanet_ecg_iq8_wq4_aq4.h5
-
-+--------------+------------+--------------------+--------------+--------------+---------+-----------+-----+-----------+
-| Architecture | Resolution | Dataset            | Quantization | Accuracy     | #Params | Size (KB) | NPs | Download  |
-+==============+============+====================+==============+==============+=========+===========+=====+===========+
-| AkidaNet 0.5 | 224        | Physionet2017      | 8/4/4        | 73.50% -     | 1.1M    | 1008.4    | 36  | |ecg_dl|  |
-|              |            | ECG classification |              | AUROC 0.7940 |         |           |     |           |
-+--------------+------------+--------------------+--------------+--------------+---------+-----------+-----+-----------+
-
 
 .. |pointcloud_icon_ref| image:: ./img/pointcloud_icon.png
    :scale: 5 %
