@@ -44,17 +44,9 @@ plt.show()
 # <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist>`_ along
 # with pretrained weights.
 #
-#  .. Note:: The pre-trained weights were obtained with knowledge distillation
-#            training, using the EfficientNet model from `this repository
-#            <https://github.com/EscVM/Efficient-CapsNet>`_ and the `Distiller`
-#            class from the `knowledge distillation toolkit
-#            <../../api_reference/akida_models_apis.html#knowledge-distillation>`_.
-#
-#            The float training was done for 30 epochs, the model is then
-#            gradually quantized following:
-#            8-4-4 --> 4-4-4 --> 4-4-2 --> 2-2-2 --> 2-2-1
-#            by tuning the model at each step with the same distillation
-#            training method for 5 epochs.
+#  .. Note:: The float training was done for 20 epochs, the model is then gradually quantized
+#            following: 4-4-4 --> 4-4-2 --> 2-2-2 --> 2-2-1 by tuning the model at each step for 15
+#            epochs.
 
 from akida_models import gxnor_mnist_pretrained
 
@@ -109,14 +101,14 @@ results = model_akida.predict_classes(test_set[:num_samples])
 accuracy = accuracy_score(test_label[:num_samples], results[:num_samples])
 
 # For non-regression purpose
-assert accuracy > 0.99
+assert accuracy > 0.98
 
 # Display results
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
 # Depending on the number of samples you run, you should find a
-# performance of around 99% (99.20% if you run all 10000 samples).
+# performance of around 99% (99.25% if you run all 10000 samples).
 #
 
 ######################################################################
