@@ -84,10 +84,7 @@ Current available models for creation are:
  * akidanet_imagenet
  * akidanet_imagenet_edge
  * mobilenet_imagenet
- * mobilenet_imagenet_edge
- * vgg_imagenet
  * yolo_base
- * convtiny_cwru
  * gxnor_mnist
 
 Command-line interface for model training
