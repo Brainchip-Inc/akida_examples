@@ -4,34 +4,35 @@ CNN2SNN Toolkit API
 
 .. automodule:: cnn2snn
 
-    Tool functions
-    ==============
+    Akida version
+    =============
+    .. autoclass:: AkidaVersion
+        :members:
 
-    quantize
-    --------
-    .. autofunction:: quantize
+    .. autofunction:: get_akida_version
+    .. autofunction:: set_akida_version
 
-    quantize_layer
-    --------------
-    .. autofunction:: quantize_layer
-
-    convert
-    -------
+    Conversion
+    ==========
     .. autofunction:: convert
 
     A detailed description of the input_scaling parameter is given in the
     `user guide <../user_guide/cnn2snn.html#input-scaling>`__.
 
-    check_model_compatibility
-    -------------------------
     .. autofunction:: check_model_compatibility
 
-    load_quantized_model
-    --------------------
+    Utils
+    =====
     .. autofunction:: load_quantized_model
 
+    Calibration
+    ===========
+    .. autofunction:: cnn2snn.calibration.QuantizationSampler
+    .. autofunction:: cnn2snn.calibration.bias_correction
+    .. autofunction:: cnn2snn.calibration.adaround
+
     Transforms
-    ----------
+    ==========
     .. autofunction:: cnn2snn.transforms.sequentialize
     .. autofunction:: cnn2snn.transforms.syncretize
     .. autofunction:: cnn2snn.transforms.invert_batchnorm_pooling
@@ -41,11 +42,14 @@ CNN2SNN Toolkit API
     .. autofunction:: cnn2snn.transforms.normalize_separable_model
     .. autofunction:: cnn2snn.transforms.reshape
 
-    Calibration
-    -----------
-    .. autofunction:: cnn2snn.calibration.QuantizationSampler
-    .. autofunction:: cnn2snn.calibration.bias_correction
-    .. autofunction:: cnn2snn.calibration.adaround
+    Constraint
+    ==========
+    .. autoclass:: cnn2snn.min_value_constraint.MinValueConstraint
+
+    Quantization
+    ============
+    .. autofunction:: quantize
+    .. autofunction:: quantize_layer
 
     Quantizers
     ==========
