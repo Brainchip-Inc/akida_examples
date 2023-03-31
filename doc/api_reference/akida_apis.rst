@@ -28,30 +28,52 @@ Akida runtime API
     .. autoclass:: akida.Layer.Mapping
         :members:
 
-
-    InputData
-    =========
+    Akida V1 layers
+    ===============
     .. autoclass:: InputData
         :members:
-
-    InputConvolutional
-    ==================
     .. autoclass:: InputConvolutional
         :members:
-
-    FullyConnected
-    ==============
     .. autoclass:: FullyConnected
         :members:
-
-    Convolutional
-    =============
     .. autoclass:: Convolutional
         :members:
-
-    SeparableConvolutional
-    ======================
     .. autoclass:: SeparableConvolutional
+        :members:
+
+    Akida V2 layers
+    ===============
+    .. autoclass:: InputConv2D
+        :members:
+    .. autoclass:: Stem
+        :members:
+    .. autoclass:: Conv2D
+        :members:
+    .. autoclass:: Conv2DTranspose
+        :members:
+    .. autoclass:: Dense1D
+        :members:
+    .. autoclass:: Dense2D
+        :members:
+    .. autoclass:: DepthwiseConv2D
+        :members:
+    .. autoclass:: DepthwiseConv2DTranspose
+        :members:
+    .. autoclass:: Attention
+        :members:
+    .. autoclass:: Add
+        :members:
+    .. autoclass:: Concatenate
+        :members:
+    .. autoclass:: ExtractToken
+        :members:
+    .. autoclass:: BatchNormalization
+        :members:
+    .. autoclass:: MadNorm
+        :members:
+    .. autoclass:: Shiftmax
+        :members:
+    .. autoclass:: Dequantizer
         :members:
 
     Layer parameters
