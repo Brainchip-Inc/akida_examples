@@ -83,19 +83,6 @@ print("Keras MAE: {0:.4f}".format(mae_keras))
 # * the model is then quantized and fine-tuned with 2-bit weights and
 #   activations (first convolutional weights are still 8 bits).
 #
-# The table below summarizes the "Mean Absolute Error" (MAE) results obtained
-# after every training episode.
-#
-# +---------+----------------+---------------+------+--------+
-# | Episode | Weights Quant. | Activ. Quant. | MAE  | Epochs |
-# +=========+================+===============+======+========+
-# | 1       | N/A            | N/A           | 5.80 | 300    |
-# +---------+----------------+---------------+------+--------+
-# | 2       | 8/4 bits       | 4 bits        | 5.79 | 30     |
-# +---------+----------------+---------------+------+--------+
-# | 3       | 8/2 bits       | 2 bits        | 6.15 | 30     |
-# +---------+----------------+---------------+------+--------+
-#
 # Here, we directly load the pre-trained quantized Keras model using the
 # akida_models helper.
 
@@ -145,20 +132,6 @@ print("Akida MAE: {0:.4f}".format(mae_akida))
 
 # For non-regression purpose
 assert abs(mae_keras - mae_akida) < 0.5
-
-######################################################################
-# Let's summarize the MAE performance for the native Keras, the quantized Keras
-# and the Akida model.
-#
-# +-----------------+------+
-# | Model           | MAE  |
-# +=================+======+
-# | native Keras    | 5.80 |
-# +-----------------+------+
-# | quantized Keras | 6.15 |
-# +-----------------+------+
-# | Akida           | 6.21 |
-# +-----------------+------+
 
 ######################################################################
 # 5. Estimate age on a single image

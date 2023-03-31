@@ -138,14 +138,7 @@ check_model_performances(model_keras)
 #  * all convolutional layers have 4-bit activations.
 #
 # However, this model will suffer from a drop in accuracy due to quantization
-# as shown in the table below for ImageNet and in the next cell for the 10
-# images set.
-#
-# +----------------+--------------------+
-# | Float accuracy | Quantized accuracy |
-# +================+====================+
-# |     64.58 %    |        1.00 %      |
-# +----------------+--------------------+
+# as shown in the next cell for the 10 images set.
 #
 
 from cnn2snn import quantize
@@ -167,14 +160,6 @@ check_model_performances(model_keras_quantized)
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
 # recover performances up to the initial floating point accuracy.
-#
-# Performances on the full ImageNet dataset are:
-#
-# +----------------+--------------------+--------------------+
-# | Float accuracy | Quantized accuracy |     After tuning   |
-# +================+====================+====================+
-# |     64.58 %    |       1.00 %       |       61.30 %      |
-# +----------------+--------------------+--------------------+
 
 from akida_models import akidanet_imagenet_pretrained
 
@@ -213,14 +198,7 @@ model_akida.summary()
 # 5.2 Check performance
 # ^^^^^^^^^^^^^^^^^^^^^
 #
-# While we compute accuracy for the 10 images set in the next cell, the
-# following table summarizes results obtained on ImageNet.
-#
-# +----------------+----------------+
-# | Keras accuracy | Akida accuracy |
-# +================+================+
-# |     61.30 %    |     61.37 %    |
-# +----------------+----------------+
+# The following will only compute accuracy for the 10 images set.
 
 # Check Model performance
 start = timer()
