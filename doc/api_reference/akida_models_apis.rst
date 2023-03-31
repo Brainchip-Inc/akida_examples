@@ -69,17 +69,9 @@ Akida models API
     .. autofunction:: akida_models.akidanet_imagenet_pretrained
     .. autofunction:: akida_models.akidanet_edge_imagenet
     .. autofunction:: akida_models.akidanet_edge_imagenet_pretrained
-    .. autofunction:: akida_models.akidanet_imagenette_pretrained
-    .. autofunction:: akida_models.akidanet_cats_vs_dogs_pretrained
     .. autofunction:: akida_models.akidanet_faceidentification_pretrained
     .. autofunction:: akida_models.akidanet_faceidentification_edge_pretrained
-    .. autofunction:: akida_models.akidanet_faceverification_pretrained
-    .. autofunction:: akida_models.akidanet_melanoma_pretrained
-    .. autofunction:: akida_models.akidanet_odir5k_pretrained
-    .. autofunction:: akida_models.akidanet_retinal_oct_pretrained
-    .. autofunction:: akida_models.akidanet_ecg_pretrained
     .. autofunction:: akida_models.akidanet_plantvillage_pretrained
-    .. autofunction:: akida_models.akidanet_cifar10_pretrained
     .. autofunction:: akida_models.akidanet_vww_pretrained
 
     Preprocessing
@@ -113,11 +105,6 @@ Akida models API
 
     VGG
     ---
-
-    ImageNet
-    ~~~~~~~~
-    .. autofunction:: akida_models.vgg_imagenet
-    .. autofunction:: akida_models.vgg_imagenet_pretrained
 
     UTK Face
     ~~~~~~~~
@@ -156,14 +143,6 @@ Akida models API
     Anchors
     *******
     .. autofunction:: akida_models.detection.generate_anchors.generate_anchors
-
-    ConvTiny
-    --------
-
-    CWRU
-    ~~~~
-    .. autofunction:: akida_models.convtiny_cwru
-    .. autofunction:: akida_models.convtiny_cwru_pretrained
 
     PointNet++
     ----------
