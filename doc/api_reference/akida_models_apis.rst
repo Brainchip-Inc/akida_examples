@@ -8,29 +8,44 @@ Akida models API
     Layer blocks
     ============
 
-    conv_block
+    CNN blocks
     ----------
     .. autofunction:: akida_models.layer_blocks.conv_block
-
-    separable_conv_block
-    --------------------
     .. autofunction:: akida_models.layer_blocks.separable_conv_block
-
-    dense_block
-    -----------
     .. autofunction:: akida_models.layer_blocks.dense_block
+
+    Transformers blocks
+    -------------------
+    .. autofunction:: akida_models.layer_blocks.mlp_block
+    .. autofunction:: akida_models.layer_blocks.multi_head_attention
+    .. autofunction:: akida_models.layer_blocks.transformer_block
+
+    Transposed blocks
+    -----------------
+    .. autofunction:: akida_models.layer_blocks.conv_transpose_block
+    .. autofunction:: akida_models.layer_blocks.sepconv_transpose_block
+
+    Detection block
+    ---------------
+    .. autofunction:: akida_models.layer_blocks.yolo_head_block
 
     Helpers
     =======
 
-    BatchNormalization gamma constraint
-    -----------------------------------
+    Gamma constraint
+    ----------------
     .. autofunction:: add_gamma_constraint
+
+    Unfusing SeparableConvolutional
+    -------------------------------
+    .. autofunction:: unfuse_sepconv2d
+
 
     Knowledge distillation
     ======================
 
     .. autoclass:: akida_models.distiller.Distiller
+    .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
     Pruning
@@ -38,6 +53,8 @@ Akida models API
 
     .. autofunction:: akida_models.prune_model
     .. autofunction:: akida_models.delete_filters
+    .. autofunction:: akida_models.filter_pruning.neural_layers
+    .. autofunction:: akida_models.filter_pruning.smallest_filters
 
     Training
     ========
@@ -47,6 +64,10 @@ Akida models API
     .. autofunction:: akida_models.training.evaluate_akida_model
     .. autofunction:: akida_models.training.compile_model
     .. autofunction:: akida_models.training.calibrate_model
+    .. autofunction:: akida_models.training.save_model
+    .. autofunction:: akida_models.training.print_history_stats
+    .. autofunction:: akida_models.training.get_training_parser
+    .. autoclass:: akida_models.training.RestoreBest
 
     MACS
     ====
@@ -56,6 +77,11 @@ Akida models API
     Utils
     =====
     .. autofunction:: akida_models.utils.fetch_file
+    .. autofunction:: akida_models.utils.load_model
+    .. autofunction:: akida_models.utils.get_tensorboard_callback
+    .. autofunction:: akida_models.utils.apply_weights_to_model
+    .. autofunction:: akida_models.utils.load_weights
+    .. autofunction:: akida_models.utils.save_weights
 
     Model zoo
     =========
@@ -69,6 +95,8 @@ Akida models API
     .. autofunction:: akida_models.akidanet_imagenet_pretrained
     .. autofunction:: akida_models.akidanet_edge_imagenet
     .. autofunction:: akida_models.akidanet_edge_imagenet_pretrained
+    .. autofunction:: akida_models.akidanet18_imagenet
+    .. autofunction:: akida_models.akidanet18_imagenet_pretrained
     .. autofunction:: akida_models.akidanet_faceidentification_pretrained
     .. autofunction:: akida_models.akidanet_faceidentification_edge_pretrained
     .. autofunction:: akida_models.akidanet_plantvillage_pretrained
@@ -144,6 +172,17 @@ Akida models API
     *******
     .. autofunction:: akida_models.detection.generate_anchors.generate_anchors
 
+    BatchGenerator
+    **************
+    .. autofunction:: akida_models.detection.batch_generator.BatchGenerator
+    .. autofunction:: akida_models.detection.batch_generator.BatchYoloGenerator
+
+    Utils
+    *****
+    .. autofunction:: akida_models.detection.box_utils.xywh_to_xyxy
+    .. autofunction:: akida_models.detection.box_utils.xyxy_to_xywh
+    .. autofunction:: akida_models.detection.box_utils.compute_overlap
+
     PointNet++
     ----------
 
@@ -164,3 +203,39 @@ Akida models API
     ~~~~~
     .. autofunction:: akida_models.gxnor_mnist
     .. autofunction:: akida_models.gxnor_mnist_pretrained
+
+    CenterNet
+    ---------
+    .. autofunction:: akida_models.centernet_base
+    .. autofunction:: akida_models.centernet.centernet_processing.decode_output
+    .. autoclass:: akida_models.centernet.centernet_loss.CenternetLoss
+    .. autoclass:: akida_models.centernet.centernet_batch_generator.BatchCenternetGenerator
+
+    AkidaUNet
+    ---------
+    .. autofunction:: akida_models.akida_unet_portrait128
+
+    Transformers
+    ------------
+
+    ViT
+    ~~~
+    .. autofunction:: akida_models.vit_imagenet
+    .. autofunction:: akida_models.vit_ti16
+    .. autofunction:: akida_models.bc_vit_ti16
+    .. autofunction:: akida_models.bc_vit_ti16_imagenet_pretrained
+    .. autofunction:: akida_models.vit_s16
+    .. autofunction:: akida_models.vit_s32
+    .. autofunction:: akida_models.vit_b16
+    .. autofunction:: akida_models.vit_b32
+    .. autofunction:: akida_models.vit_l16
+    .. autofunction:: akida_models.vit_l32
+
+    DeiT
+    ~~~~
+    .. autofunction:: akida_models.deit_imagenet
+    .. autofunction:: akida_models.deit_ti16
+    .. autofunction:: akida_models.bc_deit_ti16
+    .. autofunction:: akida_models.bc_deit_dist_ti16_imagenet_pretrained
+    .. autofunction:: akida_models.deit_s16
+    .. autofunction:: akida_models.deit_b16
