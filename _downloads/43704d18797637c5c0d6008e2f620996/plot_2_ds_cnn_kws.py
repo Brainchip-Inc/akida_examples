@@ -114,25 +114,6 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # * finally, we train the model with quantized weights and activations and by
 #   gradually increasing quantization in the last layer.
 #
-# The table below summarizes the results obtained when preparing the
-# weights stored under `<http://data.brainchip.com/models/ds_cnn/>`__ :
-#
-# +---------+----------------+----------------------------+----------+--------+
-# | Episode | Weights Quant. | Activ. Quant. / last layer | Accuracy | Epochs |
-# +=========+================+============================+==========+========+
-# | 1       | N/A            | N/A                        | 93.06 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-# | 2       | N/A            | 4 bits / 4 bits            | 92.30 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-# | 3       | 8/4 bits       | 4 bits / 4 bits            | 92.11 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-# | 4       | 8/4 bits       | 4 bits / 3 bits            | 92.38 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-# | 5       | 8/4 bits       | 4 bits / 2 bits            | 92.23 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-# | 6       | 8/4 bits       | 4 bits / 1 bit             | 92.22 %  | 16     |
-# +---------+----------------+----------------------------+----------+--------+
-#
 
 from akida_models import ds_cnn_kws_pretrained
 

@@ -251,13 +251,6 @@ full_model.output
 #            use `decode_output <../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
 #            before computing precision for all classes.
 #
-# Reported performanced for all training steps are as follows:
-#
-# +------------+-----------+------------------+-------------+
-# |            |   Float   | 8/4/4 Calibrated | 8/4/4 Tuned |
-# +============+===========+==================+=============+
-# | Global mAP |  38.38 %  | 32.88 %          | 38.83 %     |
-# +------------+-----------+------------------+-------------+
 
 from timeit import default_timer as timer
 from akida_models import yolo_voc_pretrained
@@ -328,18 +321,6 @@ model_akida.summary()
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # Akida model accuracy is tested on the first *n* images of the validation set.
-#
-# The table below summarizes the expected results:
-#
-# +---------+-----------+-----------+
-# | #Images | Keras mAP | Akida mAP |
-# +=========+===========+===========+
-# | 100     |  38.80 %  |  34.26 %  |
-# +---------+-----------+-----------+
-# | 1000    |  40.11 %  |  39.35 %  |
-# +---------+-----------+-----------+
-# | 2500    |  38.83 %  |  38.85 %  |
-# +---------+-----------+-----------+
 #
 
 # Create the mAP evaluator object
