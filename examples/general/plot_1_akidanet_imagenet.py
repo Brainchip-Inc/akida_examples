@@ -95,7 +95,7 @@ from tensorflow.keras.models import load_model
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "akidanet_imagenet_224_alpha_50.h5",
-    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5",
+    "http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()

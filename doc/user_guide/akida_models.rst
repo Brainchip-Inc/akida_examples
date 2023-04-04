@@ -184,7 +184,7 @@ is applied.
 
 .. code-block:: bash
 
-   wget http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5
+   wget http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5
 
    akida_models create -s yolo_akidanet_voc.h5 yolo_base -c 2 -bw akidanet_imagenet_alpha_50.h5
 
