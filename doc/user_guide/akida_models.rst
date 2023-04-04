@@ -86,6 +86,13 @@ Current available models for creation are:
  * mobilenet_imagenet
  * yolo_base
  * gxnor_mnist
+ * akidanet18_imagenet
+ * centernet
+ * akida_unet_portrait128
+ * vit_ti16
+ * bc_vit_ti16
+ * deit_ti16
+ * bc_deit_ti16
 
 Command-line interface for model training
 -----------------------------------------
@@ -151,19 +158,9 @@ binary activations for edge learning.
 
    kws_train train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
 
-   cnn2snn quantize -m ds_cnn_kws.h5 -iq 0 -wq 0 -aq 4
+   cnn2snn quantize -m ds_cnn_kws.h5 -iq 8 -wq 4 -aq 4
 
-   kws_train train -m ds_cnn_kws_iq0_wq0_aq4.h5 -s ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -e 16
-
-   cnn2snn quantize -m ds_cnn_kws_iq0_wq0_aq4_laq4.h5 -iq 8 -wq 4 -aq 4
-
-   kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -e 16
-
-   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq4.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -e 16 -laq 3
-
-   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq3.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -e 16 -laq 2
-
-   kws_train train -m ds_cnn_kws_iq8_wq4_aq4_laq2.h5 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -e 16 -laq 1
+   kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -e 64 -laq 1 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5
 
 YOLO training
 ^^^^^^^^^^^^^
@@ -305,48 +302,16 @@ built into the provided block modules.
 The layer block functions provided are:
 
 
-* ``conv_block``\ ,
-* ``separable_conv_block``\ ,
-* ``dense_block``.
+* ``conv_block``
+* ``separable_conv_block``
+* ``dense_block``
+* ``mlp_block``
+* ``multi_head_attention``
+* ``transformer_block``
+* ``conv_transpose_block``
+* ``sepconv_transpose_block``
+* ``yolo_head_block``
 
 Most of the parameters for these blocks are identical to those passed to the
-corresponding inner processing layers, such as strides and bias.
-
-``conv_block``
-^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def conv_block(inputs,
-                  filters,
-                  kernel_size,
-                  pooling=None,
-                  pool_size=(2, 2),
-                  add_batchnorm=False,
-                  add_activation=True,
-                  **kwargs):
-
-``dense_block``
-^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def dense_block(inputs,
-                   units,
-                   add_batchnorm=False,
-                   add_activation=True,
-                   **kwargs)
-
-``separable_conv_block``
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   def separable_conv_block(inputs,
-                            filters,
-                            kernel_size,
-                            pooling=None,
-                            pool_size=(2, 2),
-                            add_batchnorm=False,
-                            add_activation=True,
-                            **kwargs)
+corresponding inner processing layers, such as strides and bias. The detailed API is given in the
+`dedicated section <../api_reference/akida_models_apis.html#layer-blocks>`__.
