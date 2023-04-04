@@ -26,8 +26,8 @@ Run the MNIST example below, then visit the `Akida examples <../examples/index.h
 
    # Load pre-trained MNIST model
    model_file = get_file("gxnor_mnist.fbz",
-                           "http://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist.fbz",
-                           cache_subdir='models/gxnor')
+                         "http://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist.fbz",
+                         cache_subdir='models/gxnor')
    model = Model(model_file)
 
    # Test the first image of the test set
