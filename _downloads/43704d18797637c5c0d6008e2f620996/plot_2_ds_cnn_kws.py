@@ -72,7 +72,7 @@ from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = get_file("ds_cnn_kws.h5",
-                      "http://data.brainchip.com/models/ds_cnn/ds_cnn_kws.h5",
+                      "http://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws.h5",
                       cache_subdir='models')
 
 # Load the native Keras pre-trained model

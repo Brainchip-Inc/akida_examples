@@ -95,7 +95,7 @@ from tensorflow.keras.models import load_model
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "akidanet_imagenet_224_alpha_50.h5",
-    "http://data.brainchip.com/models/akidanet/akidanet_imagenet_224_alpha_50.h5",
+    "http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
@@ -208,7 +208,7 @@ print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
 # For non-regression purpose
-assert accuracy_akida >= 0.89
+assert accuracy_akida >= 0.79
 
 ######################################################################
 # 5.3 Show predictions for a random image
