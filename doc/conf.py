@@ -3,14 +3,7 @@
 project = 'Akida Examples'
 copyright = '2022, BrainChip Holdings Ltd. All Rights Reserved'
 author = 'Brainchip'
-
-# The full version, including alpha/beta/rc tags
-import pkg_resources
-
-try:
-    version = 'MetaTF '+pkg_resources.get_distribution('akida').version
-except Exception:
-    version = 'unknown'
+version = 'Akida, 2nd Generation'
 
 # -- General configuration ---------------------------------------------------
 
@@ -59,7 +52,7 @@ warnings.filterwarnings("ignore", category=UserWarning,
 
 # -- Options for HTML output -------------------------------------------------
 # Logo image displayed at the top of the sidebar
-html_logo =  'img/akida.svg'
+html_logo =  'img/MetaTF.png'
 
 # Browser icon for tabs, windows and bookmarks
 html_favicon = 'img/favicon.ico'
@@ -71,7 +64,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'collapse_navigation':False,
-    'style_nav_header_background':'#78b3ff'
+    'style_nav_header_background':'#989898'
 }
 
 # Hide undesired components
