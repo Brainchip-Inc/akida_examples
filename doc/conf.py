@@ -86,3 +86,26 @@ html_static_path = ['_static']
 
 # add a custom css file to remove rtd theme page width limit
 html_css_files = ['custom.css',]
+
+# -- Exported variables -----------------------------------------------------
+import pkg_resources
+
+akida_version = pkg_resources.get_distribution('akida').version
+cnn2snn_version = pkg_resources.get_distribution('cnn2snn').version
+models_version = pkg_resources.get_distribution('akida-models').version
+
+def ultimateReplace(app, docname, source):
+    result = source[0]
+    for key in app.config.ultimate_replacements:
+        result = result.replace(key, app.config.ultimate_replacements[key])
+    source[0] = result
+
+ultimate_replacements = {
+    "{AKIDA_VERSION}": akida_version,
+    "{CNN2SNN_VERSION}": cnn2snn_version,
+    "{MODELS_VERSION}": models_version
+}
+
+def setup(app):
+   app.add_config_value('ultimate_replacements', {}, True)
+   app.connect('source-read', ultimateReplace)

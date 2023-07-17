@@ -1,12 +1,14 @@
 Installation
 ============
 
-Requirements
-------------
+Supported configurations
+------------------------
 
-* **Supported operating systems:** Windows 10, Ubuntu 16.04, 18.04 and 20.04
-* **Python version:** python 3.7 to 3.10
-* **TensorFlow version:** 2.10.x
+* **Operating systems:**
+    * Windows 10, Windows 11
+    * Any Linux variant compatible with `manylinux 2.28 <https://github.com/pypa/manylinux>`_ (Ubuntu 20.04, Ubuntu 22.04, ...)
+* **Python versions:** 3.8 to 3.11
+* **TensorFlow versions:** 2.10, 2.11 and 2.12
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
@@ -30,16 +32,16 @@ be setup with Python's pip package manager:
 
 .. code-block:: bash
 
-    pip install akida
-    pip install cnn2snn
-    pip install akida-models
+    pip install akida=={AKIDA_VERSION}
+    pip install cnn2snn=={CNN2SNN_VERSION}
+    pip install akida-models=={MODELS_VERSION}
 
 .. note::
     We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_:
 
     .. code-block:: bash
 
-      conda create --name akida_env python=3.7
+      conda create --name akida_env python=3.8
       conda activate akida_env
 
 Running examples
