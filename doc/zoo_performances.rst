@@ -13,11 +13,20 @@ their respective performances.
 .. |image_icon_ref| image:: ./img/image_icon.png
    :scale: 5 %
 
+.. |audio_icon_ref| image:: ./img/headphones_icon.png
+   :scale: 5 %
+
+.. |pointcloud_icon_ref| image:: ./img/pointcloud_icon.png
+   :scale: 5 %
+
+Akida 1.0 models
+----------------
+
 |image_icon_ref| Image domain
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Classification
-~~~~~~~~~~~~~~
+""""""""""""""
 
 .. |an_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -145,7 +154,7 @@ Classification
 
 
 Object detection
-~~~~~~~~~~~~~~~~
+""""""""""""""""
 
 .. |yl_voc_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -170,7 +179,7 @@ Object detection
 
 
 Regression
-~~~~~~~~~~
+""""""""""
 
 .. |reg_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -188,7 +197,7 @@ Regression
 
 
 Face recognition
-~~~~~~~~~~~~~~~~
+""""""""""""""""
 
 .. |fid_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -209,14 +218,12 @@ Face recognition
 +--------------+------------+----------------------+--------------+----------+---------+-----------+-----+-----------+
 
 
-.. |audio_icon_ref| image:: ./img/headphones_icon.png
-   :scale: 5 %
 
 |audio_icon_ref| Audio domain
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Keyword spotting
-~~~~~~~~~~~~~~~~
+""""""""""""""""
 
 .. |kws_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -232,14 +239,12 @@ Keyword spotting
 | DS-CNN       | Google speech command | 8/4/4        | 91.72%         | |kws_ex| | 22.7K   | 22.8      | 5   | |kws_dl| |
 +--------------+-----------------------+--------------+----------------+----------+---------+-----------+-----+----------+
 
-.. |pointcloud_icon_ref| image:: ./img/pointcloud_icon.png
-   :scale: 5 %
 
 |pointcloud_icon_ref| Point cloud
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Classification
-~~~~~~~~~~~~~~
+""""""""""""""
 
 .. |p++_dl| image:: ./img/download_icon.png
    :scale: 4 %
