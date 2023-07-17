@@ -58,27 +58,27 @@ Classification
 
 .. |mb_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_160_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_160_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_160_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_iq8_wq4_aq4.h5
 
 .. |mb_224_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_224_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_224_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/stride2/mobilenet_imagenet_224_iq8_wq4_aq4.h5
+   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5
 
 .. |ane_ex| image:: ./img/link_icon.png
    :scale: 4 %
