@@ -55,7 +55,7 @@ warnings.filterwarnings("ignore",
 
 # -- Options for HTML output -------------------------------------------------
 # Logo image displayed at the top of the sidebar
-html_logo = 'img/MetaTF.png'
+html_logo = 'img/MetaTF_logo.png'
 
 # Browser icon for tabs, windows and bookmarks
 html_favicon = 'img/favicon.ico'
