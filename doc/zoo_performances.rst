@@ -9,7 +9,6 @@ their respective performances.
     that must be converted to Akida model using
     `cnn2snn.convert <api_reference/cnn2snn_apis.html#convert>`_.
 
-
 .. |image_icon_ref| image:: ./img/image_icon.png
    :scale: 5 %
 
@@ -21,6 +20,12 @@ their respective performances.
 
 Akida 1.0 models
 ----------------
+
+For 1.0 models, 4bit accuracy are provided and are always obtained through a QAT phase.
+
+.. note::
+    The "8/4/4" quantization scheme stands for 8bit weights in the input layer, 4bit weights in
+    other layers and 4bit activations.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -264,6 +269,11 @@ Akida 2.0 models
 For 2.0 models, both 8bit PTQ and 4bit QAT numbers are given. When not explicitely stated 8bit PTQ
 accuracy is given as is (ie no further tuning/training, only quantization and calibration). The 4bit
 QAT is the same as for 1.0.
+
+.. note::
+    The digit for quantization scheme stands for both weights and activations bitwidth. Weights in
+    the first layer are always quantized to 8bit. When given, 'edge' means that the model backbone
+    output (before classification layer) is quantized to 1bit to allow Akida edge learning.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
