@@ -335,6 +335,14 @@ Classification
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_vww_i8_w4_a4.h5
 
+.. |an18_160_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet18/akidanet18_imagenet_160_i8_w8_a8.h5
+
+.. |an18_224_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet18/akidanet18_imagenet_224_i8_w8_a8.h5
+
 .. |mb_160_25_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.25_i8_w8_a8.h5
@@ -387,6 +395,9 @@ Classification
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i2_w2_a1.h5
 
+CNNs
+++++
+
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 | Architecture     | Resolution | Dataset            | #Params | Quantization | Accuracy | Download         |
 +==================+============+====================+=========+==============+==========+==================+
@@ -422,6 +433,10 @@ Classification
 |                  |            |                    |         |              |          |                  |
 |                  |            |                    |         | 4            | 85.80%   | |vww4_dl|        |
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
+| AkidaNet18       | 160        | ImageNet           | 2.4M    | 8            | 64.60%   | |an18_160_dl|    |
++------------------+------------+--------------------+---------+--------------+----------+------------------+
+| AkidaNet18       | 224        | ImageNet           | 2.4M    | 8            | 67.05%   | |an18_224_dl|    |
++------------------+------------+--------------------+---------+--------------+----------+------------------+
 | MobileNetV1 0.25 | 160        | ImageNet           | 469K    | 8            | 44.67%   | |mb_160_25_8_dl| |
 |                  |            |                    |         |              |          |                  |
 |                  |            |                    |         | 4            | 37.51%   | |mb_160_25_4_dl| |
@@ -449,6 +464,26 @@ Classification
 | GXNOR            | 28         | MNIST              | 1.6M    | 2/2/1        | 98.98%   | |gx2_dl|         |
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 
+Transformers
+++++++++++++
+
+.. |vit_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/vit/bc_vit_ti16_224_i8_w8_a8.h5
+
+.. |deitd_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/deit/bc_deit_dist_ti16_224_i8_w8_a8.h5
+
++--------------+------------+----------+---------+--------------+-----------------+------------+
+| Architecture | Resolution | Dataset  | #Params | Quantization | Accuracy        | Download   |
++==============+============+==========+=========+==============+=================+============+
+| ViT          | 224        | ImageNet | 5.8M    | 8            | 73.71% [#fn-2]_ | |vit_dl|   |
++--------------+------------+----------+---------+--------------+-----------------+------------+
+| DeiT-dist    | 224        | ImageNet | 6.0M    | 8            | 74.37% [#fn-2]_ | |deitd_dl| |
++--------------+------------+----------+---------+--------------+-----------------+------------+
+
+.. [#fn-2] PTQ accuracy boosted with 1 epoch of tuning
 
 Object detection
 """"""""""""""""
@@ -460,6 +495,10 @@ Object detection
 .. |yl_voc4_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w4_a4.h5
+
+.. |ce_voc_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/centernet/centernet_akidanet_voc_i8_w8_a8.h5
 
 .. |yl_wf8_dl| image:: ./img/download_icon.png
    :scale: 4 %
@@ -475,6 +514,9 @@ Object detection
 | YOLOv2       | 224        | PASCAL-VOC 2007 -        | 3.6M    | 8            | 48.22% | |yl_voc8_dl| |
 |              |            | person and car classes   |         |              |        |              |
 |              |            |                          |         | 4            | 48.24% | |yl_voc4_dl| |
++--------------+------------+--------------------------+---------+--------------+--------+--------------+
+| CenterNet    | 224        | PASCAL-VOC 2007 -        | 1.9M    | 8            | 63.32% | |ce_voc_dl|  |
+|              |            | person and car classes   |         |              |        |              |
 +--------------+------------+--------------------------+---------+--------------+--------+--------------+
 | YOLOv2       | 224        | WIDER FACE               | 3.6M    | 8            | 79.22% | |yl_wf8_dl|  |
 |              |            |                          |         |              |        |              |
@@ -521,6 +563,20 @@ Face recognition
 |              |            |                      |         | 4            | 69.79%   | |fid4_dl| |
 +--------------+------------+----------------------+---------+--------------+----------+-----------+
 
+Segmentation
+""""""""""""
+
+.. |unet_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/akida_unet/akida_unet_portrait128_i8_w8_a8.h5
+
++---------------+------------+-------------+---------+--------------+-----------------+-----------+
+| Architecture  | Resolution | Dataset     | #Params | Quantization | Binary IOU      | Download  |
++===============+============+=============+=========+==============+=================+===========+
+| AkidaUNet 0.5 | 128        | Portrait128 | 1.1M    | 8            | 89.44% [#fn-3]_ | |unet_dl| |
++---------------+------------+-------------+---------+--------------+-----------------+-----------+
+
+.. [#fn-3] PTQ accuracy boosted with 1 epoch of training
 
 |audio_icon_ref| Audio domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
