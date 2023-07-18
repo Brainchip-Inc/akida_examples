@@ -34,51 +34,51 @@ Classification
 
 .. |an_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
 
 .. |an_160_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
 
 .. |an_160_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_160_iq8_wq4_aq4.h5
 
 .. |an_224_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
 
 .. |an_224_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
 
 .. |an_224_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_iq8_wq4_aq4.h5
 
 .. |mb_160_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_160_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_160_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_160_iq8_wq4_aq4.h5
 
 .. |mb_224_25_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5
 
 .. |mb_224_50_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
 
 .. |mb_224_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/mobilenet/mobilenet_imagenet_224_iq8_wq4_aq4.h5
 
 .. |ane_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -86,11 +86,11 @@ Classification
 
 .. |ane_160_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_imagenet_160_alpha_50_edge_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_imagenet_160_alpha_50_edge_iq8_wq4_aq4.h5
 
 .. |ane_224_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5
 
 .. |an_pv_ex| image:: ./img/link_icon.png
    :scale: 4 %
@@ -102,15 +102,15 @@ Classification
 
 .. |gx_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist_iq2_wq2_aq1.h5
+   :target: https://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist_iq2_wq2_aq1.h5
 
 .. |an_pv_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_plantvillage_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_plantvillage_iq8_wq4_aq4.h5
 
 .. |vww_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_vww_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_vww_iq8_wq4_aq4.h5
 
 +------------------+------------+--------------------+-----------+--------------+----------------+-------------+---------+-----+----------------+
 | Architecture     | Resolution | Dataset            | Size (KB) | Quantization | Top-1 accuracy | Example     | #Params | NPs | Download       |
@@ -162,11 +162,11 @@ Object detection
 
 .. |yl_voc_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/yolo/yolo_akidanet_voc_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/yolo/yolo_akidanet_voc_iq8_wq4_aq4.h5
 
 .. |yl_wf_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/yolo/yolo_akidanet_widerface_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/yolo/yolo_akidanet_widerface_iq8_wq4_aq4.h5
 
 +--------------+------------+--------------------------+---------+--------------+--------+-------------+-----------+-----+-------------+
 | Architecture | Resolution | Dataset                  | #Params | Quantization | mAP    | Example     | Size (KB) | NPs | Download    |
@@ -187,7 +187,7 @@ Regression
 
 .. |reg_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/vgg/vgg_utk_face_iq8_wq2_aq2.h5
+   :target: https://data.brainchip.com/models/AkidaV1/vgg/vgg_utk_face_iq8_wq2_aq2.h5
 
 +--------------+------------+--------------------------+---------+--------------+--------+----------+-----------+-----+----------+
 | Architecture | Resolution | Dataset                  | #Params | Quantization | MAE    | Example  | Size (KB) | NPs | Download |
@@ -201,11 +201,11 @@ Face recognition
 
 .. |fid_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_faceidentification_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_faceidentification_iq8_wq4_aq4.h5
 
 .. |fide_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_faceidentification_edge_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/akidanet_edge/akidanet_faceidentification_edge_iq8_wq4_aq4.h5
 
 +--------------+------------+----------------------+---------+--------------+----------+-----------+-----+-----------+
 | Architecture | Resolution | Dataset              | #Params | Quantization | Accuracy | Size (KB) | NPs | Download  |
@@ -231,7 +231,7 @@ Keyword spotting
 
 .. |kws_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws_iq8_wq4_aq4_laq1.h5
+   :target: https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws_iq8_wq4_aq4_laq1.h5
 
 +--------------+-----------------------+---------+--------------+----------------+----------+-----------+-----+----------+
 | Architecture | Dataset               | #Params | Quantization | Top-1 accuracy | Example  | Size (KB) | NPs | Download |
@@ -248,7 +248,7 @@ Classification
 
 .. |p++_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV1/pointnet_plus/pointnet_plus_modelnet40_iq8_wq4_aq4.h5
+   :target: https://data.brainchip.com/models/AkidaV1/pointnet_plus/pointnet_plus_modelnet40_iq8_wq4_aq4.h5
 
 +--------------+--------------------+---------------+---------+--------------+--------------+-----------+-----+-----------+
 | Architecture | Dataset            | Input scaling | #Params | Quantization | Accuracy     | Size (KB) | NPs | Download  |
@@ -273,119 +273,119 @@ Classification
 
 .. |an_160_25_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.25_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.25_i8_w8_a8.h5
 
 .. |an_160_25_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.25_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.25_i8_w4_a4.h5
 
 .. |an_160_50_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.5_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.5_i8_w8_a8.h5
 
 .. |an_160_50_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.5_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_0.5_i8_w4_a4.h5
 
 .. |an_160_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_1_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_1_i8_w8_a8.h5
 
 .. |an_160_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_1_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_160_alpha_1_i8_w4_a4.h5
 
 .. |an_224_25_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.25_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.25_i8_w8_a8.h5
 
 .. |an_224_25_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.25_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.25_i8_w4_a4.h5
 
 .. |an_224_50_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5_i8_w8_a8.h5
 
 .. |an_224_50_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5
 
 .. |an_224_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_1_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_1_i8_w8_a8.h5
 
 .. |an_224_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_1_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_1_i8_w4_a4.h5
 
 .. |an_pv8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_plantvillage_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_plantvillage_i8_w8_a8.h5
 
 .. |an_pv4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_plantvillage_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_plantvillage_i8_w4_a4.h5
 
 .. |vww8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_vww_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_vww_i8_w8_a8.h5
 
 .. |vww4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_vww_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_vww_i8_w4_a4.h5
 
 .. |mb_160_25_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.25_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.25_i8_w8_a8.h5
 
 .. |mb_160_25_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.25_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.25_i8_w4_a4.h5
 
 .. |mb_160_50_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.5_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.5_i8_w8_a8.h5
 
 .. |mb_160_50_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.5_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_0.5_i8_w4_a4.h5
 
 .. |mb_160_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_1_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_1_i8_w8_a8.h5
 
 .. |mb_160_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_1_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_160_alpha_1_i8_w4_a4.h5
 
 .. |mb_224_25_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.25_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.25_i8_w8_a8.h5
 
 .. |mb_224_25_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5
 
 .. |mb_224_50_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.5_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.5_i8_w8_a8.h5
 
 .. |mb_224_50_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5
 
 .. |mb_224_8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_1_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_1_i8_w8_a8.h5
 
 .. |mb_224_4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/mobilenet/mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5
 
 .. |gx2_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i2_w2_a1.h5
+   :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i2_w2_a1.h5
 
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 | Architecture     | Resolution | Dataset            | #Params | Quantization | Accuracy | Download         |
@@ -455,19 +455,19 @@ Object detection
 
 .. |yl_voc8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w8_a8.h5
 
 .. |yl_voc4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w4_a4.h5
 
 .. |yl_wf8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_widerface_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_widerface_i8_w8_a8.h5
 
 .. |yl_wf4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_widerface_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_widerface_i8_w4_a4.h5
 
 +--------------+------------+--------------------------+---------+--------------+--------+--------------+
 | Architecture | Resolution | Dataset                  | #Params | Quantization | mAP    | Download     |
@@ -487,11 +487,11 @@ Regression
 
 .. |reg8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face_i8_w8_a8.h5
 
 .. |reg4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face_i8_w4_a4.h5
 
 +--------------+------------+--------------------------+---------+--------------+--------+-----------+
 | Architecture | Resolution | Dataset                  | #Params | Quantization | MAE    | Download  |
@@ -507,11 +507,11 @@ Face recognition
 
 .. |fid8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_faceidentification_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_faceidentification_i8_w8_a8.h5
 
 .. |fid4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/akidanet/akidanet_faceidentification_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_faceidentification_i8_w4_a4.h5
 
 +--------------+------------+----------------------+---------+--------------+----------+-----------+
 | Architecture | Resolution | Dataset              | #Params | Quantization | Accuracy | Download  |
@@ -530,15 +530,15 @@ Keyword spotting
 
 .. |kws8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w8_a8.h5
 
 .. |kws4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w4_a4.h5
 
 .. |kws4e_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_edge_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_edge_i8_w4_a4.h5
 
 +--------------+-----------------------+---------+--------------+----------------+------------+
 | Architecture | Dataset               | #Params | Quantization | Top-1 accuracy | Download   |
@@ -559,11 +559,11 @@ Classification
 
 .. |p++8_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/pointnet_plus/pointnet_plus_modelnet40_i8_w8_a8.h5
+   :target: https://data.brainchip.com/models/AkidaV2/pointnet_plus/pointnet_plus_modelnet40_i8_w8_a8.h5
 
 .. |p++4_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: http://data.brainchip.com/models/AkidaV2/pointnet_plus/pointnet_plus_modelnet40_i8_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/pointnet_plus/pointnet_plus_modelnet40_i8_w4_a4.h5
 
 +--------------+--------------------+---------------+---------+--------------+-----------------+-----------+
 | Architecture | Dataset            | Input scaling | #Params | Quantization | Accuracy        | Download  |
