@@ -493,7 +493,7 @@ Transformers
 | DeiT-dist    | 224        | ImageNet | 6.0M    | 8            | 74.37% [#fn-2]_ | |deitd_dl| |
 +--------------+------------+----------+---------+--------------+-----------------+------------+
 
-.. [#fn-2] PTQ accuracy boosted with 1 epoch of tuning
+.. [#fn-2] PTQ accuracy boosted with 1 epoch of QAT.
 
 Object detection
 """"""""""""""""
@@ -586,7 +586,7 @@ Segmentation
 | AkidaUNet 0.5 | 128        | Portrait128 | 1.1M    | 8            | 89.44% [#fn-3]_ | |unet_dl| |
 +---------------+------------+-------------+---------+--------------+-----------------+-----------+
 
-.. [#fn-3] PTQ accuracy boosted with 1 epoch of training
+.. [#fn-3] PTQ accuracy boosted with 1 epoch QAT.
 
 |audio_icon_ref| Audio domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -639,4 +639,4 @@ Classification
 |              |                    |               |         | 4            | 85.66%          | |p++4_dl| |
 +--------------+--------------------+---------------+---------+--------------+-----------------+-----------+
 
-.. [#fn-1] PTQ accuracy boosted with 5 epochs of training
+.. [#fn-1] PTQ accuracy boosted with 5 epochs QAT.
