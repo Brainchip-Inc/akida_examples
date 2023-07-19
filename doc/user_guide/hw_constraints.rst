@@ -49,11 +49,16 @@ InputConvolutional
 .. note::
        * pool_stride is equal to pool_size for InputConvolutional
 
-+----------------+---------+-----------+--------------+
-|**Quantization**|**Input**|**Weights**|**Activation**|
-+----------------+---------+-----------+--------------+
-|**Bitwidth**    |8        | 2, 4, 8   |1, 2, 4       |
-+----------------+---------+-----------+--------------+
++----------------+---------+------------+--------------+
+|**Quantization**|**Input**|**Weights** |**Activation**|
++----------------+---------+------------+--------------+
+|**Bitwidth**    |8        | 1, 2, 4, 8 |1, 2, 4       |
++----------------+---------+------------+--------------+
+
+.. note::
+       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
+       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       are unsigned by definition.
 
 Convolutional
 ^^^^^^^^^^^^^
@@ -91,8 +96,13 @@ Convolutional
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
 +----------------+---------+-----------+--------------+
-|**Bitwidth**    |1, 2, 4  |2, 4       |1, 2, 4       |
+|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
 +----------------+---------+-----------+--------------+
+
+.. note::
+       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
+       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       are unsigned by definition.
 
 SeparableConvolutional
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -146,6 +156,10 @@ FullyConnected
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
 +----------------+---------+-----------+--------------+
-|**Bitwidth**    |1, 2, 4  |2, 4       |1, 2, 4       |
+|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
 +----------------+---------+-----------+--------------+
 
+.. note::
+       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
+       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       are unsigned by definition.
