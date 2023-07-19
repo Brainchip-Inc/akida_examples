@@ -167,7 +167,7 @@ YOLO training
 
 YOLO training pipeline uses the ``yolo_base`` model and the CNN2SNN
 ``quantize`` CLI. Dataset preprocessing must be done beforehand using the
-`processing toolbox <api_reference/akida_models_apis.html#processing>`__.
+`processing toolbox <../api_reference/akida_models_apis.html#processing>`__.
 
 **Example**
 
