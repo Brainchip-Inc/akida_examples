@@ -49,3 +49,29 @@ To align examples with python formatting rules:
 ```
 autopep8 --ignore E402,E501 --in-place --recursive examples/
 ```
+
+## Supported versions history
+Versions are akida/cnn2snn packages ones. Please refer to https://github.com/Brainchip-Inc/akida_examples/releases for more details.
+
+```mermaid
+sequenceDiagram
+    participant [...]
+    participant 2.2.5
+    participant 2.3.7
+    participant 2.4.0
+    participant Today
+rect rgb(171, 170, 166)
+    [...]-->>2.2.5: TensorFlow 2.8
+    2.2.5->>Today: TensorFlow 2.10
+    2.4.0->>+Today: TensorFlow 2.11/2.12
+end
+rect rgb(250, 229, 160)
+    [...]-->>+2.4.0: Python 3.7 (EOL June 2023)
+    [...]->>+Today: Python 3.8, 3.9, 3.10
+    2.4.0->>+Today: Python 3.11
+end
+rect rgb(171, 170, 166)
+    [...]-->>+2.4.0: Ubuntu 18.04 (EOL April 2023)
+    [...]->>+Today: Ubuntu 20.04, 22.04
+end
+```
