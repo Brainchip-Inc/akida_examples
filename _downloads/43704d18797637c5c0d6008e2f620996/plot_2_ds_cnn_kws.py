@@ -40,7 +40,7 @@ from tensorflow.keras.utils import get_file
 # Fetch pre-processed data for 32 keywords
 fname = get_file(
     fname='kws_preprocessed_all_words_except_backward_follow_forward.pkl',
-    origin="http://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
+    origin="https://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
 with open(fname, 'rb') as f:
     [_, _, x_valid, y_valid, _, _, word_to_index, _] = pickle.load(f)
@@ -72,7 +72,7 @@ from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = get_file("ds_cnn_kws.h5",
-                      "http://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws.h5",
+                      "https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws.h5",
                       cache_subdir='models')
 
 # Load the native Keras pre-trained model

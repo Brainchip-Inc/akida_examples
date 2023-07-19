@@ -91,7 +91,7 @@ from akida_models.detection.processing import parse_voc_annotations
 # Download validation set from Brainchip data server
 data_path = get_file(
     "voc_test_car_person.tar.gz",
-    "http://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
+    "https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
     cache_subdir='datasets/voc',
     extract=True)
 

@@ -42,7 +42,7 @@ num_images = 10
 # Retrieve dataset file from Brainchip data server
 file_path = get_file(
     "imagenet_like.zip",
-    "http://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
+    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
     cache_subdir='datasets/imagenet_like',
     extract=True)
 data_folder = os.path.dirname(file_path)
@@ -95,7 +95,7 @@ from tensorflow.keras.models import load_model
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
     "akidanet_imagenet_224_alpha_50.h5",
-    "http://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5",
+    "https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
