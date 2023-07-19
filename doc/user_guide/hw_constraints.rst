@@ -47,7 +47,7 @@ InputConvolutional
 +---------------+------------------+
 
 .. note::
-       * pool_stride is equal to pool_size for InputConvolutional
+       pool_stride is equal to pool_size for InputConvolutional
 
 +----------------+---------+------------+--------------+
 |**Quantization**|**Input**|**Weights** |**Activation**|
@@ -70,7 +70,7 @@ Convolutional
 +----------------+------------------+----------+--------+
 
 .. note::
-       * stride 2 is only supported with 3x3 kernels
+       Stride 2 is only supported with 3x3 kernels
 
 +---------------+-------------+----------+
 |**Max Pooling**|**Size**     |**Stride**|
@@ -90,8 +90,8 @@ Convolutional
 +--------------------------+---------+
 
 .. note::
-       * with global average pooling the output of the convolution must have at
-         least 3 rows.
+       With global average pooling the output of the convolution must have at
+       least 3 rows.
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|
@@ -114,7 +114,7 @@ SeparableConvolutional
 +----------------+---------------+----------+--------+
 
 .. note::
-       * stride 2 is only supported with 3x3 kernels
+       Stride 2 is only supported with 3x3 kernels
 
 +---------------+-------------+----------+
 |**Max Pooling**|**Size**     |**Stride**|
