@@ -452,7 +452,7 @@ from the `model statistics
 .. code-block:: python
 
   model_akida.forward(data)
-  print(model.statistics)
+  print(model_akida.statistics)
 
 An example of power and fps performances is given in the `AkidaNet/ImageNet
 tutorial <../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
