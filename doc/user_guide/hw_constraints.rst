@@ -37,7 +37,7 @@ InputConvolutional
 +----------------+---------------+----------+-----------+
 
 +-------------+-------+-------+-------+
-|**Filters**  |**3x3**|**5x5**|**7x7**|
+|**Filters**  |**3×3**|**5×5**|**7×7**|
 +-------------+-------+-------+-------+
 |**Max(1 ch)**|512    |192    |96     +
 +-------------+-------+-------+-------+
@@ -47,7 +47,7 @@ InputConvolutional
 +---------------+------------------+
 |**Max Pooling**|**Size**          |
 +---------------+------------------+
-|**Parameters** |1x1, 1×2, 2×1, 2×2|
+|**Parameters** |1×1, 1×2, 2×1, 2×2|
 +---------------+------------------+
 
 .. note::
@@ -70,16 +70,16 @@ Convolutional
 +----------------+------------------+----------+--------+
 |**Convolutions**|**Kernel Size**   |**Stride**|**Type**|
 +----------------+------------------+----------+--------+
-|**Parameters**  |1x1, 3×3, 5×5, 7×7|1, 2      |Same    |
+|**Parameters**  |1×1, 3×3, 5×5, 7×7|1, 2      |Same    |
 +----------------+------------------+----------+--------+
 
 .. note::
-       Stride 2 is only supported with 3x3 kernels
+       Stride 2 is only supported with 3×3 kernels
 
 +---------------+-------------+----------+
 |**Max Pooling**|**Size**     |**Stride**|
 +---------------+-------------+----------+
-|**Parameters** |1x1, 2×2     |1, 2      |
+|**Parameters** |1×1, 2×2     |1, 2      |
 +---------------+-------------+----------+
 
 .. note::
@@ -118,12 +118,12 @@ SeparableConvolutional
 +----------------+---------------+----------+--------+
 
 .. note::
-       Stride 2 is only supported with 3x3 kernels
+       Stride 2 is only supported with 3×3 kernels
 
 +---------------+-------------+----------+
 |**Max Pooling**|**Size**     |**Stride**|
 +---------------+-------------+----------+
-|**Parameters** |1x1, 2×2     |1, 2      |
+|**Parameters** |1×1, 2×2     |1, 2      |
 +---------------+-------------+----------+
 
 .. note::
@@ -140,7 +140,7 @@ SeparableConvolutional
 .. note::
        With global average pooling:
               * the output of the convolution must have at least 3 rows
-              * 1x1 inputs are not supported
+              * 1×1 inputs are not supported
 
 +----------------+---------+-----------+--------------+
 |**Quantization**|**Input**|**Weights**|**Activation**|

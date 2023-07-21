@@ -288,7 +288,7 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 # 6.1 Convert to Akida model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Check model compatibility before akida conversion
+# Check model compatibility before Akida conversion
 #
 
 from cnn2snn import check_model_compatibility
@@ -297,7 +297,7 @@ compat = check_model_compatibility(model_keras, False)
 
 ######################################################################
 # The last YOLO_output layer that was added for splitting channels into values
-# for each box must be removed before akida conversion.
+# for each box must be removed before Akida conversion.
 
 # Rebuild a model without the last layer
 compatible_model = Model(model_keras.input, model_keras.layers[-2].output)
