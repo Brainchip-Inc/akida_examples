@@ -17,162 +17,92 @@ Overview
    license.rst
 
 
-The Akida Neural Processor
---------------------------
-
-BrainChip's Akida integrated circuit technology is an ultra-low power, high
-performance, minimum memory footprint, event domain neural processor targeting
-Edge AI applications. In addition, because the architecture is based upon an
-event domain processor, leveraging fundamental principles from biological SNNs,
-the processor supports incremental learning. This allows a deeply trained
-network to continue to learn new classifiers without requiring a re-training
-process. Due to the highly optimized architecture, the Akida Neural Processor
-eliminates the need for a CPU to run the neural network algorithm and in most
-cases eliminates the need for a DRAM external to the neural fabric. The
-elimination of external devices makes the Akida solution significantly more
-power efficient compared to deep learning accelerators which require both
-external CPU and memory.
-
-Built around a mesh-connected array of neural processor units (NPUs) the
-architecture is highly scalable to meet the needs of a wide range of
-applications. The uniqueness of the BrainChip Akida Architecture lies in the
-ability of the hardware to run traditional feedforward, deeply learned CNN
-networks as well as native SNN networks. This documentation provides examples
-of how to develop both classes of solutions, using industry standard tool flows
-and networks, to solve a variety of application problems such as vision,
-acoustic, cybersecurity amongst others.
-
-The Akida neural processor is available both as Intellectual Property (IP)
-circuit design for integration in ASIC products or as a System on a Chip (SoC)
-product.
-
-As *Figure 1* shows, the SoC is built around a core neural processor comprised
-of 80 neural processing units, it includes a conversion complex and allows one
-to run popular convolutional neural networks (CNNs) such as MobileNet [#fn-1]_.
-Designers can use the Akida SoC to run industry standard CNNs, dramatically
-reducing power by changing convolutions to event based computations, or run
-native SNN solutions.
-
-.. figure:: img/Akida_Block_Diagram.png
-   :target: _images/Akida_Block_Diagram.png
-   :alt: Brainchip
-   :scale: 60%
-   :align: center
-
-   Figure 1. BrainChip Akida processor
-
-The Akida chip includes several key features that differentiate it from other
-neural network processors and deep learning accelerators. These are:
-
-* Event-based computing leveraging inherent data and activation sparsity
-* Fully configurable neural processing cores, supporting convolutional,
-  separable-convolutional, pooling and fully connected layers
-* Incremental learning after off-line training
-* On-chip few-shot training
-* Configurable number of NPUs
-* Programmable data to event converter
-* Event-based NPU engines running on a single clock
-* Configurable on-chip SRAM memory
-* Runs full neural networks in hardware
-* On chip communication via mesh network
-* On chip learning in event domain
-* Process technology independent platform
-* Network size customizable to application needs
-* IP deliverables include: RTL, dev tools, test suites and documentation
-
-*Figure 2* shows several examples of IP configurations that could be envisioned.
-Because the architecture is based upon a neural processing unit which is
-arrayed and mesh connected, the number of NPUs per solution is dependent upon
-the application need.
-
-.. figure:: img/Akida_IP.png
-   :target: _images/Akida_IP.png
-   :alt: Brainchip
-   :scale: 60%
-   :align: center
-
-   Figure 2. Akida IP example configurations
-
-
 The Akida Neuromorphic ML Framework
 -----------------------------------
 
-The Akida Neuromorphic ML Framework (MetaTF) relies on a high-level neural
-networks API, written in Python, and largely inspired by the `Keras API
-<https://keras.io>`_.
+| The Akida Development Environment (MetaTF) is a complete machine learning
+  framework that enables the seamless creation, training, and testing of neural
+  networks running on the `Akida Neuromorphic Processor IP <https://brainchip.com/akida2-0//>`_
+  simulator and the `AKD1000 reference SoC <https://brainchip.com/akida-neural-processor-soc/>`_.
+| It relies on a high-level neural networks API, written in Python, and
+  largely inspired by the `Keras API <https://keras.io>`_. It allows early
+  evaluation and design, as well as final tuning and productization of networks.
 
-The core data structure used by the Akida runtime is a neural network
-**model**\ , which itself is a linear stack of **layers**.
+.. figure:: img/Akida_Neural_Processor.png
+  :target: _images/Akida_Neural_Processor.png
+  :alt: Brainchip
+  :scale: 40%
+  :align: center
 
-MetaTF leverages the `TensorFlow <https://www.tensorflow.org/>`_ framework and
-`PyPI <https://pypi.org/>`_ for BrainChip tools installation.
-The major difference with other machine learning frameworks is that the data
-exchanged between layers is not the usual **dense** multidimensional arrays,
-but sets of spatially organized events that can be modelled as **sparse**
-multidimensional arrays.
+  AKD1000 reference SoC (left), Akida 2\ :sup:`nd` Generation IP (right)
 
-Throughout this documentation, those events will often be referred as "spikes",
-due to their close similarity with the signals exchanged by biological neurons.
+|
+|
+| MetaTF leverages the `TensorFlow <https://www.tensorflow.org/>`_ framework
+  and `PyPI <https://pypi.org/>`_ for the BrainChip tools installation.
+| It comprises four python packages:
 
-.. figure:: img/metatf.png
+  * a Model zoo (`akida-models <https://pypi.org/project/akida-models>`_) to
+    easily instantiate and train Akida compatible models or to load directly
+    their quantized versions,
+
+  * a quantization tool (`quantizeml <https://pypi.org/project/quantizeml>`_)
+    that allows the quantization of CNN, Transformer and TENN models using
+    low-bitwidth weights and outputs,
+
+  * a conversion tool (`cnn2snn <https://pypi.org/project/cnn2snn>`_) that
+    provides means to convert models that were trained and quantized,
+
+  * an interface to the Akida Neuromorphic Processor (`akida <https://pypi.org/project/akida>`_)
+    including a runtime, an Hardware Abstraction Layer (HAL) and software
+    backend. It allows the simulation of Akida Neuromorphic Processor and use
+    of the AKD1000 reference SoC.
+
+ .. figure:: img/metatf.png
    :target: _images/metatf.png
    :alt: Brainchip
-   :scale: 60%
+   :scale: 40%
    :align: center
 
-   Figure 3. Akida MetaTF ML Framework
+   Akida MetaTF ML Framework
 
-The MetaTF ML framework comprises three main python packages:
+|
+|
+| The Akida python package can be used to simulate the Akida Neuromorphic Processor
+  IP without the need of any hardware. It exposes the features provided by the Akida
+  Runtime, allowing a seamless integration with python machine-learning frameworks
+  for easy prototyping and testing of the Akida Neuromorphic Processor IP.
+| It includes:
 
-* the `Akida python package <https://pypi.org/project/akida>`_ is an interface
-  to the Brainchip Akida Neuromorphic System-on-Chip (NSoC). To allow the
-  development of Akida models without an actual Akida hardware, it includes a
-  runtime, an Hardware Abstraction Layer (HAL) and a software backend that
-  simulates the Akida NSoC (see *Figure 4* and *Figure 5*\).
+  * the Akida model API, a library supporting the native creation of Akida models,
+    the inference of instantiated models, their serialization (program sequences)
+    and their mapping for a targetted hardware device,
 
-* the `CNN2SNN tool <https://pypi.org/project/cnn2snn>`_ provides means to
-  convert Convolutional Neural Networks (CNN) that were trained using Deep
-  Learning methods to event domain, low-latency and low-power network for use
-  with the Akida runtime.
+  * a SW backend (simulator),  CPU implementation of the Akida training and inference,
 
-* the `Akida model zoo <https://pypi.org/project/akida-models>`_ contains
-  pre-created network models built with the Akida sequential API and the
-  CNN2SNN tool using quantized Keras models.
-
-.. figure:: img/akida.png
-   :target: _images/akida.png
-   :alt: Brainchip
-   :scale: 60%
-   :align: center
-
-   Figure 4. Akida python package
+  * the Akida Engine Library, C++ library supporting the instantiation of model programs
+    produced by the model library on actual hardware devices, the inference on
+    programmed devices.
 
 .. figure:: img/akida_runtime.png
    :target: _images/akida_runtime.png
    :alt: Brainchip
-   :scale: 60%
+   :scale: 40%
    :align: center
 
-   Figure 5. Akida runtime configurations
+   Akida runtime configurations
 
 
 The Akida examples
 ------------------
 
-The `examples section <examples/index.html>`_ comprises a zoo of event-based CNN
-and SNN tutorials. One can check models performances against MNIST, ImageNet and
-Google Speech Commands (KWS) datasets.
+The `examples section <examples/index.html>`_ comprises several tutorials and
+examples to get easily started with the Akida technology. One can check the
+Akida incremental learning and inference in a wide variety of use cases.
 
-.. note::
+.. warning::
     | While the Akida examples are provided under an
       `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
       the underlying Akida library is proprietary.
     | Please refer to the `End User License Agreement <license.html>`__ for
       terms and conditions.
-
-____
-
-.. [#fn-1] In most cases the entire network can be accommodated using the
-   on-chip SRAM.
-   Even the large MobileNet network used to classify 1000 classes of ImageNet fits
-   comfortably.
