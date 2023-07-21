@@ -35,7 +35,6 @@ from akida_models.imagenet import preprocessing
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
 IMAGE_SIZE = 224
-NUM_CLASSES = 1000
 
 num_images = 10
 
