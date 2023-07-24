@@ -62,7 +62,7 @@ from cnn2snn import convert
 # Load a pre-trained model
 model_keras = akidanet_edge_imagenet_pretrained()
 
-# Convert it to akida
+# Convert it to Akida
 model_ak = convert(model_keras)
 
 ##############################################################################

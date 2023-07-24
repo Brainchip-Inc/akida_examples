@@ -26,7 +26,7 @@ from tensorflow.keras.datasets import mnist
 # Retrieve MNIST dataset
 _, (test_set, test_label) = mnist.load_data()
 
-# Add a dimension to images sets as akida expects 4 dimensions inputs
+# Add a dimension to images sets as Akida expects 4 dimensions inputs
 test_set = np.expand_dims(test_set, -1)
 
 # Display a few images from the test set
