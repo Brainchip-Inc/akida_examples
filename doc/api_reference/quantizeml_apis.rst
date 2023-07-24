@@ -12,10 +12,6 @@ QuantizeML API
     .. autoclass:: quantizeml.layers.QuantizedFlatten
     .. autoclass:: quantizeml.layers.QuantizedPermute
     .. autoclass:: quantizeml.layers.QuantizedReshape
-    .. autoclass:: quantizeml.layers.UnfoldPatches
-    .. autoclass:: quantizeml.layers.QuantizedUnfoldPatches
-    .. autoclass:: quantizeml.layers.FoldPatches
-    .. autoclass:: quantizeml.layers.QuantizedFoldPatches
 
     Activations
     -----------
@@ -112,8 +108,7 @@ QuantizeML API
 
     Calibration
     -----------
-    .. autofunction:: quantizeml.layers.calibration
-    .. autoclass:: quantizeml.layers.Calibrable
+    .. autoclass::  quantizeml.layers.OutputObserver
 
     Recording
     ---------
@@ -128,7 +123,6 @@ QuantizeML API
 
     Transforms
     ----------
-    .. autofunction:: quantizeml.models.transforms.align_relu_max_value
     .. autofunction:: quantizeml.models.transforms.align_rescaling
     .. autofunction:: quantizeml.models.transforms.invert_batchnorm_pooling
     .. autofunction:: quantizeml.models.transforms.fold_batchnorms
@@ -137,6 +131,7 @@ QuantizeML API
     .. autofunction:: quantizeml.models.transforms.invert_relu_maxpool
     .. autofunction:: quantizeml.models.transforms.remove_zeropadding2d
     .. autofunction:: quantizeml.models.transforms.replace_lambda
+    .. autofunction:: quantizeml.models.transforms.sanitize
 
     Quantization
     ------------
@@ -144,6 +139,11 @@ QuantizeML API
     .. autofunction:: quantizeml.models.dump_config
     .. autofunction:: quantizeml.models.check_quantization
     .. autofunction:: quantizeml.models.record_quantization_variables
+
+    Calibration
+    -----------
+    .. autofunction:: quantizeml.models.calibrate
+    .. autofunction:: quantizeml.models.calibration_required
 
     Utils
     -----
