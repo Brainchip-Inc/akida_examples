@@ -20,6 +20,7 @@ CNN2SNN Toolkit API
     `user guide <../user_guide/cnn2snn.html#input-scaling>`__.
 
     .. autofunction:: check_model_compatibility
+    .. autofunction:: cnn2snn.quantizeml.compatibility_checks.check_model_compatibility
 
     Utils
     =====
