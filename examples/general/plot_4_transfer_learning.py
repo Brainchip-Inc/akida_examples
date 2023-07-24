@@ -110,18 +110,18 @@ test_batches = test_ds.map(format_example).batch(BATCH_SIZE)
 # `akidanet_imagenet
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_.
 
-from akida_models import akidanet_imagenet
 from keras.utils.data_utils import get_file
+from akida_models import akidanet_imagenet
+from cnn2snn import quantize
 
 # Create a quantized base model without top layers
 base_model = akidanet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
                                classes=CLASSES,
                                alpha=0.5,
                                include_top=False,
-                               pooling='avg',
-                               weight_quantization=4,
-                               activ_quantization=4,
-                               input_weight_quantization=8)
+                               pooling='avg')
+base_model = quantize(base_model, weight_quantization=4,
+                      activ_quantization=4, input_weight_quantization=8)
 
 # Get pretrained quantized weights and load them into the base model
 pretrained_weights = get_file(
@@ -152,13 +152,13 @@ x = dense_block(x,
                 units=512,
                 name='fc1',
                 add_batchnorm=True,
-                add_activation=True)
+                relu_activation='ReLU6')
 x = Dropout(0.5, name='dropout_1')(x)
 x = dense_block(x,
                 units=CLASSES,
                 name='predictions',
                 add_batchnorm=False,
-                add_activation=False)
+                relu_activation='ReLU6')
 x = Activation('softmax', name='act_softmax')(x)
 x = Reshape((CLASSES,), name='reshape')(x)
 
@@ -199,8 +199,6 @@ freeze_model_before(model_keras, 'flatten')
 #
 # Quantization is done using `cnn2snn.quantize
 # <../../api_reference/cnn2snn_apis.html#quantize>`__.
-
-from cnn2snn import quantize
 
 # Quantize weights and activation to 4 bits, first layer weights to 8 bits
 model_quantized = quantize(model_keras, 4, 4, 8)
