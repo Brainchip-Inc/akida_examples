@@ -40,6 +40,10 @@ Akida models API
     -------------------------------
     .. autofunction:: unfuse_sepconv2d
 
+    Extract samples
+    ---------------
+    .. autofunction:: extract_samples
+
 
     Knowledge distillation
     ======================
@@ -48,14 +52,6 @@ Akida models API
     .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
-    Pruning
-    =======
-
-    .. autofunction:: akida_models.prune_model
-    .. autofunction:: akida_models.delete_filters
-    .. autofunction:: akida_models.filter_pruning.neural_layers
-    .. autofunction:: akida_models.filter_pruning.smallest_filters
-
     Training
     ========
 
@@ -63,7 +59,6 @@ Akida models API
     .. autofunction:: akida_models.training.evaluate_model
     .. autofunction:: akida_models.training.evaluate_akida_model
     .. autofunction:: akida_models.training.compile_model
-    .. autofunction:: akida_models.training.calibrate_model
     .. autofunction:: akida_models.training.save_model
     .. autofunction:: akida_models.training.print_history_stats
     .. autofunction:: akida_models.training.get_training_parser
@@ -74,14 +69,18 @@ Akida models API
     .. autofunction:: akida_models.macs.get_flops
     .. autofunction:: akida_models.macs.display_macs
 
+    Model I/O
+    =========
+    .. autofunction:: akida_models.model_io.load_model
+    .. autofunction:: akida_models.model_io.load_weights
+    .. autofunction:: akida_models.model_io.save_weights
+    .. autofunction:: akida_models.model_io.get_model_path
+
     Utils
     =====
     .. autofunction:: akida_models.utils.fetch_file
-    .. autofunction:: akida_models.utils.load_model
     .. autofunction:: akida_models.utils.get_tensorboard_callback
-    .. autofunction:: akida_models.utils.apply_weights_to_model
-    .. autofunction:: akida_models.utils.load_weights
-    .. autofunction:: akida_models.utils.save_weights
+    .. autofunction:: akida_models.utils.get_params_by_version
 
     Model zoo
     =========
@@ -207,6 +206,7 @@ Akida models API
     CenterNet
     ---------
     .. autofunction:: akida_models.centernet_base
+    .. autofunction:: akida_models.centernet_voc_pretrained
     .. autofunction:: akida_models.centernet.centernet_processing.decode_output
     .. autoclass:: akida_models.centernet.centernet_loss.CenternetLoss
     .. autoclass:: akida_models.centernet.centernet_batch_generator.BatchCenternetGenerator
@@ -214,6 +214,7 @@ Akida models API
     AkidaUNet
     ---------
     .. autofunction:: akida_models.akida_unet_portrait128
+    .. autofunction:: akida_models.akida_unet_portrait128_pretrained
 
     Transformers
     ------------
