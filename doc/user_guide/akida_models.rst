@@ -5,29 +5,25 @@ Akida models zoo
 Overview
 --------
 
-Brainchip akida_models package is a model zoo that offers a set of pre-built
-akida compatible models (e.g Mobilenet, VGG or AkidaNet), pretrained weights for
-those models and training scripts.
-
-See the `model zoo API reference
-<../api_reference/akida_models_apis.html#model-zoo>`_ for a complete list of the
-available models.
-
-akida_models also contains a set of `quantization blocks
-<../api_reference/akida_models_apis.html#quantization-blocks>`_ and
-`layer blocks <../api_reference/akida_models_apis.html#layer-blocks>`_
-that are used to define the above models.
+Brainchip Akida Models package is a model zoo that offers a set of pre-built akida compatible
+models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training scripts.
+See the `model zoo API reference <../api_reference/akida_models_apis.html#model-zoo>`_ for a
+complete list of the available models. The performances of all models from the zoo are reported for
+both Akida 1.0 and Akida 2.0 in the `zoo performances page <../zoo_performances.html>`__.
+Akida Models also contains a set of
+`layer blocks <../api_reference/akida_models_apis.html#layer-blocks>`_ that are used to define the
+above models.
 
 Command-line interface for model creation
 -----------------------------------------
 
 In addition to `the programming API <../api_reference/akida_models_apis.html>`_,
-the akida_models toolkit provides a command-line interface to instantiate and
+the Akida Models toolkit provides a command-line interface to instantiate and
 save models from the zoo.
 
 Instantiating models using the CLI makes use of the model definitions from the
 programming interface with default values. To quantize a given model, the
-`CNN2SNN quantize CLI <cnn2snn.html#command-line-interface>`__ should be used.
+`QuantizeML quantize CLI <quantizeml.html#command-line-interface>`__ should be used.
 
 **Examples**
 
@@ -39,9 +35,8 @@ Instantiate a DS-CNN network for KWS (keyword spotting):
 
 The model is automatically saved to ``ds_cnn_kws.h5``.
 
-Some models come with additional parameters that allow a deeper configuration.
-That is the case for the AkidaNet, AkidaNet edge, MobileNet, Mobilenet edge and
-YOLO models. Examples are given below.
+Some models come with additional parameters that allow a deeper configuration. Examples are given
+below.
 
 To build an AkidaNet model with a 64x64 input size, alpha parameter (model
 width) equal to 0.35 and 250 classes:
@@ -68,26 +63,28 @@ The full parameter list with description can be obtained using the  ``-h`` or
                                                  [-a ALPHA] [-c CLASSES]
 
     optional arguments:
-      -h, --help            show this help message and exit
-      -i {32,64,96,128,160,192,224}, --image_size {32,64,96,128,160,192,224}
-                            The square input image size
-      -a ALPHA, --alpha ALPHA
-                            The width of the model
-      -c CLASSES, --classes CLASSES
-                            The number of classes
+        -h, --help            show this help message and exit
+         -c CLASSES, --classes CLASSES
+                              The number of classes, by default 1000.
+         -i {32,64,96,128,160,192,224}, --image_size {32,64,96,128,160,192,224}
+                              The square input image size, by default 224.
+         -a ALPHA, --alpha ALPHA
+                              The width of the model, by default 1.0.
 
 Current available models for creation are:
 
  * vgg_utk_face
+ * convtiny_dvs_handy
+ * convtiny_dvs_gesture
  * ds_cnn_kws
  * pointnet_plus_modelnet40
+ * mobilenet_imagenet
  * akidanet_imagenet
  * akidanet_imagenet_edge
- * mobilenet_imagenet
- * yolo_base
- * gxnor_mnist
  * akidanet18_imagenet
+ * yolo_base
  * centernet
+ * gxnor_mnist
  * akida_unet_portrait128
  * vit_ti16
  * bc_vit_ti16
@@ -99,139 +96,92 @@ Command-line interface for model training
 
 The package also comes with a CLI to train models from the zoo.
 
-Training models first requires that a model is created and saved using the CLI
-described above. Once a model is ready, training will use dedicated scripts
-to load and preprocess a dataset and perform training.
+Training models first requires that a model is created and saved using the CLI described above. Once
+a model is ready, training will use dedicated scripts to load and preprocess a dataset and perform
+training.
 
-As shown in the examples below, the training CLI should be used along with
-``akida_models create`` and ``cnn2snn quantize``.
+As shown in the examples below, the training CLI should be used along with ``akida_models create``
+and ``quantizeml quantize``.
 
-If the quantized model offers acceptable performance, it can be converted into
-an Akida model, ready to be loaded on the Akida NSoC using the
+If the quantized model offers acceptable performances, it can be converted into an Akida model,
+ready to be loaded on the Akida NSoC using the
 `CNN2SNN convert CLI <cnn2snn.html#command-line-interface>`_.
-
-
-UTK Face training
-^^^^^^^^^^^^^^^^^
-
-UTK Face training pipeline uses the ``vgg_utk_face`` model and the
-CNN2SNN ``quantize`` CLI. Dataset loading and preprocessing is done within the
-training script called by the ``utk_face_train`` CLI.
-
-**Example**
-
-Create a VGG model for UTK Face training and perfom step-wise quantization to
-obtain a network with 2-bit weights and activations.
-
-.. code-block:: bash
-
-   akida_models create vgg_utk_face
-
-   utk_face_train train -e 300 -m vgg_utk_face.h5 -s vgg_utk_face.h5
-
-   cnn2snn quantize -m vgg_utk_face.h5 -iq 8 -wq 4 -aq 4
-
-   utk_face_train train -e 30 -m vgg_utk_face_iq8_wq4_aq4.h5 -s vgg_utk_face_iq8_wq4_aq4.h5
-
-   cnn2snn quantize -m vgg_utk_face_iq8_wq4_aq4.h5 -iq 8 -wq 2 -aq 2
-
-   utk_face_train train -e 30 -m vgg_utk_face_iq8_wq2_aq2.h5 -s vgg_utk_face_iq8_wq2_aq2.h5
 
 KWS training
 ^^^^^^^^^^^^
 
-KWS training pipeline uses the ``ds_cnn_kws`` model and the CNN2SNN
-``quantize`` CLI. Dataset loading and preprocessing is done within the
-training script called by the ``kws_train`` CLI.
+KWS training pipeline uses the ``ds_cnn_kws`` model and the QuantizeML ``quantize`` CLI. Dataset
+loading and preprocessing is done within the training script called by the ``kws_train`` CLI.
 
 **Example**
 
-Create a DS-CNN model for KWS training and perfom step-wise quantization to
-obtain a network with 4-bit weights and activations. Note that the ``kws_train``
-script takes the ``-laq`` which defines the bitwidth of the last activation
-layer. It must be set to 1 for the last training step, since the model requires
-binary activations for edge learning.
+Create a DS-CNN model for KWS, train it over 16 epochs, then quantize it to 4bit weights and
+activations, perform a 16 epochs QAT to recover accuracy and evaluate.
 
 .. code-block:: bash
 
    akida_models create -s ds_cnn_kws.h5 ds_cnn_kws
-
    kws_train train -m ds_cnn_kws.h5 -s ds_cnn_kws.h5 -e 16
 
-   cnn2snn quantize -m ds_cnn_kws.h5 -iq 8 -wq 4 -aq 4
-
-   kws_train train -m ds_cnn_kws_iq8_wq4_aq4.h5 -e 64 -laq 1 -s ds_cnn_kws_iq8_wq4_aq4_laq1.h5
-
-YOLO training
-^^^^^^^^^^^^^
-
-YOLO training pipeline uses the ``yolo_base`` model and the CNN2SNN
-``quantize`` CLI. Dataset preprocessing must be done beforehand using the
-`processing toolbox <../api_reference/akida_models_apis.html#processing>`__.
-
-**Example**
-
-Create a YOLO model for VOC car/person training, use transfer learning from
-AkidaNet weights trained on ImageNet and perform step-wise quantization to
-obtain a network with 4-bit weights and activations. Note that the backbone
-AkidaNet layers are frozen (i.e not trainable) when performing float training
-using the `--freeze_before` or `-fb` option. Accuracy lost when quantizing is
-partially recovered using Adaround calibration from CNN2SNN CLI, then tuning
-is applied.
-
-.. code-block:: bash
-
-   wget https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5
-
-   akida_models create -s yolo_akidanet_voc.h5 yolo_base -c 2 -bw akidanet_imagenet_alpha_50.h5
-
-   yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
-
-   cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 4 -aq 4
-
-   yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b 1024 -o voc_samples.npz -m yolo_akidanet_voc_iq8_wq4_aq4.h5
-
-   cnn2snn calibrate adaround -sa voc_samples.npz -b 128 -e 500 -lr 1e-3 -m yolo_akidanet_voc_iq8_wq4_aq4.h5
-
-   yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl -e 10 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
-
+   wget https://data.brainchip.com/dataset-mirror/samples/kws/kws_batch1024.npz
+   quantizeml quantize -m ds_cnn_kws.h5 -w 4 -a 4 -e 2 -bs 100 -sa kws_batch1024.npz
+   kws_train train -m ds_cnn_kws_i8_w4_a4.h5 -e 16 -s ds_cnn_kws_i8_w4_a4.h5
+   kws_train eval -m ds_cnn_kws_i8_w4_a4.h5
 
 AkidaNet training
 ^^^^^^^^^^^^^^^^^
 
-AkidaNet training pipeline uses the ``akidanet_imagenet`` model and the CNN2SNN
-``quantize`` CLI. Dataset loading and preprocessing is done within the
-training script called by the ``imagenet_train`` CLI. Note that ImageNet data must be downloaded
-from `<https://www.image-net.org/>`__ first.
+AkidaNet training pipeline uses the ``akidanet_imagenet`` model and the QuantizeML ``quantize`` CLI.
+Dataset loading and preprocessing is done within the training script called by the
+``imagenet_train`` CLI. Note that ImageNet data must be downloaded from
+`<https://www.image-net.org/>`__ first.
 
 **Example**
 
-Create an AkidaNet 0.5 with resolution 160, perform float training then quantize to 4-bit weights
-and activations.
+Create an AkidaNet 0.5 with resolution 160, train it for 90 epochs then quantize to 4bit weights
+and activations, perform a 10 epochs QAT to recover accuracy, upscale to resolution 224 and
+evaluate.
+
 
 .. code-block:: bash
 
-   akida_models create -s akidanet_imagenet_160_alpha_50.h5 akidanet_imagenet -a 0.5 -i 160
+   akida_models create -s akidanet_imagenet_160_alpha_0.5.h5 akidanet_imagenet -a 0.5 -i 160
+   imagenet_train train -d path/to/imagenet/ -e 90 -m akidanet_imagenet_160_alpha_0.5.h5 \
+                        -s akidanet_imagenet_160_alpha_0.5.h5
 
-   imagenet_train train -d path/to/imagenet/ -e 90 -m akidanet_imagenet_160_alpha_50.h5 -s akidanet_imagenet_160_alpha_50.h5
+   wget https://data.brainchip.com/dataset-mirror/samples/imagenet/imagenet_batch1024_160.npz
+   quantizeml quantize -m akidanet_imagenet_160_alpha_0.5.h5 -w 4 -a 4 -e 2 -bs 100 \
+                        -sa imagenet_batch1024_160.npz
+   imagenet_train tune -d path/to/imagenet/ -e 10 -m akidanet_imagenet_160_alpha_0.5_i8_w4_a4.h5 \
+                       -s akidanet_imagenet_160_alpha_50_i8_w4_a4.h5
+   imagenet_train rescale -i 224 -m akidanet_imagenet_160_alpha_0.5_i8_w4_a4.h5 \
+                          -s akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5
+   imagenet_train eval -d path/to/imagenet/ -m akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5
 
-   cnn2snn quantize -m akidanet_imagenet_160_alpha_50.h5 -iq 8 -wq 4 -aq 4
 
-   imagenet_train tune -d path/to/imagenet/ -e 10 -m akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5 -s akidanet_imagenet_160_alpha_50_iq8_wq4_aq4.h5
+Current training pipelines available are:
 
+* utk_face_train
+* kws_train
+* modelnet40_train
+* yolo_train
+* dvs_train
+* mnist_train
+* imagenet_train
+* portrait128_train
+* centernet_train
 
 Command-line interface for model evaluation
 -------------------------------------------
 
-The CLI also comes with an ``eval`` action that allows to evaluate model
-performances, the ``-ak`` or ``--akida`` option allows to evaluate the model
-once converted to Akida.
+The CLI also comes with an ``eval`` action that allows to evaluate model performances, the ``-ak``
+or ``--akida`` option allows to convert to Akida then evaluate the model.
 
 .. code-block:: bash
 
-   kws_train eval -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5
+   kws_train eval -m ds_cnn_kws_i8_w4_a4.h5
 
-   kws_train eval -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5 -ak
+   kws_train eval -m ds_cnn_kws_i8_w4_a4.h5 -ak
 
 
 Command-line interface to evaluate model MACS
@@ -242,36 +192,14 @@ in a model.
 
 .. code-block:: bash
 
-   akida_models macs -m akidanet_imagenet_224_alpha_50.h5 -v
+   akida_models macs -m akidanet_imagenet_224_alpha_0.5.h5 -v
 
 
 Layer Blocks
 ------------
 
-In order to ensure that the design of a Keras model is compatible for conversion
-into an Akida model, a higher-level interface is proposed with the use of layer
-blocks. These blocks are available in the package through:
-
-.. code-block:: python
-
-   import akida_models.layer_blocks
-
-In Keras, when adding a core layer type (\ ``Dense`` or ``Conv2D``\ ) to a
-model, an activation function is typically included:
-
-.. code-block:: python
-
-   x = Dense(64, activation='relu')(x)
-
-or the equivalent, explicitly adding the activation function separately:
-
-.. code-block:: python
-
-   x = Dense(64)(x)
-   x = Activation('relu'))(x)
-
-It is very common for other functions to be included in this arrangement, e.g.,
-a normalization of values before applying the activation function:
+In Keras, it is very common for activations or other functions to be defined along with the
+processing layer, e.g.:
 
 .. code-block:: python
 
@@ -279,39 +207,86 @@ a normalization of values before applying the activation function:
    x = BatchNormalization()(x)
    x = Activation('relu')(x)
 
-This particular arrangement of layers is important for conversion and is
-therefore reflected in the blocks API.
+In order to ease the design of a Keras model compatible for conversion into an Akida model, a
+higher-level interface is proposed with the use of layer blocks. These blocks are available
+in the package through:
+
+.. code-block:: python
+
+   import akida_models.layer_blocks
 
 For instance, the following code snippet sets up the same trio of layers as
 those above:
 
 .. code-block:: python
 
-   x = dense_block(x, 64, add_batchnorm=True)
+   x = dense_block(x, 64, add_batchnorm=True, relu_activation='ReLU')
 
-The ``dense_block`` function will produce a group of layers that we call a
-"block".
+The ``dense_block`` function will produce a group of layers that we call a "block".
 
 .. note::
-    To avoid adding the activation layer, add the parameter
-    ``add_activation = False`` to the block.
+   - To avoid adding the activation layer, add the parameter ``relu_activation = False`` to the
+     block.
+   - The ReLU activation max_value can be set in the parameter using a string expression, that is
+     ``relu_activation='ReLU6'`` will create a ReLU activation with max_value set to 6.
+   - The ReLu activation can also be defined as unbounded, that is ``relu_activation='ReLU'`` (only
+     supported for models targeting Akida 2.0)
+
+Separable layers can be defined as ``fused`` (Akida 1.0) or ``unfused`` (Akida 2.0):
+
+.. code-block:: python
+
+   x = separable_conv_block(x, 64, 3, add_batchnorm=True, relu_activation='ReLU6', fused=False)
+
+Placement of the GlobalAveragePooling (GAP) operation is also configurable in layer blocks so that
+it comes after the activation (``post_relu_gap=False`` for Akida 1.0) or before
+(``post_relu_gap=True`` for Akida 2.0):
+
+.. code-block:: python
+
+   x = conv_block(x, 64, 3, relu_activation='ReLU', post_relu_gap=False)
 
 
-The option of including pooling, batchnorm layers or activation is directly
-built into the provided block modules.
+The option of including pooling, BatchNormalization layers or activation is directly built into the
+provided block modules.
+
 The layer block functions provided are:
 
-
-* ``conv_block``
-* ``separable_conv_block``
-* ``dense_block``
-* ``mlp_block``
-* ``multi_head_attention``
-* ``transformer_block``
-* ``conv_transpose_block``
-* ``sepconv_transpose_block``
-* ``yolo_head_block``
+* `conv_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_block>`__
+* `separable_conv_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.separable_conv_block>`__
+* `dense_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__
+* `mlp_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.mlp_block>`__
+* `multi_head_attention <../api_reference/akida_models_apis.html#akida_models.layer_blocks.multi_head_attention>`__
+* `transformer_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.transformer_block>`__
+* `conv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_transpose_block>`__
+* `sepconv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
+* `yolo_head_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.yolo_head_block>`__
 
 Most of the parameters for these blocks are identical to those passed to the
 corresponding inner processing layers, such as strides and bias. The detailed API is given in the
 `dedicated section <../api_reference/akida_models_apis.html#layer-blocks>`__.
+
+
+Handling Akida 1.0 and Akida 2.0 specificities
+----------------------------------------------
+
+Akida 1.0 and 2.0 specific model architecture requirements are embedded in both the model creation
+API and pretrained model helpers. By default, the returned models and pretrained model are targeting
+Akida 2.0. It is however possible to build and instantiate Akida 1.0 models.
+
+Using the programing interface:
+
+.. code-block:: python
+
+   from akida_models import ds_cnn_kws, ds_cnn_kws_pretrained
+   from cnn2snn import set_akida_version, AkidaVersion
+
+   with set_akida_version(AkidaVersion.v1):
+      model = ds_cnn_kws()
+      pretrained = ds_cnn_kws_pretrained()
+
+Using the CLI interface:
+
+.. code-block:: bash
+
+   CNN2SNN_TARGET_AKIDA_VERSION=v1 akida_models create ds_cnn_kws
