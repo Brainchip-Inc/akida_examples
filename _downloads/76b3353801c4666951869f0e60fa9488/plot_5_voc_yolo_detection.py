@@ -293,7 +293,7 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 
 from cnn2snn import check_model_compatibility
 
-compat = check_model_compatibility(model_keras, False)
+compat = check_model_compatibility(model_keras)
 
 ######################################################################
 # The last YOLO_output layer that was added for splitting channels into values
