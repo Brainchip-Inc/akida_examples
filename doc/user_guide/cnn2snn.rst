@@ -5,56 +5,132 @@ CNN2SNN toolkit
 Overview
 --------
 
-The Brainchip CNN2SNN toolkit provides means to convert Convolutional Neural
-Networks (CNN) that were trained using Deep Learning methods to a low-latency
-and low-power Spiking Neural Network (SNN) for use with the Akida runtime.
-This document is a guide to that process.
-
-The Akida neuromorphic IP provides Spiking Neural Networks (SNN) in which
-communications between neurons take the form of “spikes” or impulses that are
-generated when a neuron exceeds a threshold level of activation. Neurons that
-do not cross the threshold generate no output and contribute no further
-computational cost downstream. This feature is key to Akida hardware efficiency.
-The Akida neuromorphic IP further extends this efficiency by operating with low
-bitwidth “synapses” or weights of connections between neurons.
-
-Despite the apparent fundamental differences between SNNs and CNNs, the
-underlying mathematical operations performed by each may be rendered identical.
-Consequently, the trained parameters of a CNN can be converted to be
-Akida-compatible, given only a small number of constraints. By careful
-attention to specifics in the architecture and training of the CNN, an overly
-complex conversion step from CNN to SNN can be avoided. The CNN2SNN toolkit
-comprises a set of functions designed for the popular `Tensorflow Keras
-<https://www.tensorflow.org/guide/keras>`_ framework, making it easy to train a
-SNN-compatible network.
-
-Conversion workflow
-^^^^^^^^^^^^^^^^^^^
+The Brainchip CNN2SNN toolkit provides a mean to convert a quantized model obtained using QuantizeML
+to a low-latency and low-power network for use with the Akida runtime.
 
 
-.. image:: ../img/CNN2SNN_Flow.png
-   :target: ../_images/CNN2SNN_Flow.png
-   :alt: CNN2SNN Flow
-   :scale: 60 %
+Conversion flow
+---------------
+
+CNN2SNN offers a simple `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function
+that takes a quantized model and converts it into an Akida runtime compatible network.
+
+Let's take the `DS-CNN <../api_reference/akida_models_apis.html#ds-cnn>`__ model from our zoo that
+targets KWS task as an example:
+
+.. code-block:: python
+
+    from akida_models import ds_cnn_kws_pretrained
+    from cnn2snn import convert
+
+    # Load a pretrained 8/4/4 quantized model
+    quantized_model = ds_cnn_kws_pretrained()
+    model_akida = convert(quantized_model)
 
 
-Typical training scenario
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Conversion compatibility
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first step in the conversion workflow is to train a standard Keras model.
-This trained model is the starting point for the quantization stage. Once it is
-established that the overall model configuration prior to quantization yields a
-satisfactory performance on the task, we can proceed with quantization.
+It is possible to check if a quantized model is compatible with Akida conversion using the
+`check_model_compatibility
+<../api_reference/cnn2snn_apis.html#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility>`__
+helper. Note that this helper will not convert the model or check compatibility with an Akida
+hardware, it only checks that the model quantization scheme is allowed and that building blocks are
+compatible with Akida layers blocks.
+
+.. note::
+    `cnn2snn.quantizeml.compatibility_checks.check_model_compatibility
+    <../api_reference/cnn2snn_apis.html#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility>`__
+    only applies to QuantizeML quantized model, use the deprecated
+    `cnn2snn.check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__
+    for CNN2SNN quantized model instead.
+
+Command-line interface
+^^^^^^^^^^^^^^^^^^^^^^
+
+In addition to the CNN2SNN programming API, the CNN2SNN toolkit provides a command-line interface to
+perform conversion to an Akida runtime compatible model. Converting a quantized model into an Akida
+model using the CLI makes use of the
+`convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function.
+
+**Examples**
+
+Convert the DS-CNN/KWS 8/4/4 quantized model:
+
+.. code-block:: bash
+
+    wget https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w4_a4.h5
+
+    cnn2snn convert -m ds_cnn_kws_i8_w4_a4.h5
+
+An Akida ``.fbz`` model named ``ds_cnn_kws_i8_w4_a4.fbz`` is then saved. This model can be loaded
+back into an `akida.Model <../api_reference/akida_apis.html#akida.Model>`__ and run on Akida runtime.
+
+Deprecated CLI actions
+~~~~~~~~~~~~~~~~~~~~~~
+
+The ``scale`` and ``shift`` options of the ``convert`` CLI action that were used to set input
+scaling parameters are now deprecated.
+
+CNN2SNN CLI comes with additional actions that are also deprecated and should no longer be used:
+``quantize``, ``reshape`` and  ``calibrate``. You should rather use
+`QuantizeML <quantizeml.html#>`__ tool perform the same operations.
+
+
+Handling Akida 1.0 and Akida 2.0 specificities
+----------------------------------------------
+
+Conversion towards Akida 1.0 or Akida 2.0 is inherently different because the targeted SoC or IP
+come with different features. By default, a model is converted towards Akida 2.0. It is however
+possible to convert towards Akida 1.0.
+
+Using the programing interface:
+
+.. code-block:: python
+
+  from akida_models import ds_cnn_kws_pretrained
+  from cnn2snn import convert, set_akida_version, AkidaVersion
+
+  with set_akida_version(AkidaVersion.v1):
+      quantized_model = ds_cnn_kws_pretrained()
+      model_akida = convert(quantized_model)
+
+Using the CLI interface:
+
+.. code-block:: bash
+
+  wget https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws_iq8_wq4_aq4_laq1.h5
+
+  CNN2SNN_TARGET_AKIDA_VERSION=v1 cnn2snn convert -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5
+
+.. note::
+    - converting a model `quantized with QuantizeML <quantizeml.html>`__ will use the contextual
+      `AkidaVersion <../api_reference/cnn2snn_apis.html#cnn2snn.AkidaVersion>`__ to target either
+      1.0 or 2.0.
+    - converting a model `quantized with CNN2SNN <cnn2snn.html#legacy-quantization-api>`__
+      (deprecated path) will always target 1.0.
+
+
+Legacy quantization API
+-----------------------
+
+.. warning::
+    While it is possible to quantize Akida 1.0 models using cnn2snn legacy quantization blocks, such
+    usage is deprecated. You should rather use `QuantizeML <../user_guide/quantizeml.html#>`__ tool
+    to quantize a model whenever possible.
+
+
+Typical quantization scenario
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CNN2SNN toolkit offers a turnkey solution to quantize a model:
-the `quantize <../api_reference/cnn2snn_apis.html#quantize>`_ function. It
+the `quantize <../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`_ function. It
 replaces the neural Keras layers (Conv2D, SeparableConv2D and Dense) and
 the ReLU layers with custom CNN2SNN layers, which are quantization-aware
 derived versions of the base Keras layer types. The obtained quantized model is
 still a Keras model with a mix of CNN2SNN quantized layers (QuantizedReLU,
 QuantizedDense, etc.) and standard Keras layers (BatchNormalization, MaxPool2D,
 etc.).
-
 
 Direct quantization of a standard Keras model (also called post-training
 quantization) generally introduces a drop in performance. This drop is usually
@@ -63,7 +139,7 @@ significant for low quantization bitwidth and complex models.
 
 If the quantized model offers acceptable performance, it can be directly
 converted into an Akida model, ready to be loaded on the Akida NSoC (see the
-`convert <../api_reference/cnn2snn_apis.html#convert>`_ function).
+`convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
 
 However, if the performance drop is too high, a quantization-aware training is
 required to recover the performance prior to quantization. Since the quantized
@@ -91,32 +167,12 @@ distinct levels before the quantization stage:
 
 
 All these design compatibility constraints are summarized in the CNN2SNN
-`check_model_compatibility <../api_reference/cnn2snn_apis.html#check-model-compatibility>`_
+`check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`_
 function. A good practice is to check model compatibility before going through
 the training process [#fn-2]_.
 
-Helpers (see `Layer Blocks
-<../api_reference/akida_models_apis.html#layer-blocks>`_) are available in the
-``akida_models`` PyPI package to easily create a compatible Keras model from
-scratch.
-
-Quantization compatibility constraints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-In addition to the model design constraints, the Akida NSoC has several
-quantization constraints:
-
-* Weights of the neural layers must be quantized using
-  `1, 2, 4 or 8 bits <hw_constraints.html>`_.
-* Activations should be quantized too using 1, 2 or 4 bits, with maximum spike
-  value set to 15\ [#fn-3]_\.
-* Every neural layer accepts inputs with different quantization parameters,
-  e.g. a quantized Dense layer can only accept 1-bit or 2-bit inputs.
-
-
-Please refer to the `Hardware constraints <hw_constraints.html>`__ page for full
-details.
+Helpers (see `Layer Blocks <../api_reference/akida_models_apis.html#layer-blocks>`_) are available
+in the ``akida_models`` PyPI package to easily create a compatible Keras model from scratch.
 
 Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -148,26 +204,6 @@ Quantize an already quantized model with different quantization bitwidths:
 
 A new quantized model named ``model_keras_iq2_wq2_aq2.h5`` is saved.
 
-Converting a CNN2SNN quantized model into an Akida model using the CLI makes use
-of the ``cnn2snn.convert`` Python function. The same arguments, i.e.
-the input scaling and whether the inputs are sparse, are required.
-
-**Examples**
-
-Convert a quantized model without input scaling and with image inputs:
-
-.. code-block:: bash
-
-    cnn2snn convert -m model_keras_iq2_wq2_aq2.h5
-
-An Akida .fbz model named ``model_keras_iq2_wq2_aq2.fbz`` is then saved.
-
-Convert a quantized model with input scaling of (255, 0) and with sparse inputs:
-
-.. code-block:: bash
-
-    cnn2snn convert -m model_keras_iq2_wq2_aq2.h5 -sc 255 -sh 0 -sp True
-
 A model can be reshaped (change of input shape) using CNN2SNN CLI that makes
 use of the ``cnn2snn.transforms.reshape`` function. This will only apply to
 Sequential models, a `sequentialize helper
@@ -184,11 +220,12 @@ Reshape a model to 160x96:
 
 A reshaped model will be saved as ``model_keras_160_96.h5``.
 
+
 Layers Considerations
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Supported layer types
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
 The CNN2SNN toolkit provides quantization of Keras models with the following
 Keras layer types:
@@ -215,7 +252,7 @@ Keras layer types:
   * Input
 
 CNN2SNN Quantization-aware layers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Several articles have reported\ [#fn-4]_ that the quantization of a pre-trained
 float Keras model using 8-bit precision can be performed with a minimal loss
@@ -227,7 +264,7 @@ Keras layers.
 
 These layers are produced when quantizing a standard Keras model using the
 ``quantize`` function: it replaces the base Keras layers with their quantization-aware
-counterparts (see the `quantize <../api_reference/cnn2snn_apis.html#quantize>`_ function).
+counterparts (see the `quantize <../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`_ function).
 
 Quantization-aware training simulates the effect of quantization in the forward
 pass, yet using a straight-through estimator for the quantization gradient in
@@ -259,7 +296,7 @@ The quantized ReLU takes a single parameter corresponding to the
 bitwidth of the quantized activations.
 
 Training-Only Layers
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~
 
 Training is done within the Keras environment and training-only layers may be
 added at will, such as BatchNormalization or Dropout layers. These are handled
@@ -277,24 +314,24 @@ important consequence for the output of the final layer of the model; see
 `Final Layers <#id6>`_ below.
 
 First Layers
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 Most layers of an Akida model only accept sparse inputs.
 In order to support the most common classes of models in computer vision, a
-special layer (`InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__)
+special layer (`InputConvolutional <../api_reference/akida_apis.html#akida.InputConvolutional>`__)
 is however able to receive image data (8-bit grayscale or RGB). See the
 `Akida user guide <akida.html>`__ for further details.
 
 The CNN2SNN toolkit supports any quantization-aware training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
-accept dense inputs, thanks to the special `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`__
-layer.
+accept dense inputs, thanks to the special
+`InputConvolutional <../api_reference/akida_apis.html#akida.InputConvolutional>`__ layer.
 
 Input Scaling
-~~~~~~~~~~~~~
++++++++++++++
 
-The `InputConvolutional <../api_reference/akida_apis.html#inputconvolutional>`_
+The `InputConvolutional <../api_reference/akida_apis.html#akida.InputConvolutional>`_
 layer only receives 8-bit input values:
 
 
@@ -316,7 +353,7 @@ rescaling in two steps:
    trained model to an Akida-compatible format.
 
 Final Layers
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 As is typical for CNNs, the final layer of a model does not include the
 standard activation nonlinearity. If that is the case, once converted to Akida
@@ -328,7 +365,7 @@ Akida-compatible implementations of the model, it is likely be at this step.
 
 
 Tips and Tricks
----------------
+^^^^^^^^^^^^^^^
 
 In some cases, it may be useful to adapt existing CNN models in order to
 simplify or enhance the converted SNN. Here's a short list of some possible
