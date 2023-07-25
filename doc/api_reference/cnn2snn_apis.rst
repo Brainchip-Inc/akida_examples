@@ -7,7 +7,12 @@ CNN2SNN Toolkit API
     Akida version
     =============
     .. autoclass:: AkidaVersion
-        :members:
+
+        .. autodata:: cnn2snn.AkidaVersion.v1
+            :annotation: =Akida 1.0 SOC and IP
+
+        .. autodata:: cnn2snn.AkidaVersion.v2
+            :annotation: =Akida 2.0 IP
 
     .. autofunction:: get_akida_version
     .. autofunction:: set_akida_version
