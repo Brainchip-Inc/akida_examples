@@ -8,11 +8,13 @@ Overview
 Like many other machine learning frameworks, the core data structures of Akida are layers and
 models, and users familiar with Keras, Tensorflow or Pytorch should be on familiar grounds.
 
-The main difference between Akida and other machine learning framework is that instead of modeling
-traditional artificial neural networks, Akida models aim at representing `Spiking Neural Networks
-<https://en.wikipedia.org/wiki/Spiking_neural_network>`__, i.e. interconnected graphs of neurons
-that *fire* when their potential reaches a predefined *threshold*. Also, unlike other frameworks,
-Akida layers only use integer arithmetics, inputs, outputs and weights.
+The main difference between Akida and other machine learning networks is that inputs and weights are
+integers and it only performs integer operations, so that it can further reduce the power
+consumption and memory footprint. Since quantization and ReLU activation functions lead to a
+substantial sparsity, Akida takes advantage of this by implementing operations in biologically
+inspired event-based calculations. However, to simplify the user experience, the model weights and
+the inputs are represented as integer tensors (Numpy arrays), similar to what you would see in other
+machine learning frameworks.
 
 Going from the standard deep learning world to Akida SNN world is done following simple steps:
 
@@ -77,9 +79,11 @@ The ``Model`` object has basic features such as:
 Akida layers
 ^^^^^^^^^^^^
 
-The sections below lists the available layers for Akida 1.0 and Akida 2.0. Those layers are obtained
+The sections below list the available layers for Akida 1.0 and Akida 2.0. Those layers are obtained
 from converting a quantized model to Akida and are thus automatically defined during conversion.
-Akida layers only perform integer operations using 8bit or 4bit quantized inputs and weights.
+Akida layers only perform integer operations using 8bit or 4bit quantized inputs and weights. With
+the exception of FullyConnected layers performing edge learning, where inputs are 1 bit and weights
+are 1 bit too.
 
 Akida 1.0 layers
 """"""""""""""""
@@ -122,7 +126,8 @@ Devices
 In order to perform the inference of a model on hardware, the corresponding ``Model`` object must
 first be mapped on a specific ``Device``.
 
-The Akida ``Device`` object represents an Akida device, which is entirely characterized by:
+The Akida ``Device``represents a device object that holds a version and the hardware topology of the
+mesh. The main properties of such object are:
 
 - its `hardware version <../api_reference/akida_apis.html#hwversion>`__,
 - the description of its `mesh <../api_reference/akida_apis.html#akida.NP.Mesh>`__ of
@@ -141,7 +146,7 @@ The list of hardware devices detected on a specific host is available using the
     device = devices()[0]
     print(device.version)
 
-It is also possible to list the available devices using a command:
+It is also possible to list the available devices using a command in a terminal:
 
 .. code-block:: bash
 
@@ -168,7 +173,7 @@ Mapping a model on a specific device is as simple as calling the ``Model``
     model.map(device)
 
 When mapping a model on a device, if the Model contains layers that are not hardware compatible or
-is too big to fit on the device, it will be split in multiple sequences.
+it is too big to fit on the device, it will be split in multiple sequences.
 
 The number of sequences, program size for each and how they are mapped are included in
 the ``Model`` `.summary() <../api_reference/akida_apis.html#akida.Model.summary>`__ output after it
@@ -212,7 +217,7 @@ CPU except for passing inputs and fetching outputs.
 Performances measurement
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is possible to retrieve fps and power performances when inference happens on a device.
+It is possible to retrieve FPS and power performances when inference happens on a device.
 
 Enabling power measurement is simply done by:
 
@@ -220,7 +225,7 @@ Enabling power measurement is simply done by:
 
   device.soc.power_measurement_enabled = True
 
-After sending data for inference and performances measurements can be retrieved
+After sending data for inference, performances measurements can be retrieved
 from the `model statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__.
 
 .. code-block:: python
@@ -228,18 +233,16 @@ from the `model statistics <../api_reference/akida_apis.html#akida.Model.statist
   model_akida.forward(data)
   print(model_akida.statistics)
 
-An example of power and fps performances is given in the `AkidaNet/ImageNet
+An example of power and FPS performances is given in the `AkidaNet/ImageNet
 tutorial <../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
 
 
 Using Akida Edge learning
 -------------------------
 
-Deep-learning SNN models are genuine CNN models converted to Akida SNN models.
-
-As a consequence, deep-learning professionals do not need to learn any new framework to start using
-Akida: they can simply craft their models in TensorFlow/Keras and convert them to Akida SNN models
-using the `CNN2SNN <cnn2snn.html>`__ seamless conversion tool.
+Deep-learning professionals do not need to learn any new framework to start using Akida: they can
+simply craft their models in TensorFlow/Keras and convert them to Akida SNN models using the
+`CNN2SNN <cnn2snn.html>`__ seamless conversion tool.
 
 Unlike genuine CNN, deep-learning SNN cannot be trained online using back-propagation: for deep
 models where online learning is required, it is therefore recommended to import the weights of early

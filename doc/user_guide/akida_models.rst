@@ -270,11 +270,11 @@ corresponding inner processing layers, such as strides and bias. The detailed AP
 Handling Akida 1.0 and Akida 2.0 specificities
 ----------------------------------------------
 
-Akida 1.0 and 2.0 specific model architecture requirements are embedded in both the model creation
-API and pretrained model helpers. By default, the returned models and pretrained model are targeting
+Akida 1.0 and 2.0 specific model architecture requirements are embedded in the returned models
+(pretrained or not). By default, the returned models and pretrained model are targeting
 Akida 2.0. It is however possible to build and instantiate Akida 1.0 models.
 
-Using the programing interface:
+Using the programming interface:
 
 .. code-block:: python
 

@@ -13,7 +13,7 @@ Conversion flow
 ---------------
 
 CNN2SNN offers a simple `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function
-that takes a quantized model and converts it into an Akida runtime compatible network.
+that takes a quantized model as input and converts it into an Akida runtime compatible network.
 
 Let's take the `DS-CNN <../api_reference/akida_models_apis.html#ds-cnn>`__ model from our zoo that
 targets KWS task as an example:
@@ -74,7 +74,7 @@ scaling parameters are now deprecated.
 
 CNN2SNN CLI comes with additional actions that are also deprecated and should no longer be used:
 ``quantize``, ``reshape`` and  ``calibrate``. You should rather use
-`QuantizeML <quantizeml.html#>`__ tool perform the same operations.
+`QuantizeML <quantizeml.html#>`__ tool to perform the same operations.
 
 
 Handling Akida 1.0 and Akida 2.0 specificities
@@ -84,7 +84,7 @@ Conversion towards Akida 1.0 or Akida 2.0 is inherently different because the ta
 come with different features. By default, a model is converted towards Akida 2.0. It is however
 possible to convert towards Akida 1.0.
 
-Using the programing interface:
+Using the programming interface:
 
 .. code-block:: python
 
@@ -172,7 +172,7 @@ function. A good practice is to check model compatibility before going through
 the training process [#fn-2]_.
 
 Helpers (see `Layer Blocks <../api_reference/akida_models_apis.html#layer-blocks>`_) are available
-in the ``akida_models`` PyPI package to easily create a compatible Keras model from scratch.
+in the ``akida_models`` PyPI package to easily create a compatible model from scratch.
 
 Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^

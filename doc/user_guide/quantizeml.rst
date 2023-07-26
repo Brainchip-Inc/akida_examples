@@ -201,7 +201,7 @@ rescaling layer.
 quantize CLI
 ~~~~~~~~~~~~
 
-Quantizing a model through the CLI uses almost the same arguments as the programing interface but
+Quantizing a model through the CLI uses almost the same arguments as the programming interface but
 the quantization parameters are split into the parameters: input weight quantization with "-i",
 weight bitwidth with "-w" and activation bitwidth with the "-a" options.
 
