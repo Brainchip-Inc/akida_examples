@@ -148,7 +148,7 @@ complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.
 or `transformers <../api_reference/akida_models_apis.html#transformers>`_ architectures).
 
 If the quantized model offers acceptable performance, it can be directly converted into an Akida
-model (see the `convert <../api_reference/cnn2snn_apis.html#convert>`_ function).
+model (see the `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
 
 However, if the performance drop is too high, a quantization-aware training (QAT) step is required
 to recover the performance prior to quantization. Since the quantized model is a Keras model, it can
