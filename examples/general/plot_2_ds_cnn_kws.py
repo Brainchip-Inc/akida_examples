@@ -5,17 +5,16 @@ DS-CNN/KWS inference
 This tutorial illustrates how to build a basic speech recognition
 Akida network that recognizes thirty-two different words.
 
-The model will be first defined as a CNN and trained in Keras, then
-converted using the `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__.
+The model will be first defined as a CNN and trained in Keras, then quantized using `QuantizeML
+<../../user_guide/quantizeml.html>`__. and converted using `CNN2SNN
+<../../user_guide/cnn2snn.html>`__.
 
-This example uses a Keyword Spotting Dataset prepared using
-**TensorFlow** `audio recognition
+This example uses a Keyword Spotting Dataset prepared using **TensorFlow** `audio recognition
 example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 
-The words to recognize are first converted to `spectrogram
-images <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work>`__
-that allows us to use a model architecture that is typically used for
-image recognition tasks.
+The words to recognize are first converted to `spectrogram images
+<https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work>`__
+that allows us to use a model architecture that is typically used for image recognition tasks.
 
 """
 
@@ -23,7 +22,7 @@ image recognition tasks.
 # 1. Load the preprocessed dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The TensorFlow `speech_commands <http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz>`__
+# The TensorFlow `speech_commands <https://www.tensorflow.org/datasets/catalog/speech_commands>`__
 # dataset is used for training and validation. All keywords except "backward",
 # "follow" and "forward", are retrieved. These three words are kept to
 # illustrate the edge learning in this
@@ -59,20 +58,18 @@ print("Wanted words and labels:\n", word_to_index)
 # * a first convolutional layer accepting dense inputs (images),
 # * several separable convolutional layers preserving spatial dimensions,
 # * a global pooling reducing the spatial dimensions to a single pixel,
-# * a last separable convolutional to reduce the number of outputs
-# * a final fully connected layer to classify words
+# * a final dense layer to classify words.
 #
 # All layers are followed by a batch normalization and a ReLU activation.
 #
-# This model was obtained with unconstrained float weights and activations after
-# 16 epochs of training.
+# This model was obtained after 16 epochs of training.
 #
 
 from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = get_file("ds_cnn_kws.h5",
-                      "https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws.h5",
+                      "https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws.h5",
                       cache_subdir='models')
 
 # Load the native Keras pre-trained model
@@ -93,26 +90,12 @@ accuracy = accuracy_score(y_valid, preds_keras)
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
-# 3. Load a pre-trained quantized Keras model satisfying Akida NSoC requirements
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Load a pre-trained quantized Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized and fine-tuned to get a quantized
-# Keras model satisfying the `Akida NSoC requirements
-# <../../user_guide/hw_constraints.html>`__.
-# The first convolutional layer uses 8 bits weights, but other layers use
-# 4 bits weights.
-#
-# All activations are 4 bits except for the final Separable Convolutional that
-# uses binary activations.
-#
-# Pre-trained weights were obtained after a few training episodes:
-#
-# * we train the model with quantized activations only, with weights initialized
-#   from those trained in the previous episode (native Keras model),
-# * then, we train the model with quantized weights, with both weights and
-#   activations initialized from those trained in the previous episode,
-# * finally, we train the model with quantized weights and activations and by
-#   gradually increasing quantization in the last layer.
+# The above native Keras model is quantized and fine-tuned to recover some accuracy. The first
+# convolutional layer uses 8bit weights, but other layers use 4bit weights, activations are all
+# 4bit. QAT step is performed over 16 epochs.
 #
 
 from akida_models import ds_cnn_kws_pretrained
@@ -132,8 +115,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy_q) + "%")
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We convert the model to Akida and then evaluate the performance on the
-# dataset.
+# We convert the model to Akida and then evaluate the performance on the dataset.
 #
 
 from cnn2snn import convert
