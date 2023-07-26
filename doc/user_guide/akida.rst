@@ -20,11 +20,13 @@ Going from the standard deep learning world to Akida SNN world is done following
 - quantizing the model using the `QuantizeML toolkit <quantizeml.html>`__
 - converting the model to Akida using the `CNN2SNN toolkit <cnn2snn.html>`__
 
-.. image:: ../img/overall_flow.png
+.. figure:: ../img/overall_flow.png
    :target: ../_images/overall_flow.png
    :alt: Overall flow
-   :scale: 60 %
+   :scale: 25 %
    :align: center
+
+   Akida workflow
 
 A practical example of the overall flow is given in the examples section, see `GXNOR/MNIST example
 <../examples/general/plot_0_gxnor_mnist.html#sphx-glr-examples-general-plot-0-gxnor-mnist-py>`__.
