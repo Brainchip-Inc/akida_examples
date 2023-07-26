@@ -2,14 +2,13 @@
 Transfer learning with AkidaNet for PlantVillage
 ================================================
 
-This tutorial presents how to perform transfer learning for quantized models
-targetting Akida NSoC.
+This tutorial presents how to perform transfer learning for quantized models targeting Akida
+runtime.
 
 The transfer learning example is derived from the `Tensorflow tutorial
 <https://www.tensorflow.org/tutorials/images/transfer_learning>`__ where the
-base  model is an AkidaNet 0.5 quantized model trained on ImageNet and the
-target dataset is `PlantVillage
-<https://www.tensorflow.org/datasets/catalog/plant_village>`__.
+base model is an AkidaNet 0.5 quantized model trained on ImageNet and the
+target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/plant_village>`__.
 """
 
 ######################################################################
@@ -21,13 +20,10 @@ target dataset is `PlantVillage
 #
 # **Base model**
 #
-# The base model is a quantized version of AkidaNet 0.5 that was trained on the
+# The base model is an AkidaNet 0.5 that was trained on the
 # ImageNet dataset. Please refer to the `dedicated example
 # <plot_1_akidanet_imagenet.html>`__ for more information on the model
 # architecture and performance.
-#
-# Layers of this model have 4-bit weights (except for the first layer having
-# 8-bit weights) and activations are quantized to 4 bits.
 #
 # **Classification head**
 #
@@ -49,17 +45,18 @@ target dataset is `PlantVillage
 #
 # The standard training process for transfer learning for AkidaNet is:
 #
-#   1. Get a trained AkidaNet base model
-#   2. Add a float classification head to the model
-#   3. Freeze the base model
-#   4. Train for a few epochs
-#   5. Quantize the classification head
+#   1. Get a trained float AkidaNet base model
+#   2. Add a classification head to the model
+#   3. Optionally freeze the base model
+#   4. Train the model head for a few epochs
+#   5. Quantize the whole model
+#   6. Optionally perform QAT for a few epochs to recover accuracy
 #
 # While this process will apply to most of the tasks, there might be cases where
 # variants are needed:
 #
 #   - for some target datasets, freezing the base model will not produce the
-#     best accuracy. In such a case, the base model with stay trainable and the
+#     best accuracy. In such a case, the base model should stay trainable and the
 #     learning rate when tuning the model should be small enough to preserve
 #     features learned by the features extractor.
 #   - quantization in the 5th step might lead to drop in accuracy. In such a
@@ -107,58 +104,52 @@ test_batches = test_ds.map(format_example).batch(BATCH_SIZE)
 # ------------------------------------
 #
 # The AkidaNet architecture is available in the Akida model zoo as
-# `akidanet_imagenet
-# <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_.
+# `akidanet_imagenet <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_.
 
-from keras.utils.data_utils import get_file
-from akida_models import akidanet_imagenet
-from cnn2snn import quantize
+from akida_models import fetch_file, akidanet_imagenet
 
-# Create a quantized base model without top layers
+# Create a base model without top layers
 base_model = akidanet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
                                classes=CLASSES,
                                alpha=0.5,
                                include_top=False,
                                pooling='avg')
-base_model = quantize(base_model, weight_quantization=4,
-                      activ_quantization=4, input_weight_quantization=8)
 
 # Get pretrained quantized weights and load them into the base model
-pretrained_weights = get_file(
-    "akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5",
-    "https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5",
+pretrained_weights = fetch_file(
+    "https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5",
+    fname="akidanet_imagenet_224_alpha_0.5.h5",
     cache_subdir='models')
 
 base_model.load_weights(pretrained_weights, by_name=True)
 base_model.summary()
 
 ######################################################################
-# 3. Add a float classification head to the model
-# -----------------------------------------------
+# 3. Add a classification head to the model
+# -----------------------------------------
 #
 # As explained in `section 1 <#transfer-learning-process>`__, the classification
 # head is defined as a dense layer with batch normalization and activation,
 # which correspond to a `dense_block
-# <../../api_reference/akida_models_apis.html#dense-block>`__, followed by a
-# dropout layer and a second dense layer.
+# <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__, followed by
+# a dropout layer and a second dense layer.
 
 from keras import Model
-from keras.layers import Activation, Dropout, Reshape, Flatten
+from keras.layers import Activation, Dropout, Reshape
 from akida_models.layer_blocks import dense_block
 
 x = base_model.output
-x = Flatten(name='flatten')(x)
 x = dense_block(x,
                 units=512,
                 name='fc1',
                 add_batchnorm=True,
-                relu_activation='ReLU6')
+                relu_activation='ReLU7.5')
 x = Dropout(0.5, name='dropout_1')(x)
 x = dense_block(x,
                 units=CLASSES,
                 name='predictions',
                 add_batchnorm=False,
-                relu_activation='ReLU6')
+                relu_activation=False)
 x = Activation('softmax', name='act_softmax')(x)
 x = Reshape((CLASSES,), name='reshape')(x)
 
@@ -179,7 +170,7 @@ model_keras.summary()
 
 from akida_models.training import freeze_model_before
 
-freeze_model_before(model_keras, 'flatten')
+freeze_model_before(model_keras, 'pw_separable_13/global_avg')
 
 ######################################################################
 # 5. Train for a few epochs
@@ -189,23 +180,35 @@ freeze_model_before(model_keras, 'flatten')
 #
 #   - the model is compiled with an Adam optimizer and the sparse categorical
 #     crossentropy loss is used,
-#   - the initial learning rate is set to 1e-2 and ends at 1e-4 with a linear
-#     decay,
+#   - the initial learning rate is set to 1e-2 and ends at 1e-4 with a linear decay,
 #   - the training lasts for 10 epochs.
 
 ######################################################################
-# 6. Quantize the classification head
-# -----------------------------------
+# 6. Quantize the model
+# ---------------------
 #
-# Quantization is done using `cnn2snn.quantize
-# <../../api_reference/cnn2snn_apis.html#quantize>`__.
+# Quantization is done using QuantizeML `quantize
+# <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__.
+#
+# In order to get the best possible model, calibration samples should be provided to the model.
+# Using here samples from the train set.
 
-# Quantize weights and activation to 4 bits, first layer weights to 8 bits
-model_quantized = quantize(model_keras, 4, 4, 8)
+from quantizeml.models import quantize
+from quantizeml.layers import QuantizationParams
+
+train_batches = train_ds.map(format_example).batch(BATCH_SIZE)
+
+# Prepare a quantization scheme: first layer weights to 8bit, other weights and activation to 4bit
+qparams = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
+
+# Quantize the model, using the 1024 calibration samples from the train set and calibrate over 2
+# epochs with a batch_size of 100.
+model_quantized = quantize(model_keras, qparams=qparams,
+                           samples=train_batches, epochs=2, batch_size=BATCH_SIZE, num_samples=1024)
 
 ######################################################################
-# After this step the model is trained and ready for use after for conversion to
-# Akida (no extra fine tuning step needed for this task).
+# To recover quantization accuracy, an extra QAT step of 20 epochs with a lower learning rate
+# (training rate divided by 10) is required.
 
 ######################################################################
 # 7. Compute accuracy
