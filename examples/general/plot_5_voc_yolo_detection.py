@@ -2,8 +2,8 @@
 YOLO/PASCAL-VOC detection tutorial
 ==================================
 
-This tutorial demonstrates that Akida can perform object detection using a
-state-of-the-art model architecture. This is illustrated using a subset of the
+This tutorial demonstrates that Akida can perform object detection. This is illustrated using a
+subset of the
 `PASCAL-VOC 2007 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2007/htmldoc/index.html>`__
 with "car" and "person" classes only. The YOLOv2 architecture from
 `Redmon et al (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
@@ -177,40 +177,37 @@ full_model.output
 # learning principles.
 #
 # When using transfer learning for YOLO training, we advise to proceed in
-# several steps that include model calibration:
+# several steps:
 #
 # * instantiate the `yolo_base` model and load AkidaNet/ImageNet pretrained
 #   float weights,
 #
 # .. code-block:: bash
 #
+#       wget https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5
 #       akida_models create -s yolo_akidanet_voc.h5 yolo_base --classes 2 \
-#                --base_weights akidanet_imagenet_224_alpha_50.h5
+#                           --base_weights akidanet_imagenet_224_alpha_0.5.h5
 #
-# * freeze the AkidaNet layers and perform training,
+# * training the YOLO head without freezeing the backbone,
 #
 # .. code-block:: bash
 #
 #       yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 \
-#           -ap voc_anchors.pkl -e 25 -fb 1conv -s yolo_akidanet_voc.h5
+#                        -ap voc_anchors.pkl -e 25 -s yolo_akidanet_voc.h5
 #
-# * quantize the network, create data for calibration and calibrate,
+# * retrieve calibration data and quantize the network,
 #
 # .. code-block:: bash
 #
-#       cnn2snn quantize -m yolo_akidanet_voc.h5 -iq 8 -wq 4 -aq 4
-#       yolo_train extract -d voc_preprocessed.pkl -ap voc_anchors.pkl -b 1024 -o voc_samples.npz \
-#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5
-#       cnn2snn calibrate adaround -sa voc_samples.npz -b 128 -e 500 -lr 1e-3 \
-#           -m yolo_akidanet_voc_iq8_wq4_aq4.h5
+#       wget https://data.brainchip.com/dataset-mirror/samples/voc/voc_batch1024.npz
+#       quantizeml quantize -m yolo_akidanet_voc.h5 -w 4 -a 4 -e 2 -bs 100 -sa voc_batch1024.npz
 #
 # * tune the model to recover accuracy.
 #
 # .. code-block:: bash
 #
-#       yolo_train tune -d voc_preprocessed.pkl \
-#           -m yolo_akidanet_voc_iq8_wq4_aq4_adaround_calibrated.h5 -ap voc_anchors.pkl \
-#           -e 10 -s yolo_akidanet_voc_iq8_wq4_aq4.h5
+#       yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_i8_w4_a4.h5 \
+#                       -ap voc_anchors.pkl -e 10 -s yolo_akidanet_voc_i8_w4_a4.h5
 #
 # .. Note::
 #
@@ -225,9 +222,7 @@ full_model.output
 # has been observed that for some datasets training all layers from scratch
 # gives better results. That is the case for our `YOLO WiderFace model
 # <../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained>`_
-# to detect faces. In such a case, the training pipeline to follow is described
-# in the `typical training scenario
-# <../../user_guide/cnn2snn.html#typical-training-scenario>`_.
+# to detect faces.
 #
 
 ######################################################################
@@ -258,6 +253,9 @@ from akida_models.detection.map_evaluation import MapEvaluation
 
 # Load the pretrained model along with anchors
 model_keras, anchors = yolo_voc_pretrained()
+model_keras.summary()
+
+######################################################################
 
 # Define the final reshape and build the model
 output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),
@@ -287,15 +285,6 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 ######################################################################
 # 6.1 Convert to Akida model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# Check model compatibility before Akida conversion
-#
-
-from cnn2snn import check_model_compatibility
-
-compat = check_model_compatibility(model_keras)
-
-######################################################################
 # The last YOLO_output layer that was added for splitting channels into values
 # for each box must be removed before Akida conversion.
 
@@ -304,11 +293,7 @@ compatible_model = Model(model_keras.input, model_keras.layers[-2].output)
 
 ######################################################################
 # When converting to an Akida model, we just need to pass the Keras model
-# and the input scaling that was used during training to `cnn2snn.convert
-# <../../api_reference/cnn2snn_apis.html#convert>`_. In YOLO
-# `preprocess_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
-# function, images are zero centered and normalized between [-1, 1] hence the
-# scaling values.
+# to `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`_.
 #
 
 from cnn2snn import convert
