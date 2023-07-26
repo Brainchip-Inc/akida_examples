@@ -2,8 +2,8 @@
 Regression tutorial
 ==================================================
 
-This tutorial demonstrates that hardware-compatible Akida models can perform
-regression tasks at the same accuracy level as a native CNN network.
+This tutorial demonstrates that Akida models can perform regression tasks at the same accuracy level
+as a native CNN network.
 
 This is illustrated through an age estimation problem using the
 `UTKFace dataset <https://susanqq.github.io/UTKFace/>`__.
@@ -29,14 +29,10 @@ x_test_akida = x_test.astype('uint8')
 #
 # The model is a simplified version inspired from `VGG <https://arxiv.org/abs/1409.1556>`__
 # architecture. It consists of a succession of convolutional and pooling layers
-# and ends with two fully connected layers that outputs a single value
-# corresponding to the estimated age. This model architecture is compatible with
-# the `design constraints <../../user_guide/cnn2snn.html#design-compatibility-constraints>`__
-# before quantization. It is the starting point for a model runnable on the
-# Akida NSoC.
+# and ends with two dense layers that outputs a single value
+# corresponding to the estimated age.
 #
 # The pre-trained native Keras model loaded below was trained on 300 epochs.
-# The model file is available on the BrainChip data server.
 #
 # The performance of the model is evaluated using the "Mean Absolute Error"
 # (MAE). The MAE, used as a metric in regression problem, is calculated as an
@@ -49,7 +45,7 @@ from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = get_file("vgg_utk_face.h5",
-                      "https://data.brainchip.com/models/AkidaV1/vgg/vgg_utk_face.h5",
+                      "https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face.h5",
                       cache_subdir='models')
 
 # Load the native Keras pre-trained model
@@ -67,24 +63,13 @@ mae_keras = model_keras.evaluate(x_test, y_test, verbose=0)
 print("Keras MAE: {0:.4f}".format(mae_keras))
 
 ######################################################################
-# 3. Load a pre-trained quantized Keras model satisfying Akida NSoC requirements
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Load a pre-trained quantized Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized and fine-tuned to get a quantized
-# Keras model satisfying the
-# `Akida NSoC requirements <../../user_guide/hw_constraints.html>`__.
-# The first convolutional layer of our model uses 8-bit weights and other
-# layers are quantized using 2-bit weights. All activations are 2 bits.
+# The above native Keras model is quantized and fine-tuned over 30 epochs. The first convolutional
+# layer of our model uses 8bit weights, other layers are quantized using 4bit weights, all
+# activations are 4bit.
 #
-# The pre-trained model was obtained after two fine-tuning episodes:
-#
-# * the model is first quantized and fine-tuned with 4-bit weights and
-#   activations (first convolutional weights are 8 bits)
-# * the model is then quantized and fine-tuned with 2-bit weights and
-#   activations (first convolutional weights are still 8 bits).
-#
-# Here, we directly load the pre-trained quantized Keras model using the
-# akida_models helper.
 
 from akida_models import vgg_utk_face_pretrained
 
@@ -106,12 +91,9 @@ print("Keras MAE: {0:.4f}".format(mae_quant))
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# The quantized Keras model is now converted into an Akida model.
-# After conversion, we evaluate the performance on the UTKFace dataset.
+# The quantized Keras model is now converted into an Akida model. After conversion, we evaluate the
+# performance on the UTKFace dataset.
 #
-# Since activations sparsity has a great impact on Akida inference time, we
-# also have a look at the average input and output sparsity of each layer on
-# a subset of the dataset.
 
 from cnn2snn import convert
 
