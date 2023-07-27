@@ -6,7 +6,7 @@ Overview
 --------
 
 Like many other machine learning frameworks, the core data structures of Akida are layers and
-models, and users familiar with Keras, Tensorflow or Pytorch should be on familiar grounds.
+models, and users familiar with Keras, Tensorflow or Pytorch should be on familiar ground.
 
 The main difference between Akida and other machine learning networks is that inputs and weights are
 integers and it only performs integer operations, so that it can further reduce the power
@@ -16,11 +16,12 @@ inspired event-based calculations. However, to simplify the user experience, the
 the inputs are represented as integer tensors (Numpy arrays), similar to what you would see in other
 machine learning frameworks.
 
-Going from the standard deep learning world to Akida SNN world is done following simple steps:
+Going from the standard deep learning world to Akida world is done by following simple steps:
 
-- building a model using Keras or optionally using a model from `Brainchip zoo <akida_models.html>`__
-- quantizing the model using the `QuantizeML toolkit <quantizeml.html>`__
-- converting the model to Akida using the `CNN2SNN toolkit <cnn2snn.html>`__
+- build a model using Keras or optionally using a model from the
+  `Brainchip zoo <akida_models.html>`__
+- quantize the model using the `QuantizeML toolkit <quantizeml.html>`__
+- convert the model to Akida using the `CNN2SNN toolkit <cnn2snn.html>`__
 
 .. figure:: ../img/overall_flow.png
    :target: ../_images/overall_flow.png
@@ -33,8 +34,8 @@ Going from the standard deep learning world to Akida SNN world is done following
 A practical example of the overall flow is given in the examples section, see `GXNOR/MNIST example
 <../examples/general/plot_0_gxnor_mnist.html#sphx-glr-examples-general-plot-0-gxnor-mnist-py>`__.
 
-Programing interface
---------------------
+Programming interface
+---------------------
 
 The Akida Model
 ^^^^^^^^^^^^^^^
@@ -50,8 +51,7 @@ The ``Model`` object has basic features such as:
 - `save() <../api_reference/akida_apis.html#akida.Model.save>`__ method that needs a path for the
   model and that allows saving to disk for future use. The model will be saved as a file with an
   ``.fbz`` extension. A saved model can be reloaded using the ``Model`` object constructor with the
-  full path of saved file as a string argument. This will automatically load the weights associated
-  to the model.
+  full path of the saved file as a string argument. This will automatically load the model weights.
 
   .. code-block:: python
 
@@ -59,8 +59,8 @@ The ``Model`` object has basic features such as:
 
       model.save("my_model.fbz")
       loaded_model = Model("my_model.fbz")
-- `forward <../api_reference/akida_apis.html#akida.Model.forward>`__ method allows to infer the
-  outputs of a specific set of inputs.
+- `forward <../api_reference/akida_apis.html#akida.Model.forward>`__ method to generate the outputs
+  for a specific set of inputs.
 
   .. code-block:: python
 
@@ -81,9 +81,9 @@ Akida layers
 
 The sections below list the available layers for Akida 1.0 and Akida 2.0. Those layers are obtained
 from converting a quantized model to Akida and are thus automatically defined during conversion.
-Akida layers only perform integer operations using 8bit or 4bit quantized inputs and weights. With
-the exception of FullyConnected layers performing edge learning, where inputs are 1 bit and weights
-are 1 bit too.
+Akida layers only perform integer operations using 8bit or 4bit quantized inputs and weights. The
+exception is FullyConnected layers performing edge learning, where both inputs and weights are 1
+bit.
 
 Akida 1.0 layers
 """"""""""""""""
@@ -123,10 +123,10 @@ inference is computed on the host CPU.
 Devices
 ^^^^^^^
 
-In order to perform the inference of a model on hardware, the corresponding ``Model`` object must
-first be mapped on a specific ``Device``.
+In order to perform model inference on hardware, the corresponding ``Model`` object must first be
+mapped on a specific ``Device``.
 
-The Akida ``Device``represents a device object that holds a version and the hardware topology of the
+The Akida ``Device`` represents a device object that holds a version and the hardware topology of the
 mesh. The main properties of such object are:
 
 - its `hardware version <../api_reference/akida_apis.html#hwversion>`__,
@@ -172,8 +172,8 @@ Mapping a model on a specific device is as simple as calling the ``Model``
 
     model.map(device)
 
-When mapping a model on a device, if the Model contains layers that are not hardware compatible or
-it is too big to fit on the device, it will be split in multiple sequences.
+When mapping a model on a device, if the Model is too big to fit on the device or contains layers
+that are not hardware compatible, it will be split into multiple parts called "sequences".
 
 The number of sequences, program size for each and how they are mapped are included in
 the ``Model`` `.summary() <../api_reference/akida_apis.html#akida.Model.summary>`__ output after it
@@ -182,9 +182,9 @@ has been mapped on a device.
 Advanced Mapping Details and Hardware Devices Usage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Calling ``Model`` `.map() <../api_reference/akida_apis.html#akida.Model.map>`__ might create more
-than one "sequence". In this case, when inference methods are used, each sequence will be chain
-loaded on the device to process the given input. Sequences can be obtained using the ``Model``
+When ``Model`` `.map() <../api_reference/akida_apis.html#akida.Model.map>`__  results in more than
+one hardware sequence, on inference each sequence will be chain loaded onto the device to process a
+given input. Sequences can be obtained using the ``Model``
 `.sequences() <../api_reference/akida_apis.html#akida.Model.sequences>`__ property, that will return
 a list of sequence objects. The program used to load one sequence can be obtained programmatically.
 
@@ -200,24 +200,22 @@ a list of sequence objects. The program used to load one sequence can be obtaine
 Once the model has been mapped, the sequences mapped in the Hardware run on the device,
 and the sequences mapped in the Software run on the CPU.
 
-One can also force the model to be mapped as one sequence in the hardware device
-only by setting the parameter ``hw_only`` to True (by default the value is False).
-See the `.map() <../api_reference/akida_apis.html#akida.Model.map>`__ method API for more details.
-
 .. note::
-  An exception will be raised if the Model cannot be mapped entirely on the device.
+  Where mapping to a single on-hardware sequence is necessary, one can force an exception to be
+  raised if that fails by setting the ``hw_only`` parameter to True (default False). See the
+  `.map() <../api_reference/akida_apis.html#akida.Model.map>`__ method API for more details.
 
-.. code-block:: python
+  .. code-block:: python
 
-  model.map(device, hw_only=True)
+    model.map(device, hw_only=True)
 
 Once the model has been mapped, the inference happens only on the device, and not on the host
 CPU except for passing inputs and fetching outputs.
 
-Performances measurement
-^^^^^^^^^^^^^^^^^^^^^^^^
+Performance measurement
+^^^^^^^^^^^^^^^^^^^^^^^
 
-It is possible to retrieve FPS and power performances when inference happens on a device.
+Performance measures (FPS and power) are available for on-device inference.
 
 Enabling power measurement is simply done by:
 
@@ -225,7 +223,7 @@ Enabling power measurement is simply done by:
 
   device.soc.power_measurement_enabled = True
 
-After sending data for inference, performances measurements can be retrieved
+After sending data for inference, performance measurements can be retrieved
 from the `model statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__.
 
 .. code-block:: python
@@ -233,22 +231,19 @@ from the `model statistics <../api_reference/akida_apis.html#akida.Model.statist
   model_akida.forward(data)
   print(model_akida.statistics)
 
-An example of power and FPS performances is given in the `AkidaNet/ImageNet
+An example of power and FPS measurements is given in the `AkidaNet/ImageNet
 tutorial <../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
 
 
 Using Akida Edge learning
 -------------------------
 
-Deep-learning professionals do not need to learn any new framework to start using Akida: they can
-simply craft their models in TensorFlow/Keras and convert them to Akida SNN models using the
-`CNN2SNN <cnn2snn.html>`__ seamless conversion tool.
-
-Unlike genuine CNN, deep-learning SNN cannot be trained online using back-propagation: for deep
-models where online learning is required, it is therefore recommended to import the weights of early
-layers from a pre-trained model, and to apply Akida Edge learning only on the last layer.
-
-The Akida Edge learning is a unique feature of the Akida IP.
+Akida Edge learning is a unique feature of the Akida IP, whereby a classifier layer is enabled for
+ongoing ("continual") learning in the on-device setting, allowing the addition of new classes in the
+wild. As with any transfer learning or domain adaptation task, best results will be obtained if the
+Akida Edge layer is added as the final layer of a standard pretrained CNN backbone. An unusual
+aspect is that the backbone needs an extra layer added and trained, to generate binary inputs to the
+Edge layer.
 
 In this mode, an Akida Layer will typically be compiled with specific learning parameters and then
 undergo a period of feed-forward unsupervised or semi-supervised training by letting it process

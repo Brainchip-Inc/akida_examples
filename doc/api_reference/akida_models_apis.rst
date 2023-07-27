@@ -162,8 +162,8 @@ Akida models API
     .. autoclass:: akida_models.detection.processing.BoundingBox
         :members:
 
-    Performances
-    ************
+    Performance
+    ***********
     .. autoclass:: akida_models.detection.map_evaluation.MapEvaluation
         :members:
 

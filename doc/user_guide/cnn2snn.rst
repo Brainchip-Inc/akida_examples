@@ -5,8 +5,8 @@ CNN2SNN toolkit
 Overview
 --------
 
-The Brainchip CNN2SNN toolkit provides a mean to convert a quantized model obtained using QuantizeML
-to a low-latency and low-power network for use with the Akida runtime.
+The Brainchip CNN2SNN toolkit provides a means to convert a quantized model obtained using
+QuantizeML to a low-latency and low-power network for use with the Akida runtime.
 
 
 Conversion flow
@@ -41,9 +41,9 @@ compatible with Akida layers blocks.
 .. note::
     `cnn2snn.quantizeml.compatibility_checks.check_model_compatibility
     <../api_reference/cnn2snn_apis.html#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility>`__
-    only applies to QuantizeML quantized model, use the deprecated
-    `cnn2snn.check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__
-    for CNN2SNN quantized model instead.
+    only applies to a model quantized via QuantizeML. For a CNN2SNN-quantized model, instead use the
+    deprecated
+    `cnn2snn.check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__.
 
 Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -81,7 +81,7 @@ Handling Akida 1.0 and Akida 2.0 specificities
 ----------------------------------------------
 
 Conversion towards Akida 1.0 or Akida 2.0 is inherently different because the targeted SoC or IP
-come with different features. By default, a model is converted towards Akida 2.0. It is however
+comes with different features. By default, a model is converted towards Akida 2.0. It is however
 possible to convert towards Akida 1.0.
 
 Using the programming interface:

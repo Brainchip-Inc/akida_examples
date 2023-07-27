@@ -8,7 +8,7 @@ Overview
 Brainchip Akida Models package is a model zoo that offers a set of pre-built akida compatible
 models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training scripts.
 See the `model zoo API reference <../api_reference/akida_models_apis.html#model-zoo>`_ for a
-complete list of the available models. The performances of all models from the zoo are reported for
+complete list of the available models. The performance of all models from the zoo are reported for
 both Akida 1.0 and Akida 2.0 in the `zoo performances page <../zoo_performances.html>`__.
 Akida Models also contains a set of
 `layer blocks <../api_reference/akida_models_apis.html#layer-blocks>`_ that are used to define the
@@ -103,7 +103,7 @@ training.
 As shown in the examples below, the training CLI should be used along with ``akida_models create``
 and ``quantizeml quantize``.
 
-If the quantized model offers acceptable performances, it can be converted into an Akida model,
+If the quantized model offers acceptable performance, it can be converted into an Akida model,
 ready to be loaded on the Akida NSoC using the
 `CNN2SNN convert CLI <cnn2snn.html#command-line-interface>`_.
 
@@ -116,7 +116,8 @@ loading and preprocessing is done within the training script called by the ``kws
 **Example**
 
 Create a DS-CNN model for KWS, train it over 16 epochs, then quantize it to 4bit weights and
-activations, perform a 16 epochs QAT to recover accuracy and evaluate.
+activations (using a set of samples for calibration only), perform a 16 epochs QAT to recover
+accuracy and evaluate.
 
 .. code-block:: bash
 
@@ -174,7 +175,7 @@ Current training pipelines available are:
 Command-line interface for model evaluation
 -------------------------------------------
 
-The CLI also comes with an ``eval`` action that allows to evaluate model performances, the ``-ak``
+The CLI also comes with an ``eval`` action that allows to evaluate model performance, the ``-ak``
 or ``--akida`` option allows to convert to Akida then evaluate the model.
 
 .. code-block:: bash
@@ -239,12 +240,12 @@ Separable layers can be defined as ``fused`` (Akida 1.0) or ``unfused`` (Akida 2
    x = separable_conv_block(x, 64, 3, add_batchnorm=True, relu_activation='ReLU6', fused=False)
 
 Placement of the GlobalAveragePooling (GAP) operation is also configurable in layer blocks so that
-it comes after the activation (``post_relu_gap=False`` for Akida 1.0) or before
+it comes before the activation (``post_relu_gap=False`` for Akida 1.0) or after
 (``post_relu_gap=True`` for Akida 2.0):
 
 .. code-block:: python
 
-   x = conv_block(x, 64, 3, relu_activation='ReLU', post_relu_gap=False)
+   x = conv_block(x, 64, 3, relu_activation='ReLU', post_relu_gap=True)
 
 
 The option of including pooling, BatchNormalization layers or activation is directly built into the
@@ -271,8 +272,8 @@ Handling Akida 1.0 and Akida 2.0 specificities
 ----------------------------------------------
 
 Akida 1.0 and 2.0 specific model architecture requirements are embedded in the returned models
-(pretrained or not). By default, the returned models and pretrained model are targeting
-Akida 2.0. It is however possible to build and instantiate Akida 1.0 models.
+(pretrained or not). By default, the returned models and pretrained model target Akida 2.0. It is
+however possible to build and instantiate Akida 1.0 models.
 
 Using the programming interface:
 

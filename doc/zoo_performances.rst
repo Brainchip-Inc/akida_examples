@@ -1,8 +1,8 @@
-Model zoo performances
-======================
+Model zoo performance
+=====================
 
 This page lets you discover all of Akida model zoo machine learning models with
-their respective performances.
+their respective performance.
 
 .. note::
     The download links provided point towards standard Tensorflow Keras models
