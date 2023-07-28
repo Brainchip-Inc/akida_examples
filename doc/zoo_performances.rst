@@ -101,10 +101,6 @@ Classification
    :scale: 4 %
    :target: examples/general/plot_4_transfer_learning.html
 
-.. |gx_ex| image:: ./img/link_icon.png
-   :scale: 4 %
-   :target: examples/general/plot_0_gxnor_mnist.html
-
 .. |gx_dl| image:: ./img/download_icon.png
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist_iq2_wq2_aq1.h5
@@ -154,7 +150,7 @@ Classification
 +------------------+------------+--------------------+---------+--------------+----------------+-------------+-----------+-----+----------------+
 | MobileNetV1      | 224        | ImageNet           | 4.2M    | 8/4/4        | 68.76%         |             | 5251.8    | 123 | |mb_224_dl|    |
 +------------------+------------+--------------------+---------+--------------+----------------+-------------+-----------+-----+----------------+
-| GXNOR            | 28         | MNIST              | 1.6M    | 2/2/1        | 98.03%         | |gx_ex|     | 412.6     | 3   | |gx_dl|        |
+| GXNOR            | 28         | MNIST              | 1.6M    | 2/2/1        | 98.03%         |             | 412.6     | 3   | |gx_dl|        |
 +------------------+------------+--------------------+---------+--------------+----------------+-------------+-----------+-----+----------------+
 
 
