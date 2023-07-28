@@ -55,7 +55,7 @@ model_keras.summary()
 
 ######################################################################
 
-# Check Model performances
+# Check Model performance
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 
 model_keras.compile(optimizer='adam',

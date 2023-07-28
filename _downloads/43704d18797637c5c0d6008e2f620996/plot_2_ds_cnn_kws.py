@@ -132,7 +132,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy_q) + "%")
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We convert the model to Akida and then evaluate the performances on the
+# We convert the model to Akida and then evaluate the performance on the
 # dataset.
 #
 

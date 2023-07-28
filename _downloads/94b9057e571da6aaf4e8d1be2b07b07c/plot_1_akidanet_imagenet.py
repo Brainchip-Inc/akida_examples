@@ -5,7 +5,7 @@ AkidaNet/ImageNet inference
 This CNN2SNN tutorial presents how to convert an AkidaNet pre-trained model into
 Akida.
 
-As ImageNet images are not publicly available, performances are assessed using a
+As ImageNet images are not publicly available, performance is assessed using a
 set of 10 copyright free images that were found on Google using ImageNet class
 names.
 
@@ -107,7 +107,7 @@ from timeit import default_timer as timer
 
 
 # Check model performance
-def check_model_performances(model, x_test=x_test, labels_test=labels_test):
+def check_model_performance(model, x_test=x_test, labels_test=labels_test):
     num_images = len(x_test)
 
     start = timer()
@@ -121,7 +121,7 @@ def check_model_performances(model, x_test=x_test, labels_test=labels_test):
     print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 
 
-check_model_performances(model_keras)
+check_model_performance(model_keras)
 
 ######################################################################
 # 3. Quantized model
@@ -147,7 +147,7 @@ from cnn2snn import quantize
 model_keras_quantized = quantize(model_keras, 4, 4, 8)
 
 # Check Model performance
-check_model_performances(model_keras_quantized)
+check_model_performance(model_keras_quantized)
 
 ######################################################################
 # 4. Pretrained quantized model
@@ -158,7 +158,7 @@ check_model_performances(model_keras_quantized)
 # that was obtained after fine tuning the model for 10 epochs.
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
-# recover performances up to the initial floating point accuracy.
+# recover performance up to the initial floating point accuracy.
 
 from akida_models import akidanet_imagenet_pretrained
 
@@ -169,7 +169,7 @@ model_keras_quantized_pretrained.summary()
 ######################################################################
 
 # Check model performance
-check_model_performances(model_keras_quantized_pretrained)
+check_model_performance(model_keras_quantized_pretrained)
 
 ######################################################################
 # 5. Conversion to Akida
@@ -368,11 +368,11 @@ model_akida.map(device)
 model_akida.summary()
 
 ######################################################################
-# 6.2. Performances measurement
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 6.2. Performance measurement
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Power measurement must be enabled on the device' soc (disabled by default).
-# After sending data for inference, performances measurements are available in
+# After sending data for inference, performance measurements are available in
 # the `model statistics <../../api_reference/akida_apis.html#akida.Model.statistics>`__.
 
 # Enable power measurement
