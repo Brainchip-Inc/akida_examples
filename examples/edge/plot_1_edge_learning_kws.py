@@ -35,7 +35,7 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # To achieve this using the Akida NSoC, learning occurs in 3 stages:
 #
 # 1. The Akida model preparation: an Akida model must meet specific conditions
-#    to be compatible for `Akida learning <../../user_guide/akida.html#id5>`__.
+#    to be compatible for `Akida learning <../../user_guide/akida.html#using-akida-edge-learning>`__.
 # 2. The "offline" Akida learning: the last layer of the Akida model is trained
 #    from scratch with a large dataset. In this KWS case, the model is trained
 #    with 32 keywords from the Google "Speech Commands dataset".
@@ -214,11 +214,15 @@ print("New words:\n", word_to_index_new)
 # good starting point for this hyper-parameter. Here, we estimate this number
 # of output spikes using 10% of the training set, which is enough to have a
 # reasonable estimation.
+#
+# .. Note:: Edge learning in only supported for Akida 1.0 models for now.
 
 from akida_models import ds_cnn_kws_pretrained
+from cnn2snn import set_akida_version, AkidaVersion
 
 # Instantiate a quantized model with pretrained quantized weights
-model = ds_cnn_kws_pretrained()
+with set_akida_version(AkidaVersion.v1):
+    model = ds_cnn_kws_pretrained()
 model.summary()
 
 ######################################################################
@@ -291,7 +295,7 @@ print("The number of weights is then set to:", num_weights)
 # must be set using the `compile <../../api_reference/akida_apis.html#akida.Model.compile>`__
 # method of the last layer. Compiling a layer means that this layer is
 # configured for training and ready to be trained. For more information about
-# the learning hyper-parameters, check the `user guide <../../user_guide/akida.html#id5>`__.
+# the learning hyper-parameters, check the `user guide <../../user_guide/akida.html#compiling-a-layer>`__.
 # Note that we set the `learning_competition` to 0.1, which gives a little
 # competition between neurons to prevent learning similar features.
 #
