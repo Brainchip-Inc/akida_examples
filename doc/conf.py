@@ -37,8 +37,7 @@ sphinx_gallery_conf = {
     'first_notebook_cell': ("%matplotlib notebook"),
     'subsection_order':
         ExplicitOrder([
-            '../examples/general', '../examples/cnn2snn', '../examples/edge',
-            '../examples/private'
+            '../examples/general', '../examples/cnn2snn', '../examples/edge'
         ]),
     'within_subsection_order':
         FileNameSortKey
