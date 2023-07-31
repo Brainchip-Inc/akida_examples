@@ -40,7 +40,8 @@ sphinx_gallery_conf = {
             '../examples/general', '../examples/edge', '../examples/cnn2snn'
         ]),
     'within_subsection_order':
-        FileNameSortKey
+        FileNameSortKey,
+    'nested_sections': False
 }
 
 # Sphinx gallery will raise a Matplotlib agg warning that can only be silenced
