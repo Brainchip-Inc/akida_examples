@@ -23,9 +23,7 @@ pip install -r requirements.txt
 
 * Install Sphinx additional modules used by the documentation:
 ~~~~
-pip install sphinx_rtd_theme
-pip install sphinx-gallery
-pip install autodocsumm
+pip install sphinx_rtd_theme sphinx-gallery autodocsumm
 ~~~~
 
 * Finally build using *sphinx-build* tool, refer to
