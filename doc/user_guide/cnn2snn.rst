@@ -307,8 +307,7 @@ As regards the implementation within the Akida neuromorphic IP: it may be
 helpful to understand that the associated scaling operations (multiplication and
 shift) are never performed during inference. The computational cost is reduced
 by wrapping the (optional) batch normalization function and quantized activation
-function into the spike generating thresholds and other parameters of the Akida
-SNN.
+function into the spike generating thresholds and other parameters of the Akida model.
 That process is completely transparent to the user. It does, however, have an
 important consequence for the output of the final layer of the model; see
 `Final Layers <#id6>`_ below.
@@ -368,7 +367,7 @@ Tips and Tricks
 ^^^^^^^^^^^^^^^
 
 In some cases, it may be useful to adapt existing CNN models in order to
-simplify or enhance the converted SNN. Here's a short list of some possible
+simplify or enhance the converted model. Here's a short list of some possible
 substitutions that might come in handy:
 
 
