@@ -12,7 +12,7 @@ The model will be first defined as a CNN and trained in Keras, then quantized us
 This example uses a Keyword Spotting Dataset prepared using **TensorFlow** `audio recognition
 example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 
-The words to recognize are first converted to `spectrogram images
+The words to recognize have been converted to `spectrogram images
 <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work>`__
 that allows us to use a model architecture that is typically used for image recognition tasks.
 
@@ -27,10 +27,9 @@ that allows us to use a model architecture that is typically used for image reco
 # "follow" and "forward", are retrieved. These three words are kept to
 # illustrate the edge learning in this
 # `edge example <../edge/plot_1_edge_learning_kws.html>`__.
-# The data are not directly used for training. They are preprocessed,
-# transforming the audio files into MFCC features, well-suited for CNN networks.
-# A pickle file containing the preprocessed data is available on our data
-# server.
+# The raw audio data are not directly used for training. As noted above, they have been
+# preprocessed, transforming the audio files into MFCC features, well-suited for CNN networks.
+# A pickle file containing the preprocessed data is available on our data server.
 #
 import pickle
 
@@ -62,8 +61,6 @@ print("Wanted words and labels:\n", word_to_index)
 #
 # All layers are followed by a batch normalization and a ReLU activation.
 #
-# This model was obtained after 16 epochs of training.
-#
 
 from tensorflow.keras.models import load_model
 
@@ -93,9 +90,9 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # 3. Load a pre-trained quantized Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized and fine-tuned to recover some accuracy. The first
+# The above native Keras model is quantized and fine-tuned (QAT) to recover some accuracy. The first
 # convolutional layer uses 8bit weights, but other layers use 4bit weights, activations are all
-# 4bit. QAT step is performed over 16 epochs.
+# 4bit.
 #
 
 from akida_models import ds_cnn_kws_pretrained
@@ -132,7 +129,7 @@ preds_akida = model_akida.predict_classes(x_valid, num_classes=num_classes)
 accuracy = accuracy_score(y_valid, preds_akida)
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
-# For non-regression purpose
+# For non-regression purposes
 assert accuracy > 0.9
 
 ######################################################################

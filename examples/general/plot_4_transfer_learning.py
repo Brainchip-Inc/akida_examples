@@ -2,8 +2,8 @@
 Transfer learning with AkidaNet for PlantVillage
 ================================================
 
-This tutorial presents how to perform transfer learning for quantized models targeting Akida
-runtime.
+This tutorial presents how to perform transfer learning for quantized models targeting an Akida
+accelerator.
 
 The transfer learning example is derived from the `Tensorflow tutorial
 <https://www.tensorflow.org/tutorials/images/transfer_learning>`__ where the
@@ -207,8 +207,9 @@ model_quantized = quantize(model_keras, qparams=qparams,
                            samples=train_batches, epochs=2, batch_size=BATCH_SIZE, num_samples=1024)
 
 ######################################################################
-# To recover quantization accuracy, an extra QAT step of 20 epochs with a lower learning rate
-# (training rate divided by 10) is required.
+# To recover the loss of accuracy introduced with 4bit quantization, an extra QAT step with a lower
+# learning rate (training rate divided by 10) is required. Note that you could also aim for 8bit
+# quantization and not require this extra QAT step.
 
 ######################################################################
 # 7. Compute accuracy

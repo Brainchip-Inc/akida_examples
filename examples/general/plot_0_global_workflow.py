@@ -3,8 +3,8 @@ Global Akida workflow tutorial
 ==============================
 
 This tutorial illustrates how to use the QuantizeML and CNN2SNN toolkits to produce a model that can
-be used with Akida runtime. You can refer to our `Akida user guide <../../user_guide/akida.html>`__
-for further explanation.
+be used with Akida accelerator. You can refer to our `Akida user guide
+<../../user_guide/akida.html>`__ for further explanation.
 
 .. Note:: Please refer to TensorFlow  `tf.keras.models
           <https://www.tensorflow.org/api_docs/python/tf/keras/models>`__
@@ -43,8 +43,9 @@ from keras.datasets import mnist
 # Load MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# Add a dimension to images sets as Akida expects 4 dimensions inputs, which corresponds to
-# (num_samples, width, height, channels)
+# Add a channels dimension to the image sets as Akida expects 4-D inputs (corresponding to
+# (num_samples, width, height, channels). Note: MNIST is unusual in this respect - most image data
+# already includes a channel dimension, and this step will not be necessary.
 x_train = np.expand_dims(x_train, -1)
 x_test = np.expand_dims(x_test, -1)
 
@@ -59,7 +60,7 @@ plt.show()
 # 1.2. Model definition
 # ^^^^^^^^^^^^^^^^^^^^^
 #
-# Note that at this stage, there is nothing specific to the Akida runtime.
+# Note that at this stage, there is nothing specific to the Akida IP.
 # This start point is very much a completely standard CNN as defined
 # within `Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__.
 #
@@ -115,12 +116,12 @@ print('Test accuracy:', score[1])
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # We can now turn to quantization to get a discretized version of the model, where the weights and
-# activations are quantized so as to be suitable for conversion towards Akida runtime.
+# activations are quantized so as to be suitable for conversion towards an Akida accelerator.
 #
 # For this, we just have to quantize the Keras model using the QuantizeML
 # `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function. The selected quantization scheme is 8/8/8 which stands for 8bit weights in the first
-# layer, 4bit weights in other layers and 4bit activations respectively.
+# layer, 8bit weights in other layers and 8bit activations respectively.
 #
 # The quantized model is a Keras model where the layers are replaced with custom `QuantizeML
 # quantized layers <../../api_reference/quantizeml_apis.html#layers>`__. All Keras API functions
@@ -145,10 +146,7 @@ model_quantized.summary()
 
 def compile_evaluate(model):
     """ Compiles and evaluates the model, then return accuracy score. """
-    model.compile(
-        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=Adam(learning_rate=1e-3),
-        metrics=['accuracy'])
+    model.compile(metrics=['accuracy'])
     return model.evaluate(x_test, y_test, verbose=0)[1]
 
 
@@ -161,8 +159,10 @@ print('Test accuracy after 8bit quantization:', compile_evaluate(model_quantized
 #
 # The previous call to ``quantize`` was made with random samples for calibration (default
 # parameters). While the observed accuracy drop is minimal, that is around 1%, it can be higher on
-# more complex models and it is advised to use a set of real samples from the training set. The
-# recommended configuration for calibration that is widely to obtain
+# more complex models and it is advised to use a set of real samples from the training set. Note
+# that this remains a calibration rather than a training step: any relevant data could be used, and
+# crucially, no labels are required.
+# The recommended configuration for calibration that is widely used to obtain
 # `zoo performances <../../zoo_performances.html#akida-2-0-models>`__ is:
 #
 # - 1024 samples
@@ -178,15 +178,20 @@ model_quantized = quantize(model_keras, qparams=qparams,
 print('Test accuracy after calibration:', compile_evaluate(model_quantized))
 
 ######################################################################
-# Calibrating with real sample on this model allow to recover the initial float accuracy.
+# Calibrating with real samples on this model allows to recover the initial float accuracy.
 
 ######################################################################
 # 2.3. 4bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # The accuracy of the 8bit quantized model is equivalent to the one of the base model. In this
-# section, a lower bitwidth quantization scheme that is still compatible with Akida runtime is
+# section, a lower bitwidth quantization scheme that is still compatible with Akida accelerator is
 # adopted.
+# The accuracy of the 8bit quantized model is equal to that of the base model. That quantized model
+# is already compatible with the Akida accelerator (following "conversion", see below), and for most
+# users, no further quantization is required. In a few cases, it may be attractive to bring the
+# model down to an even lower bitwidth quantization scheme, and here we show how to do that.
+#
 # The model will now be quantized to 8/4/4, that is 8bit weights in the first layer and 4bit weights
 # and activations everywhere else. Such a quantization scheme will usually introduce a performance
 # drop.
@@ -204,10 +209,10 @@ print('Test accuracy after 4bit quantization:', compile_evaluate(model_quantized
 # 2.4. Model fine tuning (quantization-aware training)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# When a model suffers from a large accuracy drop after quantization, a quantization-aware training
-# or fine tuning or QAT allows to recover some or all peformance.
+# When a model suffers from a large accuracy drop after quantization, fine tuning or "quantization
+# aware training" (QAT) allows to recover some or all performance.
 #
-# Note that since this step is a fine tuning, both the number of epochs and learning rate are
+# Note that since this is a fine tuning step, both the number of epochs and learning rate are
 # expected to be lower than during the initial float training.
 #
 model_quantized.compile(
@@ -231,8 +236,9 @@ print('Test accuracy after fine tuning:', score)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # When the quantized model achieves satisfactory performance, it can be converted to an Akida
-# runtime suitable format. The `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__
-# function returns a model in Akida format ready for inference.
+# accelerator suitable format. The
+# `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function returns a model in
+# Akida format ready for inference.
 #
 # As with Keras, the summary() method provides a textual representation of the Akida model.
 #
@@ -243,12 +249,12 @@ model_akida = convert(model_quantized)
 model_akida.summary()
 
 ######################################################################
-# 3.2. Check performances
-# ^^^^^^^^^^^^^^^^^^^^^^^
+# 3.2. Check performance
+# ^^^^^^^^^^^^^^^^^^^^^^
 accuracy = model_akida.evaluate(x_test, y_test)
 print('Test accuracy after conversion:', accuracy)
 
-# For non-regression purpose
+# For non-regression purposes
 assert accuracy > 0.96
 
 
@@ -295,5 +301,5 @@ print(outputs.squeeze())
 # `GXNOR-Net paper <https://arxiv.org/pdf/1705.09283.pdf>`__. It comes with its
 # `pretrained 2/2/1 helper
 # <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained>`__ for which the
-# float training was done for 20 epochs then the model was then gradually quantized following:
+# float training was done for 20 epochs, then the model was then gradually quantized following:
 # 4/4/4 --> 4/4/2 --> 2/2/2 --> 2/2/1 with a 15 epochs QAT step at each quantization stage.

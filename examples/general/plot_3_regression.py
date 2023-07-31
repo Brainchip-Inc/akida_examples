@@ -32,8 +32,6 @@ x_test_akida = x_test.astype('uint8')
 # and ends with two dense layers that outputs a single value
 # corresponding to the estimated age.
 #
-# The pre-trained native Keras model loaded below was trained on 300 epochs.
-#
 # The performance of the model is evaluated using the "Mean Absolute Error"
 # (MAE). The MAE, used as a metric in regression problem, is calculated as an
 # average of absolute differences between the target values and the predictions.
@@ -66,7 +64,7 @@ print("Keras MAE: {0:.4f}".format(mae_keras))
 # 3. Load a pre-trained quantized Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized and fine-tuned over 30 epochs. The first convolutional
+# The above native Keras model is quantized and fine-tuned (QAT). The first convolutional
 # layer of our model uses 8bit weights, other layers are quantized using 4bit weights, all
 # activations are 4bit.
 #
@@ -112,7 +110,7 @@ y_akida = model_akida.predict(x_test_akida)
 mae_akida = np.sum(np.abs(y_test.squeeze() - y_akida.squeeze())) / len(y_test)
 print("Akida MAE: {0:.4f}".format(mae_akida))
 
-# For non-regression purpose
+# For non-regression purposes
 assert abs(mae_keras - mae_akida) < 0.5
 
 ######################################################################

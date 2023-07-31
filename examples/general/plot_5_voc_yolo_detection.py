@@ -188,7 +188,7 @@ full_model.output
 #       akida_models create -s yolo_akidanet_voc.h5 yolo_base --classes 2 \
 #                           --base_weights akidanet_imagenet_224_alpha_0.5.h5
 #
-# * training the YOLO head without freezeing the backbone,
+# * train the YOLO head without freezing the backbone,
 #
 # .. code-block:: bash
 #
@@ -369,7 +369,7 @@ pred_boxes = np.array([[
     box.get_score()
 ] for box in raw_boxes])
 
-fig = plt.figure(num='VOC2012 car and person detection by Akida runtime')
+fig = plt.figure(num='VOC2012 car and person detection by Akida')
 ax = fig.subplots(1)
 img_plot = ax.imshow(np.zeros(raw_image.shape, dtype=np.uint8))
 img_plot.set_data(raw_image)

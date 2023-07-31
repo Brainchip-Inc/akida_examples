@@ -160,7 +160,7 @@ check_model_performance(model_keras_quantized)
 #
 # The Akida models zoo also contains a `pretrained quantized helper
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained>`_
-# that was obtained after fine tuning the model for 10 epochs.
+# that was obtained after fine tuning the model (QAT).
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
 # recover performance up to the initial floating point accuracy.
@@ -185,8 +185,9 @@ check_model_performance(model_keras_quantized_pretrained)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here, the Keras quantized model is converted into a suitable version for
-# the Akida runtime. The `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__
-# function only needs the Keras model as argument.
+# the Akida accelerator. The
+# `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function only needs
+# the Keras model as argument.
 
 from cnn2snn import convert
 
@@ -211,7 +212,7 @@ end = timer()
 print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
-# For non-regression purpose
+# For non-regression purposes
 assert accuracy_akida >= 0.8
 
 ######################################################################
@@ -334,11 +335,11 @@ fig, imgobj, ax1, rects = prepare_plots()
 img = np.random.randint(num_images)
 
 # Predict image class
-potentials_akida = model_akida.predict(np.expand_dims(x_test[img], axis=0)).squeeze()
+outputs_akida = model_akida.predict(np.expand_dims(x_test[img], axis=0)).squeeze()
 
 # Get top 5 prediction labels and associated names
 true_label = int(validation_labels[x_test_files[img]])
-top5, yvals, class_name = get_top5(potentials_akida, true_label)
+top5, yvals, class_name = get_top5(outputs_akida, true_label)
 
 # Draw Plots
 imgobj.set_data(x_test[img])
@@ -357,8 +358,8 @@ plt.show()
 #
 # Akida NSoC V2 comes with model architecture requirements that are different from Akida 2.0 IP. The
 # Akida 1.0 compatible model can be loaded and converted to the appropriate format using
-# `AkidaVersion <../../api_reference/cnn2snn_apis.html#akida-version>`__ context. Not that the 1.0
-# model has very similar performance than the previously described 2.0 model.
+# `AkidaVersion <../../api_reference/cnn2snn_apis.html#akida-version>`__ context. Note that the 1.0
+# model has very similar performance to the previously described 2.0 model.
 
 from cnn2snn import set_akida_version, AkidaVersion
 
@@ -378,7 +379,7 @@ devices = akida.devices()
 print(f'Available devices: {[dev.desc for dev in devices]}')
 assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
 device = devices[0]
-assert device.version == akida.NSoC_v2
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
 
 ######################################################################
 # Map the model on the device

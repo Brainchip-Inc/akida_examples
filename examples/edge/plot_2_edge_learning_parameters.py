@@ -64,7 +64,7 @@ with open(fname, 'rb') as f:
 
 ##############################################################################
 #
-# .. Note:: Edge learning in only supported for Akida 1.0 models for now.
+# .. Note:: Edge learning is only supported for Akida 1.0 models for now.
 
 from cnn2snn import convert, set_akida_version, AkidaVersion
 from akida_models import ds_cnn_kws_pretrained

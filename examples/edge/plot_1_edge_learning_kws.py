@@ -215,7 +215,7 @@ print("New words:\n", word_to_index_new)
 # of output spikes using 10% of the training set, which is enough to have a
 # reasonable estimation.
 #
-# .. Note:: Edge learning in only supported for Akida 1.0 models for now.
+# .. Note:: Edge learning is only supported for Akida 1.0 models for now.
 
 from akida_models import ds_cnn_kws_pretrained
 from cnn2snn import set_akida_version, AkidaVersion
@@ -250,7 +250,7 @@ for i in range(num_batches_val):
 acc_val_ak = np.sum(preds_ak == y_val) / y_val.shape[0]
 print(f"Akida CNN2SNN validation set accuracy: {100 * acc_val_ak:.2f} %")
 
-# For non-regression purpose
+# For non-regression purposes
 assert acc_val_ak > 0.88
 
 ######################################################################
@@ -427,5 +427,5 @@ acc_val_old_ak = np.sum(preds_ak_old == y_val) / y_val.shape[0]
 print(f"Akida validation set accuracy on 33 old classes: \
         {100 * acc_val_old_ak:.2f} %")
 
-# For non-regression purpose
+# For non-regression purposes
 assert acc_val_old_ak > 0.82
