@@ -405,7 +405,7 @@ plot_discretized_weights(w, wq)
 # limited in memory on NSoC. It may happen that their values are too big to fit
 # into memory and then a Runtime Error occurs at Akida inference, e.g. ``Runtime
 # Error: Error when programming layer 'separable_8': Backend Hardware(CNP):
-# 1246278 cannot fit in a 20 bits unsigned integer``.
+# 1246278 cannot fit in a 20-bit unsigned integer``.
 #
 # If you're facing this issue, it is necessary to retrain your Keras model to
 # avoid too high scale factors in the neural layers. One possible reason for

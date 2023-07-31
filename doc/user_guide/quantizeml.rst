@@ -22,7 +22,7 @@ FixedPoint numbers are actually integers with a static number of fractional bits
     x_{float} \approx x_{int}.2^{-x_{frac\_bits}}
 
 The precision of the representation is directly related to the number of fractional bits. For
-example, representing PI using an 8bit FixedPoint with varying fractional bits:
+example, representing PI using an 8-bit FixedPoint with varying fractional bits:
 
 +-----------+-------+-------------+
 | frac_bits | x_int | float value |
@@ -70,23 +70,23 @@ The quantization scheme used by
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ can be configured
 using
 `QuantizationParams <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__.
-If none is given, an 8bit configuration scheme will be selected.
+If none is given, an 8-bit configuration scheme will be selected.
 
-Here's an example for 8bit quantization:
+Here's an example for 8-bit quantization:
 
 .. code-block:: python
 
     from quantizeml.layers import QuantizationParams
     qparams8 = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits=8)
 
-Here's an example for 4bit quantization (with first layer weights set to 8bit):
+Here's an example for 4-bit quantization (with first layer weights set to 8-bit):
 
 .. code-block:: python
 
     from quantizeml.layers import QuantizationParams
     qparams4 = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
-Note that quantizating the first weights to 8bit helps preserving accuracy.
+Note that quantizating the first weights to 8-bit helps preserving accuracy.
 
 QuantizeML uses a uniform quantization scheme centered on zero. During quantization, the floating
 point values are mapped to a given bitwidth quantization space of the form:
@@ -131,7 +131,7 @@ our zoo. They must be downloaded and deserialized before being used for calibrat
     samples = np.load(samples)
     samples = np.concatenate([samples[item] for item in samples.files])
 
-Quantizing the DS-CNN model to 8bit is then done with:
+Quantizing the DS-CNN model to 8-bit is then done with:
 
 .. code-block:: python
 
@@ -142,7 +142,7 @@ Please refer to `calibrate <../api_reference/quantizeml_apis.html#quantizeml.mod
 for more details on calibration.
 
 Direct quantization of a standard Keras model (also called post-training quantization, PTQ)
-generally introduces a drop in performance. This drop is usually small for 8bit or even 4bit
+generally introduces a drop in performance. This drop is usually small for 8-bit or even 4-bit
 quantization of simple models, but it can be very significant for low quantization bitwidth and
 complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
 or `transformers <../api_reference/akida_models_apis.html#transformers>`_ architectures).

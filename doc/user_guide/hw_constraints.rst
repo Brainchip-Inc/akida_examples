@@ -61,7 +61,7 @@ InputConvolutional
 
 .. note::
        While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
        are unsigned by definition.
 
 Convolutional
@@ -105,7 +105,7 @@ Convolutional
 
 .. note::
        While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
        are unsigned by definition.
 
 SeparableConvolutional
@@ -165,5 +165,5 @@ FullyConnected
 
 .. note::
        While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1bit integers
+       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
        are unsigned by definition.

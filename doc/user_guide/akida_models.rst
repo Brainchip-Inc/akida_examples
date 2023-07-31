@@ -115,7 +115,7 @@ loading and preprocessing is done within the training script called by the ``kws
 
 **Example**
 
-Create a DS-CNN model for KWS, train it over 16 epochs, then quantize it to 4bit weights and
+Create a DS-CNN model for KWS, train it over 16 epochs, then quantize it to 4-bit weights and
 activations (using a set of samples for calibration only), perform a 16 epochs QAT to recover
 accuracy and evaluate.
 
@@ -139,7 +139,7 @@ Dataset loading and preprocessing is done within the training script called by t
 
 **Example**
 
-Create an AkidaNet 0.5 with resolution 160, train it for 90 epochs then quantize to 4bit weights
+Create an AkidaNet 0.5 with resolution 160, train it for 90 epochs then quantize to 4-bit weights
 and activations, perform a 10 epochs QAT to recover accuracy, upscale to resolution 224 and
 evaluate.
 

@@ -81,9 +81,8 @@ Akida layers
 
 The sections below list the available layers for Akida 1.0 and Akida 2.0. Those layers are obtained
 from converting a quantized model to Akida and are thus automatically defined during conversion.
-Akida layers only perform integer operations using 8bit or 4bit quantized inputs and weights. The
-exception is FullyConnected layers performing edge learning, where both inputs and weights are 1
-bit.
+Akida layers only perform integer operations using 8-bit or 4-bit quantized inputs and weights. The
+exception is FullyConnected layers performing edge learning, where both inputs and weights are 1-bit.
 
 Akida 1.0 layers
 """"""""""""""""

@@ -91,8 +91,8 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The above native Keras model is quantized and fine-tuned (QAT) to recover some accuracy. The first
-# convolutional layer uses 8bit weights, but other layers use 4bit weights, activations are all
-# 4bit.
+# convolutional layer uses 8-bit weights, but other layers use 4-bit weights, activations are all
+# 4-bit.
 #
 
 from akida_models import ds_cnn_kws_pretrained

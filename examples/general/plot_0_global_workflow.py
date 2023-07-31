@@ -112,7 +112,7 @@ print('Test accuracy:', score[1])
 # ~~~~~~~~~~~
 
 ######################################################################
-# 2.1. 8bit quantization
+# 2.1. 8-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # We can now turn to quantization to get a discretized version of the model, where the weights and
@@ -120,8 +120,8 @@ print('Test accuracy:', score[1])
 #
 # For this, we just have to quantize the Keras model using the QuantizeML
 # `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
-# function. The selected quantization scheme is 8/8/8 which stands for 8bit weights in the first
-# layer, 8bit weights in other layers and 8bit activations respectively.
+# function. The selected quantization scheme is 8/8/8 which stands for 8-bit weights in the first
+# layer, 8-bit weights in other layers and 8-bit activations respectively.
 #
 # The quantized model is a Keras model where the layers are replaced with custom `QuantizeML
 # quantized layers <../../api_reference/quantizeml_apis.html#layers>`__. All Keras API functions
@@ -150,7 +150,7 @@ def compile_evaluate(model):
     return model.evaluate(x_test, y_test, verbose=0)[1]
 
 
-print('Test accuracy after 8bit quantization:', compile_evaluate(model_quantized))
+print('Test accuracy after 8-bit quantization:', compile_evaluate(model_quantized))
 
 
 ######################################################################
@@ -181,29 +181,29 @@ print('Test accuracy after calibration:', compile_evaluate(model_quantized))
 # Calibrating with real samples on this model allows to recover the initial float accuracy.
 
 ######################################################################
-# 2.3. 4bit quantization
-# ^^^^^^^^^^^^^^^^^^^^^^
+# 2.3. 4-bit quantization
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The accuracy of the 8bit quantized model is equivalent to the one of the base model. In this
+# The accuracy of the 8-bit quantized model is equivalent to the one of the base model. In this
 # section, a lower bitwidth quantization scheme that is still compatible with Akida accelerator is
 # adopted.
-# The accuracy of the 8bit quantized model is equal to that of the base model. That quantized model
+# The accuracy of the 8-bit quantized model is equal to that of the base model. That quantized model
 # is already compatible with the Akida accelerator (following "conversion", see below), and for most
 # users, no further quantization is required. In a few cases, it may be attractive to bring the
 # model down to an even lower bitwidth quantization scheme, and here we show how to do that.
 #
-# The model will now be quantized to 8/4/4, that is 8bit weights in the first layer and 4bit weights
-# and activations everywhere else. Such a quantization scheme will usually introduce a performance
-# drop.
+# The model will now be quantized to 8/4/4, that is 8-bit weights in the first layer and 4-bit
+# weights and activations everywhere else. Such a quantization scheme will usually introduce a
+# performance drop.
 
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 model_quantized = quantize(model_keras, qparams=qparams,
                            samples=x_train, num_samples=1024, batch_size=100, epochs=2)
 
 ######################################################################
-# Check the 4bit quantized accuracy.
+# Check the 4-bit quantized accuracy.
 
-print('Test accuracy after 4bit quantization:', compile_evaluate(model_quantized))
+print('Test accuracy after 4-bit quantization:', compile_evaluate(model_quantized))
 
 ######################################################################
 # 2.4. Model fine tuning (quantization-aware training)

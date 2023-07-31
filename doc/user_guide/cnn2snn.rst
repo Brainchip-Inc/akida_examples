@@ -187,8 +187,7 @@ the quantization bitwidths for weights and activations, are required.
 
 **Examples**
 
-Quantize a standard Keras model with 4-bit weights and activations and 8-bit
-input weights:
+Quantize a standard Keras model with 4-bit weights and activations and 8-bit input weights:
 
 .. code-block:: bash
 

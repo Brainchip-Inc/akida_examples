@@ -21,11 +21,11 @@ their respective performance.
 Akida 1.0 models
 ----------------
 
-For 1.0 models, 4bit accuracy are provided and are always obtained through a QAT phase.
+For 1.0 models, 4-bit accuracy are provided and are always obtained through a QAT phase.
 
 .. note::
-    The "8/4/4" quantization scheme stands for 8bit weights in the input layer, 4bit weights in
-    other layers and 4bit activations.
+    The "8/4/4" quantization scheme stands for 8-bit weights in the input layer, 4-bit weights in
+    other layers and 4-bit activations.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,14 +262,14 @@ Classification
 Akida 2.0 models
 ----------------
 
-For 2.0 models, both 8bit PTQ and 4bit QAT numbers are given. When not explicitely stated 8bit PTQ
-accuracy is given as is (ie no further tuning/training, only quantization and calibration). The 4bit
+For 2.0 models, both 8-bit PTQ and 4-bit QAT numbers are given. When not explicitely stated 8-bit PTQ
+accuracy is given as is (ie no further tuning/training, only quantization and calibration). The 4-bit
 QAT is the same as for 1.0.
 
 .. note::
     The digit for quantization scheme stands for both weights and activations bitwidth. Weights in
-    the first layer are always quantized to 8bit. When given, 'edge' means that the model backbone
-    output (before classification layer) is quantized to 1bit to allow Akida edge learning.
+    the first layer are always quantized to 8-bit. When given, 'edge' means that the model backbone
+    output (before classification layer) is quantized to 1-bit to allow Akida edge learning.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -65,8 +65,8 @@ print("Keras MAE: {0:.4f}".format(mae_keras))
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The above native Keras model is quantized and fine-tuned (QAT). The first convolutional
-# layer of our model uses 8bit weights, other layers are quantized using 4bit weights, all
-# activations are 4bit.
+# layer of our model uses 8-bit weights, other layers are quantized using 4-bit weights, all
+# activations are 4-bit.
 #
 
 from akida_models import vgg_utk_face_pretrained
