@@ -48,7 +48,7 @@ data_folder = os.path.dirname(file_path)
 
 # Load images for test set
 x_test_files = []
-x_test = np.zeros((num_images, 224, 224, 3)).astype('uint8')
+x_test = np.zeros((num_images, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
 for id in range(num_images):
     test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
     x_test_files.append(test_file)
@@ -93,14 +93,14 @@ from tensorflow.keras.models import load_model
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
-    "akidanet_imagenet_224_alpha_50.h5",
-    "https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50.h5",
+    "akidanet_imagenet_224_alpha_0.5.h5",
+    "https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# Top-1 accuracy on the actual ImageNet is 64.58%, the perfomance given below
+# Top-1 accuracy on the actual ImageNet is 65.07%, the perfomance given below
 # uses the 10 images subset.
 
 from timeit import default_timer as timer
@@ -127,24 +127,29 @@ check_model_performance(model_keras)
 # 3. Quantized model
 # ~~~~~~~~~~~~~~~~~~
 #
-# Quantizing a model is done using `cnn2snn.quantize
-# <../../api_reference/cnn2snn_apis.html#quantize>`_.
+# Quantizing a model is done using QuantizeML `quantize
+# <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`_.
 #
-# The quantized model satisfies the Akida NSoC requirements:
+# The quantization scheme is the following:
 #
-#  * the first layer has 8-bit weights,
-#  * all other convolutional layers have 4-bit weights,
-#  * all convolutional layers have 4-bit activations.
+#  * the first layer has 8bit weights,
+#  * all other layers have 4bit weights,
+#  * all activations are 4bit.
 #
 # However, this model will suffer from a drop in accuracy due to quantization
 # as shown in the next cell for the 10 images set.
 #
 
-from cnn2snn import quantize
+from quantizeml.models import quantize
+from quantizeml.layers import QuantizationParams
 
-# Quantize the model to 4-bit weights and activations, 8-bit weights for the
-# first convolutional layer
-model_keras_quantized = quantize(model_keras, 4, 4, 8)
+# Quantize the model to 8/4/4, use 1024 random samples with a batch size of 100 over 2 epochs for
+# calibration.
+model_keras_quantized = quantize(model_keras,
+                                 qparams=QuantizationParams(input_weight_bits=8,
+                                                            weight_bits=4,
+                                                            activation_bits=4),
+                                 num_samples=1024, batch_size=100, epochs=2)
 
 # Check Model performance
 check_model_performance(model_keras_quantized)
@@ -155,7 +160,7 @@ check_model_performance(model_keras_quantized)
 #
 # The Akida models zoo also contains a `pretrained quantized helper
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained>`_
-# that was obtained after fine tuning the model for 10 epochs.
+# that was obtained after fine tuning the model (QAT).
 #
 # Tuning the model, that is training with a lowered learning rate, allows to
 # recover performance up to the initial floating point accuracy.
@@ -180,8 +185,9 @@ check_model_performance(model_keras_quantized_pretrained)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here, the Keras quantized model is converted into a suitable version for
-# the Akida NSoC. The `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`__
-# function needs as arguments the Keras model and the input scaling parameters.
+# the Akida accelerator. The
+# `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function only needs
+# the Keras model as argument.
 
 from cnn2snn import convert
 
@@ -206,8 +212,8 @@ end = timer()
 print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
 print(f"Accuracy: {accuracy_akida*100:.2f} %")
 
-# For non-regression purpose
-assert accuracy_akida >= 0.79
+# For non-regression purposes
+assert accuracy_akida >= 0.8
 
 ######################################################################
 # 5.3 Show predictions for a random image
@@ -273,7 +279,7 @@ def prepare_plots():
     fig = plt.figure(figsize=(8, 4))
     # Image subplot
     ax0 = plt.subplot(1, 3, 1)
-    imgobj = ax0.imshow(np.zeros((224, 224, 3), dtype=np.uint8))
+    imgobj = ax0.imshow(np.zeros((IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS), dtype=np.uint8))
     ax0.set_axis_off()
     # Top 5 results subplot
     ax1 = plt.subplot(1, 2, 2)
@@ -329,12 +335,11 @@ fig, imgobj, ax1, rects = prepare_plots()
 img = np.random.randint(num_images)
 
 # Predict image class
-potentials_akida = model_akida.predict(np.expand_dims(x_test[img],
-                                                      axis=0)).squeeze()
+outputs_akida = model_akida.predict(np.expand_dims(x_test[img], axis=0)).squeeze()
 
 # Get top 5 prediction labels and associated names
 true_label = int(validation_labels[x_test_files[img]])
-top5, yvals, class_name = get_top5(potentials_akida, true_label)
+top5, yvals, class_name = get_top5(outputs_akida, true_label)
 
 # Draw Plots
 imgobj.set_data(x_test[img])
@@ -348,7 +353,23 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ######################################################################
-# 6.1. Map on hardware
+# 6.1. Rebuild an Akida 1.0 compatible model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Akida NSoC V2 comes with model architecture requirements that are different from Akida 2.0 IP. The
+# Akida 1.0 compatible model can be loaded and converted to the appropriate format using
+# `AkidaVersion <../../api_reference/cnn2snn_apis.html#akida-version>`__ context. Note that the 1.0
+# model has very similar performance to the previously described 2.0 model.
+
+from cnn2snn import set_akida_version, AkidaVersion
+
+with set_akida_version(AkidaVersion.v1):
+    quantized_model = akidanet_imagenet_pretrained(0.5)
+    model_akida = convert(quantized_model)
+
+
+######################################################################
+# 6.2. Map on hardware
 # ^^^^^^^^^^^^^^^^^^^^
 #
 # List Akida available devices and check that an NSoC V2 (production chip) is
@@ -356,8 +377,9 @@ plt.show()
 
 devices = akida.devices()
 print(f'Available devices: {[dev.desc for dev in devices]}')
+assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
 device = devices[0]
-assert device.version == akida.NSoC_v2
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
 
 ######################################################################
 # Map the model on the device
@@ -368,7 +390,7 @@ model_akida.map(device)
 model_akida.summary()
 
 ######################################################################
-# 6.2. Performance measurement
+# 6.3. Performance measurement
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Power measurement must be enabled on the device' soc (disabled by default).

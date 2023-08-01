@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Model zoo performance" href="../../zoo_performances.html" />
+    <link rel="next" title="[Deprecated] CNN2SNN tutorials" href="../cnn2snn/index.html" />
     <link rel="prev" title="Akida edge learning for keyword spotting" href="plot_1_edge_learning_kws.html" /> 
 </head>
 
@@ -273,10 +273,10 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../index.html#general-examples">General examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../index.html#cnn2snn-tutorials">CNN2SNN tutorials</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../index.html#edge-examples">Edge examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#edge-examples">Edge examples</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#deprecated-cnn2snn-tutorials">[Deprecated] CNN2SNN tutorials</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="../general/index.html">General examples</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_0_gxnor_mnist.html">GXNOR/MNIST inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_0_global_workflow.html">Global Akida workflow tutorial</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_1_akidanet_imagenet.html">AkidaNet/ImageNet inference</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_2_ds_cnn_kws.html">DS-CNN/KWS inference</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_3_regression.html">Regression tutorial</a></li>
@@ -284,15 +284,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_5_voc_yolo_detection.html">YOLO/PASCAL-VOC detection tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../cnn2snn/index.html">CNN2SNN tutorials</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../cnn2snn/plot_0_cnn_flow.html">CNN conversion flow tutorial</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../cnn2snn/plot_1_advanced_cnn2snn.html">Advanced CNN2SNN tutorial</a></li>
-</ul>
-</li>
 <li class="toctree-l3 current"><a class="reference internal" href="index.html">Edge examples</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="plot_0_edge_learning_vision.html">Akida vision edge learning</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_1_edge_learning_kws.html">Akida edge learning for keyword spotting</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Tips to set Akida learning parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../cnn2snn/index.html">[Deprecated] CNN2SNN tutorials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../cnn2snn/plot_1_advanced_cnn2snn.html">Advanced CNN2SNN tutorial</a></li>
 </ul>
 </li>
 </ul>
@@ -434,11 +433,16 @@ feature extractor.</p>
     <span class="p">[</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">word_to_index</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Edge learning is only supported for Akida 1.0 models for now.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">set_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 <span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">ds_cnn_kws_pretrained</span>
 
 <span class="c1"># Instantiate a quantized model with pretrained quantized weights</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ds_cnn_kws_pretrained</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">set_akida_version</span><span class="p">(</span><span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">ds_cnn_kws_pretrained</span><span class="p">()</span>
 
 <span class="c1"># Convert to an Akida model</span>
 <span class="n">model_ak</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -716,7 +720,7 @@ cannot be generalized for all use cases.</p>
 </tr>
 </tbody>
 </table>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  5.615 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  5.777 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-2-edge-learning-parameters-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d2a8403d961f7338d204f7b40b8414be/plot_2_edge_learning_parameters.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_2_edge_learning_parameters.py</span></code></a></p>
@@ -734,7 +738,7 @@ cannot be generalized for all use cases.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="plot_1_edge_learning_kws.html" class="btn btn-neutral float-left" title="Akida edge learning for keyword spotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../zoo_performances.html" class="btn btn-neutral float-right" title="Model zoo performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../cnn2snn/index.html" class="btn btn-neutral float-right" title="[Deprecated] CNN2SNN tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

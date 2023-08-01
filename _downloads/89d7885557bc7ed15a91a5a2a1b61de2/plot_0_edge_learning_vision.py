@@ -55,12 +55,15 @@ plt.show()
 ##############################################################################
 # 2. Prepare Akida model for learning
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# .. Note:: Edge learning is only supported for Akida 1.0 models for now.
 
 from akida_models import akidanet_edge_imagenet_pretrained
-from cnn2snn import convert
+from cnn2snn import convert, set_akida_version, AkidaVersion
 
 # Load a pre-trained model
-model_keras = akidanet_edge_imagenet_pretrained()
+with set_akida_version(AkidaVersion.v1):
+    model_keras = akidanet_edge_imagenet_pretrained()
 
 # Convert it to Akida
 model_ak = convert(model_keras)
@@ -125,5 +128,5 @@ for i in range(len(object_ids)):
 mean_accuracy = stat.mean(accuracy)
 print(f'Mean accuracy: {mean_accuracy:.2f}%')
 
-# For non-regression purpose
+# For non-regression purposes
 assert mean_accuracy > 94

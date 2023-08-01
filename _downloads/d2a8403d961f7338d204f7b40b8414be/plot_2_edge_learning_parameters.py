@@ -63,12 +63,15 @@ with open(fname, 'rb') as f:
     [x_train, y_train, _, _, _, _, word_to_index, _] = pickle.load(f)
 
 ##############################################################################
+#
+# .. Note:: Edge learning is only supported for Akida 1.0 models for now.
 
-from cnn2snn import convert
+from cnn2snn import convert, set_akida_version, AkidaVersion
 from akida_models import ds_cnn_kws_pretrained
 
 # Instantiate a quantized model with pretrained quantized weights
-model = ds_cnn_kws_pretrained()
+with set_akida_version(AkidaVersion.v1):
+    model = ds_cnn_kws_pretrained()
 
 # Convert to an Akida model
 model_ak = convert(model)
