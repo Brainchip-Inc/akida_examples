@@ -132,9 +132,9 @@ check_model_performance(model_keras)
 #
 # The quantization scheme is the following:
 #
-#  * the first layer has 8bit weights,
-#  * all other layers have 4bit weights,
-#  * all activations are 4bit.
+#  * the first layer has 8-bit weights,
+#  * all other layers have 4-bit weights,
+#  * all activations are 4-bit.
 #
 # However, this model will suffer from a drop in accuracy due to quantization
 # as shown in the next cell for the 10 images set.

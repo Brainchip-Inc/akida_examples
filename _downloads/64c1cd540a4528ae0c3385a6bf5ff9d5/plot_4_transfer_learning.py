@@ -198,7 +198,7 @@ from quantizeml.layers import QuantizationParams
 
 train_batches = train_ds.map(format_example).batch(BATCH_SIZE)
 
-# Prepare a quantization scheme: first layer weights to 8bit, other weights and activation to 4bit
+# Prepare a quantization scheme: first layer weights to 8-bit, other weights and activation to 4-bit
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
 # Quantize the model, using the 1024 calibration samples from the train set and calibrate over 2
@@ -207,8 +207,8 @@ model_quantized = quantize(model_keras, qparams=qparams,
                            samples=train_batches, epochs=2, batch_size=BATCH_SIZE, num_samples=1024)
 
 ######################################################################
-# To recover the loss of accuracy introduced with 4bit quantization, an extra QAT step with a lower
-# learning rate (training rate divided by 10) is required. Note that you could also aim for 8bit
+# To recover the loss of accuracy introduced with 4-bit quantization, an extra QAT step with a lower
+# learning rate (training rate divided by 10) is required. Note that you could also aim for 8-bit
 # quantization and not require this extra QAT step.
 
 ######################################################################
