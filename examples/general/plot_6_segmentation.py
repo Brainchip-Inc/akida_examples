@@ -2,9 +2,9 @@
 Segmentation tutorial
 ==================================================
 
-This tutorial demonstrates that hardware-compatible Akida models can perform segmentation tasks.
+This tutorial demonstrates that Akida-compatible models can perform segmentation tasks.
 
-This is illustrated through an person segmentation problem using the `Portrait128 dataset
+This is illustrated through a person segmentation problem using the `Portrait128 dataset
 <https://github.com/anilsathyan7/Portrait-Segmentation>`__.
 
 """
@@ -51,8 +51,8 @@ plt.show()
 # 2. Load a pre-trained native Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The model is an AkidaUNet network, that is an AkidaNet (0.5) backbone to extract features,
-# combined to a succession of `separable transposed convolutional
+# The model is an AkidaUNet, that has an AkidaNet (0.5) backbone to extract features,
+# combined with a succession of `separable transposed convolutional
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
 # blocks to build a segmentation map.
 #
@@ -64,7 +64,7 @@ plt.show()
 #     with a standard pointwise convolution.
 #
 # The performance of the model is evaluated using both the pixel accuracy that describes how well
-# the model can predict the segmentation mask pixel by pixel and the `BinaryIoU
+# the model can predict the segmentation mask pixel by pixel and the `Binary IoU
 # <https://www.tensorflow.org/api_docs/python/tf/keras/metrics/BinaryIoU>`__ that better takes into
 # account how close the predicted mask is to the ground truth.
 #
@@ -91,13 +91,13 @@ model_keras.compile(loss='binary_crossentropy', metrics=[BinaryIoU(), 'accuracy'
 # Check Keras model performance
 _, biou, acc = model_keras.evaluate(x_val, y_val, steps=steps, verbose=0)
 
-print(f"Keras BinaryIoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
+print(f"Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 
 ######################################################################
 # 3. Load a pre-trained quantized Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized to 8bit (all weights and activations) and fine-tuned
+# The above native Keras model is quantized to 8-bit (all weights and activations) and fine-tuned
 # (QAT).
 
 from akida_models import akida_unet_portrait128_pretrained
@@ -114,7 +114,7 @@ model_quantized_keras.compile(loss='binary_crossentropy', metrics=[BinaryIoU(), 
 # Check Keras model performance
 _, biou, acc = model_quantized_keras.evaluate(x_val, y_val, steps=steps, verbose=0)
 
-print(f"Keras quantized BinaryIoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
+print(f"Keras quantized binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 
 ######################################################################
 # 4. Conversion to Akida
@@ -155,7 +155,7 @@ binary_iou = m_binary_iou.result().numpy()
 m_accuracy = tf.keras.metrics.Accuracy()
 m_accuracy.update_state(labels, preds > 0.5)
 accuracy = m_accuracy.result().numpy()
-print(f"Akida BinaryIoU / pixel accuracy: {binary_iou:.4f} / {100*accuracy:.2f}%")
+print(f"Akida binary IoU / pixel accuracy: {binary_iou:.4f} / {100*accuracy:.2f}%")
 
 # For non-regression purpose
 assert binary_iou > 0.9
