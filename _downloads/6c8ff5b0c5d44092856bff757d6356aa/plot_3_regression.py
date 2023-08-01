@@ -2,8 +2,8 @@
 Regression tutorial
 ==================================================
 
-This tutorial demonstrates that Akida models can perform regression tasks at the same accuracy level
-as a native CNN network.
+This tutorial demonstrates that Akida-compatible models can perform regression tasks at the same
+accuracy level as native CNN networks.
 
 This is illustrated through an age estimation problem using the
 `UTKFace dataset <https://susanqq.github.io/UTKFace/>`__.

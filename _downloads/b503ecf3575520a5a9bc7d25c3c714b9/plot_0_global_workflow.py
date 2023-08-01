@@ -113,7 +113,7 @@ print('Test accuracy:', score[1])
 
 ######################################################################
 # 2.1. 8-bit quantization
-# ^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # We can now turn to quantization to get a discretized version of the model, where the weights and
 # activations are quantized so as to be suitable for conversion towards an Akida accelerator.
