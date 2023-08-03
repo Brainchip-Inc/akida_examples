@@ -221,12 +221,46 @@ def check_model_performance(model, x_test=x_test, labels_test=labels_test):
 check_model_performance(model_keras)
 
 ######################################################################
-# 3.  Load a pre-trained quantized Keras model
+# 3. Quantization
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+######################################################################
+# 3.1. 8-bit PTQ
+# ^^^^^^^^^^^^^^
+# The above native Keras model is quantized to 8-bit (all weights and activations) and we compute
+# the post-training quantization (PTQ) accuracy.
 #
-# The above native Keras model is quantized to 8-bit (all weights and activations) and fine-tuned
-# (QAT) to produce `bc_vit_ti16_imagenet_pretrained helper
-# <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained>`__
+
+from akida_models import fetch_file
+
+# Retrieve calibration samples
+samples = fetch_file("https://data.brainchip.com/dataset-mirror/samples/imagenet/imagenet_batch1024_224.npz",
+                     fname="imagenet_batch1024_224.npz")
+samples = np.load(samples)
+samples = np.concatenate([samples[item] for item in samples.files])
+
+######################################################################
+
+from quantizeml.models import quantize
+from quantizeml.layers import QuantizationParams
+
+# Quantize the model to 8-bit and calibrate using 1024 samples with a batch size of 100 over 2
+# epochs.
+model_quantized = quantize(model_keras,
+                           qparams=QuantizationParams(weight_bits=8, activation_bits=8),
+                           num_samples=1024, batch_size=100, epochs=2)
+
+######################################################################
+check_model_performance(model_quantized)
+
+######################################################################
+# 3.2. Load a pre-trained quantized Keras model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The `bc_vit_ti16_imagenet_pretrained helper
+# <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained>`__ was
+# obtained with the same 8-bit quantization scheme but with an additional QAT step to further
+# improve accuracy.
 #
 
 from akida_models import bc_vit_ti16_imagenet_pretrained
