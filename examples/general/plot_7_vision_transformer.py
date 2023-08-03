@@ -35,7 +35,7 @@ from akida_models.imagenet import preprocessing
 NUM_CHANNELS = 3
 IMAGE_SIZE = 224
 
-num_images = 10
+NUM_IMAGES = 10
 
 # Retrieve dataset file from Brainchip data server
 file_path = get_file(
@@ -47,8 +47,8 @@ data_folder = os.path.dirname(file_path)
 
 # Load images for test set
 x_test_files = []
-x_test = np.zeros((num_images, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(num_images):
+x_test = np.zeros((NUM_IMAGES, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
+for id in range(NUM_IMAGES):
     test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
     x_test_files.append(test_file)
     img_path = os.path.join(data_folder, test_file)
@@ -57,7 +57,7 @@ for id in range(num_images):
     image = preprocessing.preprocess_image(image, IMAGE_SIZE)
     x_test[id, :, :, :] = np.expand_dims(image, axis=0)
 
-print(f'{num_images} images loaded and preprocessed.')
+print(f'{NUM_IMAGES} images loaded and preprocessed.')
 
 # Parse labels file
 fname = os.path.join(data_folder, 'labels_validation.txt')
@@ -68,8 +68,8 @@ with open(fname, newline='') as csvfile:
         validation_labels[row[0]] = row[1]
 
 # Get labels for the test set by index
-labels_test = np.zeros(num_images)
-for i in range(num_images):
+labels_test = np.zeros(NUM_IMAGES)
+for i in range(NUM_IMAGES):
     labels_test[i] = int(validation_labels[x_test_files[i]])
 
 ######################################################################
@@ -93,15 +93,14 @@ for i in range(num_images):
 #
 # .. note:: The Vision Transformers support has been introduced in Akida 2.0.
 #
-# Both architectures have been modified so that they layers can be quantized to integer only
+# Both architectures have been modified so that their layers can be quantized to integer only
 # operations. The detailed list of changes is:
 #
 #   - replace `LayerNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/LayerNormalization>`__ with
 #     `LayerMadNormalization
 #     <../../api_reference/quantizeml_apis.html#quantizeml.layers.LayerMadNormalization>`__ and
-#     replace the very last normalization layer before the classification layer with a
-#     `BatchNormalization
+#     replace the last normalization previous to the classification head with a `BatchNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/BatchNormalization>`__,
 #   - replace `GeLU <https://www.tensorflow.org/addons/api_docs/python/tfa/layers/GELU>`__
 #     activations with `ReLU8 <https://www.tensorflow.org/api_docs/python/tf/keras/layers/ReLU>`__,
@@ -110,8 +109,7 @@ for i in range(num_images):
 #     `Attention <../../api_reference/quantizeml_apis.html#quantizeml.layers.Attention>`__ with a
 #     `shiftmax <../../api_reference/quantizeml_apis.html#quantizeml.layers.shiftmax>`__ operation.
 #
-# .. note:: Details on the custom layers and operations computations are given in the API
-#           docstrings.
+# .. note:: Details on the custom layers and operations are given in the API docstrings.
 #
 # Layer replacement is made possible through the ``akida_models create`` CLI that comes with
 # dedicated options for the ``vit_ti16`` and ``deit_ti16`` architectures. See for example the helper
@@ -187,9 +185,9 @@ model_keras.summary()
 
 # Check model performance
 def check_model_performance(model, x_test=x_test, labels_test=labels_test):
-    outputs_keras = model.predict(x_test, batch_size=num_images)
+    outputs_keras = model.predict(x_test, batch_size=NUM_IMAGES)
     outputs_keras = np.squeeze(np.argmax(outputs_keras, 1))
-    accuracy_keras = np.sum(np.equal(outputs_keras, labels_test)) / num_images
+    accuracy_keras = np.sum(np.equal(outputs_keras, labels_test)) / NUM_IMAGES
     print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
 
 
@@ -238,10 +236,9 @@ assert accuracy_akida == 1
 # 5.3 Attention maps
 # ~~~~~~~~~~~~~~~~~~
 #
-# Instead of showing predictions on an image like in `AkidaNet/ImageNet inference
-# <plot_1_akidanet_imagenet.html#show-predictions-for-a-random-image>`__, here we propose to show
-# attention maps. This is derived from `Abnar et al. attention rollout
-# <https://arxiv.org/abs/2005.00928>`__ as shown in the following `Keras tutorial
+# Instead of showing predictions, here we propose to show attention maps on an image. This is
+# derived from `Abnar et al. attention rollout <https://arxiv.org/abs/2005.00928>`__ as shown in the
+# following `Keras tutorial
 # <https://keras.io/examples/vision/probing_vits/#method-ii-attention-rollout>`__. This aims to
 # highlight the model abilities to focus on relevant parts in the input image.
 #
