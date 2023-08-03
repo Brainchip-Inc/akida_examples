@@ -77,10 +77,32 @@ for i in range(NUM_IMAGES):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ######################################################################
-# 2.1. Model transformations
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 2.1. Selecting an architecture
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The model zoo comes with two vision transformers architectures:
+# Vision Transformers is a hot-topic in AI and new architectures are being introduced regularly.
+# When selecting an appropriate achitecture for Akida, some size, speed and training capabilities
+# must be considered.
+#
+# The following table briefly shows what led to chose the ViT Tiny and DeiT-dist architectures:
+#
+# +--------------+-------------------+---------+-------------------+----------------------+
+# | Architecture | Original accuracy | #Params | Architecture      | Commment             |
+# +==============+===================+=========+===================+======================+
+# | ViT Base     |  79.90%           |  86M    |  12 heads,        | base model but huge  |
+# |              |                   |         |  12 blocks,       | amount of parameters |
+# |              |                   |         |  hidden size 768  |                      |
+# +--------------+-------------------+---------+-------------------+----------------------+
+# | ViT Tiny     |  75.48%           |  5.8M   |  3 heads,         | edge compatible      |
+# |              |                   |         |  12 blocks,       |                      |
+# |              |                   |         |  hidden size 192  |                      |
+# +--------------+-------------------+---------+-------------------+----------------------+
+# | DeiT-dist    |  74.17%           |  5.8M   |  3 heads,         | easy to retrain      |
+# | Tiny         |                   |         |  12 blocks,       | thanks to the        |
+# |              |                   |         |  hidden size 192  | distilled token      |
+# +--------------+-------------------+---------+-------------------+----------------------+
+#
+# The model zoo then comes with two vision transformers architectures:
 #
 #  - `BC ViT Ti16 <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16>`__, which
 #    is a modified version of `ViT TI16
@@ -92,6 +114,10 @@ for i in range(NUM_IMAGES):
 #    original DeiT-dist paper <https://arxiv.org/abs/2012.12877>`__.
 #
 # .. note:: The Vision Transformers support has been introduced in Akida 2.0.
+
+######################################################################
+# 2.2. Model transformations
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Both architectures have been modified so that their layers can be quantized to integer only
 # operations. The detailed list of changes is:
@@ -166,7 +192,7 @@ for i in range(NUM_IMAGES):
 #
 
 ######################################################################
-# 2.2. Load a pre-trained native Keras model
+# 2.3. Load a pre-trained native Keras model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 from akida_models.model_io import load_model
