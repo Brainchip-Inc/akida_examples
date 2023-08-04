@@ -113,7 +113,7 @@ objects during the quantization process.
 
 To properly operate, an
 `OutputQuantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__ must
-be calibrated so that it determines an adequate quantization range. Calibration will dertermine the
+be calibrated so that it determines an adequate quantization range. Calibration will determine the
 quantization range statistically. It is possible to pass down samples to the
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function so that
 calibration and quantization are performed simultaneously.
