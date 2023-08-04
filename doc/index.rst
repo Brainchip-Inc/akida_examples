@@ -76,7 +76,7 @@ The Akida Neuromorphic ML Framework
 
   * the Akida model API, a library supporting the native creation of Akida models,
     the inference of instantiated models, their serialization (program sequences)
-    and their mapping for a targetted hardware device,
+    and their mapping for a targeted hardware device,
 
   * a SW backend (simulator),  CPU implementation of the Akida training and inference,
 

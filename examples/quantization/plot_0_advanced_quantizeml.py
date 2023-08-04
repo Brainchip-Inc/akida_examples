@@ -49,20 +49,18 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 # to set every parameter with a different value. The following list is a detailed description of the
 # parameters with tips on how to set them:
 #
-# - ``input_weight_bits`` is the bitwidth with which the weights of the first layer in the
-#   model are quantized. It is usually set to 8 which allows to better preserve the overall
-#   accuracy.
-# - ``weight_bits`` is the bitwidth with which all the other weights in the model are
-#   quantized. It is usually set to 8 (Akida 2.0) or 4 (Akida 1.0).
-# - ``activation_bits`` is the bitwidth with which all ReLU activations in the model are
-#   quantized. It is usually set to 8 (Akida 2.0) or 4 (Akida 1.0) but can be lower for edge
-#   learning (1-bit).
+# - ``input_weight_bits`` is the bitwidth used to quantize weights of the first layer. It is usually
+#   set to 8 which allows to better preserve the overall accuracy.
+# - ``weight_bits`` is the bitwidth  used to quantize all other weights. It is usually set to 8
+#   (Akida 2.0) or 4 (Akida 1.0).
+# - ``activation_bits`` is the bitwidth used to quantize all ReLU activations. It is usually set to
+#   8 (Akida 2.0) or 4 (Akida 1.0) but can be lower for edge learning (1-bit).
 # - ``per_tensor_activations`` is a boolean that allows to define a per-axis (default) or per-tensor
 #   quantization for ReLU activations. Per-axis quantization will usually provide more accurate
 #   results (default ``False`` value) but it might be more challenging to `calibrate
 #   <plot_0_advanced_quantizeml.html#calibration>`__ the model. Note that Akida 1.0 only supports
 #   per-tensor activations.
-# - ``output_bits`` is the bitwidth with wich intermediate results are quantized in
+# - ``output_bits`` is the bitwidth used to quantize intermediate results in
 #   `OutputQuantizer <../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__.
 #   Go back to the `user guide quantization flow <../../user_guide/quantizeml.html#quantization-flow>`__
 #   for details about this process.
@@ -76,8 +74,8 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 #           <../../user_guide/hw_constraints.html>`__. Staying within a 8-bit or 4-bit quantization
 #           scheme is thus recommended.
 #
-# .. warning:: ``QuantizationParams`` is only applied to float layers when they are first quantized.
-#              When re-quantizing a model, one must provide a complete ``q_config``.
+# .. warning:: ``QuantizationParams`` is only applied the first time a model is quantized.
+#              If you want to re-quantize a model, you must to provide a complete ``q_config``.
 
 ######################################################################
 # Command-line interface equivalent
@@ -124,21 +122,21 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 
 
 ######################################################################
-# 1.2. Using a configuration
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 1.2. Using a configuration file
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Quantization can further be customized via a JSON configuration passed to the ``q_config``
+# Quantization can be further customized via a JSON configuration passed to the ``q_config``
 # parameter of the `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
-# function. This usage should be limited to targetted customization as writting a whole
-# configuration from scratch is really error prone. An example of targetted customization is to set
-# the quantization bitwidth of a feature extractor to 1 which will allow edge learning.
+# function. This usage should be limited to targeted customization as writing a whole
+# configuration from scratch is really error prone. An example of targeted customization is to set
+# the quantization bitwidth of the output of a feature extractor to 1 which will allow edge learning.
 #
-# .. warning:: When provided, the configuration has priority over quantization parameters meaning
-#              that a layer will always quantized with the given JSON configuration instead of
-#              parameters and the configuration should as a result contain all desired parameters.
+# .. warning:: When provided, the configuration file has priority over arguments. As a result
+#              however, the configuration file therefore must contain all parameters - you cannot
+#              rely on argument defaults to set non-specified values.
 #
-# The following code snippets show what a configuration looks like and how to edit it to customize
-# quantization.
+# The following code snippets show what a configuration file looks like and how to edit it to
+# customize quantization.
 #
 
 import keras
@@ -181,7 +179,7 @@ print(json.dumps(config, indent=4))
 #   when calling ``quantize``).
 # - the depthwise layer weights are quantized to 16-bit because it is the first layer
 #   (``input_weight_bits=16``) and are quantized per-axis (default for weights). The given axis is
-#   -2 because of Keras depthwise kernel shape that is (Kx, Ky, C, F), channel dimension is at index
+#   -2 because of Keras depthwise kernel shape that is (Kx, Ky, F, 1), channel dimension is at index
 #   -2.
 # - the pointwise layer has weights quantized to 4-bit (``weight_bits=4``) but the quantization axis
 #   is not specified as it defaults to -1 for a per-axis quantization. One would need to set it to
@@ -228,8 +226,8 @@ print(json.dumps(new_config, indent=4))
 # --------------
 
 ######################################################################
-# 2.1. Why is calibration required ?
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 2.1. Why is calibration required?
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # As already stated, `OutputQuantizer
 # <../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__ are added between
@@ -238,11 +236,12 @@ print(json.dumps(new_config, indent=4))
 # is called calibration.
 #
 # Calibration will statistically determine the quantization range by passing samples into the float
-# model and observe the intermediate output values. The quantization range is store in ``range_max``
-# variable. The calibration algorithm used in QuantizeML is based on a moving maximum: ``range_max``
-# is initialized with the maximum value of the samples first batch (per-axis or per-tensor depending
-# on the quantization scheme) and the following batches will update ``range_max`` with a moving
-# momentum strategy (momentum is set to 0.9).
+# model and observing the intermediate output values. The quantization range is stored in
+# ``range_max`` variable. The calibration algorithm used in QuantizeML is based on a moving maximum:
+# ``range_max`` is initialized with the maximum value of the first batch of samples (per-axis or
+# per-tensor depending on the quantization scheme) and the following batches will update
+# ``range_max`` with a moving momentum strategy (momentum is set to 0.9). Pseudo code is given
+# below:
 #
 # .. code-block:: python
 #
@@ -267,7 +266,7 @@ print(json.dumps(new_config, indent=4))
 #
 # When the ``samples`` parameter of ``quantize`` is left to the default ``None`` value, random
 # samples will be generated using the ``num_samples`` value (default is 1024). When the model input
-# shape has 1 or 3 channel, which corresponds to an image, the random samples value are unsigned
+# shape has 1 or 3 channels, which corresponds to an image, the random samples value are unsigned
 # 8-bit integers in the [0, 255] range. If the channel dimension is not 1 or 3, the generated
 # samples are 8-bit signed integers in the [-128, 127] range.
 # If that does not correspond to the range expected by your model, either add a `Rescaling
