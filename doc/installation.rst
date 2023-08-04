@@ -37,7 +37,10 @@ be setup with Python's pip package manager:
     pip install akida-models=={MODELS_VERSION}
 
 .. note::
-    We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_:
+    We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_.
+    Please note that the python version must be explicitly specified when creating a
+    conda environment. The specification must be for one of the supported python
+    versions listed above.
 
     .. code-block:: bash
 
