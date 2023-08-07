@@ -3,9 +3,10 @@ Advanced CNN2SNN tutorial
 =========================
 
 .. warning::
-    While it is possible to quantize Akida 1.0 models using cnn2snn legacy quantization blocks,
-    such usage is deprecated. You should rather use `QuantizeML <../../user_guide/quantizeml.html#>`__
-    tool to quantize a model whenever possible.
+    Please note that CNN2SNN quantization is now deprecated and shouldn't be used anymore.
+    `QuantizeML <../../user_guide/quantizeml.html#>`__ tool replaces it.
+    However, we wanted to keep some CNN2SNN quantization
+    examples of use, to avoid Akida 1.0 IP based hardware support discontinuity.
 
 This tutorial gives insights about CNN2SNN for users who want to go deeper
 into the quantization possibilities of Keras models. We recommend first looking
