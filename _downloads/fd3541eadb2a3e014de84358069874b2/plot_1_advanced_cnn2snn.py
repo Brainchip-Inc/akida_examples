@@ -9,14 +9,13 @@ Advanced CNN2SNN tutorial
 
 This tutorial gives insights about CNN2SNN for users who want to go deeper
 into the quantization possibilities of Keras models. We recommend first looking
-at the `user guide <../../user_guide/cnn2snn.html#legacy-quantization-api>`__  and the
-`CNN2SNN conversion flow tutorial <plot_0_cnn_flow.html>`__ to get started with
+at the `user guide <../../user_guide/cnn2snn.html#legacy-quantization-api>`__  to get started with
 CNN2SNN.
 
 The CNN2SNN toolkit offers an easy-to-use set of functions to get a quantized
 model from a native Keras model and to convert it to an Akida model compatible
-with the Akida NSoC. The `quantize <../../api_reference/cnn2snn_apis.html#quantize>`__
-and `quantize_layer <../../api_reference/cnn2snn_apis.html#quantize-layer>`__
+with the Akida NSoC. The `quantize <../../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`__
+and `quantize_layer <../../api_reference/cnn2snn_apis.html#cnn2snn.quantize_layer>`__
 high-level functions replace native Keras layers into custom CNN2SNN quantized
 layers which are derived from their Keras equivalents. However, these functions
 are not designed to choose how the weights and activations are quantized. This
