@@ -12,7 +12,7 @@ Overview
    API reference <api_reference/api_reference.rst>
    Examples <examples/index.rst>
    Model zoo performances <zoo_performances.rst>
-   Changelog <https://github.com/Brainchip-Inc/akida_examples/releases>
+   Changelog <changelog.rst>
    Support <https://support.brainchip.com/portal/home>
    license.rst
 
