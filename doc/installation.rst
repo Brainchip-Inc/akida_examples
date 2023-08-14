@@ -13,7 +13,7 @@ Supported configurations
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
     Please refer to `this link
-    <https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads>`_
+    <https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads>`__
     for installation.
 
 Quick installation
@@ -51,9 +51,14 @@ Running examples
 ----------------
 
 The Akida tutorials can be downloaded from the `examples <examples/index.html>`_
-section. Dependencies needed to replay the examples can be installed using the
-:download:`requirements.txt <../requirements.txt>` file:
+section as python scripts or Jupyter Notebooks. Dependencies needed to replay
+the examples can be installed using the :download:`requirements.txt <../requirements.txt>`
+file:
 
 .. code-block:: bash
 
     pip install -r requirements.txt
+
+.. note::
+    Please refer to `this link <https://jupyter.org/>`__ for Jupyter Notebook installation
+    and configuration.
