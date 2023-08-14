@@ -3,8 +3,8 @@ Hardware constraints
 ====================
 
 .. note::
-       The following constraints concern only Akida 1.0 IP based solutions, such as AKD1000 and
-       AKD1500.
+       The following constraints concern only Akida 1.0 IP based solutions
+       and the AKD1000 reference SoC.
 
 While working with CNN2SNN and the Akida simulator, only few limitations are
 imposed. When mapping a model to the Akida hardware, not all Model and Layer
