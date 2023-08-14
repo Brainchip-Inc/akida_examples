@@ -1,8 +1,14 @@
 Model zoo performance
 =====================
 
-This page lets you discover all of Akida model zoo machine learning models with
-their respective performance.
+| This page lets you discover all of Akida model zoo machine learning models with
+  their respective performance.
+| Please refer to:
+
+* `Akida 1.0 models`_ for models targetting the Akida Neuromorphic Processor IP 1.0 and the AKD1000 reference SoC,
+* `Akida 2.0 models`_ for models targetting the Akida Neuromorphic Processor IP 2.0,
+* `Upgrading to Akida 2.0 tutorial <./examples/quantization/plot_1_upgrading_to_2.0.html>`_ to understand the
+  architectural differences between 1.0 and 2.0 models and their respective workflows.
 
 .. note::
     The download links provided point towards standard Tensorflow Keras models
