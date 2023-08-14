@@ -1,27 +1,39 @@
 """
-Regression tutorial
+Age estimation (regression) example
 ==================================================
 
-This tutorial demonstrates that Akida-compatible models can perform regression tasks at the same
-accuracy level as native CNN networks.
+This tutorial aims to demonstrate the comparable accuracy of the Akida-compatible
+model to the traditional Keras model in performing an age estimation task.
 
-This is illustrated through an age estimation problem using the
-`UTKFace dataset <https://susanqq.github.io/UTKFace/>`__.
+It uses the `UTKFace dataset <https://susanqq.github.io/UTKFace/>`__, which
+includes images of faces and age labels, to showcase how well akida compatible
+model can predict the ages of individuals based on their facial features.
 
 """
 
 ######################################################################
-# 1. Load the dataset
-# ~~~~~~~~~~~~~~~~~~~
+# 1. Load the UTKFace Dataset
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# The UTKFace dataset has 20,000+ diverse face images spanning 0 to 116 years.
+# It includes age, gender, ethnicity annotations. This dataset is useful for
+# various tasks like age estimation, face detection, and more.
+#
+# Load the dataset from Brainchip data server using the `akida_models preprocessing
+# tool <../../api_reference/akida_models_apis.html#akida_models.utk_face.preprocessing.load_data>`_.
 
 from akida_models.utk_face.preprocessing import load_data
 
 # Load the dataset using akida_models preprocessing tool
 x_train, y_train, x_test, y_test = load_data()
 
+######################################################################
+# Akida models accept only `uint8 tensors <../../api_reference/akida_apis.html?highlight=uint8#akida.Model>`_
+# as inputs. Use uint8 raw data for Akida performance evaluation.
+
 # For Akida inference, use uint8 raw data
 x_test_akida = x_test.astype('uint8')
+
 
 ######################################################################
 # 2. Load a pre-trained native Keras model
@@ -116,6 +128,9 @@ assert abs(mae_keras - mae_akida) < 0.5
 ######################################################################
 # 5. Estimate age on a single image
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Select a random image from the test set for age estimation.
+# Print the Keras model's age prediction using the ``model_keras.predict()`` function.
+# Print the Akida model's estimated age and the actual age associated with the image.
 
 import matplotlib.pyplot as plt
 
