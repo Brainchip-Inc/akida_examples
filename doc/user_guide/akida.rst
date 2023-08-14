@@ -31,7 +31,7 @@ Going from the standard deep learning world to Akida world is done by following 
 
    Akida workflow
 
-A practical example of the overall flow is given in the examples section, see `GXNOR/MNIST example
+A practical example of the overall flow is given in the examples section, see the `workflow tutorial
 <../examples/general/plot_0_global_workflow.html#sphx-glr-examples-general-plot-0-global-workflow-py>`__.
 
 Programming interface
