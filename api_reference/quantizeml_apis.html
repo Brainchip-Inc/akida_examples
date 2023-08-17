@@ -283,11 +283,9 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html">AkidaNet/ImageNet inference</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#dataset-preparation">1. Dataset preparation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#create-a-keras-akidanet-model">2. Create a Keras AkidaNet model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#quantized-model">3. Quantized model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#pretrained-quantized-model">4. Pretrained quantized model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#conversion-to-akida">5. Conversion to Akida</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance">6. Hardware mapping and performance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#pretrained-quantized-model">2. Pretrained quantized model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#conversion-to-akida">3. Conversion to Akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance">4. Hardware mapping and performance</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_2_ds_cnn_kws.html">DS-CNN/KWS inference</a><ul>
@@ -1340,7 +1338,8 @@ Defaults to 8.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>activation_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – activations quantization bitwidth. Defaults to 8.</p></li>
-<li><p><strong>per_tensor_activations</strong> (<em>bool</em><em>, </em><em>optional</em>) – per-axis. Defaults to False.</p></li>
+<li><p><strong>per_tensor_activations</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to quantize activation per-tensor or
+per-axis. Defaults to False.</p></li>
 <li><p><strong>weight_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – weights quantization bitwidth. Defaults to 8.</p></li>
 <li><p><strong>output_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – outputs quantization bitwidth. Defaults to 8.</p></li>
 <li><p><strong>input_weight_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – weights quantization bitwidth for the first layer.
@@ -1762,6 +1761,16 @@ recording of all dynamic quantization objects.</p>
 <dt class="sig sig-object py" id="quantizeml.models.calibrate">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/calibrate.html#calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.calibrate" title="Permalink to this definition"></a></dt>
 <dd><p>Calibrates the model using the provided samples.</p>
+<p>With TENN models only np.array samples are supported for calibration. Those should have
+a temporally coherent data, which means that their expected shape is
+[batch_size*Seq, dim_0,, …, dim_n] where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>batch_size is the same batch_size provided to the calibration.</p></li>
+<li><p>Seq is a dataset parameter that defines the temporally coherent data (eg number of frames</p></li>
+</ul>
+<p>per video clips).</p>
+</div></blockquote>
 <p>When no samples are provided, random samples are generated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
