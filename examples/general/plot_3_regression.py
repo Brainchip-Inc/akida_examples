@@ -19,12 +19,13 @@ model can predict the ages of individuals based on their facial features.
 # It includes age, gender, ethnicity annotations. This dataset is useful for
 # various tasks like age estimation, face detection, and more.
 #
-# Load the dataset from Brainchip data server using the `akida_models preprocessing
-# tool <../../api_reference/akida_models_apis.html#akida_models.utk_face.preprocessing.load_data>`_.
+# Load the dataset from Brainchip data server using the `load_data
+# <../../api_reference/akida_models_apis.html#akida_models.utk_face.preprocessing.load_data>`__
+# helper (decode JPEG images and load the associated labels).
 
 from akida_models.utk_face.preprocessing import load_data
 
-# Load the dataset using akida_models preprocessing tool
+# Load the dataset
 x_train, y_train, x_test, y_test = load_data()
 
 ######################################################################
