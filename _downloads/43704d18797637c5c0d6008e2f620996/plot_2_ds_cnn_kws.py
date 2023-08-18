@@ -91,7 +91,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The above native Keras model has been quantized to 8-bit. Note that
-# a 4-bit version is also available from the `model zoo <../../zoo_performances.html#id10>`_.
+# a 4-bit version is also available from the `model zoo <../../model_zoo_performance.html#id10>`_.
 #
 
 from quantizeml.models import load_model
