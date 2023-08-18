@@ -1,9 +1,13 @@
 Model zoo performance
 =====================
 
-| This page lets you discover all of Akida model zoo machine learning models with
-  their respective performance.
-| Please refer to:
+| The Brainchip `akida_models <https://pypi.org/project/akida-models>`__ package offers a set of pre-built
+  akida compatible models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training
+  scripts. Please refer to the `model zoo API reference <./api_reference/akida_models_apis.html#model-zoo>`__
+  for a complete list of the available models.
+
+| This page lists the performance of all models from the zoo reported for both Akida 1.0 and Akida 2.0. Please
+  refer to:
 
 * `Akida 1.0 models`_ for models targetting the Akida Neuromorphic Processor IP 1.0 and the AKD1000 reference SoC,
 * `Akida 2.0 models`_ for models targetting the Akida Neuromorphic Processor IP 2.0,
