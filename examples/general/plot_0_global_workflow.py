@@ -142,6 +142,12 @@ model_quantized = quantize(model_keras, qparams=qparams)
 model_quantized.summary()
 
 ######################################################################
+# .. Note:: Note that the number of parameters for the floating and quantized models differs,
+#           a consequence of the BatchNormalization folding and the additional parameters
+#           added for quantization. For further details, please refer to their respective summary.
+#
+
+######################################################################
 # Check the quantized model accuracy.
 
 
