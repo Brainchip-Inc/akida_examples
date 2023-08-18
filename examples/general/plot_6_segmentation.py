@@ -2,11 +2,15 @@
 Segmentation tutorial
 ==================================================
 
-This tutorial demonstrates that Akida-compatible models can perform segmentation tasks.
-
-This is illustrated through a person segmentation problem using the `Portrait128 dataset
+This example demonstrates image segmentation with an Akida-compatible model as
+illustrated through person segmentation using the `Portrait128 dataset
 <https://github.com/anilsathyan7/Portrait-Segmentation>`__.
 
+Using pre-trained models for quick runtime, this example shows the evolution of
+model performance for a trained keras floating point model, a keras quantized and
+Quantization Aware Trained (QAT) model, and an Akida-converted model. Notice that
+the performance of the original keras floating point model is maintained throughout
+the model conversion flow.
 """
 
 ######################################################################
@@ -51,22 +55,23 @@ plt.show()
 # 2. Load a pre-trained native Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The model is an AkidaUNet, that has an AkidaNet (0.5) backbone to extract features,
-# combined with a succession of `separable transposed convolutional
+# The model used in this example is AkidaUNet. It has an AkidaNet (0.5) backbone to extract
+# features combined with a succession of `separable transposed convolutional
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
-# blocks to build a segmentation map.
+# blocks to build an image segmentation map. A pre-trained floating point keras model is
+# downloaded to save training time.
 #
 # .. note::
-#   - The "transposed" convolutional feature has been introduced in Akida 2.0.
-#   - The "separable transposed" operation is obtained combining the QuantizeML custom
+#   - The "transposed" convolutional feature is new in Akida 2.0.
+#   - The "separable transposed" operation is realized through the combination of a QuantizeML custom
 #     `DepthwiseConv2DTranspose
 #     <../../api_reference/quantizeml_apis.html#quantizeml.layers.DepthwiseConv2DTranspose>`__ layer
 #     with a standard pointwise convolution.
 #
-# The performance of the model is evaluated using both the pixel accuracy that describes how well
-# the model can predict the segmentation mask pixel by pixel and the `Binary IoU
-# <https://www.tensorflow.org/api_docs/python/tf/keras/metrics/BinaryIoU>`__ that better takes into
-# account how close the predicted mask is to the ground truth.
+# The performance of the model is evaluated using both pixel accuracy and `Binary IoU
+# <https://www.tensorflow.org/api_docs/python/tf/keras/metrics/BinaryIoU>`__. The pixel
+# accuracy describes how well the model can predict the segmentation mask pixel by pixel
+# and the Binary IoU_ takes into account how close the predicted mask is to the ground truth.
 #
 
 from tensorflow.keras.utils import get_file
@@ -97,8 +102,11 @@ print(f"Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 # 3. Load a pre-trained quantized Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model is quantized to 8-bit (all weights and activations) and fine-tuned
-# (QAT).
+# The next step is to quantize and potentially perform Quantize Aware Training (QAT) on the
+# Keras model from the previous step. After the Keras model is quantized to 8-bits for
+# all weights and activations, QAT is used to maintain the performance of the quantized
+# model. Again, a pre-trained model is downloaded to save runtime.
+#
 
 from akida_models import akida_unet_portrait128_pretrained
 
@@ -120,7 +128,10 @@ print(f"Keras quantized binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# The quantized Keras model is now converted into an Akida model.
+# Finally, the quantized Keras model from the previous step is converted into an Akida
+# model and its performance is evaluated. Note that the original performance of the keras
+# floating point model is maintained throughout the conversion process in this example.
+#
 
 from cnn2snn import convert
 
@@ -163,6 +174,11 @@ assert binary_iou > 0.9
 ######################################################################
 # 5. Segment a single image
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# For visualization of the person segmentation performed by the Akida model, display a
+# single image along with the segmentation produced by the original floating point model
+# and the ground truth segmentation.
+#
 
 import matplotlib.pyplot as plt
 
