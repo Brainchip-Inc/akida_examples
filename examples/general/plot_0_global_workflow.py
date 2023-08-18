@@ -163,7 +163,7 @@ print('Test accuracy after 8-bit quantization:', compile_evaluate(model_quantize
 # that this remains a calibration rather than a training step: any relevant data could be used, and
 # crucially, no labels are required.
 # The recommended configuration for calibration that is widely used to obtain
-# `zoo performances <../../zoo_performances.html#akida-2-0-models>`__ is:
+# `model zoo performance <../../model_zoo_performance.html#akida-2-0-models>`__ is:
 #
 # - 1024 samples
 # - a batch size of 100

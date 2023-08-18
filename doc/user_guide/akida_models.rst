@@ -9,7 +9,7 @@ Brainchip Akida Models package is a model zoo that offers a set of pre-built aki
 models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training scripts.
 See the `model zoo API reference <../api_reference/akida_models_apis.html#model-zoo>`_ for a
 complete list of the available models. The performance of all models from the zoo are reported for
-both Akida 1.0 and Akida 2.0 in the `zoo performances page <../zoo_performances.html>`__.
+both Akida 1.0 and Akida 2.0 in the `model zoo performance page <../model_zoo_performance.html>`__.
 Akida Models also contains a set of
 `layer blocks <../api_reference/akida_models_apis.html#layer-blocks>`_ that are used to define the
 above models.

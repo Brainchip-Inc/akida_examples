@@ -11,7 +11,7 @@ Overview
    User guide <user_guide/user_guide.rst>
    API reference <api_reference/api_reference.rst>
    Examples <examples/index.rst>
-   Model zoo performances <zoo_performances.rst>
+   Model zoo performance <model_zoo_performance.rst>
    Changelog <changelog.rst>
    Support <https://support.brainchip.com/portal/home>
    license.rst
