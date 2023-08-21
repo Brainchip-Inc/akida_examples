@@ -71,7 +71,7 @@ plt.show()
 # The performance of the model is evaluated using both pixel accuracy and `Binary IoU
 # <https://www.tensorflow.org/api_docs/python/tf/keras/metrics/BinaryIoU>`__. The pixel
 # accuracy describes how well the model can predict the segmentation mask pixel by pixel
-# and the Binary IoU_ takes into account how close the predicted mask is to the ground truth.
+# and the Binary IoU takes into account how close the predicted mask is to the ground truth.
 #
 
 from tensorflow.keras.utils import get_file
