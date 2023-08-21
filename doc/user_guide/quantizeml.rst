@@ -141,7 +141,7 @@ Quantizing the DS-CNN model to 8-bit is then done with:
 Please refer to `calibrate <../api_reference/quantizeml_apis.html#quantizeml.models.calibrate>`__
 for more details on calibration.
 
-Direct quantization of a standard Keras model (also called post-training quantization, PTQ)
+Direct quantization of a standard Keras model (also called Post Training Quantization, PTQ)
 generally introduces a drop in performance. This drop is usually small for 8-bit or even 4-bit
 quantization of simple models, but it can be very significant for low quantization bitwidth and
 complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
@@ -150,7 +150,7 @@ or `transformers <../api_reference/akida_models_apis.html#transformers>`_ archit
 If the quantized model offers acceptable performance, it can be directly converted into an Akida
 model (see the `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
 
-However, if the performance drop is too high, a quantization-aware training (QAT) step is required
+However, if the performance drop is too high, a Quantization Aware Training (QAT) step is required
 to recover the performance prior to quantization. Since the quantized model is a Keras model, it can
 then be trained using the standard Keras API.
 

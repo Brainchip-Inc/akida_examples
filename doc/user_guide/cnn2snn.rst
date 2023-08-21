@@ -126,7 +126,7 @@ Typical quantization scenario
 The CNN2SNN toolkit offers a turnkey solution to quantize a model:
 the `quantize <../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`_ function. It
 replaces the neural Keras layers (Conv2D, SeparableConv2D and Dense) and
-the ReLU layers with custom CNN2SNN layers, which are quantization-aware
+the ReLU layers with custom CNN2SNN layers, which are Quantization Aware
 derived versions of the base Keras layer types. The obtained quantized model is
 still a Keras model with a mix of CNN2SNN quantized layers (QuantizedReLU,
 QuantizedDense, etc.) and standard Keras layers (BatchNormalization, MaxPool2D,
@@ -141,7 +141,7 @@ If the quantized model offers acceptable performance, it can be directly
 converted into an Akida model, ready to be loaded on the Akida NSoC (see the
 `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
 
-However, if the performance drop is too high, a quantization-aware training is
+However, if the performance drop is too high, a Quantization Aware Training is
 required to recover the performance prior to quantization. Since the quantized
 model is a Keras model, it can then be trained using the standard Keras API.
 
@@ -250,29 +250,29 @@ Keras layer types:
   * Reshape
   * Input
 
-CNN2SNN Quantization-aware layers
+CNN2SNN Quantization Aware layers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Several articles have reported\ [#fn-4]_ that the quantization of a pre-trained
 float Keras model using 8-bit precision can be performed with a minimal loss
 of accuracy for simple models, but that for lower bitwidth or complex models a
-quantization-aware re-training of the quantized model may be required.
+Quantization Aware Training of the quantized model may be required.
 
-The CNN2SNN toolkit therefore includes quantization-aware versions of the base
+The CNN2SNN toolkit therefore includes Quantization Aware versions of the base
 Keras layers.
 
 These layers are produced when quantizing a standard Keras model using the
-``quantize`` function: it replaces the base Keras layers with their quantization-aware
+``quantize`` function: it replaces the base Keras layers with their Quantization Aware
 counterparts (see the `quantize <../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`_ function).
 
-Quantization-aware training simulates the effect of quantization in the forward
+Quantization Aware Training simulates the effect of quantization in the forward
 pass, yet using a straight-through estimator for the quantization gradient in
 the backward pass.
 For the stochastic gradient descent to be efficient, the weights are stored as
 float values and updated with high precision during back propagation.
 This ensures sufficient precision in accumulating tiny weights adjustments.
 
-The CNN2SNN toolkit includes two classes of quantization-aware layers:
+The CNN2SNN toolkit includes two classes of Quantization Aware layers:
 
 
 * **quantized processing layers**\ :
@@ -289,7 +289,7 @@ Most of the parameters for the quantized processing layers are identical to
 those used when defining a model using standard Keras layers. However, each of
 these layers also includes a ``quantizer`` parameter that specifies the
 `WeightQuantizer <../api_reference/cnn2snn_apis.html#weightquantizer>`_
-object to use during the quantization-aware training.
+object to use during the Quantization Aware Training.
 
 The quantized ReLU takes a single parameter corresponding to the
 bitwidth of the quantized activations.
@@ -320,7 +320,7 @@ special layer (`InputConvolutional <../api_reference/akida_apis.html#akida.Input
 is however able to receive image data (8-bit grayscale or RGB). See the
 `Akida user guide <akida.html>`__ for further details.
 
-The CNN2SNN toolkit supports any quantization-aware training layer as the first
+The CNN2SNN toolkit supports any Quantization Aware Training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
 accept dense inputs, thanks to the special

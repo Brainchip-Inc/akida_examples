@@ -271,7 +271,7 @@ model_keras.summary()
 # when running on Akida hardware.
 #
 # Quantization of ViT models can be done using `QuantizeML python package <../../user_guide/quantizeml.html>`__
-# using either Post-Training Quantization (PTQ) or Quantization-aware Training (QAT) methods. The following
+# using either Post Training Quantization (PTQ) or Quantization Aware Training (QAT) methods. The following
 # section shows quantization example of `vit_ti16 <../../_modules/akida_models/transformers/model_vit.html#vit_ti16>`__
 # which is trained on Imagenet dataset.
 
@@ -314,7 +314,7 @@ model_quantized.summary()
 
 
 ######################################################################
-# 4.2 Quantization-aware Training (Optional)
+# 4.2 Quantization Aware Training (Optional)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # In Section 4.1, we performed PTQ and converted the weights and activation outputs to 8-bit integer numbers.
 # In most cases, there is no accuracy drop observed after quantization, however in cases where an accurary
