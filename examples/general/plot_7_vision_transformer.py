@@ -1,25 +1,22 @@
 """
-Vision transformers
-===================
-
-This tutorial demonstrates that Vision Transformers can be adapted and converted to Akida to perform
-image classification.
+Build Vision Transformers for Akida
+===================================
 
 Just like for the `AkidaNet example
 <plot_1_akidanet_imagenet.html#sphx-glr-examples-general-plot-1-akidanet-imagenet-py>`__, ImageNet
 images are not publicly available, performance is assessed using a set of 10 copyright free images
 that were found on Google using ImageNet class names.
 
-"""
+The Vision Transformer, or ViT, is a model for image classification that employs a Transformer-like
+architecture over patches of the image. An image is split into fixed-size patches, each of them are
+then linearly embedded, position embeddings are added, and the resulting sequence of vectors are
+fed to a standard Transformer encoder.
 
-######################################################################
-# 1. Dataset preparation
-# ~~~~~~~~~~~~~~~~~~~~~~
-#
-# See `AkidaNet example
-# <plot_1_akidanet_imagenet.html#sphx-glr-examples-general-plot-1-akidanet-imagenet-py>`__ for
-# details on dataset preparation.
-#
+The 2nd generation of Akida now supports patch and position embeddings, and the encoder block in
+hardware. This tutorial explains how to build an optimized ViT using Akida models python API for
+The 2nd generation Akida hardware.
+
+"""
 
 import os
 import csv
@@ -73,73 +70,94 @@ for i in range(NUM_IMAGES):
     labels_test[i] = int(validation_labels[x_test_files[i]])
 
 ######################################################################
-# 2. Create a transformer model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-######################################################################
-# 2.1. Selecting an architecture
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 1. Model selection
+# ~~~~~~~~~~~~~~~~~~
+# There are many varients of ViT. The choice of the model is typically influenced by the tradeoff
+# among architecture size, accuracy, inference speed, and training capabilities.
 #
-# Vision Transformers is a hot-topic in AI and new architectures are being introduced regularly.
-# When selecting an appropriate achitecture for Akida, some size, speed and training capabilities
-# must be considered.
+# The following table shows few varients of commonly used ViT:
 #
-# The following table briefly shows what led to chose the ViT Tiny and DeiT-dist architectures:
-#
-# +--------------+-------------------+---------+-------------------+----------------------+
-# | Architecture | Original accuracy | #Params | Architecture      | Commment             |
-# +==============+===================+=========+===================+======================+
-# | ViT Base     |  79.90%           |  86M    |  12 heads,        | base model but huge  |
-# |              |                   |         |  12 blocks,       | amount of parameters |
-# |              |                   |         |  hidden size 768  |                      |
-# +--------------+-------------------+---------+-------------------+----------------------+
-# | ViT Tiny     |  75.48%           |  5.8M   |  3 heads,         | edge compatible      |
-# |              |                   |         |  12 blocks,       |                      |
-# |              |                   |         |  hidden size 192  |                      |
-# +--------------+-------------------+---------+-------------------+----------------------+
-# | DeiT-dist    |  74.17%           |  5.8M   |  3 heads,         | easy to retrain      |
-# | Tiny         |                   |         |  12 blocks,       | thanks to the        |
-# |              |                   |         |  hidden size 192  | distilled token      |
-# +--------------+-------------------+---------+-------------------+----------------------+
-#
-# The model zoo then comes with two vision transformers architectures:
-#
-#  - `BC ViT Ti16 <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16>`__, which
-#    is a modified version of `ViT TI16
-#    <../../api_reference/akida_models_apis.html#akida_models.vit_ti16>`__ described in `the
-#    original ViT paper <https://arxiv.org/abs/2010.11929>`__,
-#  - `BC DeiT-dist Ti16 <../../api_reference/akida_models_apis.html#akida_models.bc_deit_ti16>`__,
-#    which is a modified version of the original `DeiT TI16
-#    <../../api_reference/akida_models_apis.html#akida_models.deit_ti16>`__ described in `the
-#    original DeiT-dist paper <https://arxiv.org/abs/2012.12877>`__.
+# +--------------+-------------------+---------+-------------------+
+# | Architecture | Original accuracy | #Params | Architecture      |
+# +==============+===================+=========+===================+
+# | ViT Base     |  79.90%           |  86M    |  12 heads,        |
+# |              |                   |         |  12 blocks,       |
+# |              |                   |         |  hidden size 768  |
+# +--------------+-------------------+---------+-------------------+
+# | ViT Tiny     |  75.48%           |  5.8M   |  3 heads,         |
+# |              |                   |         |  12 blocks,       |
+# |              |                   |         |  hidden size 192  |
+# +--------------+-------------------+---------+-------------------+
+# | DeiT-dist    |  74.17%           |  5.8M   |  3 heads,         |
+# | Tiny         |                   |         |  12 blocks,       |
+# |              |                   |         |  hidden size 192  |
+# +--------------+-------------------+---------+-------------------+
 #
 # .. note:: The Vision Transformers support has been introduced in Akida 2.0.
-
-######################################################################
-# 2.2. Model transformations
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The Akida models zoo provides edge suitable ViT architectures that are optimized to run on
+# Akida hardware:
+#
+#  - `ViT (tiny) <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16>`__,
+#  - `DeiT-dist (tiny) <../../api_reference/akida_models_apis.html#akida_models.bc_deit_ti16>`__.
 #
 # Both architectures have been modified so that their layers can be quantized to integer only
-# operations. The detailed list of changes is:
+# operations.
+
+
+######################################################################
+# 2. Model Optimization for Akida hardware
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# ViT have many encoder blocks that performs self-attention to process visual data. Each encoder
+# block consists of many different layers. To optimally run ViT at the edge using Akida requires
+# transforming this encoder block in the following way:
+#
+#   - replace `GeLU <https://www.tensorflow.org/addons/api_docs/python/tfa/layers/GELU>`__
+#     with `ReLU8 <https://www.tensorflow.org/api_docs/python/tf/keras/layers/ReLU>`__ activations,
 #   - replace `LayerNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/LayerNormalization>`__ with
-#     `LayerMadNormalization
-#     <../../api_reference/quantizeml_apis.html#quantizeml.layers.LayerMadNormalization>`__ and
-#     replace the last normalization previous to the classification head with a `BatchNormalization
+#     `LayerMadNormalization,
+#     <../../api_reference/quantizeml_apis.html#quantizeml.layers.LayerMadNormalization>`__,
+#   - replace the last `LayerNormalization
+#     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/LayerNormalization>`__ previous
+#     to the classification head with a `BatchNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/BatchNormalization>`__,
-#   - replace `GeLU <https://www.tensorflow.org/addons/api_docs/python/tfa/layers/GELU>`__
-#     activations with `ReLU8 <https://www.tensorflow.org/api_docs/python/tf/keras/layers/ReLU>`__,
-#   - replace the `softmax
+#   - replace `Softmax
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/activations/softmax>`__ operation in
 #     `Attention <../../api_reference/quantizeml_apis.html#quantizeml.layers.Attention>`__ with a
 #     `shiftmax <../../api_reference/quantizeml_apis.html#quantizeml.layers.shiftmax>`__ operation.
 #
-# .. note:: Details on the custom layers and operations are given in the API docstrings.
+# .. note:: Sections below show different ways to training a ViT for Akida which uses the above
+#           transformations.
+
+
+######################################################################
+# 3. Model Training
+# ~~~~~~~~~~~~~~~~~
+# Akida accelerates ViT model that has the transformation mentioned in Section 2. Training a ViT
+# that optimally runs on Akida can be made possible in the following two ways:
+
+
+######################################################################
+# 3.1 Option 1: Training of a ViT (base) model first and then transforming each layer incrementally
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# First, train a ViT (original) model on a custom dataset until satisfactory accuracy. Once this
+# model is optimized, it is then possible to transform this model into a Akida optimized one as per
+# Section 2. The layers mentioned in Section 2 are functionally equivalent to each of the layers
+# present in the original model.
 #
-# Layer replacement is made possible through the ``akida_models create`` CLI that comes with
-# dedicated options for the ``vit_ti16`` and ``deit_ti16`` architectures. See for example the helper
-# for ViT:
+# .. note:: To overcome accuracy drop from original when transforming the model as per Section 2.,
+#           it is recommended to replace the original layers one at a time and fine-tuning at every
+#           step.
+#
+# The example below shows the transformation of ViT (tiny) into an optimized model that can run on
+# the Akida hardware.
+#
+# The `akida_models <https://pypi.org/project/akida-models>`__ python package provides a Command Line
+# Interface (CLI) to transform `vit_ti16 <../../_modules/akida_models/transformers/model_vit.html#vit_ti16>`__
+# and `deit_ti16 <../../_modules/akida_models/transformers/model_deit.html#deit_ti16>`__ model architectures
+# and fine-tune them respectively.
 #
 # .. code-block:: bash
 #
@@ -164,37 +182,70 @@ for i in range(NUM_IMAGES):
 #     -i {224,384}, --image_size {224,384}
 #                           The square input image size
 #
-# The replacement layers are functionaly equivalent to the base layers but an accuracy loss is
-# introduced at each step. This is compensated by a tuning step after each change.
-#
-# For example, replacing activations layers can be done with:
+# Below shows transformation of vit_ti16 model architecture which was trained on Imagenet dataset. The methods
+# apply the same way if it were trained on any other dataset.
 #
 # .. code-block:: bash
 #
+#   # download the pre-trained weights
 #   wget https://data.brainchip.com/models/AkidaV2/vit/vit_ti16_224.h5
+#
+#   # transformation 1: replace GeLU layer with ReLU
 #   akida_models create -s vit_ti16_relu.h5 vit_ti16 -bw vit_ti16_224.h5 --act ReLU8
+#   # fine-tuning
 #   imagenet_train tune -m vit_ti16_relu.h5 -e 15 --optim Adam --lr_policy cosine_decay \
 #                       -lr 6e-5 -s vit_ti16_relu_tuned.h5
 #
-# After all changes, the model accuracy is close to (or better than) the original model and the
-# "BC" transformer model is ready for quantization.
+#   # transformation 2: replace layer normalization with layer mad norm layer
+#   akida_models create -s vit_ti16_lmn.h5 vit_ti16 -bw vit_ti16_relu_tuned.h5 --norm LMN
+#   # fine-tuning
+#   imagenet_train tune -m vit_ti16_lmn.h5 -e 15 --optim Adam --lr_policy cosine_decay \
+#                       -lr 6e-5 -s vit_ti16_lmn_tuned.h5
 #
-# +--------------+-------------------+---------------+
-# | Architecture | Original accuracy | "BC" accuracy |
-# +==============+===================+===============+
-# | ViT          |  75.48%           | 74.25%        |
-# +--------------+-------------------+---------------+
-# | DeiT-dist    |  74.17%           | 75.03%        |
-# +--------------+-------------------+---------------+
+#   # transformation 3: replace last layer normalization with batch normalization
+#   akida_models create -s vit_ti16_bn.h5 vit_ti16 -bw vit_ti16_lmn_tuned.h5 --last_norm BN
+#   # fine-tuning
+#   imagenet_train tune -m vit_ti16_bn.h5 -e 15 --optim Adam --lr_policy cosine_decay \
+#                       -lr 6e-5 -s vit_ti16_bn_tuned.h5
 #
-# .. note:: In the following sections, the ViT model will be used but the very same steps apply to
-#           DeiT-dist.
+#   # transformation 4: replace softmax with shiftmax layer
+#   akida_models create -s vit_ti16_shiftmax.h5 vit_ti16 -bw vit_ti16_bn_tuned.h5 --softmax softmax2
+#   # fine-tuning
+#   imagenet_train tune -m vit_ti16_shiftmax.h5 -e 15 --optim Adam --lr_policy cosine_decay \
+#                       -lr 6e-5 -s vit_ti16_transformed.h5
 #
+# The above transformation generates a ViT model that is optimized to run efficiently on Akida hardware.
+# Similar steps can also be applied to deit_ti16. Below table highlights the accuracy of the original model
+# and the transformed model.
+#
+# +--------------+-------------------+----------------------+
+# | Architecture | Original accuracy | Transformed accuracy |
+# +==============+===================+======================+
+# | ViT          |  75.48%           | 74.25%               |
+# +--------------+-------------------+----------------------+
+# | DeiT-dist    |  74.17%           | 75.03%               |
+# +--------------+-------------------+----------------------+
+#
+# .. note:: The models obtained above having floating point weights and ready to be quantized now.
+#           See Section 4.
+
 
 ######################################################################
-# 2.3. Load a pre-trained native Keras model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# 3.2. Option 2: Transfer Learning using Pre-trained transformed model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# The `Akida models python package <../api_reference/akida_models_apis.html>`__ has  `APIs for ViTs
+# <../api_reference/akida_models_apis.html#layer-blocks>`__ which provides pre-trained models for
+# `vit_ti16 <../../_modules/akida_models/transformers/model_vit.html#vit_ti16>`__ and `deit_ti16
+# <../../_modules/akida_models/transformers/model_deit.html#deit_ti16>`__. These models can be used
+# for Transfer Learning on a custom dataset. Since the above models are already transformed, no
+# further transformation is required.
+#
+# Visit our `Transfer Learning Example <plot_4_transfer_learning.html>`__ to learn how more about Transfer
+# Learning using the `Akida models python package <../../api_reference/akida_models_apis.html>`__. The
+# following code shows a snippet to download the pre-trained model that can be used for Transfer Learning
+# later on.
 
+# Following API download the vit_t16 model trained on imagenet dataset
 from akida_models.model_io import load_model
 
 # Retrieve the float model with pretrained weights and load it
@@ -206,62 +257,74 @@ model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
-# The perfomance given below uses the 10 ImageNet like images subset.
-
-
-# Check model performance
-def check_model_performance(model, x_test=x_test, labels_test=labels_test):
-    outputs_keras = model.predict(x_test, batch_size=NUM_IMAGES)
-    outputs_keras = np.squeeze(np.argmax(outputs_keras, 1))
-    accuracy_keras = np.sum(np.equal(outputs_keras, labels_test)) / NUM_IMAGES
-    print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
+# .. note:: The models in Section 3. have floating point weights. Once a desired accuracy is obtained,
+#           these models should go through the quantization before converting to Akida.
 
 
 ######################################################################
-check_model_performance(model_keras)
-
-######################################################################
-# 3. Quantization
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-######################################################################
-# 3.1. 8-bit PTQ
-# ^^^^^^^^^^^^^^
-# The above native Keras model is quantized to 8-bit (all weights and activations) and we compute
-# the post-training quantization (PTQ) accuracy.
+# 4. Model Quantization
+# ~~~~~~~~~~~~~~~~~~~~~
+# Akida 2.0 hardware adds efficient processing of 8 bit weights and activations for Vision Transformer
+# models. This requires models in Section 3. to be quantized to 8 bits integer numbers. This means both
+# both weights and activation outputs become 8 bits integer numbers. This results in a smaller and
+# compressed model with minimal to no drop in accuracy and achieves improvements in latecny and power
+# when running on Akida hardware.
 #
+# Quantization of ViT models can be done using `QuantizeML python package <../../user_guide/quantizeml.html>`__
+# using either Post-Training Quantization (PTQ) or Quantization-aware Training (QAT) methods. The following
+# section shows quantization example of `vit_ti16 <../../_modules/akida_models/transformers/model_vit.html#vit_ti16>`__
+# which is trained on Imagenet dataset.
 
+
+######################################################################
+# 4.1 Post-Training Quantization
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Using `QuantizeML python package <../../user_guide/quantizeml.html>`__, ViT model can be quantizied to
+# 8-bit integer numbers (both weights and activation outputs). PTQ usually requires a calibration or
+# reference data which helps to determine a quantization range of the float model. To learn more about PTQ,
+# refer to `Advanced QuantizeML tutorial <../quantization/plot_0_advanced_quantizeml.html>`__.
+
+# Obtain calibration samples
 from akida_models import fetch_file
 
-# Retrieve calibration samples
 samples = fetch_file("https://data.brainchip.com/dataset-mirror/samples/imagenet/imagenet_batch1024_224.npz",
                      fname="imagenet_batch1024_224.npz")
 samples = np.load(samples)
 samples = np.concatenate([samples[item] for item in samples.files])
 
-######################################################################
-
+# Using quantizeml to perform quantization
 from quantizeml.models import quantize
 from quantizeml.layers import QuantizationParams
 
-# Quantize the model to 8-bit and calibrate using 1024 samples with a batch size of 100 over 2
-# epochs.
+# Define the quantization parameters.
+# In this case we will be quantizing the weights, activations output and first layer weights to 8 bits
+qparams = QuantizationParams(weight_bits=8, activation_bits=8)
+
+# Quantize the model defined in Section 3.2
 model_quantized = quantize(model_keras,
-                           qparams=QuantizationParams(weight_bits=8, activation_bits=8),
+                           qparams=qparams,
                            num_samples=1024, batch_size=100, epochs=2)
+model_quantized.summary()
 
 ######################################################################
-check_model_performance(model_quantized)
-
-######################################################################
-# 3.2. Load a pre-trained quantized Keras model
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
 # The `bc_vit_ti16_imagenet_pretrained helper
-# <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained>`__ was
-# obtained with the same 8-bit quantization scheme but with an additional QAT step to further
+# <../..api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained>`__
+# was obtained with the same 8-bit quantization scheme but with an additional QAT step to further
 # improve accuracy.
+
+
+######################################################################
+# 4.2 Quantization-aware Training (Optional)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# In Section 4.1, we performed PTQ and converted the weights and activation outputs to 8-bit integer numbers.
+# In most cases, there is no accuracy drop observed after quantization, however in cases where an accurary
+# drop is observed, it is possible to further fine-tune this model using QAT.
 #
+# The model that is obtained through `QuantizeML python package <../../user_guide/quantizeml.html>`__ is an
+# instance of Keras. This allows the model to be fine-tuned using the original dataset to regain accuracy.
+#
+# `Akida models python package <../..api_reference/akida_models_apis.html>`__  provides pre-trained models
+# for vit_ti16 and deit_ti16 that have been trained using QAT method. It can used in the following way:
 
 from akida_models import bc_vit_ti16_imagenet_pretrained
 
@@ -269,15 +332,15 @@ from akida_models import bc_vit_ti16_imagenet_pretrained
 model_quantized = bc_vit_ti16_imagenet_pretrained()
 model_quantized.summary()
 
-######################################################################
-check_model_performance(model_quantized)
-
 
 ######################################################################
-# 4. Conversion to Akida
-# ~~~~~~~~~~~~~~~~~~~~~~
+# 5. Convert to Akida
+# ~~~~~~~~~~~~~~~~~~~
 #
-# The quantized Keras model is now converted into an Akida model.
+# A model quantized through `QuantizeML python package <../../user_guide/quantizeml.html>`__ is ready to be
+# converted to Akida. Once the quantized model has the desired accuracy `CNN2SNN toolkit <../../user_guide/cnn2snn.html>`__
+# is used for conversion to Akida. There is no further optimization required and equivalent accuracy is
+# observed upon converting the model to Akida.
 
 from cnn2snn import convert
 
@@ -285,23 +348,17 @@ from cnn2snn import convert
 model_akida = convert(model_quantized)
 model_akida.summary()
 
-#######################################################################
-accuracy_akida = model_akida.evaluate(x_test, labels_test)
-print(f"Accuracy: {accuracy_akida*100:.2f} %")
-
-# For non-regression purposes
-assert accuracy_akida == 1
-
 ######################################################################
-# 5.3 Attention maps
-# ~~~~~~~~~~~~~~~~~~
-#
 # Instead of showing predictions, here we propose to show attention maps on an image. This is
 # derived from `Abnar et al. attention rollout <https://arxiv.org/abs/2005.00928>`__ as shown in the
 # following `Keras tutorial
 # <https://keras.io/examples/vision/probing_vits/#method-ii-attention-rollout>`__. This aims to
 # highlight the model abilities to focus on relevant parts in the input image.
-#
+
+
+######################################################################
+# 6. Displaying results Attention Maps
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import cv2
 import matplotlib.pyplot as plt
