@@ -95,7 +95,7 @@ for i in range(NUM_IMAGES):
 #
 # .. note:: The Vision Transformers support has been introduced in Akida 2.0.
 #
-# The Akida models zoo provides edge suitable ViT architectures that are optimized to run on
+# The Akida model zoo provides edge suitable ViT architectures that are optimized to run on
 # Akida hardware:
 #
 #  - `ViT (tiny) <../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16>`__,
