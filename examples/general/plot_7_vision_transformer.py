@@ -221,15 +221,6 @@ model_keras.summary()
 # reference data) which helps to determine optimal quantization ranges. To learn more about PTQ, refer
 # to `Advanced QuantizeML tutorial <../quantization/plot_0_advanced_quantizeml.html>`__.
 
-# Obtain calibration samples
-import numpy as np
-from akida_models import fetch_file
-
-samples = fetch_file("https://data.brainchip.com/dataset-mirror/samples/imagenet/imagenet_batch1024_224.npz",
-                     fname="imagenet_batch1024_224.npz")
-samples = np.load(samples)
-samples = np.concatenate([samples[item] for item in samples.files])
-
 # Using QuantizeML to perform quantization
 from quantizeml.models import quantize
 from quantizeml.layers import QuantizationParams
@@ -238,10 +229,7 @@ from quantizeml.layers import QuantizationParams
 qparams = QuantizationParams(weight_bits=8, activation_bits=8)
 
 # Quantize the model defined in Section 3.2
-model_quantized = quantize(model_keras,
-                           qparams=qparams,
-                           samples=samples,
-                           num_samples=1024, batch_size=100, epochs=2)
+model_quantized = quantize(model_keras, qparams=qparams)
 model_quantized.summary()
 
 ######################################################################
