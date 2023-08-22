@@ -6,7 +6,7 @@ Overview
 --------
 
 QuantizeML package provides base layers and quantization tools for deep-learning models. It  allows
-the quantization of CNN, Transformer and TENN models using low-bitwidth weights and outputs. Once
+the quantization of CNN and Vision Transformer models using low-bitwidth weights and outputs. Once
 quantized with the provided tools, CNN2SNN toolkit will be able to convert the model and execute it
 with Akida runtime.
 

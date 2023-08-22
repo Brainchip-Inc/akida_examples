@@ -50,7 +50,7 @@ The Akida Neuromorphic ML Framework
     compatible models,
 
   * a quantization tool (`quantizeml <https://pypi.org/project/quantizeml>`_)
-    for quantization of CNN, Transformer, and TENN models using low-bitwidth
+    for quantization of CNN and Vision Transformer models using low-bitwidth
     weights and outputs,
 
   * a conversion tool (`cnn2snn <https://pypi.org/project/cnn2snn>`_) to convert
