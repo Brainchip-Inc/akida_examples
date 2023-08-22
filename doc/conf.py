@@ -34,7 +34,7 @@ sphinx_gallery_conf = {
         'examples',
     'remove_config_comments':
         True,
-    'first_notebook_cell': ("%matplotlib notebook"),
+    'first_notebook_cell': ("%matplotlib inline"),
     'subsection_order':
         ExplicitOrder([
             '../examples/general', '../examples/quantization', '../examples/edge',
