@@ -2,11 +2,6 @@
 Build Vision Transformers for Akida
 ===================================
 
-Just like for the `AkidaNet example
-<plot_1_akidanet_imagenet.html#sphx-glr-examples-general-plot-1-akidanet-imagenet-py>`__, ImageNet
-images are not publicly available, this example uses a set of 10 copyright free images that were
-found on Google using ImageNet class names.
-
 The Vision Transformer, or ViT, is a model for image classification that employs a Transformer-like
 architecture over patches of the image. An image is split into fixed-size patches, each of them are
 then linearly embedded, position embeddings are added, and the resulting sequence of vectors are
@@ -17,43 +12,6 @@ Akida 2.0 now supports patch and position embeddings, and the encoder block in h
 tutorial explains how to build an optimized ViT using Akida models python API for Akida 2.0 hardware.
 
 """
-
-import os
-import numpy as np
-
-from tensorflow.io import read_file
-from tensorflow.image import decode_jpeg
-from tensorflow.keras.utils import get_file
-
-from akida_models.imagenet import preprocessing
-
-# Model specification and hyperparameters
-NUM_CHANNELS = 3
-IMAGE_SIZE = 224
-
-NUM_IMAGES = 10
-
-# Retrieve dataset file from Brainchip data server
-file_path = get_file(
-    "imagenet_like.zip",
-    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-    cache_subdir='datasets/imagenet_like',
-    extract=True)
-data_folder = os.path.dirname(file_path)
-
-# Load images for test set
-x_test_files = []
-x_test = np.zeros((NUM_IMAGES, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(NUM_IMAGES):
-    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
-    x_test_files.append(test_file)
-    img_path = os.path.join(data_folder, test_file)
-    base_image = read_file(img_path)
-    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, IMAGE_SIZE)
-    x_test[id, :, :, :] = np.expand_dims(image, axis=0)
-
-print(f'{NUM_IMAGES} images loaded and preprocessed.')
 
 ######################################################################
 # 1. Model selection
@@ -101,7 +59,7 @@ print(f'{NUM_IMAGES} images loaded and preprocessed.')
 #
 #   - replace `LayerNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/LayerNormalization>`__ with
-#     `LayerMadNormalization,
+#     `LayerMadNormalization
 #     <../../api_reference/quantizeml_apis.html#quantizeml.layers.LayerMadNormalization>`__,
 #   - replace the last `LayerNormalization
 #     <https://www.tensorflow.org/api_docs/python/tf/keras/layers/LayerNormalization>`__ previous
@@ -225,6 +183,7 @@ print(f'{NUM_IMAGES} images loaded and preprocessed.')
 
 # The following is the API download the vit_t16 model trained on ImageNet dataset
 from akida_models.model_io import load_model
+from tensorflow.keras.utils import get_file
 
 # Retrieve the float model with pretrained weights and load it
 model_file = get_file(
@@ -263,6 +222,7 @@ model_keras.summary()
 # to `Advanced QuantizeML tutorial <../quantization/plot_0_advanced_quantizeml.html>`__.
 
 # Obtain calibration samples
+import numpy as np
 from akida_models import fetch_file
 
 samples = fetch_file("https://data.brainchip.com/dataset-mirror/samples/imagenet/imagenet_batch1024_224.npz",
@@ -336,6 +296,53 @@ model_akida.summary()
 # following `Keras tutorial
 # <https://keras.io/examples/vision/probing_vits/#method-ii-attention-rollout>`__. This aims to
 # highlight the model abilities to focus on relevant parts in the input image.
+#
+# Just like for the `AkidaNet example
+# <plot_1_akidanet_imagenet.html#sphx-glr-examples-general-plot-1-akidanet-imagenet-py>`__, ImageNet
+# images are not publicly available, this example uses a set of 10 copyright free images that were
+# found on Google using ImageNet class names.
+#
+# Get sample images and preprocess them:
+
+import os
+import numpy as np
+
+from tensorflow.io import read_file
+from tensorflow.image import decode_jpeg
+
+from akida_models.imagenet import preprocessing
+
+# Model specification and hyperparameters
+NUM_CHANNELS = 3
+IMAGE_SIZE = 224
+
+NUM_IMAGES = 10
+
+# Retrieve dataset file from Brainchip data server
+file_path = get_file(
+    "imagenet_like.zip",
+    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
+    cache_subdir='datasets/imagenet_like',
+    extract=True)
+data_folder = os.path.dirname(file_path)
+
+# Load images for test set
+x_test_files = []
+x_test = np.zeros((NUM_IMAGES, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
+for id in range(NUM_IMAGES):
+    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
+    x_test_files.append(test_file)
+    img_path = os.path.join(data_folder, test_file)
+    base_image = read_file(img_path)
+    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
+    image = preprocessing.preprocess_image(image, IMAGE_SIZE)
+    x_test[id, :, :, :] = np.expand_dims(image, axis=0)
+
+print(f'{NUM_IMAGES} images loaded and preprocessed.')
+
+
+######################################################################
+# Build and display the attention map for one selected sample:
 
 import cv2
 import matplotlib.pyplot as plt
