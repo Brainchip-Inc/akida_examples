@@ -52,18 +52,6 @@ Akida models API
     .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
-    Training
-    ========
-
-    .. autofunction:: akida_models.training.freeze_model_before
-    .. autofunction:: akida_models.training.evaluate_model
-    .. autofunction:: akida_models.training.evaluate_akida_model
-    .. autofunction:: akida_models.training.compile_model
-    .. autofunction:: akida_models.training.save_model
-    .. autofunction:: akida_models.training.print_history_stats
-    .. autofunction:: akida_models.training.get_training_parser
-    .. autoclass:: akida_models.training.RestoreBest
-
     MACS
     ====
     .. autofunction:: akida_models.macs.get_flops
