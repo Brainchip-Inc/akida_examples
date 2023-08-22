@@ -331,12 +331,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_6_segmentation.html#segment-a-single-image">5. Segment a single image</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html">Vision transformers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#dataset-preparation">1. Dataset preparation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#create-a-transformer-model">2. Create a transformer model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#quantization">3. Quantization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#conversion-to-akida">4. Conversion to Akida</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#attention-maps">5.3 Attention maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html">Build Vision Transformers for Akida</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#model-selection">1. Model selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#model-optimization-for-akida-hardware">2. Model optimization for Akida hardware</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#model-training">3. Model Training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#model-quantization">4. Model quantization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#conversion-to-akida">5. Conversion to Akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/general/plot_7_vision_transformer.html#displaying-results-attention-maps">6. Displaying results Attention Maps</a></li>
 </ul>
 </li>
 </ul>
@@ -565,7 +566,7 @@ to quantize a model whenever possible.</p>
 <p>The CNN2SNN toolkit offers a turnkey solution to quantize a model:
 the <a class="reference external" href="../api_reference/cnn2snn_apis.html#cnn2snn.quantize">quantize</a> function. It
 replaces the neural Keras layers (Conv2D, SeparableConv2D and Dense) and
-the ReLU layers with custom CNN2SNN layers, which are quantization-aware
+the ReLU layers with custom CNN2SNN layers, which are Quantization Aware
 derived versions of the base Keras layer types. The obtained quantized model is
 still a Keras model with a mix of CNN2SNN quantized layers (QuantizedReLU,
 QuantizedDense, etc.) and standard Keras layers (BatchNormalization, MaxPool2D,
@@ -577,7 +578,7 @@ significant for low quantization bitwidth and complex models.</p>
 <p>If the quantized model offers acceptable performance, it can be directly
 converted into an Akida model, ready to be loaded on the Akida NSoC (see the
 <a class="reference external" href="../api_reference/cnn2snn_apis.html#cnn2snn.convert">convert</a> function).</p>
-<p>However, if the performance drop is too high, a quantization-aware training is
+<p>However, if the performance drop is too high, a Quantization Aware Training is
 required to recover the performance prior to quantization. Since the quantized
 model is a Keras model, it can then be trained using the standard Keras API.</p>
 <p>Note that quantizing directly to the target bitwidth is not mandatory: it is
@@ -667,23 +668,23 @@ Keras layer types:</p>
 </ul>
 </section>
 <section id="cnn2snn-quantization-aware-layers">
-<h4>CNN2SNN Quantization-aware layers<a class="headerlink" href="#cnn2snn-quantization-aware-layers" title="Permalink to this headline"></a></h4>
+<h4>CNN2SNN Quantization Aware layers<a class="headerlink" href="#cnn2snn-quantization-aware-layers" title="Permalink to this headline"></a></h4>
 <p>Several articles have reported<a class="footnote-reference brackets" href="#fn-4" id="id4">4</a> that the quantization of a pre-trained
 float Keras model using 8-bit precision can be performed with a minimal loss
 of accuracy for simple models, but that for lower bitwidth or complex models a
-quantization-aware re-training of the quantized model may be required.</p>
-<p>The CNN2SNN toolkit therefore includes quantization-aware versions of the base
+Quantization Aware Training of the quantized model may be required.</p>
+<p>The CNN2SNN toolkit therefore includes Quantization Aware versions of the base
 Keras layers.</p>
 <p>These layers are produced when quantizing a standard Keras model using the
-<code class="docutils literal notranslate"><span class="pre">quantize</span></code> function: it replaces the base Keras layers with their quantization-aware
+<code class="docutils literal notranslate"><span class="pre">quantize</span></code> function: it replaces the base Keras layers with their Quantization Aware
 counterparts (see the <a class="reference external" href="../api_reference/cnn2snn_apis.html#cnn2snn.quantize">quantize</a> function).</p>
-<p>Quantization-aware training simulates the effect of quantization in the forward
+<p>Quantization Aware Training simulates the effect of quantization in the forward
 pass, yet using a straight-through estimator for the quantization gradient in
 the backward pass.
 For the stochastic gradient descent to be efficient, the weights are stored as
 float values and updated with high precision during back propagation.
 This ensures sufficient precision in accumulating tiny weights adjustments.</p>
-<p>The CNN2SNN toolkit includes two classes of quantization-aware layers:</p>
+<p>The CNN2SNN toolkit includes two classes of Quantization Aware layers:</p>
 <ul class="simple">
 <li><p><strong>quantized processing layers</strong>:</p>
 <ul>
@@ -702,7 +703,7 @@ This ensures sufficient precision in accumulating tiny weights adjustments.</p>
 those used when defining a model using standard Keras layers. However, each of
 these layers also includes a <code class="docutils literal notranslate"><span class="pre">quantizer</span></code> parameter that specifies the
 <a class="reference external" href="../api_reference/cnn2snn_apis.html#weightquantizer">WeightQuantizer</a>
-object to use during the quantization-aware training.</p>
+object to use during the Quantization Aware Training.</p>
 <p>The quantized ReLU takes a single parameter corresponding to the
 bitwidth of the quantized activations.</p>
 </section>
@@ -728,7 +729,7 @@ In order to support the most common classes of models in computer vision, a
 special layer (<a class="reference external" href="../api_reference/akida_apis.html#akida.InputConvolutional">InputConvolutional</a>)
 is however able to receive image data (8-bit grayscale or RGB). See the
 <a class="reference external" href="akida.html">Akida user guide</a> for further details.</p>
-<p>The CNN2SNN toolkit supports any quantization-aware training layer as the first
+<p>The CNN2SNN toolkit supports any Quantization Aware Training layer as the first
 layer in the model. The type of input accepted by that layer can be specified
 during conversion, but only models starting with a QuantizedConv2D layer will
 accept dense inputs, thanks to the special

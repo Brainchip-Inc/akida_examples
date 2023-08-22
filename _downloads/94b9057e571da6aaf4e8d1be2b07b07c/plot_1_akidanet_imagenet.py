@@ -93,7 +93,7 @@ for i in range(num_images):
 # 2. Pretrained quantized model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The Akida models zoo contains a `pretrained quantized helper
+# The Akida model zoo contains a `pretrained quantized helper
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained>`_.
 #
 # The quantization scheme for this model is the following:

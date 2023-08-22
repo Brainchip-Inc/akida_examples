@@ -212,11 +212,11 @@ model_quantized = quantize(model_keras, qparams=qparams,
 print('Test accuracy after 4-bit quantization:', compile_evaluate(model_quantized))
 
 ######################################################################
-# 2.4. Model fine tuning (quantization-aware training)
+# 2.4. Model fine tuning (Quantization Aware Training)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# When a model suffers from an accuracy drop after quantization, fine tuning or “quantization
-# aware training” (QAT) may recover some or all of the original performance.
+# When a model suffers from an accuracy drop after quantization, fine tuning or Quantization
+# Aware Training (QAT) may recover some or all of the original performance.
 #
 # Note that since this is a fine tuning step, both the number of epochs and learning rate are
 # expected to be lower than during the initial float training.

@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Upgrading to Akida 2.0" href="plot_1_upgrading_to_2.0.html" />
-    <link rel="prev" title="Vision transformers" href="../general/plot_7_vision_transformer.html" /> 
+    <link rel="prev" title="Build Vision Transformers for Akida" href="../general/plot_7_vision_transformer.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -331,12 +331,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_6_segmentation.html#segment-a-single-image">5. Segment a single image</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../general/plot_7_vision_transformer.html">Vision transformers</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#dataset-preparation">1. Dataset preparation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#create-a-transformer-model">2. Create a transformer model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#quantization">3. Quantization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#conversion-to-akida">4. Conversion to Akida</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#attention-maps">5.3 Attention maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../general/plot_7_vision_transformer.html">Build Vision Transformers for Akida</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#model-selection">1. Model selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#model-optimization-for-akida-hardware">2. Model optimization for Akida hardware</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#model-training">3. Model Training</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#model-quantization">4. Model quantization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#conversion-to-akida">5. Conversion to Akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_vision_transformer.html#displaying-results-attention-maps">6. Displaying results Attention Maps</a></li>
 </ul>
 </li>
 </ul>
@@ -607,24 +608,24 @@ customize quantization.</p>
 <span class="n">quantized_model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:40
-  63/1024 [&gt;.............................] - ETA: 0s  
- 127/1024 [==&gt;...........................] - ETA: 0s
- 191/1024 [====&gt;.........................] - ETA: 0s
- 257/1024 [======&gt;.......................] - ETA: 0s
- 321/1024 [========&gt;.....................] - ETA: 0s
- 385/1024 [==========&gt;...................] - ETA: 0s
- 450/1024 [============&gt;.................] - ETA: 0s
- 514/1024 [==============&gt;...............] - ETA: 0s
- 578/1024 [===============&gt;..............] - ETA: 0s
- 642/1024 [=================&gt;............] - ETA: 0s
- 706/1024 [===================&gt;..........] - ETA: 0s
- 770/1024 [=====================&gt;........] - ETA: 0s
- 833/1024 [=======================&gt;......] - ETA: 0s
- 896/1024 [=========================&gt;....] - ETA: 0s
- 959/1024 [===========================&gt;..] - ETA: 0s
-1024/1024 [==============================] - ETA: 0s
-1024/1024 [==============================] - 1s 788us/step
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:32
+  62/1024 [&gt;.............................] - ETA: 0s  
+ 125/1024 [==&gt;...........................] - ETA: 0s
+ 188/1024 [====&gt;.........................] - ETA: 0s
+ 252/1024 [======&gt;.......................] - ETA: 0s
+ 316/1024 [========&gt;.....................] - ETA: 0s
+ 379/1024 [==========&gt;...................] - ETA: 0s
+ 444/1024 [============&gt;.................] - ETA: 0s
+ 507/1024 [=============&gt;................] - ETA: 0s
+ 572/1024 [===============&gt;..............] - ETA: 0s
+ 634/1024 [=================&gt;............] - ETA: 0s
+ 697/1024 [===================&gt;..........] - ETA: 0s
+ 761/1024 [=====================&gt;........] - ETA: 0s
+ 823/1024 [=======================&gt;......] - ETA: 0s
+ 886/1024 [========================&gt;.....] - ETA: 0s
+ 950/1024 [==========================&gt;...] - ETA: 0s
+1014/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 796us/step
 Model: &quot;model_5&quot;
 _________________________________________________________________
  Layer (type)                Output Shape              Param #
@@ -748,24 +749,24 @@ quantized using the given configuration and the other layers will use what is pr
 <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">new_config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:19
-  63/1024 [&gt;.............................] - ETA: 0s  
- 126/1024 [==&gt;...........................] - ETA: 0s
- 189/1024 [====&gt;.........................] - ETA: 0s
- 253/1024 [======&gt;.......................] - ETA: 0s
- 317/1024 [========&gt;.....................] - ETA: 0s
- 379/1024 [==========&gt;...................] - ETA: 0s
- 443/1024 [===========&gt;..................] - ETA: 0s
- 506/1024 [=============&gt;................] - ETA: 0s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:17
+  65/1024 [&gt;.............................] - ETA: 0s  
+ 129/1024 [==&gt;...........................] - ETA: 0s
+ 192/1024 [====&gt;.........................] - ETA: 0s
+ 255/1024 [======&gt;.......................] - ETA: 0s
+ 318/1024 [========&gt;.....................] - ETA: 0s
+ 381/1024 [==========&gt;...................] - ETA: 0s
+ 445/1024 [============&gt;.................] - ETA: 0s
+ 508/1024 [=============&gt;................] - ETA: 0s
  570/1024 [===============&gt;..............] - ETA: 0s
- 634/1024 [=================&gt;............] - ETA: 0s
+ 632/1024 [=================&gt;............] - ETA: 0s
  697/1024 [===================&gt;..........] - ETA: 0s
- 762/1024 [=====================&gt;........] - ETA: 0s
- 826/1024 [=======================&gt;......] - ETA: 0s
- 889/1024 [=========================&gt;....] - ETA: 0s
- 952/1024 [==========================&gt;...] - ETA: 0s
-1014/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 795us/step
+ 759/1024 [=====================&gt;........] - ETA: 0s
+ 823/1024 [=======================&gt;......] - ETA: 0s
+ 887/1024 [========================&gt;.....] - ETA: 0s
+ 950/1024 [==========================&gt;...] - ETA: 0s
+1013/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 798us/step
 {
     &quot;dw_conv&quot;: {
         &quot;output_quantizer&quot;: {
@@ -878,7 +879,7 @@ the <code class="docutils literal notranslate"><span class="pre">quantize</span>
 The only difference with the programming interface is that samples must be serialized and provided
 as a <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file. The <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.extract_samples">extract_samples</a> can be used for that
 purpose.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  3.303 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  3.222 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-0-advanced-quantizeml-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/390c9f4cf688db846ca83d5d8edc2814/plot_0_advanced_quantizeml.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_0_advanced_quantizeml.py</span></code></a></p>
@@ -897,7 +898,7 @@ purpose.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../general/plot_7_vision_transformer.html" class="btn btn-neutral float-left" title="Vision transformers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../general/plot_7_vision_transformer.html" class="btn btn-neutral float-left" title="Build Vision Transformers for Akida" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="plot_1_upgrading_to_2.0.html" class="btn btn-neutral float-right" title="Upgrading to Akida 2.0" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
