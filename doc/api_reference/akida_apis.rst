@@ -177,8 +177,3 @@ Akida runtime API
     Sparsity
     --------
     .. autofunction:: akida.evaluate_sparsity
-
-    Compatibility
-    -------------
-    .. autofunction:: akida.compatibility.create_from_model
-    .. autofunction:: akida.compatibility.transpose

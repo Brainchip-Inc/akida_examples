@@ -10,17 +10,6 @@ While working with CNN2SNN and the Akida simulator, only few limitations are
 imposed. When mapping a model to the Akida hardware, not all Model and Layer
 configurations are supported.
 
-When dealing with an unsupported model, one can call `the dedicated Akida helper
-<../api_reference/akida_apis.html#akida.compatibility.create_from_model>`_
-that will try to find workarounds for incompatibilities and build a converted
-model:
-
-.. code-block::
-
-   import akida.compatibility
-   updated_model = akida.compatibility.create_from_model(incompatible_model)
-
-
 InputConvolutional
 ^^^^^^^^^^^^^^^^^^
 
