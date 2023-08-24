@@ -2,7 +2,7 @@
 Hardware constraints
 ====================
 
-.. note::
+.. warning::
        The following constraints concern only Akida 1.0 IP based solutions
        and the AKD1000 reference SoC.
 
@@ -10,149 +10,192 @@ While working with CNN2SNN and the Akida simulator, only few limitations are
 imposed. When mapping a model to the Akida hardware, not all Model and Layer
 configurations are supported.
 
-InputConvolutional
-^^^^^^^^^^^^^^^^^^
+.. tab-set::
 
-+--------------+---------+----------+------------+
-|**Input**     |**Width**|**Height**|**Channels**|
-+--------------+---------+----------+------------+
-|**Dimensions**|[5:256]  |>= 5      |1, 3        |
-+--------------+---------+----------+------------+
+    .. tab-item:: InputConvolutional
 
-+----------------+---------------+----------+-----------+
-|**Convolutions**|**Kernel Size**|**Stride**|**Type**   |
-+----------------+---------------+----------+-----------+
-|**Parameters**  |3×3, 5×5, 7×7  |1, 2, 3   |Same, Valid|
-+----------------+---------------+----------+-----------+
+        .. card::
 
-+-------------+-------+-------+-------+
-|**Filters**  |**3×3**|**5×5**|**7×7**|
-+-------------+-------+-------+-------+
-|**Max(1 ch)**|512    |192    |96     +
-+-------------+-------+-------+-------+
-|**Max(3 ch)**|192    |64     |32     +
-+-------------+-------+-------+-------+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +---------+----------+------------+
+            |**Width**|**Height**|**Channels**|
+            +---------+----------+------------+
+            |[5:256]  |>= 5      |1, 3        |
+            +---------+----------+------------+
 
-+---------------+------------------+
-|**Max Pooling**|**Size**          |
-+---------------+------------------+
-|**Parameters** |1×1, 1×2, 2×1, 2×2|
-+---------------+------------------+
+        .. card::
 
-.. note::
-       pool_stride is equal to pool_size for InputConvolutional
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------------+----------+-----------+
+            |**Kernel Size**|**Stride**|**Type**   |
+            +---------------+----------+-----------+
+            |3×3, 5×5, 7×7  |1, 2, 3   |Same, Valid|
+            +---------------+----------+-----------+
 
-+----------------+---------+------------+--------------+
-|**Quantization**|**Input**|**Weights** |**Activation**|
-+----------------+---------+------------+--------------+
-|**Bitwidth**    |8        | 1, 2, 4, 8 |1, 2, 4       |
-+----------------+---------+------------+--------------+
+        .. card::
 
-.. note::
-       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
-       are unsigned by definition.
+            **Maximum number of filters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-----------------+-------+-------+-------+
+            |**Kernel Sise**  |**3×3**|**5×5**|**7×7**|
+            +-----------------+-------+-------+-------+
+            |**Max(1 ch)**    |512    |192    |96     +
+            +-----------------+-------+-------+-------+
+            |**Max(3 ch)**    |192    |64     |32     +
+            +-----------------+-------+-------+-------+
 
-Convolutional
-^^^^^^^^^^^^^
+        .. card::
 
-+----------------+------------------+----------+--------+
-|**Convolutions**|**Kernel Size**   |**Stride**|**Type**|
-+----------------+------------------+----------+--------+
-|**Parameters**  |1×1, 3×3, 5×5, 7×7|1, 2      |Same    |
-+----------------+------------------+----------+--------+
+            **Max Pooling size**
+            ^^^^^^^^^^^^^^^^^^^^
+            1×1, 1×2, 2×1, 2×2
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` Pool stride is equal to pool size for
+            `InputConvolutional <../api_reference/akida_apis.html#akida.InputConvolutional>`__.
 
-.. note::
-       Stride 2 is only supported with 3×3 kernels
+        .. card::
 
-+---------------+-------------+----------+
-|**Max Pooling**|**Size**     |**Stride**|
-+---------------+-------------+----------+
-|**Parameters** |1×1, 2×2     |1, 2      |
-+---------------+-------------+----------+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------+------------+--------------+
+            |**Input**|**Weights** |**Activation**|
+            +---------+------------+--------------+
+            |8        | 1, 2, 4, 8 |1, 2, 4       |
+            +---------+------------+--------------+
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` While minimum weights bitwidth supported is 1
+            for native learning, CNN2SNN quantization only allows quantization with bitwidth >=2
+            because float weights are signed while 1-bit integers are unsigned by definition.
 
-.. note::
-       * pooling stride cannot be greater than pooling size
-       * a layer with max pooling must be followed by another Convolutional or
-         SeparableConvolutional layer.
 
-+--------------------------+---------+
-|**Global Average Pooling**|**Width**|
-+--------------------------+---------+
-|**Dimensions**            |[1:32]   |
-+--------------------------+---------+
+    .. tab-item:: Convolutional
 
-.. note::
-       With global average pooling the output of the convolution must have at
-       least 3 rows.
+        .. card::
 
-+----------------+---------+-----------+--------------+
-|**Quantization**|**Input**|**Weights**|**Activation**|
-+----------------+---------+-----------+--------------+
-|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
-+----------------+---------+-----------+--------------+
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +------------------+----------+--------+
+            |**Kernel Size**   |**Stride**|**Type**|
+            +------------------+----------+--------+
+            |1×1, 3×3, 5×5, 7×7|1, 2      |Same    |
+            +------------------+----------+--------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` Stride 2 is only supported with 3×3 kernels.
 
-.. note::
-       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
-       are unsigned by definition.
+        .. card::
 
-SeparableConvolutional
-^^^^^^^^^^^^^^^^^^^^^^
+            **Max Pooling parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-------------+----------+
+            |**Size**     |**Stride**|
+            +-------------+----------+
+            |1×1, 2×2     |1, 2      |
+            +-------------+----------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` Pooling stride cannot be greater than pooling size,
+            layer with max pooling must be followed by another `Convolutional
+            <../api_reference/akida_apis.html#akida.Convolutional>`__ or `SeparableConvolutional
+            <../api_reference/akida_apis.html#akida.SeparableConvolutional>`__ layer.
 
-+----------------+---------------+----------+--------+
-|**Convolutions**|**Kernel Size**|**Stride**|**Type**|
-+----------------+---------------+----------+--------+
-|**Parameters**  |3×3, 5×5, 7×7  |1, 2      |Same    |
-+----------------+---------------+----------+--------+
+        .. card::
 
-.. note::
-       Stride 2 is only supported with 3×3 kernels
+            **Global Average Pooling width**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            [1:32]
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` The output of the convolution must have at least 3 rows.
 
-+---------------+-------------+----------+
-|**Max Pooling**|**Size**     |**Stride**|
-+---------------+-------------+----------+
-|**Parameters** |1×1, 2×2     |1, 2      |
-+---------------+-------------+----------+
+        .. card::
 
-.. note::
-       * pooling stride cannot be greater than pooling size.
-       * a layer with max pooling must be followed by another Convolutional or
-         SeparableConvolutional layer.
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------+-----------+--------------+
+            |**Input**|**Weights**|**Activation**|
+            +---------+-----------+--------------+
+            |1, 2, 4  |1, 2, 4    |1, 2, 4       |
+            +---------+-----------+--------------+
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` While minimum weights bitwidth supported is 1
+            for native learning, CNN2SNN quantization only allows quantization with bitwidth >=2
+            because float weights are signed while 1-bit integers are unsigned by definition.
 
-+--------------------------+---------+
-|**Global Average Pooling**|**Width**|
-+--------------------------+---------+
-|**Dimensions**            |[1:32]   |
-+--------------------------+---------+
 
-.. note::
-       With global average pooling:
-              * the output of the convolution must have at least 3 rows
-              * 1×1 inputs are not supported
+    .. tab-item:: SeparableConvolutional
 
-+----------------+---------+-----------+--------------+
-|**Quantization**|**Input**|**Weights**|**Activation**|
-+----------------+---------+-----------+--------------+
-|**Bitwidth**    |1, 2, 4  |2, 4       |1, 2, 4       |
-+----------------+---------+-----------+--------------+
+        .. card::
 
-FullyConnected
-^^^^^^^^^^^^^^
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------------+----------+--------+
+            |**Kernel Size**|**Stride**|**Type**|
+            +---------------+----------+--------+
+            |3×3, 5×5, 7×7  |1, 2      |Same    |
+            +---------------+----------+--------+
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` Stride 2 is only supported with 3×3 kernels.
 
-+--------------+---------+----------+---------+
-|**Input**     |**Width**|**Height**|**WxHxC**|
-+--------------+---------+----------+---------+
-|**Dimensions**|1        |1         |<= 57334 |
-+--------------+---------+----------+---------+
+        .. card::
 
-+----------------+---------+-----------+--------------+
-|**Quantization**|**Input**|**Weights**|**Activation**|
-+----------------+---------+-----------+--------------+
-|**Bitwidth**    |1, 2, 4  |1, 2, 4    |1, 2, 4       |
-+----------------+---------+-----------+--------------+
+            **Max Pooling parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-------------+----------+
+            |**Size**     |**Stride**|
+            +-------------+----------+
+            |1×1, 2×2     |1, 2      |
+            +-------------+----------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` Pooling stride cannot be greater than pooling size,
+            layer with max pooling must be followed by another `Convolutional
+            <../api_reference/akida_apis.html#akida.Convolutional>`__ or `SeparableConvolutional
+            <../api_reference/akida_apis.html#akida.SeparableConvolutional>`__ layer.
 
-.. note::
-       While minimum weights bitwidth supported is 1 for native learning, CNN2SNN quantization only
-       allows quantization with bitwidth >=2 because float weights are signed while 1-bit integers
-       are unsigned by definition.
+        .. card::
+
+            **Global Average Pooling width**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            [1:32]
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` The output of the convolution must have at least 3 rows,
+            1×1 inputs are not supported.
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------+-----------+--------------+
+            |**Input**|**Weights**|**Activation**|
+            +---------+-----------+--------------+
+            |1, 2, 4  |2, 4       |1, 2, 4       |
+            +---------+-----------+--------------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` While minimum weights bitwidth supported is 1
+            for native learning, CNN2SNN quantization only allows quantization with bitwidth >=2
+            because float weights are signed while 1-bit integers are unsigned by definition.
+
+    .. tab-item:: FullyConnected
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +---------+----------+---------+
+            |**Width**|**Height**|**WxHxC**|
+            +---------+----------+---------+
+            |1        |1         |<= 57334 |
+            +---------+----------+---------+
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------+-----------+--------------+
+            |**Input**|**Weights**|**Activation**|
+            +---------+-----------+--------------+
+            |1, 2, 4  |1, 2, 4    |1, 2, 4       |
+            +---------+-----------+--------------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` While minimum weights bitwidth supported is 1
+            for native learning, CNN2SNN quantization only allows quantization with bitwidth >=2
+            because float weights are signed while 1-bit integers are unsigned by definition.

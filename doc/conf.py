@@ -12,7 +12,8 @@ version = 'Akida, 2nd Generation'
 # ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon',
-    'sphinx_gallery.gen_gallery', 'autodocsumm', 'sphinx.ext.viewcode'
+    'sphinx_gallery.gen_gallery', 'autodocsumm', 'sphinx.ext.viewcode',
+    'sphinx_design'
 ]
 
 # The suffix(es) of source filenames.
