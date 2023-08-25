@@ -6,9 +6,14 @@ Hardware constraints
        The following constraints concern only Akida 1.0 IP based solutions
        and the AKD1000 reference SoC.
 
-While working with CNN2SNN and the Akida simulator, only few limitations are
-imposed. When mapping a model to the Akida hardware, not all Model and Layer
-configurations are supported.
+For compatibility with multiple possible hardware backends downstream, CNN2SNN and
+the Akida simulator impose few constraints on layer dimensions. However, hardware
+does have limits in this respect, which will be checked at the stage of mapping a
+model to a specific device (real or virtual). This page details the limits for the
+AKD1000 SoC.
+
+Please refer to `Akida V1 layers <../api_reference/akida_apis.html#akida-v1-layers>`__
+for layers description.
 
 .. tab-set::
 
@@ -21,7 +26,7 @@ configurations are supported.
             +---------+----------+------------+
             |**Width**|**Height**|**Channels**|
             +---------+----------+------------+
-            |[5:256]  |>= 5      |1, 3        |
+            |[5:256]  |[5:256]   |1, 3        |
             +---------+----------+------------+
 
         .. card::
