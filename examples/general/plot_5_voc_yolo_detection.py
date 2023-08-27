@@ -176,54 +176,6 @@ full_model.output
 # <plot_4_transfer_learning.html>`_ for a detail explanation on transfer
 # learning principles.
 #
-# When using transfer learning for YOLO training, we advise to proceed in
-# several steps:
-#
-# * instantiate the `yolo_base` model and load AkidaNet/ImageNet pretrained
-#   float weights,
-#
-# .. code-block:: bash
-#
-#       wget https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5
-#       akida_models create -s yolo_akidanet_voc.h5 yolo_base --classes 2 \
-#                           --base_weights akidanet_imagenet_224_alpha_0.5.h5
-#
-# * train the YOLO head without freezing the backbone,
-#
-# .. code-block:: bash
-#
-#       yolo_train train -d voc_preprocessed.pkl -m yolo_akidanet_voc.h5 \
-#                        -ap voc_anchors.pkl -e 25 -s yolo_akidanet_voc.h5
-#
-# * retrieve calibration data and quantize the network,
-#
-# .. code-block:: bash
-#
-#       wget https://data.brainchip.com/dataset-mirror/samples/voc/voc_batch1024.npz
-#       quantizeml quantize -m yolo_akidanet_voc.h5 -w 4 -a 4 -e 2 -bs 100 -sa voc_batch1024.npz
-#
-# * tune the model to recover accuracy.
-#
-# .. code-block:: bash
-#
-#       yolo_train tune -d voc_preprocessed.pkl -m yolo_akidanet_voc_i8_w4_a4.h5 \
-#                       -ap voc_anchors.pkl -e 10 -s yolo_akidanet_voc_i8_w4_a4.h5
-#
-# .. Note::
-#
-#       - ``voc_anchors.pkl`` is obtained saving the output of the
-#         `generate_anchors` call to a pickle file,
-#       - ``voc_preprocessed.pkl`` is obtained saving training data, validation
-#         data (obtained using `parse_voc_annotations`) and labels list (i.e
-#         ["car", "person"]) into a pickle file.
-#
-#
-# Even if transfer learning should be the preferred way to train a YOLO model, it
-# has been observed that for some datasets training all layers from scratch
-# gives better results. That is the case for our `YOLO WiderFace model
-# <../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained>`_
-# to detect faces.
-#
 
 ######################################################################
 # 5. Performance
