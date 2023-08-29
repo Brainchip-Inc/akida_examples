@@ -163,12 +163,11 @@ model_keras.summary()
 # ------------------------
 #
 # Freezing can be done by setting the `trainable` attribute of a layer to False. The following code
-# will freeze all layers until the classification head, that is before the GlobalAveragePooling
-# layer.
+# will freeze all layers up to (but not including) the classification head.
 
 trainable = False
 for layer in model_keras.layers:
-    if layer.name == 'pw_separable_13/global_avg':
+    if layer.name == 'fc1':
         trainable = True
     layer.trainable = trainable
 
@@ -235,18 +234,18 @@ from cnn2snn import convert
 
 model_akida = convert(model)
 
-# Manual evaluation loop to retrieve potentials and labels
-labels, pots = None, None
+# Manual evaluation loop to retrieve activations and labels
+labels, logits = None, None
 for batch, label_batch in test_batches:
-    pots_batch = model_akida.predict(batch.numpy().astype('uint8'))
+    logits_batch = model_akida.predict(batch.numpy().astype('uint8'))
 
     if labels is None:
         labels = label_batch
-        pots = pots_batch.squeeze(axis=(1, 2))
+        logits = logits_batch.squeeze(axis=(1, 2))
     else:
         labels = np.concatenate((labels, label_batch))
-        pots = np.concatenate((pots, pots_batch.squeeze(axis=(1, 2))))
-preds = Activation("softmax")(pots)
+        logits = np.concatenate((logits, logits_batch.squeeze(axis=(1, 2))))
+preds = Activation("softmax")(logits)
 accuracy = (np.argmax(preds, 1) == labels).mean()
 
 print(f"Akida accuracy: {accuracy}")
