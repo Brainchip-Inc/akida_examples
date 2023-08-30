@@ -1,6 +1,6 @@
 """
-Tips to set Akida learning parameters
-=====================================
+Tips to set Akida edge learning parameters
+==========================================
 
 This tutorial gives details about the Akida learning parameters and tips to
 set their values in a first try in an edge learning application. The KWS dataset
