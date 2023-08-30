@@ -6,4 +6,4 @@ User guide
    quantizeml.rst
    cnn2snn.rst
    akida_models.rst
-   hw_constraints.rst
+   1.0_hw_constraints.rst

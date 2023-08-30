@@ -71,7 +71,7 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 # .. note:: While it is possible define customized quantization scheme like 3-bit weights and 7-bit
 #           activations using a ``QuantizationParams`` object, remember that conversion to Akida
 #           will come with restrictions and `hardware constraints
-#           <../../user_guide/hw_constraints.html>`__. Staying within a 8-bit or 4-bit quantization
+#           <../../user_guide/1.0_hw_constraints.html>`__. Staying within a 8-bit or 4-bit quantization
 #           scheme is thus recommended.
 #
 # .. warning:: ``QuantizationParams`` is only applied the first time a model is quantized.
