@@ -162,15 +162,14 @@ model_keras.summary()
 # 4. Freeze the base model
 # ------------------------
 #
-# Freezing can be done by setting the `trainable` attribute of a layer to False.
-# For convenience, a `freeze_model_before
-# <../../api_reference/akida_models_apis.html#akida_models.training.freeze_model_before>`__
-# API is provided in akida_models. It allows to freeze all layers before the
-# classification head.
+# Freezing can be done by setting the `trainable` attribute of a layer to False. The following code
+# will freeze all layers up to (but not including) the classification head.
 
-from akida_models.training import freeze_model_before
-
-freeze_model_before(model_keras, 'pw_separable_13/global_avg')
+trainable = False
+for layer in model_keras.layers:
+    if layer.name == 'fc1':
+        trainable = True
+    layer.trainable = trainable
 
 ######################################################################
 # 5. Train for a few epochs
@@ -219,24 +218,34 @@ model_quantized = quantize(model_keras, qparams=qparams,
 # is retrieved from the zoo.
 
 from akida_models import akidanet_plantvillage_pretrained
-from akida_models.training import evaluate_model
 
 model = akidanet_plantvillage_pretrained()
 
 # Evaluate Keras accuracy
 model.compile(metrics=['accuracy'])
-evaluate_model(model, test_batches)
+history = model.evaluate(test_batches, verbose=0)
+print('Keras accuracy: ', history[1])
 
 ######################################################################
 # Convert the model and evaluate the Akida model.
 
 import numpy as np
 from cnn2snn import convert
-from akida_models.training import evaluate_akida_model
 
 model_akida = convert(model)
 
-preds, labels = evaluate_akida_model(model_akida, test_batches, 'softmax')
-accuracy = (np.squeeze(np.argmax(preds, 1)) == labels).mean()
+# Manual evaluation loop to retrieve activations and labels
+labels, logits = None, None
+for batch, label_batch in test_batches:
+    logits_batch = model_akida.predict(batch.numpy().astype('uint8'))
+
+    if labels is None:
+        labels = label_batch
+        logits = logits_batch.squeeze(axis=(1, 2))
+    else:
+        labels = np.concatenate((labels, label_batch))
+        logits = np.concatenate((logits, logits_batch.squeeze(axis=(1, 2))))
+preds = Activation("softmax")(logits)
+accuracy = (np.argmax(preds, 1) == labels).mean()
 
 print(f"Akida accuracy: {accuracy}")
