@@ -462,21 +462,20 @@ to download the full example code</p>
 </div>
 <section class="sphx-glr-example-title" id="advanced-quantizeml-tutorial">
 <span id="sphx-glr-examples-quantization-plot-0-advanced-quantizeml-py"></span><h1>Advanced QuantizeML tutorial<a class="headerlink" href="#advanced-quantizeml-tutorial" title="Permalink to this headline"></a></h1>
-<p>This tutorial gives insights about QuantizeML for users who want to go deeper into the quantization
-possibilities of the toolkit. We recommend first looking at the <a class="reference external" href="../../user_guide/quantizeml.html">user guide</a>  and the <a class="reference external" href="../general/plot_0_global_workflow.html">global workflow tutorial</a> to get started with QuantizeML.</p>
-<p>The QuantizeML toolkit offers an easy-to-use set of functions to get a quantized model from a
-pretrained model. The <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">quantize</a> high-level function
-replaces Keras layers (or custom QuantizeML layers) with quantized, integer only layers.</p>
-<p>While the default 8-bit quantization scheme will produce satisfying results, this tutorial will
-present the alternative low-level method to define customizable quantization schemes.</p>
+<p>This tutorial provides a comprehensive understanding of quantization in <a class="reference external" href="../../user_guide/quantizeml.html#quantizeml-toolkit">QuantizeML python
+package</a>. Refer to <a class="reference external" href="../../user_guide/quantizeml.html">QuantizeML user
+guide</a>  and <a class="reference external" href="../general/plot_0_global_workflow.html">Global Akida workflow tutorial</a> for additional resources.</p>
+<p><a class="reference external" href="../../user_guide/quantizeml.html#quantizeml-toolkit">QuantizeML python package</a> provides
+a user-friendly collection of functions for obtaining a quantized model. The <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">quantize</a> function replaces Keras
+layers with quantized, integer only layers from <a class="reference external" href="../../user_guide/quantizeml.html">QuantizeML</a>.</p>
 <section id="defining-a-quantization-scheme">
 <h2>1. Defining a quantization scheme<a class="headerlink" href="#defining-a-quantization-scheme" title="Permalink to this headline"></a></h2>
-<p>The quantization scheme refers to all the parameters used for quantization, that is the bitwidth
-used for inputs, outputs or weights and how they are actually quantized (e.g. per-axis or
-per-tensor, as described later).</p>
+<p>The quantization scheme refers to all the parameters used for quantization, that is the method of
+quantization such as per-axis or per-tensor, and the bitwidth used for inputs, outputs and
+weights.</p>
 <p>The first part in this section explains how to define a quantization scheme using
-<a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams">QuantizationParams</a>
-to define an homogeneous scheme that applies to all layers and the second part explains how to
+<a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams">QuantizationParams</a>,
+which defines a homogeneous scheme that applies to all layers, and the second part explains how to
 fully customize the quantization scheme using a configuration file.</p>
 <section id="the-quantization-parameters">
 <h3>1.1. The quantization parameters<a class="headerlink" href="#the-quantization-parameters" title="Permalink to this headline"></a></h3>
@@ -512,56 +511,14 @@ target will use.</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>While it is possible define customized quantization scheme like 3-bit weights and 7-bit
-activations using a <code class="docutils literal notranslate"><span class="pre">QuantizationParams</span></code> object, remember that conversion to Akida
-will come with restrictions and <a class="reference external" href="../../user_guide/1.0_hw_constraints.html">hardware constraints</a>. Staying within a 8-bit or 4-bit quantization
-scheme is thus recommended.</p>
+<p>It is recommended to quantize a model to 8-bit or 4-bit to ensure it is Akida hardware
+compatible.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><code class="docutils literal notranslate"><span class="pre">QuantizationParams</span></code> is only applied the first time a model is quantized.
 If you want to re-quantize a model, you must to provide a complete <code class="docutils literal notranslate"><span class="pre">q_config</span></code>.</p>
 </div>
-<section id="command-line-interface-equivalent">
-<h4>Command-line interface equivalent<a class="headerlink" href="#command-line-interface-equivalent" title="Permalink to this headline"></a></h4>
-<p>The <a class="reference external" href="../../user_guide/quantizeml.html#quantize-cli">quantize command line interface</a> allows to
-define <code class="docutils literal notranslate"><span class="pre">QuantizationParams</span></code> parameters with the same names:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>quantize<span class="w"> </span>--help
-
-usage:<span class="w"> </span>quantizeml<span class="w"> </span>quantize<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-m<span class="w"> </span>MODEL<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>QUANTIZATION_CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>-a<span class="w"> </span>ACTIVATION_BITS<span class="o">]</span>
-<span class="w">                           </span><span class="o">[</span>--per_tensor_activations<span class="o">]</span><span class="w"> </span><span class="o">[</span>-w<span class="w"> </span>WEIGHT_BITS<span class="o">]</span><span class="w"> </span><span class="o">[</span>-i<span class="w"> </span>INPUT_WEIGHT_BITS<span class="o">]</span>
-<span class="w">                           </span><span class="o">[</span>-b<span class="w"> </span>BUFFER_BITS<span class="o">]</span><span class="w"> </span><span class="o">[</span>-s<span class="w"> </span>SAVE_NAME<span class="o">]</span><span class="w"> </span><span class="o">[</span>-sa<span class="w"> </span>SAMPLES<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ns<span class="w"> </span>NUM_SAMPLES<span class="o">]</span>
-<span class="w">                           </span><span class="o">[</span>-bs<span class="w"> </span>BATCH_SIZE<span class="o">]</span><span class="w"> </span><span class="o">[</span>-e<span class="w"> </span>EPOCHS<span class="o">]</span>
-
-optional<span class="w"> </span>arguments:
-<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">            </span>show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
-<span class="w">  </span>-m<span class="w"> </span>MODEL,<span class="w"> </span>--model<span class="w"> </span>MODEL
-<span class="w">                        </span>Model<span class="w"> </span>to<span class="w"> </span>quantize
-<span class="w">  </span>-c<span class="w"> </span>QUANTIZATION_CONFIG,<span class="w"> </span>--quantization_config<span class="w"> </span>QUANTIZATION_CONFIG
-<span class="w">                        </span>Quantization<span class="w"> </span>configuration<span class="w"> </span>file
-<span class="w">  </span>-a<span class="w"> </span>ACTIVATION_BITS,<span class="w"> </span>--activation_bits<span class="w"> </span>ACTIVATION_BITS
-<span class="w">                        </span>Activation<span class="w"> </span>quantization<span class="w"> </span>bitwidth
-<span class="w">  </span>--per_tensor_activations
-<span class="w">                        </span>Quantize<span class="w"> </span>activations<span class="w"> </span>per-tensor
-<span class="w">  </span>-w<span class="w"> </span>WEIGHT_BITS,<span class="w"> </span>--weight_bits<span class="w"> </span>WEIGHT_BITS
-<span class="w">                        </span>Weight<span class="w"> </span>quantization<span class="w"> </span>bitwidth
-<span class="w">  </span>-i<span class="w"> </span>INPUT_WEIGHT_BITS,<span class="w"> </span>--input_weight_bits<span class="w"> </span>INPUT_WEIGHT_BITS
-<span class="w">                        </span>Input<span class="w"> </span>layer<span class="w"> </span>weight<span class="w"> </span>quantization<span class="w"> </span>bitwidth
-<span class="w">  </span>-b<span class="w"> </span>BUFFER_BITS,<span class="w"> </span>--buffer_bits<span class="w"> </span>BUFFER_BITS
-<span class="w">                        </span>Buffer<span class="w"> </span>quantization<span class="w"> </span>bitwidth
-<span class="w">  </span>-s<span class="w"> </span>SAVE_NAME,<span class="w"> </span>--save_name<span class="w"> </span>SAVE_NAME
-<span class="w">                        </span>Name<span class="w"> </span><span class="k">for</span><span class="w"> </span>saving<span class="w"> </span>the<span class="w"> </span>quantized<span class="w"> </span>model.
-<span class="w">  </span>-sa<span class="w"> </span>SAMPLES,<span class="w"> </span>--samples<span class="w"> </span>SAMPLES
-<span class="w">                        </span>Set<span class="w"> </span>of<span class="w"> </span>samples<span class="w"> </span>to<span class="w"> </span>calibrate<span class="w"> </span>the<span class="w"> </span>model<span class="w"> </span><span class="o">(</span>.npz<span class="w"> </span>file<span class="o">)</span>.
-<span class="w">  </span>-ns<span class="w"> </span>NUM_SAMPLES,<span class="w"> </span>--num_samples<span class="w"> </span>NUM_SAMPLES
-<span class="w">                        </span>Number<span class="w"> </span>of<span class="w"> </span>samples<span class="w"> </span>to<span class="w"> </span>use<span class="w"> </span><span class="k">for</span><span class="w"> </span>calibration,<span class="w"> </span>only<span class="w"> </span>used<span class="w"> </span>when<span class="w"> </span><span class="s1">&#39;samples&#39;</span><span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>provided.
-<span class="w">  </span>-bs<span class="w"> </span>BATCH_SIZE,<span class="w"> </span>--batch_size<span class="w"> </span>BATCH_SIZE
-<span class="w">                        </span>Batch<span class="w"> </span>size<span class="w"> </span><span class="k">for</span><span class="w"> </span>calibration.
-<span class="w">  </span>-e<span class="w"> </span>EPOCHS,<span class="w"> </span>--epochs<span class="w"> </span>EPOCHS
-<span class="w">                        </span>Number<span class="w"> </span>of<span class="w"> </span>epochs<span class="w"> </span><span class="k">for</span><span class="w"> </span>calibration.
-</pre></div>
-</div>
-</section>
 </section>
 <section id="using-a-configuration-file">
 <h3>1.2. Using a configuration file<a class="headerlink" href="#using-a-configuration-file" title="Permalink to this headline"></a></h3>
@@ -602,24 +559,24 @@ customize quantization.</p>
 <span class="n">quantized_model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:36
-  64/1024 [&gt;.............................] - ETA: 0s  
- 126/1024 [==&gt;...........................] - ETA: 0s
- 188/1024 [====&gt;.........................] - ETA: 0s
- 249/1024 [======&gt;.......................] - ETA: 0s
- 313/1024 [========&gt;.....................] - ETA: 0s
- 377/1024 [==========&gt;...................] - ETA: 0s
- 440/1024 [===========&gt;..................] - ETA: 0s
- 503/1024 [=============&gt;................] - ETA: 0s
- 566/1024 [===============&gt;..............] - ETA: 0s
- 630/1024 [=================&gt;............] - ETA: 0s
- 692/1024 [===================&gt;..........] - ETA: 0s
- 755/1024 [=====================&gt;........] - ETA: 0s
- 818/1024 [======================&gt;.......] - ETA: 0s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:35
+  63/1024 [&gt;.............................] - ETA: 0s  
+ 127/1024 [==&gt;...........................] - ETA: 0s
+ 190/1024 [====&gt;.........................] - ETA: 0s
+ 253/1024 [======&gt;.......................] - ETA: 0s
+ 317/1024 [========&gt;.....................] - ETA: 0s
+ 380/1024 [==========&gt;...................] - ETA: 0s
+ 442/1024 [===========&gt;..................] - ETA: 0s
+ 505/1024 [=============&gt;................] - ETA: 0s
+ 568/1024 [===============&gt;..............] - ETA: 0s
+ 632/1024 [=================&gt;............] - ETA: 0s
+ 694/1024 [===================&gt;..........] - ETA: 0s
+ 757/1024 [=====================&gt;........] - ETA: 0s
+ 819/1024 [======================&gt;.......] - ETA: 0s
  881/1024 [========================&gt;.....] - ETA: 0s
- 943/1024 [==========================&gt;...] - ETA: 0s
-1006/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 802us/step
+ 945/1024 [==========================&gt;...] - ETA: 0s
+1010/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 801us/step
 Model: &quot;model_5&quot;
 _________________________________________________________________
  Layer (type)                Output Shape              Param #
@@ -744,23 +701,23 @@ quantized using the given configuration and the other layers will use what is pr
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:20
-  64/1024 [&gt;.............................] - ETA: 0s  
- 128/1024 [==&gt;...........................] - ETA: 0s
- 191/1024 [====&gt;.........................] - ETA: 0s
- 254/1024 [======&gt;.......................] - ETA: 0s
- 316/1024 [========&gt;.....................] - ETA: 0s
+  63/1024 [&gt;.............................] - ETA: 0s  
+ 126/1024 [==&gt;...........................] - ETA: 0s
+ 189/1024 [====&gt;.........................] - ETA: 0s
+ 251/1024 [======&gt;.......................] - ETA: 0s
+ 315/1024 [========&gt;.....................] - ETA: 0s
  378/1024 [==========&gt;...................] - ETA: 0s
- 440/1024 [===========&gt;..................] - ETA: 0s
+ 442/1024 [===========&gt;..................] - ETA: 0s
  504/1024 [=============&gt;................] - ETA: 0s
  567/1024 [===============&gt;..............] - ETA: 0s
- 631/1024 [=================&gt;............] - ETA: 0s
+ 630/1024 [=================&gt;............] - ETA: 0s
  694/1024 [===================&gt;..........] - ETA: 0s
- 757/1024 [=====================&gt;........] - ETA: 0s
- 820/1024 [=======================&gt;......] - ETA: 0s
- 883/1024 [========================&gt;.....] - ETA: 0s
- 946/1024 [==========================&gt;...] - ETA: 0s
-1007/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 802us/step
+ 759/1024 [=====================&gt;........] - ETA: 0s
+ 823/1024 [=======================&gt;......] - ETA: 0s
+ 887/1024 [========================&gt;.....] - ETA: 0s
+ 949/1024 [==========================&gt;...] - ETA: 0s
+1013/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 798us/step
 {
     &quot;dw_conv&quot;: {
         &quot;output_quantizer&quot;: {
@@ -804,17 +761,17 @@ parameters defined configuration for other layers.</p>
 <h2>2. Calibration<a class="headerlink" href="#calibration" title="Permalink to this headline"></a></h2>
 <section id="why-is-calibration-required">
 <h3>2.1. Why is calibration required?<a class="headerlink" href="#why-is-calibration-required" title="Permalink to this headline"></a></h3>
-<p>As already stated, <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer">OutputQuantizer</a> are added between
-layer blocks during quantization in order to decrease intermediate potential bitwidth and prevent
-saturation. The process of defining the best quantization range possible for the OutputQuantizer
-is called calibration.</p>
+<p><a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer">OutputQuantizer</a>
+are added between layer blocks during quantization in order to decrease intermediate potential
+bitwidth and prevent saturation. Calibration is the process of defining the best quantization
+range possible for the OutputQuantizer.</p>
 <p>Calibration will statistically determine the quantization range by passing samples into the float
 model and observing the intermediate output values. The quantization range is stored in
 <code class="docutils literal notranslate"><span class="pre">range_max</span></code> variable. The calibration algorithm used in QuantizeML is based on a moving maximum:
 <code class="docutils literal notranslate"><span class="pre">range_max</span></code> is initialized with the maximum value of the first batch of samples (per-axis or
 per-tensor depending on the quantization scheme) and the following batches will update
-<code class="docutils literal notranslate"><span class="pre">range_max</span></code> with a moving momentum strategy (momentum is set to 0.9). Pseudo code is given
-below:</p>
+<code class="docutils literal notranslate"><span class="pre">range_max</span></code> with a moving momentum strategy (momentum is set to 0.9). Refer to the following
+pseudo code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">samples_max</span> <span class="o">=</span> <span class="n">reduce_max</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 <span class="n">delta</span> <span class="o">=</span> <span class="n">previous_range_max</span> <span class="o">-</span> <span class="n">new_range_max</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">momentum</span><span class="p">)</span>
 <span class="n">new_range_max</span> <span class="o">=</span> <span class="n">previous_range_max</span> <span class="o">-</span> <span class="n">delta</span>
@@ -865,15 +822,7 @@ that is made on the first batch of samples. The recommended value is 100.</p>
 <p>It is the number of iterations over the calibration samples. Increasing the value will allow for
 more updates of the <code class="docutils literal notranslate"><span class="pre">range_max</span></code> variables thanks to the momentum policy without requiring a huge
 amount of samples. The recommended value is 2.</p>
-</section>
-<section id="id1">
-<h4>Command-line interface equivalent<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h4>
-<p>As <a class="reference external" href="plot_0_advanced_quantizeml.html#command-line-interface-equivalent">previously described</a>,
-the <code class="docutils literal notranslate"><span class="pre">quantize</span></code> CLI also comes with calibration parameters.
-The only difference with the programming interface is that samples must be serialized and provided
-as a <code class="docutils literal notranslate"><span class="pre">.npz</span></code> file. The <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.extract_samples">extract_samples</a> can be used for that
-purpose.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.311 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.302 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-0-advanced-quantizeml-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/390c9f4cf688db846ca83d5d8edc2814/plot_0_advanced_quantizeml.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_0_advanced_quantizeml.py</span></code></a></p>

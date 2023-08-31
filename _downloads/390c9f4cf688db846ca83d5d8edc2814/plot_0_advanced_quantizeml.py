@@ -2,31 +2,30 @@
 Advanced QuantizeML tutorial
 ============================
 
-This tutorial gives insights about QuantizeML for users who want to go deeper into the quantization
-possibilities of the toolkit. We recommend first looking at the `user guide
-<../../user_guide/quantizeml.html>`__  and the `global workflow tutorial
-<../general/plot_0_global_workflow.html>`__ to get started with QuantizeML.
+This tutorial provides a comprehensive understanding of quantization in `QuantizeML python
+package <../../user_guide/quantizeml.html#quantizeml-toolkit>`__. Refer to `QuantizeML user
+guide <../../user_guide/quantizeml.html>`__  and `Global Akida workflow tutorial
+<../general/plot_0_global_workflow.html>`__ for additional resources.
 
-The QuantizeML toolkit offers an easy-to-use set of functions to get a quantized model from a
-pretrained model. The `quantize
-<../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ high-level function
-replaces Keras layers (or custom QuantizeML layers) with quantized, integer only layers.
+`QuantizeML python package <../../user_guide/quantizeml.html#quantizeml-toolkit>`__ provides
+a user-friendly collection of functions for obtaining a quantized model. The `quantize
+<../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function replaces Keras
+layers with quantized, integer only layers from `QuantizeML <../../user_guide/quantizeml.html>`__.
 
-While the default 8-bit quantization scheme will produce satisfying results, this tutorial will
-present the alternative low-level method to define customizable quantization schemes.
 """
 
 ######################################################################
 # 1. Defining a quantization scheme
 # ---------------------------------
 #
-# The quantization scheme refers to all the parameters used for quantization, that is the bitwidth
-# used for inputs, outputs or weights and how they are actually quantized (e.g. per-axis or
-# per-tensor, as described later).
+# The quantization scheme refers to all the parameters used for quantization, that is the method of
+# quantization such as per-axis or per-tensor, and the bitwidth used for inputs, outputs and
+# weights.
 #
 # The first part in this section explains how to define a quantization scheme using
-# `QuantizationParams <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__
-# to define an homogeneous scheme that applies to all layers and the second part explains how to
+# `QuantizationParams
+# <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__,
+# which defines a homogeneous scheme that applies to all layers, and the second part explains how to
 # fully customize the quantization scheme using a configuration file.
 #
 
@@ -68,58 +67,11 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 #   multiplications). It is set to 32 and should not be changed as this is what the Akida hardware
 #   target will use.
 #
-# .. note:: While it is possible define customized quantization scheme like 3-bit weights and 7-bit
-#           activations using a ``QuantizationParams`` object, remember that conversion to Akida
-#           will come with restrictions and `hardware constraints
-#           <../../user_guide/1.0_hw_constraints.html>`__. Staying within a 8-bit or 4-bit quantization
-#           scheme is thus recommended.
+# .. note:: It is recommended to quantize a model to 8-bit or 4-bit to ensure it is Akida hardware
+#           compatible.
 #
 # .. warning:: ``QuantizationParams`` is only applied the first time a model is quantized.
 #              If you want to re-quantize a model, you must to provide a complete ``q_config``.
-
-######################################################################
-# Command-line interface equivalent
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# The `quantize command line interface <../../user_guide/quantizeml.html#quantize-cli>`__ allows to
-# define ``QuantizationParams`` parameters with the same names:
-#
-# .. code-block:: bash
-#
-#   quantizeml quantize --help
-#
-#   usage: quantizeml quantize [-h] -m MODEL [-c QUANTIZATION_CONFIG] [-a ACTIVATION_BITS]
-#                              [--per_tensor_activations] [-w WEIGHT_BITS] [-i INPUT_WEIGHT_BITS]
-#                              [-b BUFFER_BITS] [-s SAVE_NAME] [-sa SAMPLES] [-ns NUM_SAMPLES]
-#                              [-bs BATCH_SIZE] [-e EPOCHS]
-#
-#   optional arguments:
-#     -h, --help            show this help message and exit
-#     -m MODEL, --model MODEL
-#                           Model to quantize
-#     -c QUANTIZATION_CONFIG, --quantization_config QUANTIZATION_CONFIG
-#                           Quantization configuration file
-#     -a ACTIVATION_BITS, --activation_bits ACTIVATION_BITS
-#                           Activation quantization bitwidth
-#     --per_tensor_activations
-#                           Quantize activations per-tensor
-#     -w WEIGHT_BITS, --weight_bits WEIGHT_BITS
-#                           Weight quantization bitwidth
-#     -i INPUT_WEIGHT_BITS, --input_weight_bits INPUT_WEIGHT_BITS
-#                           Input layer weight quantization bitwidth
-#     -b BUFFER_BITS, --buffer_bits BUFFER_BITS
-#                           Buffer quantization bitwidth
-#     -s SAVE_NAME, --save_name SAVE_NAME
-#                           Name for saving the quantized model.
-#     -sa SAMPLES, --samples SAMPLES
-#                           Set of samples to calibrate the model (.npz file).
-#     -ns NUM_SAMPLES, --num_samples NUM_SAMPLES
-#                           Number of samples to use for calibration, only used when 'samples' is not provided.
-#     -bs BATCH_SIZE, --batch_size BATCH_SIZE
-#                           Batch size for calibration.
-#     -e EPOCHS, --epochs EPOCHS
-#                           Number of epochs for calibration.
-
 
 ######################################################################
 # 1.2. Using a configuration file
@@ -229,19 +181,18 @@ print(json.dumps(new_config, indent=4))
 # 2.1. Why is calibration required?
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# As already stated, `OutputQuantizer
-# <../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__ are added between
-# layer blocks during quantization in order to decrease intermediate potential bitwidth and prevent
-# saturation. The process of defining the best quantization range possible for the OutputQuantizer
-# is called calibration.
+# `OutputQuantizer <../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__
+# are added between layer blocks during quantization in order to decrease intermediate potential
+# bitwidth and prevent saturation. Calibration is the process of defining the best quantization
+# range possible for the OutputQuantizer.
 #
 # Calibration will statistically determine the quantization range by passing samples into the float
 # model and observing the intermediate output values. The quantization range is stored in
 # ``range_max`` variable. The calibration algorithm used in QuantizeML is based on a moving maximum:
 # ``range_max`` is initialized with the maximum value of the first batch of samples (per-axis or
 # per-tensor depending on the quantization scheme) and the following batches will update
-# ``range_max`` with a moving momentum strategy (momentum is set to 0.9). Pseudo code is given
-# below:
+# ``range_max`` with a moving momentum strategy (momentum is set to 0.9). Refer to the following
+# pseudo code:
 #
 # .. code-block:: python
 #
@@ -304,14 +255,3 @@ print(json.dumps(new_config, indent=4))
 # It is the number of iterations over the calibration samples. Increasing the value will allow for
 # more updates of the ``range_max`` variables thanks to the momentum policy without requiring a huge
 # amount of samples. The recommended value is 2.
-#
-#
-# Command-line interface equivalent
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# As `previously described <plot_0_advanced_quantizeml.html#command-line-interface-equivalent>`__,
-# the ``quantize`` CLI also comes with calibration parameters.
-# The only difference with the programming interface is that samples must be serialized and provided
-# as a ``.npz`` file. The `extract_samples
-# <../../api_reference/akida_models_apis.html#akida_models.extract_samples>`__ can be used for that
-# purpose.
