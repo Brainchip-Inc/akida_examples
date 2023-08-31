@@ -18,12 +18,13 @@ layers with quantized, integer only layers from `QuantizeML <../../user_guide/qu
 # 1. Defining a quantization scheme
 # ---------------------------------
 #
-# The quantization scheme refers to all the parameters used for quantization, that is the bitwidth
-# used for inputs, outputs or weights, and method of quantization such as per-axis or
-# per-tensor.
+# The quantization scheme refers to all the parameters used for quantization, that is the method of
+# quantization such as per-axis or per-tensor, and the bitwidth used for inputs, outputs and
+# weights.
 #
 # The first part in this section explains how to define a quantization scheme using
-# `QuantizationParams <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`_,_
+# `QuantizationParams
+# <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__,
 # which defines a homogeneous scheme that applies to all layers, and the second part explains how to
 # fully customize the quantization scheme using a configuration file.
 #
@@ -66,8 +67,8 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 #   multiplications). It is set to 32 and should not be changed as this is what the Akida hardware
 #   target will use.
 #
-# .. note:: It is recommended to quantize a model to 8 bits or 4 bits to ensure it is Akida hardware
-#           compatbile.
+# .. note:: It is recommended to quantize a model to 8-bit or 4-bit to ensure it is Akida hardware
+#           compatible.
 #
 # .. warning:: ``QuantizationParams`` is only applied the first time a model is quantized.
 #              If you want to re-quantize a model, you must to provide a complete ``q_config``.
@@ -190,8 +191,8 @@ print(json.dumps(new_config, indent=4))
 # ``range_max`` variable. The calibration algorithm used in QuantizeML is based on a moving maximum:
 # ``range_max`` is initialized with the maximum value of the first batch of samples (per-axis or
 # per-tensor depending on the quantization scheme) and the following batches will update
-# ``range_max`` with a moving momentum strategy (momentum is set to 0.9). Refer to below pseudo
-# code:
+# ``range_max`` with a moving momentum strategy (momentum is set to 0.9). Refer to the following
+# pseudo code:
 #
 # .. code-block:: python
 #
