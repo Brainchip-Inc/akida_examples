@@ -171,6 +171,10 @@ All these design compatibility constraints are summarized in the CNN2SNN
 function. A good practice is to check model compatibility before going through
 the training process [#fn-2]_.
 
+.. warning::
+    The CNN2SNN `check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`_
+    API is deprecated. It only applies to models targeting Akida 1.0 IP and quantized with the CNN2NN toolkit.
+
 Helpers (see `Layer Blocks <../api_reference/akida_models_apis.html#layer-blocks>`_) are available
 in the ``akida_models`` PyPI package to easily create a compatible model from scratch.
 
