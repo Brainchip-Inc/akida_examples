@@ -20,13 +20,13 @@ the model conversion flow.
 
 import os
 import numpy as np
-from tensorflow.keras.utils import get_file
+from akida_models import fetch_file
 
 # Download validation set from Brainchip data server, it contains 10% of the original dataset
-data_path = get_file("val.tar.gz",
-                     "https://data.brainchip.com/dataset-mirror/portrait128/val.tar.gz",
-                     cache_subdir=os.path.join("datasets", "portrait128"),
-                     extract=True)
+data_path = fetch_file(fname="val.tar.gz",
+                       origin="https://data.brainchip.com/dataset-mirror/portrait128/val.tar.gz",
+                       cache_subdir=os.path.join("datasets", "portrait128"),
+                       extract=True)
 
 data_dir = os.path.join(os.path.dirname(data_path), "val")
 x_val = np.load(os.path.join(data_dir, "val_img.npy"))
@@ -74,13 +74,12 @@ plt.show()
 # and the Binary IoU takes into account how close the predicted mask is to the ground truth.
 #
 
-from tensorflow.keras.utils import get_file
 from akida_models.model_io import load_model
 
 # Retrieve the model file from Brainchip data server
-model_file = get_file("akida_unet_portrait128.h5",
-                      "https://data.brainchip.com/models/AkidaV2/akida_unet/akida_unet_portrait128.h5",
-                      cache_subdir='models')
+model_file = fetch_file(fname="akida_unet_portrait128.h5",
+                        origin="https://data.brainchip.com/models/AkidaV2/akida_unet/akida_unet_portrait128.h5",
+                        cache_subdir='models')
 
 # Load the native Keras pre-trained model
 model_keras = load_model(model_file)

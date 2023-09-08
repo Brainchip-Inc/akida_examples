@@ -117,7 +117,7 @@ base_model = akidanet_imagenet(input_shape=(IMG_SIZE, IMG_SIZE, 3),
 
 # Get pretrained quantized weights and load them into the base model
 pretrained_weights = fetch_file(
-    "https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5",
+    origin="https://data.brainchip.com/models/AkidaV2/akidanet/akidanet_imagenet_224_alpha_0.5.h5",
     fname="akidanet_imagenet_224_alpha_0.5.h5",
     cache_subdir='models')
 

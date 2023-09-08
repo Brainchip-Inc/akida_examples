@@ -37,8 +37,8 @@ import numpy as np
 
 from tensorflow.io import read_file
 from tensorflow.image import decode_jpeg
-from tensorflow.keras.utils import get_file
 
+from akida_models import fetch_file
 from akida_models.imagenet import preprocessing
 
 # Model specification and hyperparameters
@@ -48,9 +48,9 @@ IMAGE_SIZE = 224
 num_images = 10
 
 # Retrieve dataset file from Brainchip data server
-file_path = get_file(
-    "imagenet_like.zip",
-    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
+file_path = fetch_file(
+    fname="imagenet_like.zip",
+    origin="https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
     cache_subdir='datasets/imagenet_like',
     extract=True)
 data_folder = os.path.dirname(file_path)

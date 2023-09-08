@@ -33,10 +33,10 @@ example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 #
 import pickle
 
-from tensorflow.keras.utils import get_file
+from akida_models import fetch_file
 
 # Fetch pre-processed data for 32 keywords
-fname = get_file(
+fname = fetch_file(
     fname='kws_preprocessed_all_words_except_backward_follow_forward.pkl',
     origin="https://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
@@ -65,9 +65,9 @@ print("Wanted words and labels:\n", word_to_index)
 from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
-model_file = get_file("ds_cnn_kws.h5",
-                      "https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws.h5",
-                      cache_subdir='models')
+model_file = fetch_file(fname="ds_cnn_kws.h5",
+                        origin="https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws.h5",
+                        cache_subdir='models')
 
 # Load the native Keras pre-trained model
 model_keras = load_model(model_file)
@@ -97,9 +97,9 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 from quantizeml.models import load_model
 
 # Load the pre-trained quantized model
-model_file = get_file(
-    "ds_cnn_kws_i8_w8_a8.h5",
-    "https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w8_a8.h5",
+model_file = fetch_file(
+    fname="ds_cnn_kws_i8_w8_a8.h5",
+    origin="https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w8_a8.h5",
     cache_subdir='models')
 model_keras_quantized = load_model(model_file)
 model_keras_quantized.summary()
