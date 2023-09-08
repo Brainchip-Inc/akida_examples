@@ -7,29 +7,29 @@ describes the steps to prepare a model for Akida starting from a TensorFlow/Kera
 Here we will instead describe a workflow to go from a model trained in PyTorch.
 
 .. Note::
-   | This example targets those users who already have a Pytorch training pipeline
+   | This example targets those users who already have a PyTorch training pipeline
      in place, and a trained model: this workflow will allow you to rapidly convert
      your model to Akida 2.0.
    | Note however that this pathway offers slightly less flexibility than our default,
      TensorFlow-based pathway - specifically, fine tuning of the quantized model is
      not possible when starting from PyTorch.
    | In most cases, that won't matter, there should be almost no performance drop when
-     quantizing to 8-bits anyway.
+     quantizing to 8-bit anyway.
    | However, advanced users interested in further optimization of the original model
      (going to 4-bit quantization for example) or those users who don't yet have a
      training pipeline in place may prefer the extra options afforded by our default,
      TensorFlow-based `Global Akida workflow <../general/plot_0_global_workflow.html>`__.
 
 
-QuantizeML allows to quantize and fine-tune Tensorflow models natively. While it does
-not support Pytorch quantization natively, it allows to quantize float models stored in
+QuantizeML allows to quantize and fine-tune TensorFlow models natively. While it does
+not support PyTorch quantization natively, it allows to quantize float models stored in
 the `Open Neural Network eXchange (ONNX) <https://onnx.ai>`__ format. Export from
 PyTorch to ONNX is well supported, and so this provides a straightforward pathway to
 prepare your PyTorch model for Akida.
 
 As a concrete example, we will prepare a PyTorch model on a simple classification task
 (MNIST). This model will then be exported to ONNX, from where it will be quantized to
-8-bits using QuantizeML. The quantized model is then converted to Akida, and performance
+8-bit using QuantizeML. The quantized model is then converted to Akida, and performance
 evaluated to show that there has been no loss in accuracy.
 
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
@@ -297,7 +297,7 @@ model_akida.summary()
 # Native PyTorch data must be presented in a different format to perform
 # the evaluation in Akida models. Specifically:
 #
-# 1. images must be numpy-raw, with an 8-bits unsigned integer data type and
+# 1. images must be numpy-raw, with an 8-bit unsigned integer data type and
 # 2. the channel dimension must be in the last dimension.
 #
 
