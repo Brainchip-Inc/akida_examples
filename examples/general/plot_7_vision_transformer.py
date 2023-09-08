@@ -182,13 +182,13 @@ tutorial explains how to build an optimized ViT using Akida models python API fo
 # following code snippet downloads a pre-trained model that can be used for Transfer Learning.
 
 # The following is the API download the vit_t16 model trained on ImageNet dataset
+from akida_models import fetch_file
 from akida_models.model_io import load_model
-from tensorflow.keras.utils import get_file
 
 # Retrieve the float model with pretrained weights and load it
-model_file = get_file(
-    "bc_vit_ti16_224.h5",
-    "https://data.brainchip.com/models/AkidaV2/vit/bc_vit_ti16_224.h5",
+model_file = fetch_file(
+    fname="bc_vit_ti16_224.h5",
+    origin="https://data.brainchip.com/models/AkidaV2/vit/bc_vit_ti16_224.h5",
     cache_subdir='models/akidanet_imagenet')
 model_keras = load_model(model_file)
 model_keras.summary()
@@ -307,9 +307,9 @@ IMAGE_SIZE = 224
 NUM_IMAGES = 10
 
 # Retrieve dataset file from Brainchip data server
-file_path = get_file(
-    "imagenet_like.zip",
-    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
+file_path = fetch_file(
+    fname="imagenet_like.zip",
+    origin="https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
     cache_subdir='datasets/imagenet_like',
     extract=True)
 data_folder = os.path.dirname(file_path)

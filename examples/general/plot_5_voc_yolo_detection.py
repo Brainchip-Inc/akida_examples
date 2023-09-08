@@ -85,13 +85,13 @@ tackle this object detection problem.
 
 import os
 
-from tensorflow.keras.utils import get_file
+from akida_models import fetch_file
 from akida_models.detection.processing import parse_voc_annotations
 
 # Download validation set from Brainchip data server
-data_path = get_file(
-    "voc_test_car_person.tar.gz",
-    "https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
+data_path = fetch_file(
+    fname="voc_test_car_person.tar.gz",
+    origin="https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
     cache_subdir='datasets/voc',
     extract=True)
 

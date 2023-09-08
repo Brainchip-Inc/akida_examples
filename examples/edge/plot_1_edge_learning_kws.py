@@ -161,10 +161,10 @@ from akida import FullyConnected, evaluate_sparsity, Model
 
 import pickle
 
-from tensorflow.keras.utils import get_file
+from akida_models import fetch_file
 
 # Fetch pre-processed data for 32 keywords
-fname = get_file(
+fname = fetch_file(
     fname='kws_preprocessed_all_words_except_backward_follow_forward.pkl',
     origin="https://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')
@@ -173,7 +173,7 @@ with open(fname, 'rb') as f:
      data_transform] = pickle.load(f)
 
 # Fetch pre-processed data for the 3 new keywords
-fname2 = get_file(
+fname2 = fetch_file(
     fname='kws_preprocessed_edge_backward_follow_forward.pkl',
     origin="https://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_edge_backward_follow_forward.pkl",
     cache_subdir='datasets/kws')

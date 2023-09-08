@@ -51,13 +51,13 @@ x_test_akida = x_test.astype('uint8')
 # The MAE is a linear score, i.e. all the individual differences are equally
 # weighted in the average.
 
-from tensorflow.keras.utils import get_file
+from akida_models import fetch_file
 from tensorflow.keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
-model_file = get_file("vgg_utk_face.h5",
-                      "https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face.h5",
-                      cache_subdir='models')
+model_file = fetch_file(fname="vgg_utk_face.h5",
+                        origin="https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face.h5",
+                        cache_subdir='models')
 
 # Load the native Keras pre-trained model
 model_keras = load_model(model_file)
