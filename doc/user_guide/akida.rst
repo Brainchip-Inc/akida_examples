@@ -26,7 +26,7 @@ Going from the standard deep learning world to Akida world is done by following 
 .. figure:: ../img/overall_flow.png
    :target: ../_images/overall_flow.png
    :alt: Overall flow
-   :scale: 25 %
+   :scale: 60 %
    :align: center
 
    Akida workflow

@@ -21,10 +21,10 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
 .. figure:: ../../img/overall_flow.png
    :target: ../../_images/overall_flow.png
    :alt: Overall flow
-   :scale: 25 %
+   :scale: 60 %
    :align: center
 
-   Akida workflow
+   Global Akida workflow
 
 """
 
