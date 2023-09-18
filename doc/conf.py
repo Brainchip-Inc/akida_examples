@@ -101,6 +101,9 @@ akida_version = pkg_resources.get_distribution('akida').version
 cnn2snn_version = pkg_resources.get_distribution('cnn2snn').version
 models_version = pkg_resources.get_distribution('akida-models').version
 
+from pip._internal.operations.freeze import freeze
+pip_freeze = ', '.join([str(i) for i in freeze(local_only=True)])
+
 
 def ultimateReplace(app, docname, source):
     result = source[0]
@@ -112,7 +115,8 @@ def ultimateReplace(app, docname, source):
 ultimate_replacements = {
     "{AKIDA_VERSION}": akida_version,
     "{CNN2SNN_VERSION}": cnn2snn_version,
-    "{MODELS_VERSION}": models_version
+    "{MODELS_VERSION}": models_version,
+    "{PIP_FREEZE}": pip_freeze
 }
 
 
