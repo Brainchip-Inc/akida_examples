@@ -7,7 +7,7 @@ describes the steps to prepare a model for Akida starting from a TensorFlow/Kera
 Here we will instead describe a workflow to go from a model trained in PyTorch.
 
 .. Note::
-   | This example targets those users who already have a PyTorch training pipeline
+   | This example targets users who already have a PyTorch training pipeline
      in place, and a trained model: this workflow will allow you to rapidly convert
      your model to Akida 2.0.
    | Note however that this pathway offers slightly less flexibility than our default,
@@ -16,21 +16,21 @@ Here we will instead describe a workflow to go from a model trained in PyTorch.
    | In most cases, that won't matter, there should be almost no performance drop when
      quantizing to 8-bit anyway.
    | However, advanced users interested in further optimization of the original model
-     (going to 4-bit quantization for example) or those users who don't yet have a
+     (going to 4-bit quantization for example) or users who don't yet have a
      training pipeline in place may prefer the extra options afforded by our default,
      TensorFlow-based `Global Akida workflow <../general/plot_0_global_workflow.html>`__.
 
 
-QuantizeML allows to quantize and fine-tune TensorFlow models natively. While it does
-not support PyTorch quantization natively, it allows to quantize float models stored in
-the `Open Neural Network eXchange (ONNX) <https://onnx.ai>`__ format. Export from
-PyTorch to ONNX is well supported, and so this provides a straightforward pathway to
+QuantizeML natively allows the quantization and fine-tuning of TensorFlow models. While
+it does not support PyTorch quantization natively, it allows to quantize float models
+stored in the `Open Neural Network eXchange (ONNX) <https://onnx.ai>`__ format. Export
+from PyTorch to ONNX is well supported, and so this provides a straightforward pathway to
 prepare your PyTorch model for Akida.
 
 As a concrete example, we will prepare a PyTorch model on a simple classification task
-(MNIST). This model will then be exported to ONNX, from where it will be quantized to
-8-bit using QuantizeML. The quantized model is then converted to Akida, and performance
-evaluated to show that there has been no loss in accuracy.
+(MNIST). This model will then be exported to ONNX and quantized to 8-bit using QuantizeML.
+The quantized model is then converted to Akida, and performance evaluated to show that
+there has been no loss in accuracy.
 
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
 
@@ -50,8 +50,8 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
    | The MNIST example below is light enough to train on the CPU only.
    | However, where GPU acceleration is desirable for the PyTorch training step, you may find
      it simpler to use separate virtual environments for the PyTorch-dependent sections
-     (`1. Create and train`_ and `2. Export`_ ) vs the TensorFlow-dependent sections
-     (`3. Quantize`_ and `4. Convert`_ ).
+     (`1. Create and train`_ and `2. Export`_) vs the TensorFlow-dependent sections
+     (`3. Quantize`_ and `4. Convert`_).
 
 
 .. figure:: ../../img/overall_onnx_flow.png
@@ -111,9 +111,11 @@ def imshow(img):
 # Get some random training images
 images, labels = next(iter(trainloader))
 
+######################################################################
+
 # Show images and labels
 imshow(torchvision.utils.make_grid(images, nrow=8))
-print("[INFO] labels:\n", labels.reshape((-1, 8)))
+print("Labels:\n", labels.reshape((-1, 8)))
 
 ######################################################################
 # 1.2. Model definition
@@ -197,7 +199,7 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
 
 assert correct / total >= 0.98
-print(f'[INFO] Test accuracy: {100 * correct // total} %')
+print(f'Test accuracy: {100 * correct // total} %')
 
 ######################################################################
 # 2. Export
@@ -217,7 +219,7 @@ print(f'[INFO] Test accuracy: {100 * correct // total} %')
 import onnx
 
 opset_version = onnx.defs.onnx_opset_version()
-print("[INFO] Current opset version:", onnx.defs.onnx_opset_version())
+print("Current opset version:", onnx.defs.onnx_opset_version())
 
 ######################################################################
 # Then, the model is exported by the following code:
@@ -305,7 +307,7 @@ model_akida.summary()
 x_test = testloader.dataset.data.numpy()
 y_test = testloader.dataset.targets.numpy()
 
-# Add a channels dimension to the image sets as Akida expects 4-D inputs corresponding to
+# Add a channel dimension to the image sets as Akida expects 4-D inputs corresponding to
 # (num_samples, width, height, channels). Note: MNIST is a grayscale dataset and is unusual
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
@@ -322,8 +324,8 @@ assert accuracy > 0.96
 # 4.3 Show predictions for a single image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Display one of the test images, such as the first image in the dataset from above, to visualize
-# the output of the model.
+# Display one of the test images, such as the first image in the aforementioned
+# dataset, to visualize the output of the model.
 #
 
 # Test a single example
@@ -332,5 +334,5 @@ image = x_test[sample_image]
 outputs = model_akida.predict(image.reshape(1, 28, 28, 1))
 
 plt.imshow(x_test[sample_image].reshape((28, 28)), cmap="Greys")
-print('[INFO] Input Label:', y_test[sample_image].item())
-print('[INFO] Prediction Label:', outputs.squeeze().argmax())
+print('Input Label:', y_test[sample_image].item())
+print('Prediction Label:', outputs.squeeze().argmax())

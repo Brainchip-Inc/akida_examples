@@ -2,6 +2,9 @@
 Off-the-shelf models quantization
 =================================
 
+.. Warning::
+   QuantizeML ONNX quantization is an **evolving feature**. Some models may not be compatible.
+
 | The `Global Akida workflow <../general/plot_0_global_workflow.html>`__ and the
   `PyTorch to Akida workflow <../general/plot_8_global_pytorch_workflow.html>`__ guides
   describe all the steps required to create, train, quantize and convert a model for Akida,
@@ -55,8 +58,8 @@ Off-the-shelf models quantization
 # 2. Data preparation
 # ~~~~~~~~~~~~~~~~~~~
 #
-# Given that the reference model was trained in `ImageNet <https://www.image-net.org/>`__ dataset
-# (which it is not publicly available), this tutorial used a subset of 10 copyright free images.
+# Given that the reference model was trained on `ImageNet <https://www.image-net.org/>`__ dataset
+# (which is not publicly available), this tutorial used a subset of 10 copyright free images.
 # See `data preparation <../general/plot_1_akidanet_imagenet.html#dataset-preparation>`__
 # for more details.
 #
@@ -115,7 +118,7 @@ for i in range(num_images):
 print(f'{num_images} images loaded and preprocessed.')
 
 ######################################################################
-# As illustrated in `1. Workflow overview`_, models source is at the user's
+# As illustrated in `1. Workflow overview`_, the model's source is at the user's
 # discretion. Here, we know a priori that MobileNet V2 was trained with
 # images normalized within [-1, 1] interval. Also, ONNX models are usually
 # saved with a `channels-first` format, input images are expected to be passed
@@ -140,9 +143,9 @@ x_test = np.transpose(x_test, (0, 3, 1, 2))
 #
 # There are many repositories with models saved in ONNX format. In this example the
 # `Optimum API <https://huggingface.co/docs/optimum/main/en/exporters/onnx/usage_guides/export_a_model>`__
-# is used for download and export to ONNX. Note that the current `operation set
-# <https://onnx.ai/onnx/intro/concepts.html#what-is-an-opset-version>`__ version is
-# required for the export.
+# is used for downloading and exporting models to ONNX. Note that the current
+# `operation set <https://onnx.ai/onnx/intro/concepts.html#what-is-an-opset-version>`__
+# version is required for the export.
 #
 
 import onnx
@@ -156,6 +159,8 @@ main_export(model_name_or_path="google/mobilenet_v2_1.0_224",
             task="image-classification",
             output="./",
             opset=opset_version)
+
+######################################################################
 
 # Load the model in memory
 model_onnx = onnx.load_model("./model.onnx")
@@ -171,10 +176,11 @@ print(onnx.helper.printable_graph(model_onnx.graph))
 # We take advantage of this framework to run the ONNX models and evaluate
 # their performances.
 #
-# .. Note:: We only compute accuracy for the 10 images set.
+# .. Note:: We only compute accuracy on 10 images.
 #
 
 from onnxruntime import InferenceSession
+
 
 def evaluate_onnx_model(model):
     sess = InferenceSession(model.SerializeToString())
@@ -185,6 +191,7 @@ def evaluate_onnx_model(model):
     # Compute the model accuracy
     accuracy = (predicted == labels_test).sum() / num_images
     return accuracy
+
 
 accuracy_floating = evaluate_onnx_model(model_onnx)
 print(f'Floating point model accuracy: {100 * accuracy_floating:.2f} %')
@@ -198,13 +205,23 @@ print(f'Floating point model accuracy: {100 * accuracy_floating:.2f} %')
 #   must be quantized in preparation to run on an Akida accelerator.
 # | `QuantizeML quantize() <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 #   function recognizes `ModelProto <https://onnx.ai/onnx/api/classes.html#modelproto>`__ objects
-#   and quantize them for Akida. The result is another ``ModelProto``, compatible with the
+#   and quantizes them for Akida. The result is another ``ModelProto``, compatible with the
 #   `CNN2SNN Toolkit <../../user_guide/cnn2snn.html>`__.
-# | Please refer to the `calibration user guide <../../user_guide/quantizeml.html>`__ for further
-#   details.
+# | The table below summarizes the obtained accuracy at the various stages using the full
+#   ImageNet dataset.
 #
-# .. Warning::
-#    QuantizeML ONNX quantization is an **evolving feature**. Some models may not be compatible.
+# +-------------------------------+----------------+--------------------+----------------+
+# | Calibration parameters        | Float accuracy | Quantized accuracy | Akida accuracy |
+# +===============================+================+====================+================+
+# | Random samples / per-tensor   | 71.790         | 70.550             | 70.588         |
+# +-------------------------------+----------------+--------------------+----------------+
+# | Imagenet samples / per-tensor | 71.790         | 70.472             | 70.628         |
+# +-------------------------------+----------------+--------------------+----------------+
+#
+# .. Note::
+#    Please refer to the `QuantizeML toolkit user guide <../../user_guide/quantizeml.html>`__
+#    and the `Advanced QuantizeML tutorial <plot_0_advanced_quantizeml.html>`__ for details
+#    about quantization parameters.
 #
 
 from quantizeml.layers import QuantizationParams
@@ -221,5 +238,5 @@ print(f'Quantized model accuracy: {100 * accuracy:.2f} %')
 ######################################################################
 # .. Note:: Once the model is quantized, the `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__
 #    function must be used to retrieve a model in Akida format ready for inference. Please
-#    refer to the `Global Akida workflow <../general/plot_0_global_workflow.html>`__ for further details.
+#    refer to the `PyTorch to Akida workflow <../general/plot_8_global_pytorch_workflow.html>`__ for further details.
 #
