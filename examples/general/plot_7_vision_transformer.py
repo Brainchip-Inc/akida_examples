@@ -90,9 +90,9 @@ tutorial explains how to build an optimized ViT using Akida models python API fo
 # possible to transform this model into an Akida optimized one as per Section 2. The layers mentioned
 # in Section 2 are functionally equivalent to each of the layers present in the original model.
 #
-# .. note:: To overcome the accuracy drop from the original when transforming the model as per Section 2,
-#           it is recommended to replace the original layers one at a time and to fine-tune at every
-#           step.
+# .. note:: To overcome the accuracy drop from the original when transforming the model as per
+#           Section 2, it is recommended to replace the original layers all at once and to fine-tune
+#           afterwards.
 #
 # The example below shows the transformation of ViT (tiny) into an optimized model that can run on
 # the Akida hardware.
@@ -133,22 +133,12 @@ tutorial explains how to build an optimized ViT using Akida models python API fo
 #   # download the pre-trained weights
 #   wget https://data.brainchip.com/models/AkidaV2/vit/vit_ti16_224.h5
 #
-#   # transformation 1: replace layer normalization with mad norm layer and last layer normalization with batch normalization
-#   akida_models create -s vit_ti16_lmnbn.h5 vit_ti16 -bw vit_ti16_224.h5 --norm LMN --last_norm BN
+#   # transformations: replace layer normalization with mad norm layer, last layer normalization
+#   # with batch normalization, GeLU layer with ReLU and softmax with shiftmax layer
+#   akida_models create -s vit_ti16_transformed.h5 vit_ti16 --norm LMN --last_norm BN --act ReLU8 \
+#                                                   --softmax softmax2 -bw vit_ti16_224.h5
 #   # fine-tuning
-#   imagenet_train tune -m vit_ti16_lmnbn.h5 -e 15 --optim Adam --lr_policy cosine_decay \
-#                       -lr 6e-5 -s vit_ti16_lmnbn_tuned.h5
-#
-#   # transformation 2: replace GeLU layer with ReLU
-#   akida_models create -s vit_ti16_relu.h5 vit_ti16 -bw vit_ti16_lmnbn_tuned.h5 --norm LMN --last_norm BN --act ReLU8
-#   # fine-tuning
-#   imagenet_train tune -m vit_ti16_relu.h5 -e 15 --optim Adam --lr_policy cosine_decay \
-#                       -lr 6e-5 -s vit_ti16_relu_tuned.h5
-#
-#   # transformation 3: replace softmax with shiftmax layer
-#   akida_models create -s vit_ti16_shiftmax.h5 vit_ti16 -bw vit_ti16_relu_tuned.h5 --norm LMN --last_norm BN --act ReLU8 --softmax softmax2
-#   # fine-tuning
-#   imagenet_train tune -m vit_ti16_shiftmax.h5 -e 15 --optim Adam --lr_policy cosine_decay \
+#   imagenet_train tune -m vit_ti16_transformed.h5 -e 30 --optim Adam --lr_policy cosine_decay \
 #                       -lr 6e-5 -s vit_ti16_transformed.h5
 #
 # The above transformation generates a ViT model that is optimized to run efficiently on Akida hardware.
