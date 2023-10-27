@@ -472,7 +472,7 @@
 <span class="sd">Utility methods to insert layers in a model.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;insert_layer&#39;</span><span class="p">,</span> <span class="s1">&#39;insert_rescaling&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;insert_layer&#39;</span><span class="p">,</span> <span class="s1">&#39;insert_rescaling&#39;</span><span class="p">,</span> <span class="s1">&#39;insert_in_config&#39;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
@@ -485,7 +485,7 @@
 <span class="kn">from</span> <span class="nn">...layers.quantizers</span> <span class="kn">import</span> <span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span>
 
 
-<span class="k">def</span> <span class="nf">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer_name</span><span class="p">,</span> <span class="n">new_layer</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer_name</span><span class="p">,</span> <span class="n">new_layer</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">outbound_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Inserts the given layer in the model after the layer with the name target_layer_name by</span>
 <span class="sd">    editing the given configuration.</span>
 
@@ -494,6 +494,10 @@
 <span class="sd">        target_layer_name (str): name of the layer after which to insert a layer</span>
 <span class="sd">        new_layer (keras.layers.Layer): layer to insert</span>
 <span class="sd">        config (dict): model dict config being updated</span>
+<span class="sd">        outbound_names (list, optional): list of outbounds layers names for the inserted</span>
+<span class="sd">            layer. When not specified, the outbound_names outbounds are retrieved from the given</span>
+<span class="sd">            model. Providing incoherent names will result in an invalid model graph. Defaults to</span>
+<span class="sd">            None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">layers_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">]</span>
 
@@ -508,9 +512,10 @@
         <span class="c1"># The layer name is added to the configuration</span>
         <span class="n">new_layer_config</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_layer</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="c1"># Retrieve target_layer outbounds</span>
-        <span class="n">target_outbounds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">target_layer_name</span><span class="p">)</span><span class="o">.</span><span class="n">outbound_nodes</span>
-        <span class="n">outbound_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">outbound</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">outbound</span> <span class="ow">in</span> <span class="n">target_outbounds</span><span class="p">]</span>
+        <span class="c1"># Retrieve target_layer outbounds if None specified.</span>
+        <span class="k">if</span> <span class="n">outbound_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_outbounds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">target_layer_name</span><span class="p">)</span><span class="o">.</span><span class="n">outbound_nodes</span>
+            <span class="n">outbound_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">outbound</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">outbound</span> <span class="ow">in</span> <span class="n">target_outbounds</span><span class="p">]</span>
 
         <span class="c1"># OutputQuantizer does not support multiple inputs so target layers with multiple outputs</span>
         <span class="c1"># are rejected</span>
@@ -537,7 +542,7 @@
                             <span class="n">new_layer_inbounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matched</span><span class="p">)</span>
 
             <span class="c1"># Set the inserted layer inbounds</span>
-            <span class="n">new_layer_config</span><span class="p">[</span><span class="s1">&#39;inbound_nodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="n">new_layer_inbounds</span><span class="p">]]</span>
+            <span class="n">new_layer_config</span><span class="p">[</span><span class="s1">&#39;inbound_nodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_layer_inbounds</span><span class="p">]</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If target layer has no outbounds (ie. it&#39;s a model output), update the model</span>

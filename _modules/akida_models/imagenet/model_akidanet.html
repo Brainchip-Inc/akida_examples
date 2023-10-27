@@ -476,6 +476,10 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;akidanet_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;akidanet_imagenet_pretrained&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;akidanet_faceidentification_pretrained&quot;</span><span class="p">,</span> <span class="s2">&quot;akidanet_plantvillage_pretrained&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;akidanet_vww_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -492,6 +496,9 @@
                       <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                       <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the AkidaNet architecture.</span>
+
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): shape tuple. Defaults to None.</span>
@@ -519,7 +526,7 @@
 <span class="sd">            into, only to be specified if `include_top` is `True`. Defaults to 1000.</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
 <span class="sd">            inputs. Defaults to (128, -1). Note that following Akida convention,</span>
-<span class="sd">            the scale factor is an integer used as a divider.</span>
+<span class="sd">            the scale factor is an integer used as a divisor.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for AkidaNet/ImageNet.</span>
@@ -731,7 +738,7 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;akidanet_</span><span class="si">%0.2f</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">classes</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="akidanet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<div class="viewcode-block" id="akidanet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    ImageNet dataset.</span>
@@ -739,26 +746,46 @@
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float, optional): width of the model, allowed values in [0.25,</span>
 <span class="sd">            0.5, 1]. Defaults to 1.0.</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;359e0ff05abbb26fe215830ca467ef40761767c0d77f8c743c6d6e4fffa7a925&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5c6d3009a0a62139696234b86ddbad5186e889e2c351f727e2b96c3926816a5c&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;359e0ff05abbb26fe215830ca467ef40761767c0d77f8c743c6d6e4fffa7a925&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5c6d3009a0a62139696234b86ddbad5186e889e2c351f727e2b96c3926816a5c&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9208233d21c3251777b1f700b7c2c51491590133f97f81f04348ab131679b00f&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fc4aaf81a8aec8792709ae0fa10aac2dcb9517202a6f919e049c4db96f272339&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1d9493115d43625f2644f8265f71b8487c4019047fc331e892a233a3d6520371&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1f2acdabe7fca379f2e8e13df2c080eec18090fe155869f2351fc15c8ab1829b&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1d9493115d43625f2644f8265f71b8487c4019047fc331e892a233a3d6520371&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1f2acdabe7fca379f2e8e13df2c080eec18090fe155869f2351fc15c8ab1829b&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;61f2883a6b798f922a5c0411296219a85f25581d7571f65546557b46066f058f&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6d202e9477d89192abe069e3a87105e0db8fe4a6a1a152afc933b687dd5418b8&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9146d6228d859d8b8db1c1b7a795471096e5a49ee4ff5656eabc6be749d42f5e&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3aad95e41263c393b6a3fc80c8788615b0d53b938b7f7702b52fdbb93e76b7f1&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9146d6228d859d8b8db1c1b7a795471096e5a49ee4ff5656eabc6be749d42f5e&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3aad95e41263c393b6a3fc80c8788615b0d53b938b7f7702b52fdbb93e76b7f1&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;23d96a1c73397a5c2060808f3843d99fa3cd96b5b1af36e03b0d039be393c001&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;bb2b39fc2e41009547eb267fd8b6c66d7a5a16e72ffed4a641ec82f50fb4370f&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>
@@ -772,19 +799,30 @@
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="akidanet_faceidentification_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet_faceidentification_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    CASIA Webface dataset and that performs face identification.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b287f86155c51dc73053f7e5f3e58be1beb4a35d543dd817a63a782ffaf5bff1&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;d38af7f3bb24d1e8f0e0471d8afb80ae1c8cb3589031e153abac120434bde8e7&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b287f86155c51dc73053f7e5f3e58be1beb4a35d543dd817a63a782ffaf5bff1&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;d38af7f3bb24d1e8f0e0471d8afb80ae1c8cb3589031e153abac120434bde8e7&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;998b6cdce5adbdb0b7c3e9f8eb1011c3582e05f0c159e473d226a9a94c4309a1&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;f7b65fbf520f51b3c0c6d8cb7fcc78391536f200a45dbc8b9bd16262ebd82b18&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
@@ -794,19 +832,30 @@
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="akidanet_plantvillage_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_plantvillage_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_plantvillage_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet_plantvillage_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_plantvillage_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_plantvillage_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    PlantVillage dataset.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1400910c774fd78a5e6ea227ff28cb28e79ecec0909a378068cd9f40ddaf4e0a&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a7a92c193a342bc35b80d99a33f8beb9ed5524ca1b1e3549865ad73eec94cec9&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1400910c774fd78a5e6ea227ff28cb28e79ecec0909a378068cd9f40ddaf4e0a&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a7a92c193a342bc35b80d99a33f8beb9ed5524ca1b1e3549865ad73eec94cec9&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a7a92c193a342bc35b80d99a33f8beb9ed5524ca1b1e3549865ad73eec94cec9&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
@@ -816,19 +865,30 @@
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="akidanet_vww_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_vww_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_vww_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet_vww_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_vww_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_vww_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    VWW dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b962e022071fcc77cb9403e1343341f3c160c870ba7d1f4a5011da67e4d33e66&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a54cb42906ed5eb253bac223123a1bbe7e14e4e188b4d877feb195759f85d9b2&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b962e022071fcc77cb9403e1343341f3c160c870ba7d1f4a5011da67e4d33e66&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a54cb42906ed5eb253bac223123a1bbe7e14e4e188b4d877feb195759f85d9b2&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;f2949e968cdbf466e311be94ed55671b60e4eab023f41d7c2ea46245096832f8&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;635cbb3cfa486f44d0fca7ca66dbc794b87b67d7d77ab32e06780ecb278c2c58&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>

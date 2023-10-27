@@ -474,10 +474,13 @@
 <span class="sd">spike extractor and a classification layer.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;akidanet_edge_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;akidanet_edge_imagenet_pretrained&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;akidanet_faceidentification_edge_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Reshape</span>
 
-<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize_layer</span><span class="p">,</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">quantize_layer</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
@@ -498,15 +501,21 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">base_model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
 
-    <span class="n">is_v1</span> <span class="o">=</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># Identify the base model classifier</span>
         <span class="n">base_classifier</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">base_layer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_v1</span><span class="p">:</span>
-            <span class="c1"># remember the classifier weight bitwidth</span>
+        <span class="c1"># Determine if the base model is quantized with CNN2SNN</span>
+        <span class="n">is_base_quantized_cnn2snn</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_classifier</span><span class="o">.</span><span class="vm">__module__</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;cnn2snn&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_base_quantized_cnn2snn</span><span class="p">:</span>
+            <span class="c1"># Remember the classifier weight bitwidth</span>
             <span class="n">wq</span> <span class="o">=</span> <span class="n">base_classifier</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">bitwidth</span>
+        <span class="c1"># Check the base model is not quantized with QuantizeML</span>
+        <span class="n">is_base_quantized_quantizeml</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_classifier</span><span class="o">.</span><span class="vm">__module__</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;quantizeml&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_base_quantized_quantizeml</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A QuantizeML quantized backbone is not supported, &quot;</span>
+                             <span class="s2">&quot;use a float model and quantize with QuantizeML.&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The base model is not a quantized AkidaNet/Imagenet model&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The base model is not an expected AkidaNet/Imagenet model.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="c1"># Model version management</span>
     <span class="n">fused</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
@@ -541,9 +550,10 @@
                   <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_edge&quot;</span><span class="p">)</span>
 
-    <span class="c1"># When targeting Akida V1, edge layers can be quantized and tuned which is not the case for V2</span>
+    <span class="c1"># When targeting Akida V1 and with a quantized base model, edge layers can be quantized with</span>
+    <span class="c1"># CNN2SNN and tuned which is not the case with a quantizeml quantization.</span>
     <span class="c1"># (float head training is required).</span>
-    <span class="k">if</span> <span class="n">is_v1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">is_base_quantized_cnn2snn</span><span class="p">:</span>
         <span class="c1"># Quantize edge layers</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator&#39;</span><span class="p">,</span> <span class="n">wq</span><span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">quantize_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;spike_generator/relu&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -555,17 +565,30 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="akidanet_edge_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_edge_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_edge_imagenet_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet_edge_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_edge_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_edge_imagenet_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a `akidanet_edge_imagenet` model that was</span>
 <span class="sd">    trained on ImageNet dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool): a boolean indicating whether the model should be loaded quantized or not</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;71ffc3acb09e5682e479505f6b288bd2736311ce46d3974bdf7b2c02916e52a8&#39;</span>
-    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;71ffc3acb09e5682e479505f6b288bd2736311ce46d3974bdf7b2c02916e52a8&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_edge_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;13E55373858A1136A1580B7A9EE16855EBE2FEE4B76554BF03D64B0AAEE3E3EB&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;586AB1FB1BAF9E171C54BBC6F4E7EF9FD6910BB5B169EF5B9DD5A29122683D31&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_edge.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;9763FF8D95D2BE88766339171C5FFB6F407F706802BB5939D39C87E5218521ED&#39;</span>
+
+    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
+                                                       <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
                             <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                             <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -573,19 +596,30 @@
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="akidanet_faceidentification_edge_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_edge_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_edge_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet_faceidentification_edge_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_edge_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet_faceidentification_edge_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_edge_imagenet` model that was trained</span>
 <span class="sd">    on CASIA Webface dataset and that performs face identification.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;61838682cc88cec6dc9a347f1a301bfa9e94fbcbc7a52a273789259de07d3104&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2b0fed9bb88674ebba2925cdd76c26232c418d43b7e05b8ba8121861fcc49137&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;61838682cc88cec6dc9a347f1a301bfa9e94fbcbc7a52a273789259de07d3104&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2b0fed9bb88674ebba2925cdd76c26232c418d43b7e05b8ba8121861fcc49137&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fc0e6f06078dcafb503ec8944a871c781297bc120ef6335b17a17f6f8b316bbf&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;bc5054c3370c8194d27380df0f99c5ac285ce160d04c7776e665436668fe416f&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>

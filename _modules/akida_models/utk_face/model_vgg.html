@@ -472,6 +472,8 @@
 <span class="sd">VGG model definition for UTKFace regression.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;vgg_utk_face&quot;</span><span class="p">,</span> <span class="s2">&quot;vgg_utk_face_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -484,11 +486,14 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates a VGG-like model for the regression example on age</span>
 <span class="sd">    estimation using UTKFace dataset.</span>
 
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape tuple of the model. Defaults to (32, 32, 3).</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
 <span class="sd">            inputs. Defaults to (127, -1). Note that following Akida convention,</span>
-<span class="sd">            the scale factor is an integer used as a divider.</span>
+<span class="sd">            the scale factor is an integer used as a divisor.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for VGG/UTKFace</span>
@@ -571,19 +576,30 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;vgg_utk_face&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="vgg_utk_face_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vgg_utk_face_pretrained">[docs]</a><span class="k">def</span> <span class="nf">vgg_utk_face_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="vgg_utk_face_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vgg_utk_face_pretrained">[docs]</a><span class="k">def</span> <span class="nf">vgg_utk_face_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `vgg_utk_face` model that was trained on</span>
 <span class="sd">    UTK Face dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_iq8_wq2_aq2.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;e341d2d5e4655846ddc7aceff0d4e324cbfbcca16f3cfefc65e7b0863e4a23a3&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;06a892b9e831767537b1da937bbacf05825c7493b7a5a9ba46bea4900de0563a&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_iq8_wq2_aq2.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;e341d2d5e4655846ddc7aceff0d4e324cbfbcca16f3cfefc65e7b0863e4a23a3&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;06a892b9e831767537b1da937bbacf05825c7493b7a5a9ba46bea4900de0563a&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;3f9084c452ef006a16f10f2d124804b6db267f7a5149b735a9c383a9b00a4922&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7cd9e976913041ea0e0e730e31523c049c2d5e5b24f6d0379114af2042317b58&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;vgg&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>

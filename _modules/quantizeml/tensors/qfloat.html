@@ -544,7 +544,7 @@
 
 <div class="viewcode-block" id="QFloat.optimal_scales"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QFloat.optimal_scales">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">optimal_scales</span><span class="p">(</span><span class="n">ranges</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluates the optimal QFloat scales for quantization ranges.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Evaluates the optimal QFloat scales for quantization ranges.</span>
 
 <span class="sd">        We choose the optimal quantization range for a given bitwidth as:</span>
 
@@ -668,6 +668,16 @@
             <span class="k">return</span> <span class="n">QFloat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for +: &#39;QFloat&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">):</span>
+            <span class="c1"># Check that self and other have the same scales</span>
+            <span class="n">assert_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span>
+                         <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> have different scales.&quot;</span><span class="p">)</span>
+            <span class="c1"># Return a new QFloat</span>
+            <span class="k">return</span> <span class="n">QFloat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for -: &#39;QFloat&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># We only support the division of the scales by a compatible type</span>

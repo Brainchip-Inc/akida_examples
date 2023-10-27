@@ -471,6 +471,9 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">CenterNet model definition for detection</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;centernet_base&quot;</span><span class="p">,</span> <span class="s2">&quot;centernet_voc_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">initializers</span>
@@ -500,7 +503,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># This model is only available for akida 2.0</span>
+    <span class="c1"># This model is only available for Akida 2.0</span>
     <span class="k">with</span> <span class="n">set_akida_version</span><span class="p">(</span><span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">):</span>
         <span class="c1"># Create an AkidaNet network without top layers</span>
         <span class="n">base_model</span> <span class="o">=</span> <span class="n">akidanet_imagenet</span><span class="p">(</span>
@@ -570,16 +573,25 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;centernet_base&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="centernet_voc_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet_voc_pretrained">[docs]</a><span class="k">def</span> <span class="nf">centernet_voc_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="centernet_voc_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet_voc_pretrained">[docs]</a><span class="k">def</span> <span class="nf">centernet_voc_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `centernet_base` model that was trained on VOC detection dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet_voc_i8_w8_a8.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5705206ecb5b006afd33838ada04d69d7dea0beda34727dee2a4bc0a80b9fd8b&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet_voc_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5705206ecb5b006afd33838ada04d69d7dea0beda34727dee2a4bc0a80b9fd8b&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet_voc.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;918657f45e6f2206b66ce4ebde62048856a8b33932e19b9a5e45d2a0fe69f279&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;centernet&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span>
                                                        <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

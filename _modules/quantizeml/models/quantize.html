@@ -474,15 +474,18 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">layers</span>
+<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
 
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">deep_clone_model</span>
 <span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">insert_layer</span><span class="p">,</span> <span class="n">sanitize</span>
 <span class="kn">from</span> <span class="nn">.calibrate</span> <span class="kn">import</span> <span class="n">calibrate</span>
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">quantization</span><span class="p">,</span>
                       <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">get_quantization_params</span><span class="p">,</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">,</span>
-                      <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">)</span>
+                      <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">,</span>
+                      <span class="n">StatefulRecurrent</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..layers.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="p">,</span> <span class="n">_GLOBAL_NO_OUTPUT_QUANTIZER</span><span class="p">,</span>
                                   <span class="n">_GLOBAL_ALIGNED_INPUTS</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..onnx_support.quantization.quantize</span> <span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_onnx</span>
 
 
 <span class="c1"># List of Quantizer layer&#39;s that do not have a float layer representation</span>
@@ -602,7 +605,13 @@
                                   <span class="n">signed</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">activation_bits</span> <span class="o">&gt;=</span> <span class="mi">8</span><span class="p">,</span>
                                   <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">output_bits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                    <span class="c1"># StatefulRecurrent special: previous and self OutputQuantizer should be 16-bits</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">current_layer</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span> <span class="ow">or</span>
+                            <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)):</span>
+                        <span class="n">bitwidth</span> <span class="o">=</span> <span class="mi">16</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">qparams</span><span class="o">.</span><span class="n">output_bits</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
                 <span class="n">out_quantizer_configs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">output_quantizer</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
             <span class="c1"># If the layer OutputQuantizer configuration is already set, simply check the axis:</span>
@@ -650,9 +659,9 @@
     <span class="k">return</span> <span class="n">out_quantizer_configs</span>
 
 
-<div class="viewcode-block" id="quantize"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">[docs]</a><span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-             <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizes the model using the provided configuration or parameters.</span>
+<span class="k">def</span> <span class="nf">quantize_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizes a Keras model using the provided configuration or parameters.</span>
 
 <span class="sd">    Details on how this function behaves:</span>
 
@@ -799,7 +808,54 @@
     <span class="c1"># Now that the model is quantized, proceed to calibration</span>
     <span class="n">calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
               <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">qmodel</span></div>
+    <span class="k">return</span> <span class="n">qmodel</span>
+
+
+<div class="viewcode-block" id="quantize"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">[docs]</a><span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+             <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizes a Keras or ONNX model using the provided configuration or parameters.</span>
+
+<span class="sd">    Details on how this function behaves:</span>
+
+<span class="sd">    - `q_config` has priority over `qparams`, meaning that when a match is found in `q_config` the</span>
+<span class="sd">      given configuration will be used instead of `qparams`. This is useful to handle specific cases</span>
+<span class="sd">      (e.g per-tensor output quantizer). This is only used when quantizing Keras models.</span>
+<span class="sd">    - when no configuration is given, quantization parameters are deduced from `qparams` and</span>
+<span class="sd">      OutputQuantizers are automatically set on appropriate layers.</span>
+<span class="sd">    - `qparams` are only applied to &#39;float&#39; Keras layers when they are first quantized. As a result,</span>
+<span class="sd">      when re-quantizing a model, one must provide a complete `q_config`. This is made easy with the</span>
+<span class="sd">      `dump_config` helper. Note the only configuration supported when quantizing ONNX models is</span>
+<span class="sd">      8-bit for weights and activations, but per_tensor_activations param will be taken into</span>
+<span class="sd">      account.</span>
+
+<span class="sd">    If not already present, a final Dequantizer will be added at the end of the Model.</span>
+
+<span class="sd">    The model will also be calibrated using the provided (or randomly generated inputs).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model or ModelProto): the model to quantize</span>
+<span class="sd">        q_config (dict, optional): quantization configuration as a dictionary mapping layer names to</span>
+<span class="sd">            their quantization configuration. Defaults to None.</span>
+<span class="sd">        qparams (QuantizationParams, optional): global quantization parameters. Defaults to</span>
+<span class="sd">            QuantizationParams().</span>
+<span class="sd">        samples (tf.Dataset, np.array or generator, optional): calibration samples. When no samples</span>
+<span class="sd">            are provided, random samples are generated. Defaults to None.</span>
+<span class="sd">        num_samples (int, optional): number of samples to use in the provided samples or number of</span>
+<span class="sd">            samples to generate. Defaults to 1024.</span>
+<span class="sd">        batch_size (int, optional): the batch size. Defaults to None.</span>
+<span class="sd">        epochs (int, optional): the number of epochs. This parameter must be 1 for ONNX models.</span>
+<span class="sd">            Defaults to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model or ModelProto: the quantized model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ModelProto</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">quantize_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="p">,</span> <span class="n">qparams</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">q_config</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unsupported parameter q_config for ONNX models quantization&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">epochs</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unsupported parameter epochs != 1 for ONNX models quantization&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">quantize_onnx</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qparams</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="dump_config"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.dump_config">[docs]</a><span class="k">def</span> <span class="nf">dump_config</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>

@@ -483,7 +483,7 @@
 <span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
-                      <span class="n">Attention</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">reset_buffers</span><span class="p">)</span>
+                      <span class="n">Attention</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_log2</span>
 
 
@@ -736,9 +736,10 @@
 <span class="sd">    With TENN models only np.array samples are supported for calibration. Those should have</span>
 <span class="sd">    a temporally coherent data, which means that their expected shape is</span>
 <span class="sd">    [batch_size*Seq, dim_0,, ..., dim_n] where:</span>
+
 <span class="sd">        - batch_size is the same batch_size provided to the calibration.</span>
 <span class="sd">        - Seq is a dataset parameter that defines the temporally coherent data (eg number of frames</span>
-<span class="sd">        per video clips).</span>
+<span class="sd">          per video clips).</span>
 
 <span class="sd">    When no samples are provided, random samples are generated.</span>
 
@@ -756,6 +757,11 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_required</span><span class="p">(</span><span class="n">qmodel</span><span class="p">):</span>
         <span class="k">return</span>
 
+    <span class="c1"># Disable sumbsampling in StatefulRecurrent layers before building the calibration model</span>
+    <span class="n">rec_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">rec_layers</span><span class="p">:</span>
+        <span class="n">ly</span><span class="o">.</span><span class="n">subsample_ratio</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="c1"># Build a calibration model which is a float model with OutputObservers at locations where the</span>
     <span class="c1"># quantized model has OutputQuantizers.</span>
     <span class="n">calibration_model</span><span class="p">,</span> <span class="n">end_of_blocks</span> <span class="o">=</span> <span class="n">_get_calibration_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
@@ -769,25 +775,30 @@
             <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">samples_shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">128</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">samples_shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rec_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">samples_shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
 
     <span class="c1"># Extract number of (Depthwise)BufferTempConv layers</span>
     <span class="n">buf_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">buf_layers</span> <span class="ow">or</span> <span class="n">rec_layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;TENN models calibration is only possible with np.array samples.&quot;</span>
                             <span class="sa">f</span><span class="s2">&quot; Received </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s2">. Please convert them to a compatible&quot;</span>
-                            <span class="s2">&quot; format before the calibration with the following shape:&quot;</span>
+                            <span class="s2">&quot; format before the calibration. </span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot; Spatiotemporal expects the following shape:&quot;</span>
                             <span class="s2">&quot; [batch_size*Seq, dim_0,, ..., dim_n] where:&quot;</span>
                             <span class="s2">&quot; - batch_size is the same batch_size provided to the calibration.&quot;</span>
                             <span class="s2">&quot; - Seq is a dataset parameter that defines the temporally coherent&quot;</span>
-                            <span class="s2">&quot; data (eg number of frames per video clips).&quot;</span><span class="p">)</span>
-        <span class="c1"># With TENN models, the num of samples is infered from the provided samples.</span>
-        <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;batch_size not specified. With spatiotemporal TENN models batch_size&quot;</span>
-                          <span class="s2">&quot; must be given for the calibration, otherwise the result is&quot;</span>
-                          <span class="s2">&quot; unpredictible. Refers to &#39;calibrate&#39; function docstring for more&quot;</span>
-                          <span class="s2">&quot; details.&quot;</span><span class="p">)</span>
+                            <span class="s2">&quot; data (eg number of frames per video clips). </span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot; Recurrent expects [batch_size, (model.input_shape)] array.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">buf_layers</span><span class="p">:</span>
+            <span class="c1"># With ST TENN models, the number of samples is infered from the provided samples</span>
+            <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;batch_size not specified. With spatiotemporal TENN models batch_size&quot;</span>
+                              <span class="s2">&quot; must be given for the calibration, otherwise the result is&quot;</span>
+                              <span class="s2">&quot; unpredictible. Refer to &#39;calibrate&#39; function docstring for more&quot;</span>
+                              <span class="s2">&quot; details.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Compute step value otherwise &#39;predict&#39; will run until samples are exhausted (ie. indefinitely</span>
     <span class="c1"># if samples is a dataset with repeat enabled)</span>
@@ -797,20 +808,25 @@
         <span class="k">assert</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;The batch size should be strictly positive.&quot;</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
 
-    <span class="c1"># reset calibration_model buffers before the inference</span>
-    <span class="n">reset_buffers</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
-        <span class="c1"># Set default calib samples and number of steps</span>
-        <span class="n">calib_samples</span> <span class="o">=</span> <span class="n">samples</span>
-        <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span>
-        <span class="c1"># If the model is a buffer TENN, it normally requires a warmup period on the first epoch</span>
-        <span class="c1"># in order to calibrate it. For that purpose batch_size is mandatory.</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">batch_size</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">calib_samples</span><span class="p">,</span> <span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">_split_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">buf_layers</span><span class="p">,</span>
-                                                                         <span class="n">batch_size</span><span class="p">)</span>
-            <span class="n">_warmup_calib</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">end_of_blocks</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-            <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">-</span> <span class="n">warmup_steps</span>
-        <span class="n">calibration_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">calib_samples</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">calibration_steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rec_layers</span><span class="p">:</span>
+            <span class="c1"># Ensure graph execution</span>
+            <span class="n">model_func</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">model_func</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Set default calib samples and number of steps</span>
+            <span class="n">calib_samples</span> <span class="o">=</span> <span class="n">samples</span>
+            <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span>
+            <span class="c1"># If the model is a buffer TENN, it normally requires a warmup period on the first epoch</span>
+            <span class="c1"># in order to calibrate it. For that purpose batch_size is mandatory.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">batch_size</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">calib_samples</span><span class="p">,</span> <span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">_split_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">buf_layers</span><span class="p">,</span>
+                                                                             <span class="n">batch_size</span><span class="p">)</span>
+                <span class="n">_warmup_calib</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">end_of_blocks</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+                <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">-</span> <span class="n">warmup_steps</span>
+            <span class="n">calibration_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">calib_samples</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">calibration_steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
 
     <span class="c1"># Update quantized model OutputQuantizers range_max using OutputObservers calibrated values</span>
     <span class="k">for</span> <span class="n">eob</span><span class="p">,</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">end_of_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>

@@ -498,7 +498,11 @@
     <span class="n">supported_dst_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">]</span>
 
     <span class="n">scale_per_axis</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">scale_per_axis</span> <span class="ow">and</span> <span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="n">zero_offset</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">offset</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">zero_offset</span> <span class="o">=</span> <span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scale_per_axis</span> <span class="ow">and</span> <span class="n">zero_offset</span><span class="p">:</span>
         <span class="c1"># Rescaling is already aligned: nothing to do</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="c1"># Alignment is limited to single outbound node Rescaling layers</span>
@@ -510,26 +514,16 @@
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_dst_layers</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layer type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">)</span><span class="si">}</span><span class="s2"> after Rescaling not supported, must be in &quot;</span>
                          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">supported_dst_layers</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-    <span class="c1"># When destination layer is a Conv2D with padding &#39;same&#39;, reject:</span>
-    <span class="c1">#   - offsets defined per axis,</span>
-    <span class="c1">#   - scales defined per axis when offset is not null.</span>
-    <span class="c1"># Otherwise it would require a padding value per-axis which is not supported.</span>
-    <span class="n">same_conv2d</span> <span class="o">=</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">)</span>
-                   <span class="ow">and</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()[</span><span class="s1">&#39;padding&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;same&#39;</span><span class="p">)</span>
-    <span class="n">offset_per_axis</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">same_conv2d</span> <span class="ow">and</span> <span class="p">(</span><span class="n">offset_per_axis</span> <span class="ow">or</span> <span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">scale_per_axis</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Folding an offset per-axis or with a scale per-axis into a &quot;</span>
-                                  <span class="s2">&quot;Conv2D with &#39;same&#39; padding is not supported.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dst_layer</span>
 
 
-<span class="k">def</span> <span class="nf">_fold_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Folds the rescaling offset into next layer.</span>
+<span class="k">def</span> <span class="nf">_adapt_padding</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Update padding scheme by replacing Conv2D with a PaddedConv2D and appropriate padding value.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (keras.Model): the original model</span>
 <span class="sd">        offset (float, list, tuple): the offset to fold</span>
-<span class="sd">        dst_layer (keras.layer): the layer where offset will be folded</span>
+<span class="sd">        dst_layer (keras.layer): the layer where offset or scale will be folded</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: the updated model</span>
@@ -542,10 +536,14 @@
     <span class="n">dst_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;use_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="c1"># Replace Conv2D with &#39;same&#39; padding by PaddedConv2D with correct padding value</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;same&#39;</span><span class="p">:</span>
-        <span class="c1"># Offset has a single value at this point</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">dst_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;padding_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">offset</span><span class="p">)</span>
+            <span class="n">chan</span> <span class="o">=</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">chan</span><span class="p">),</span> <span class="s2">&quot;offset must be a scalar or of size of channels&quot;</span>
+            <span class="n">pad_values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">offset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad_values</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">offset</span><span class="p">)</span>
+
+        <span class="n">dst_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;padding_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pad_values</span>
         <span class="n">dst_config</span><span class="p">[</span><span class="s1">&#39;class_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;PaddedConv2D&#39;</span>
 
     <span class="c1"># Reconstruct model from the config</span>
@@ -557,14 +555,17 @@
     <span class="k">return</span> <span class="n">aligned_model</span>
 
 
-<span class="k">def</span> <span class="nf">_set_folded_weights</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">,</span> <span class="n">had_bias</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Sets folded weights in the given layers.</span>
+<span class="k">def</span> <span class="nf">_fold_rescaling</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">,</span> <span class="n">had_bias</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Fold rescaling parameters into dst_layer weights and bias.</span>
+
+<span class="sd">    Note that if scales are per-channel, there are folded in the weights.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        rescaling_layer (keras.layers.Layer): the Rescaling layer</span>
 <span class="sd">        dst_layer (keras.layers.Layer): the layer where Rescaling is folded</span>
 <span class="sd">        had_bias (bool): whether the original layer had a bias or not</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">))</span>
     <span class="n">base_weights</span> <span class="o">=</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
     <span class="n">new_w</span> <span class="o">=</span> <span class="n">base_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">filters</span> <span class="o">=</span> <span class="n">new_w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -572,15 +573,14 @@
     <span class="n">scale</span> <span class="o">=</span> <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">scale</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="c1"># If scale is not a scalar, align it</span>
-        <span class="n">target_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
-        <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">target_scale</span>
-        <span class="c1"># To compensate, adjust the weights of the next layer</span>
+        <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">filters</span><span class="p">):</span>
-            <span class="c1"># Rescale weights filter by filter to enable broadcast</span>
-            <span class="n">new_w</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">target_scale</span>
+            <span class="c1"># To compensate, adjust the weights of the next layer</span>
+            <span class="n">new_w</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">):</span>
             <span class="c1"># Also rescale the padding value</span>
-            <span class="n">dst_layer</span><span class="o">.</span><span class="n">_padding_value</span> <span class="o">*=</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">target_scale</span>
+            <span class="n">padding_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dst_layer</span><span class="o">.</span><span class="n">_padding_value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">dst_layer</span><span class="o">.</span><span class="n">_padding_value</span> <span class="o">=</span> <span class="n">padding_value</span> <span class="o">/</span> <span class="n">scale</span>
     <span class="n">new_weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_w</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">:</span>
@@ -592,17 +592,13 @@
             <span class="n">new_biases</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_i</span> <span class="o">*</span> <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
         <span class="n">new_weights</span> <span class="o">+=</span> <span class="p">[</span><span class="n">new_biases</span><span class="p">]</span>
         <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
-
     <span class="n">dst_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="align_rescaling"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.models.transforms.align_rescaling">[docs]</a><span class="k">def</span> <span class="nf">align_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Aligns the Rescaling layer of the model to make it quantization ready.</span>
 
-<span class="sd">    This aligns the Rescaling scale to a single scalar, adjusting the weights of</span>
-<span class="sd">    the next layer.</span>
-
-<span class="sd">    This also folds the offset into the bias of next layer.</span>
+<span class="sd">    This folds the offset into the bias of next layer.</span>
 
 <span class="sd">    The resulting Rescaling is therefore compatible with a quantization to a</span>
 <span class="sd">    QuantizedRescaling.</span>
@@ -631,17 +627,14 @@
     <span class="k">if</span> <span class="n">dst_layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">model</span>
 
-    <span class="c1"># If there is a rescaling offset, it is folded in the dst_layer</span>
+    <span class="c1"># There is a rescaling offset, dst_layer padding scheme must be updated</span>
     <span class="n">offset</span> <span class="o">=</span> <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span>
-    <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">aligned_model</span> <span class="o">=</span> <span class="n">_fold_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">aligned_model</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="n">aligned_model</span> <span class="o">=</span> <span class="n">_adapt_padding</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dst_layer</span><span class="p">)</span>
 
-    <span class="c1"># Set weights in the layers of the new model</span>
-    <span class="n">_set_folded_weights</span><span class="p">(</span><span class="n">aligned_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-                        <span class="n">aligned_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">dst_layer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-                        <span class="n">dst_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">)</span>
+    <span class="c1"># Fold Rescaling parameters into the new layer weights</span>
+    <span class="n">_fold_rescaling</span><span class="p">(</span><span class="n">aligned_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                    <span class="n">aligned_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">dst_layer</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                    <span class="n">dst_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">aligned_model</span></div>
 </pre></div>
 

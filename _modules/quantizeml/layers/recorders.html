@@ -469,7 +469,8 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;recording&quot;</span><span class="p">,</span> <span class="s2">&quot;Recorder&quot;</span><span class="p">,</span> <span class="s2">&quot;TensorRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;FixedPointRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;QFloatRecorder&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;recording&quot;</span><span class="p">,</span> <span class="s2">&quot;Recorder&quot;</span><span class="p">,</span> <span class="s2">&quot;TensorRecorder&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;FixedPointRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;QFloatRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;NonTrackVariable&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">keras</span>
@@ -499,6 +500,50 @@
             <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">RECORDING_ENV</span><span class="p">]</span> <span class="o">=</span> <span class="n">_prev_state</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">RECORDING_ENV</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">NonTrackVariable</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;  A wrapper class for the temporary variables that should be tracked only during the call and</span>
+<span class="sd">        which does not require to be serialized within the layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">set_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">new_value</span><span class="p">)</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">init_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_value</span><span class="p">,</span> <span class="n">validate_shape</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function that creates and initializes a variable, if it doesn&#39;t exist. This variable will</span>
+<span class="sd">            be integrated in the layer graph and tracked (but not within the main layer variables).</span>
+<span class="sd">            See pattern defined here: https://www.tensorflow.org/guide/function#creating_tfvariables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            init_value (tf.Tensor): Tensor, or Python object convertible to a Tensor which is the</span>
+<span class="sd">                initial value for the Variable. The initial value must have a shape specified</span>
+<span class="sd">                unless validate_shape is set to False.</span>
+<span class="sd">            validate_shape (bool, optional): If False, allows the variable to be initialized with a</span>
+<span class="sd">                value of unknown shape. If True the shape of initial_value must be known.</span>
+<span class="sd">                Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reset internal var.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">is_fully_defined</span><span class="p">():</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">zero</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Recorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.Recorder">[docs]</a><span class="k">class</span> <span class="nc">Recorder</span><span class="p">():</span>

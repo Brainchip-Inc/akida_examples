@@ -454,7 +454,7 @@
   <h1>Source code for cnn2snn.converter</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2019 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2023 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -471,12 +471,14 @@
 <span class="sd">&quot;&quot;&quot;Conversion of a Keras/CNN2SNN model into an Akida model&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
 <span class="kn">from</span> <span class="nn">.model_generator</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">cnn2snn_generate_model</span>
 <span class="kn">from</span> <span class="nn">.quantizeml</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">qml_generate_model</span>
 
-<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">sequentialize</span><span class="p">,</span> <span class="n">syncretize</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">sequentialize</span><span class="p">,</span> <span class="n">syncretize</span><span class="p">,</span> <span class="n">fix_v1_activation_variables</span>
 <span class="kn">from</span> <span class="nn">.compatibility_checks</span> <span class="kn">import</span> <span class="n">check_sequential_compatibility</span>
 
 
@@ -500,7 +502,7 @@
 
 
 <div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">[docs]</a><span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras quantized model to an Akida one.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras or ONNX quantized model to an Akida one.</span>
 
 <span class="sd">    This method is compatible with model quantized with :func:`cnn2snn.quantize`</span>
 <span class="sd">    and :func:`quantizeml.quantize`. To check the difference between the two</span>
@@ -508,7 +510,7 @@
 <span class="sd">    below.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a tf.keras model</span>
+<span class="sd">        model (:obj:`tf.keras.Model` or :obj:`onnx.ModelProto`): a model to convert.</span>
 <span class="sd">        file_path (str, optional): destination for the akida model.</span>
 <span class="sd">            (Default value = None)</span>
 <span class="sd">        input_scaling (2 elements tuple, optional): value of the input scaling.</span>
@@ -522,13 +524,22 @@
                           <span class="s2">&quot;It is required to convert Keras weights to Akida.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Check if the model has been quantized with quantizeml by checking quantized layers type</span>
-    <span class="n">cnn2snn_model</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;quantizeml&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+    <span class="c1"># or with ONNX tools</span>
+    <span class="n">cnn2snn_model</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ModelProto</span><span class="p">)</span> <span class="ow">or</span>
+                         <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;quantizeml&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">))</span>
 
     <span class="c1"># Convert the model</span>
     <span class="k">if</span> <span class="n">cnn2snn_model</span><span class="p">:</span>
         <span class="n">ak_model</span> <span class="o">=</span> <span class="n">_convert_cnn2snn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_scaling</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">input_scaling</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">(</span><span class="s2">&quot;Cannot use input_scaling parameter when converting&quot;</span>
+                                      <span class="s2">&quot; quantizeml models to akida.&quot;</span><span class="p">))</span>
         <span class="n">ak_model</span> <span class="o">=</span> <span class="n">_convert_quantizeml</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># check if the akida v1 model has an unvalid act_step, that prevents the model</span>
+    <span class="c1"># to map on HW. If so equalize the Akida model activation variables.</span>
+    <span class="n">fix_v1_activation_variables</span><span class="p">(</span><span class="n">ak_model</span><span class="p">)</span>
 
     <span class="c1"># Save model if file_path is given</span>
     <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
@@ -552,13 +563,13 @@
 
 
 <span class="k">def</span> <span class="nf">_convert_quantizeml</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras quantized model with quantizeml to an Akida one.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras or ONNX quantized model with quantizeml to an Akida one.</span>
 
 <span class="sd">    After quantizing a Keras model with :func:`quantizeml.quantize`, it can be</span>
 <span class="sd">    converted to an Akida model.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): a tf.keras model</span>
+<span class="sd">        model (:obj:`tf.keras.Model` or :obj:`onnx.ModelProto`): the model to convert.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :obj:`akida.Model`: an Akida model.</span>

@@ -64,7 +64,7 @@ for id in range(num_images):
     img_path = os.path.join(data_folder, test_file)
     base_image = read_file(img_path)
     image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, IMAGE_SIZE)
+    image = preprocessing.preprocess_image(image, (IMAGE_SIZE, IMAGE_SIZE))
     x_test[id, :, :, :] = np.expand_dims(image, axis=0)
 
 print(f'{num_images} images loaded and preprocessed.')

@@ -472,6 +472,10 @@
 <span class="sd">ViT model definition.</span>
 <span class="sd">Inspired from https://github.com/faustomorales/vit-keras/blob/master/vit_keras/vit.py.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;deit_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;deit_ti16&quot;</span><span class="p">,</span> <span class="s2">&quot;bc_deit_ti16&quot;</span><span class="p">,</span> <span class="s2">&quot;bc_deit_dist_ti16_imagenet_pretrained&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;deit_s16&quot;</span><span class="p">,</span> <span class="s2">&quot;deit_b16&quot;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">keras</span>
 
 <span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">AddPositionEmbs</span><span class="p">,</span> <span class="n">ClassToken</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">ExtractToken</span>
@@ -499,7 +503,17 @@
                   <span class="n">last_norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">,</span>
                   <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span>
                   <span class="n">act</span><span class="o">=</span><span class="s2">&quot;GeLU&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a DeiT model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the DeiT architecture.</span>
+
+<span class="sd">    The Data-efficient image Transformers (DeiT) is a model for image classification,</span>
+<span class="sd">    requiring far less data and far less computing resources compared to the original</span>
+<span class="sd">    ViT model. It relies on a teacher-student strategy specific to transformers</span>
+<span class="sd">    (distillation token).</span>
+
+<span class="sd">    Please refer to https://arxiv.org/abs/2012.12877 for further details.</span>
+
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple): image shape tuple</span>
@@ -594,7 +608,8 @@
               <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span>
               <span class="n">act</span><span class="o">=</span><span class="s1">&#39;GeLU&#39;</span><span class="p">,</span>
               <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build DeiT-Tiny.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the DeiT-Tiny 16 architecture; that is a DeiT architecture with 3 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -632,7 +647,12 @@
 
 <div class="viewcode-block" id="bc_deit_ti16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_ti16">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">num_blocks</span><span class="o">=</span><span class="mi">12</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build DeiT-Tiny, changing all LN by LMN, using softmax2 and ReLU8.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the DeiT-Tiny 16 architecture adapted for implementation on hardware,</span>
+<span class="sd">    that is:</span>
+
+<span class="sd">        - LayerNormalization replaced by LayerMadNormalization,</span>
+<span class="sd">        - GeLU replaced by ReLU8 activations,</span>
+<span class="sd">        - Softmax replaced by shiftmax.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -662,14 +682,30 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bc_deit_dist_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_dist_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_dist_ti16_imagenet_pretrained</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a `bc_deit_dist_ti16` model that was trained on ImageNet dataset.</span>
+<div class="viewcode-block" id="bc_deit_dist_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_deit_dist_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_deit_dist_ti16_imagenet_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a DeiT-Tiny 16 model adapted for implementation on hardware,</span>
+<span class="sd">    that is:</span>
+
+<span class="sd">        - LayerNormalization replaced by LayerMadNormalization,</span>
+<span class="sd">        - GeLU replaced by ReLU8 activations,</span>
+<span class="sd">        - Softmax replaced by shiftmax,</span>
+
+<span class="sd">    and that was trained on ImageNet dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_deit_dist_ti16_224_i8_w8_a8.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4e40e36beb56a926b18cab4c5880aa3cbe768e0e40c9c91abca6063a72763044&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_deit_dist_ti16_224_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4e40e36beb56a926b18cab4c5880aa3cbe768e0e40c9c91abca6063a72763044&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_deit_dist_ti16_224.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;40618ba14d894fc308ef149c1eb17ff601ad54a8bc0ad329dc6f7dba5ff86260&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;deit&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span>
                                                        <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
@@ -680,7 +716,8 @@
 
 
 <div class="viewcode-block" id="deit_s16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.deit_s16">[docs]</a><span class="k">def</span> <span class="nf">deit_s16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build DeiT-Small.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the DeiT-Small 16 architecture; that is a ViT architecture with 6 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -703,7 +740,8 @@
 
 
 <div class="viewcode-block" id="deit_b16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.deit_b16">[docs]</a><span class="k">def</span> <span class="nf">deit_b16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">distilled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build DeiT-B16.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the DeiT-B16 architecture; that is a ViT architecture with 12 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>

@@ -565,6 +565,19 @@
                                    <span class="sa">f</span><span class="s2">&quot;in layer &#39;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_check_layers_dilation</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Asserts that all layers in the model have default dilation.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        model (tf.keras.model): the Keras model to check.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Error if &#39;dilation_rate&#39; is not default</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s1">&#39;dilation_rate&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">layer</span><span class="o">.</span><span class="n">dilation_rate</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported dilation rate </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">dilation_rate</span><span class="si">}</span><span class="s2"> in layer &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">_check_model_input_output</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Asserts that model inputs/outputs are supported for conversion.</span>
 <span class="sd">    The Keras model must have only one input layer and one output layer. The</span>
@@ -649,6 +662,7 @@
     <span class="n">model_clone</span> <span class="o">=</span> <span class="n">clone_model_with_weights</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
     <span class="n">_check_layers_data_format</span><span class="p">(</span><span class="n">model_clone</span><span class="p">)</span>
+    <span class="n">_check_layers_dilation</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">_check_model_input_output</span><span class="p">(</span><span class="n">model_clone</span><span class="p">)</span>
     <span class="n">_check_layer_inbounds</span><span class="p">(</span><span class="n">model_clone</span><span class="p">)</span>
 

@@ -472,6 +472,8 @@
 <span class="sd">YOLO model definition for detection.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;yolo_base&quot;</span><span class="p">,</span> <span class="s2">&quot;yolo_widerface_pretrained&quot;</span><span class="p">,</span> <span class="s2">&quot;yolo_voc_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">pickle</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -494,7 +496,7 @@
 <span class="sd">        alpha (float, optional): controls the width of the model. Defaults to 1.0.</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
 <span class="sd">            inputs. Defaults to (127.5, -1). Note that following Akida</span>
-<span class="sd">            convention, the scale factor is a number used as a divider.</span>
+<span class="sd">            convention, the scale factor is a number used as a divisor.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
@@ -552,10 +554,14 @@
     <span class="k">return</span> <span class="n">model</span></div>
 
 
-<div class="viewcode-block" id="yolo_widerface_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained">[docs]</a><span class="k">def</span> <span class="nf">yolo_widerface_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="yolo_widerface_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.yolo_widerface_pretrained">[docs]</a><span class="k">def</span> <span class="nf">yolo_widerface_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `yolo_base` model that was trained on WiderFace</span>
 <span class="sd">    dataset and the anchors that are needed to interpet the model output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model, list: a Keras Model instance and a list of anchors.</span>
@@ -570,10 +576,17 @@
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">anchors_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
         <span class="n">anchors</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;d55744cbfbbe1131aa26015f38d99f1df7026347bae8f66683259e366e7b6e03&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;13e4290c4f197c08ba93ded44a9f5a5ab07e793f1e216737134a700feeb74cf9&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;d55744cbfbbe1131aa26015f38d99f1df7026347bae8f66683259e366e7b6e03&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;13e4290c4f197c08ba93ded44a9f5a5ab07e793f1e216737134a700feeb74cf9&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fc1eedb343a97b637f7877a9978d0230962360643578f5fe357034d653b37e44&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_widerface.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;8dae0dac668f6a527a2603758051835801e2a5c838e1e39ac818d7eec674bdc0&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;yolo&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
@@ -584,11 +597,15 @@
     <span class="k">return</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">),</span> <span class="n">anchors</span></div>
 
 
-<div class="viewcode-block" id="yolo_voc_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained">[docs]</a><span class="k">def</span> <span class="nf">yolo_voc_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="yolo_voc_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained">[docs]</a><span class="k">def</span> <span class="nf">yolo_voc_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `yolo_base` model that was trained on PASCAL</span>
 <span class="sd">    VOC2012 dataset for &#39;person&#39; and &#39;car&#39; classes only, and the anchors that</span>
 <span class="sd">    are needed to interpet the model output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model, list: a Keras Model instance and a list of anchors.</span>
@@ -603,10 +620,17 @@
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">anchors_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
         <span class="n">anchors</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;e65b0b6bd4b08c2796c3bbea89343748195e29e240ce28e70489c53d06ca69d9&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a66791f482e33f4a2bc05db652e604ce494a5e6a6253749429535c4007938174&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;e65b0b6bd4b08c2796c3bbea89343748195e29e240ce28e70489c53d06ca69d9&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a66791f482e33f4a2bc05db652e604ce494a5e6a6253749429535c4007938174&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;5dff1dd3afafd512e105fa416b444431ca5f816ccc42d9efb49cfa34bd13e91d&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;yolo_akidanet_voc.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;27de83b48fb0b054e33d3bb7d2482a8528c5964be10f5f153299782e5ac5580d&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;yolo&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>

@@ -474,6 +474,8 @@
 <span class="sd">      https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/speech_commands</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AudioProcessor&quot;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
@@ -498,8 +500,8 @@
 <span class="n">RANDOM_SEED</span> <span class="o">=</span> <span class="mi">59185</span>
 
 
-<div class="viewcode-block" id="prepare_model_settings"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.prepare_model_settings">[docs]</a><span class="k">def</span> <span class="nf">prepare_model_settings</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">,</span> <span class="n">clip_duration_ms</span><span class="p">,</span> <span class="n">window_size_ms</span><span class="p">,</span>
-                           <span class="n">window_stride_ms</span><span class="p">,</span> <span class="n">feature_bin_count</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_prepare_model_settings</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">,</span> <span class="n">clip_duration_ms</span><span class="p">,</span> <span class="n">window_size_ms</span><span class="p">,</span>
+                            <span class="n">window_stride_ms</span><span class="p">,</span> <span class="n">feature_bin_count</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates common settings needed for all models.</span>
 
 <span class="sd">    Args:</span>
@@ -534,10 +536,10 @@
         <span class="s1">&#39;spectrogram_length&#39;</span><span class="p">:</span> <span class="n">spectrogram_length</span><span class="p">,</span>
         <span class="s1">&#39;fingerprint_width&#39;</span><span class="p">:</span> <span class="n">fingerprint_width</span><span class="p">,</span>
         <span class="s1">&#39;fingerprint_size&#39;</span><span class="p">:</span> <span class="n">fingerprint_size</span><span class="p">,</span>
-    <span class="p">}</span></div>
+    <span class="p">}</span>
 
 
-<div class="viewcode-block" id="prepare_words_list"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.prepare_words_list">[docs]</a><span class="k">def</span> <span class="nf">prepare_words_list</span><span class="p">(</span><span class="n">wanted_words</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_prepare_words_list</span><span class="p">(</span><span class="n">wanted_words</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepends common tokens to the custom word list.</span>
 
 <span class="sd">    Args:</span>
@@ -546,10 +548,10 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        List with the standard silence and unknown tokens added.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">SILENCE_LABEL</span><span class="p">,</span> <span class="n">UNKNOWN_WORD_LABEL</span><span class="p">]</span> <span class="o">+</span> <span class="n">wanted_words</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">SILENCE_LABEL</span><span class="p">,</span> <span class="n">UNKNOWN_WORD_LABEL</span><span class="p">]</span> <span class="o">+</span> <span class="n">wanted_words</span>
 
 
-<div class="viewcode-block" id="which_set"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.which_set">[docs]</a><span class="k">def</span> <span class="nf">which_set</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">validation_percentage</span><span class="p">,</span> <span class="n">testing_percentage</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_which_set</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">validation_percentage</span><span class="p">,</span> <span class="n">testing_percentage</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines which data partition the file should belong to.</span>
 
 <span class="sd">    We want to keep files in the same training, validation, or testing sets even</span>
@@ -594,7 +596,7 @@
         <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;testing&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;training&#39;</span>
-    <span class="k">return</span> <span class="n">result</span></div>
+    <span class="k">return</span> <span class="n">result</span>
 
 
 <div class="viewcode-block" id="AudioProcessor"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.kws.preprocessing.AudioProcessor">[docs]</a><span class="k">class</span> <span class="nc">AudioProcessor</span><span class="p">():</span>
@@ -615,11 +617,11 @@
                  <span class="n">testing_percentage</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_settings</span> <span class="o">=</span> <span class="n">prepare_model_settings</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">,</span>
-                                                     <span class="n">clip_duration_ms</span><span class="p">,</span>
-                                                     <span class="n">window_size_ms</span><span class="p">,</span>
-                                                     <span class="n">window_stride_ms</span><span class="p">,</span>
-                                                     <span class="n">feature_bin_count</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_settings</span> <span class="o">=</span> <span class="n">_prepare_model_settings</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">,</span>
+                                                      <span class="n">clip_duration_ms</span><span class="p">,</span>
+                                                      <span class="n">window_size_ms</span><span class="p">,</span>
+                                                      <span class="n">window_stride_ms</span><span class="p">,</span>
+                                                      <span class="n">feature_bin_count</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">data_dir</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">maybe_download_and_extract_dataset</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
@@ -718,8 +720,8 @@
             <span class="k">if</span> <span class="n">word</span> <span class="o">==</span> <span class="n">BACKGROUND_NOISE_DIR_NAME</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">all_words</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">set_index</span> <span class="o">=</span> <span class="n">which_set</span><span class="p">(</span><span class="n">wav_path</span><span class="p">,</span> <span class="n">validation_percentage</span><span class="p">,</span>
-                                  <span class="n">testing_percentage</span><span class="p">)</span>
+            <span class="n">set_index</span> <span class="o">=</span> <span class="n">_which_set</span><span class="p">(</span><span class="n">wav_path</span><span class="p">,</span> <span class="n">validation_percentage</span><span class="p">,</span>
+                                   <span class="n">testing_percentage</span><span class="p">)</span>
             <span class="c1"># If it&#39;s a known class, store its detail, otherwise add it to the</span>
             <span class="c1"># list we&#39;ll use to train the unknown label.</span>
             <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wanted_words_index</span><span class="p">:</span>
@@ -759,7 +761,7 @@
         <span class="k">for</span> <span class="n">set_index</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="s1">&#39;training&#39;</span><span class="p">]:</span>
             <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_index</span><span class="p">[</span><span class="n">set_index</span><span class="p">])</span>
         <span class="c1"># Prepare the rest of the result data structure.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">words_list</span> <span class="o">=</span> <span class="n">prepare_words_list</span><span class="p">(</span><span class="n">wanted_words</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">words_list</span> <span class="o">=</span> <span class="n">_prepare_words_list</span><span class="p">(</span><span class="n">wanted_words</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">word_to_index</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">all_words</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wanted_words_index</span><span class="p">:</span>

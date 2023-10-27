@@ -469,18 +469,20 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;Functions to check model compatibility for CNN2SNN conversion.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">Sequential</span>
 <span class="kn">from</span> <span class="nn">quantizeml</span> <span class="kn">import</span> <span class="n">layers</span> <span class="k">as</span> <span class="n">qlayers</span>
 
 <span class="kn">from</span> <span class="nn">.blocks</span> <span class="kn">import</span> <span class="n">split_model_into_blocks</span>
-<span class="kn">from</span> <span class="nn">..transforms.sequential</span> <span class="kn">import</span> <span class="n">_check_layers_data_format</span><span class="p">,</span> <span class="n">_check_layer_inbounds</span>
+<span class="kn">from</span> <span class="nn">..transforms.sequential</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_check_layers_data_format</span><span class="p">,</span> <span class="n">_check_layers_dilation</span><span class="p">,</span>
+                                     <span class="n">_check_layer_inbounds</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..akida_versions</span> <span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 <span class="kn">from</span> <span class="nn">.block_converter</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_V1_PATTERN_CONVERTERS</span><span class="p">,</span> <span class="n">_V2_PATTERN_CONVERTERS</span><span class="p">,</span>
                               <span class="n">_V1_INPUT_PATTERN_CONVERTERS</span><span class="p">,</span> <span class="n">_V2_INPUT_PATTERN_CONVERTERS</span><span class="p">)</span>
 
 <span class="n">neural_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedSeparableConv2D</span><span class="p">,</span>
                  <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDense</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span>
-                 <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedConv2DTranspose</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDepthwiseConv2DTranspose</span><span class="p">)</span>
+                 <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedConv2DTranspose</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDepthwiseConv2DTranspose</span><span class="p">,</span>
+                 <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedBufferTempConv</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedDepthwiseBufferTempConv</span><span class="p">)</span>
 <span class="n">skippable_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Rescaling</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Softmax</span><span class="p">,</span>
                     <span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">)</span>
 <span class="n">pooling_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedGlobalAveragePooling2D</span><span class="p">,</span> <span class="n">qlayers</span><span class="o">.</span><span class="n">QuantizedMaxPool2D</span><span class="p">)</span>
@@ -559,6 +561,7 @@
     <span class="c1"># 3. Over Akida 1.0, check if model is sequential.</span>
     <span class="n">_check_model_input_output</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">_check_layers_data_format</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">_check_layers_dilation</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
         <span class="n">_check_layer_inbounds</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
@@ -601,6 +604,16 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (tf.keras.model): the Keras model to check.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Error if all model layers are skippable</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">skippable_layers</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot convert model with only skippable layers.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If the quantized keras model is Sequential, it should have its input_shape defined.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
+        <span class="n">input_shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;input_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">input_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The Sequential quantized model </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> should have its&quot;</span>
+                                 <span class="s2">&quot; input_shape fully defined.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Error if multiple inputs</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>

@@ -481,6 +481,8 @@
 <span class="sd">    - different initialization options.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mobilenet_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenet_imagenet_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -499,6 +501,9 @@
                        <span class="n">use_stride2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                        <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the MobileNet architecture.</span>
+
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): shape tuple. Defaults to None.</span>
@@ -529,7 +534,7 @@
 <span class="sd">            convolutions in layers separable 2, 4, 6 and 12. Defaults to True.</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
 <span class="sd">            inputs. Defaults to (128, -1). Note that following Akida convention,</span>
-<span class="sd">            the scale factor is an integer used as a divider.</span>
+<span class="sd">            the scale factor is an integer used as a divisor.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for MobileNet/ImageNet.</span>
@@ -760,33 +765,53 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mobilenet_</span><span class="si">%0.2f</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">classes</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="mobilenet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<div class="viewcode-block" id="mobilenet_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `mobilenet_imagenet` model that was trained on</span>
 <span class="sd">    ImageNet dataset.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): width of the model.</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;4e63ea329b3f2f773a0b9d6fef4e449639fda89d17e48bb7132b6ad86585c867&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;da329c8b6836c141a7b836875dbcabd36d8efd5b90d9719f50e2d4facea4868a&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;4e63ea329b3f2f773a0b9d6fef4e449639fda89d17e48bb7132b6ad86585c867&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;da329c8b6836c141a7b836875dbcabd36d8efd5b90d9719f50e2d4facea4868a&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fb674f627337995f4aa372e4a270445457573fc7aae61e28c05f94da14cf2980&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4305ca6e03bffaf4e39a840fb2c6108101136f572ae784bebc3bd9406a6ecd0c&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;6a5c51cb1a5ae022f2c025affb4022842078dbbb970fb07fdc9fd9e0eb1acd2f&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c7277a7850c777a39c90023a7c509696bc7a2cb61590d3c88841f1ee3bc14003&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;af9a31774467de96acceeed46cee14d7864fa2cc247601beff5521e7a5e6da99&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c7277a7850c777a39c90023a7c509696bc7a2cb61590d3c88841f1ee3bc14003&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1bffadb48f3fd194cdeecf4e02d91d0b3a87df103620c645f1c00f5e5cfbca9a&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1ded4e456b59b4286329b2e8694d1d3adce9745a73a59cc4670dc0eae60ff2bc&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;35ad51e662ed04b68978865ccb1c16bf024fa013146488b2a9c18c80d1efab29&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;29eb66a023fa808735e66f3716e3a8d6429a5d9621e6ed875de4fc8104682a14&#39;</span>
+        <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;35ad51e662ed04b68978865ccb1c16bf024fa013146488b2a9c18c80d1efab29&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;29eb66a023fa808735e66f3716e3a8d6429a5d9621e6ed875de4fc8104682a14&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;33c49bb4ec868558a2a9687be19a7e51756ddb9f00a032535069dcd5a727e0dd&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5f70598352ddeb7bf2c19126d7009f569fc9cf6d52124334c4ccebe9030f3c39&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>

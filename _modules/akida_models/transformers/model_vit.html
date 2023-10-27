@@ -473,6 +473,10 @@
 <span class="sd">Inspired from https://github.com/faustomorales/vit-keras/blob/master/vit_keras/vit.py.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;vit_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_ti16&quot;</span><span class="p">,</span> <span class="s2">&quot;bc_vit_ti16&quot;</span><span class="p">,</span> <span class="s2">&quot;bc_vit_ti16_imagenet_pretrained&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_s16&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;vit_s32&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_b16&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_b32&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_l16&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_l32&quot;</span><span class="p">,</span> <span class="s2">&quot;CONFIG_TI&quot;</span><span class="p">,</span> <span class="s2">&quot;CONFIG_S&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CONFIG_B&quot;</span><span class="p">,</span> <span class="s2">&quot;CONFIG_L&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_embedding_weights&quot;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -582,7 +586,17 @@
                  <span class="n">last_norm</span><span class="o">=</span><span class="s1">&#39;LN&#39;</span><span class="p">,</span>
                  <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span>
                  <span class="n">act</span><span class="o">=</span><span class="s2">&quot;GeLU&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a ViT model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT architecture.</span>
+
+<span class="sd">    The Vision Transformer (ViT) is a model for image classification that employs a Transformer-like</span>
+<span class="sd">    architecture over patches of the image. An image is split into fixed-size patches, each of them</span>
+<span class="sd">    are then linearly embedded, position embeddings are added, and the resulting sequence of vectors</span>
+<span class="sd">    are fed to a standard Transformer encoder.</span>
+
+<span class="sd">    Please refer to https://arxiv.org/abs/2010.11929 for further details.</span>
+
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple): image shape tuple</span>
@@ -662,7 +676,8 @@
              <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span>
              <span class="n">act</span><span class="o">=</span><span class="s1">&#39;GeLU&#39;</span><span class="p">,</span>
              <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-Tiny. All arguments passed to vit_imagenet.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-Tiny 16 architecture; that is a ViT architecture with 3 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -698,7 +713,12 @@
 
 
 <div class="viewcode-block" id="bc_vit_ti16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16">[docs]</a><span class="k">def</span> <span class="nf">bc_vit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-Tiny, changing all LN by LMN, using softmax2 and ReLU8.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-Tiny 16 architecture adapted for implementation on hardware,</span>
+<span class="sd">    that is:</span>
+
+<span class="sd">        - LayerNormalization replaced by LayerMadNormalization,</span>
+<span class="sd">        - GeLU replaced by ReLU8 activations,</span>
+<span class="sd">        - Softmax replaced by shiftmax.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -723,14 +743,30 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bc_vit_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_vit_ti16_imagenet_pretrained</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a `bc_vit_ti16` model that was trained on ImageNet dataset.</span>
+<div class="viewcode-block" id="bc_vit_ti16_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">bc_vit_ti16_imagenet_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a ViT-Tiny 16 model adapted for implementation on hardware,</span>
+<span class="sd">    that is:</span>
+
+<span class="sd">        - LayerNormalization replaced by LayerMadNormalization,</span>
+<span class="sd">        - GeLU replaced by ReLU8 activations,</span>
+<span class="sd">        - Softmax replaced by shiftmax,</span>
+
+<span class="sd">    and that was trained on ImageNet dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_vit_ti16_224_i8_w8_a8.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;15ee27991b18f3cb7f38a1ea8e0ed10168b7ca7924baba4fe08593a8caf29a35&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_vit_ti16_224_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;15ee27991b18f3cb7f38a1ea8e0ed10168b7ca7924baba4fe08593a8caf29a35&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;bc_vit_ti16_224.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7ae299f698abc545e21338b129dfbc0ff97ee9b994319e53e8605d34e3ee1f82&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;vit&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span>
                                                        <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
@@ -741,7 +777,8 @@
 
 
 <div class="viewcode-block" id="vit_s16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_s16">[docs]</a><span class="k">def</span> <span class="nf">vit_s16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-Small.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-Small 16 architecture; that is a ViT architecture with 6 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -763,7 +800,8 @@
 
 
 <div class="viewcode-block" id="vit_s32"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_s32">[docs]</a><span class="k">def</span> <span class="nf">vit_s32</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-Small.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-Small 32 architecture; that is a ViT architecture with 6 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 32.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -785,7 +823,8 @@
 
 
 <div class="viewcode-block" id="vit_b16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_b16">[docs]</a><span class="k">def</span> <span class="nf">vit_b16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-B16.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-B16 architecture; that is a ViT architecture with 12 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -807,7 +846,8 @@
 
 
 <div class="viewcode-block" id="vit_b32"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_b32">[docs]</a><span class="k">def</span> <span class="nf">vit_b32</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-B32.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-B32 architecture; that is a ViT architecture with 12 attention heads,</span>
+<span class="sd">    12 blocks and a patch size of 32.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
@@ -829,7 +869,8 @@
 
 
 <div class="viewcode-block" id="vit_l16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_l16">[docs]</a><span class="k">def</span> <span class="nf">vit_l16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">384</span><span class="p">,</span> <span class="mi">384</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-L16.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-L16 architecture; that is a ViT architecture with 16 attention heads,</span>
+<span class="sd">    24 blocks and a patch size of 16.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (384, 384, 3).</span>
@@ -851,7 +892,8 @@
 
 
 <div class="viewcode-block" id="vit_l32"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.vit_l32">[docs]</a><span class="k">def</span> <span class="nf">vit_l32</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">384</span><span class="p">,</span> <span class="mi">384</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ViT-L32.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-L32 architecture; that is a ViT architecture with 16 attention heads,</span>
+<span class="sd">    24 blocks and a patch size of 32.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): input shape. Defaults to (384, 384, 3).</span>

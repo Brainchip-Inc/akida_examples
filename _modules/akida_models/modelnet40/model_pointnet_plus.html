@@ -472,6 +472,8 @@
 <span class="sd">PointNet++ model definition for ModelNet40 classification.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pointnet_plus_modelnet40&quot;</span><span class="p">,</span> <span class="s2">&quot;pointnet_plus_modelnet40_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 
 <span class="kn">from</span> <span class="nn">.pointnet_utils</span> <span class="kn">import</span> <span class="n">get_reshape_factor</span>
@@ -480,7 +482,7 @@
 <span class="kn">from</span> <span class="nn">..model_io</span> <span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
 
 
-<div class="viewcode-block" id="pointnet_plus_modelnet40"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.pointnet_plus_modelnet40">[docs]</a><span class="k">def</span> <span class="nf">pointnet_plus_modelnet40</span><span class="p">(</span><span class="n">selected_points</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">knn_points</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<div class="viewcode-block" id="pointnet_plus_modelnet40"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.pointnet_plus_modelnet40">[docs]</a><span class="k">def</span> <span class="nf">pointnet_plus_modelnet40</span><span class="p">(</span><span class="n">selected_points</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">knn_points</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Instantiates a PointNet++ model for the ModelNet40 classification.</span>
 
 <span class="sd">    This example implements the point cloud deep learning paper</span>
@@ -494,15 +496,18 @@
 <span class="sd">    Each of the selected points is taken as the centroid of the K-nearest</span>
 <span class="sd">    neighbours. This defines a localized group.</span>
 
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        selected_points (int, optional): the number of points to process per</span>
-<span class="sd">            sample. Default is 128.</span>
+<span class="sd">            sample. Defaults to 64.</span>
 <span class="sd">        features (int, optional): the number of features. Expected values are</span>
 <span class="sd">            1 or 3. Default is 3.</span>
 <span class="sd">        knn_points (int, optional): the number of points to include in each</span>
 <span class="sd">            localised group. Must be a power of 2, and ideally an integer square</span>
 <span class="sd">            (so 64, or 16 for a deliberately small network, or 256 for large).</span>
-<span class="sd">            Default is 64.</span>
+<span class="sd">            Defaults to 32.</span>
 <span class="sd">        classes (int, optional): the number of classes for the classifier.</span>
 <span class="sd">            Default is 40.</span>
 <span class="sd">        alpha (float, optional): network filters multiplier. Default is 1.0.</span>
@@ -515,8 +520,8 @@
 
     <span class="c1"># Adapt input shape with preprocessing</span>
     <span class="n">reshape_factor</span> <span class="o">=</span> <span class="n">get_reshape_factor</span><span class="p">(</span><span class="n">knn_points</span><span class="p">)</span>
-    <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">selected_points</span> <span class="o">*</span> <span class="n">reshape_factor</span><span class="p">,</span>
-                   <span class="n">knn_points</span> <span class="o">//</span> <span class="n">reshape_factor</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">knn_points</span> <span class="o">//</span> <span class="n">reshape_factor</span><span class="p">,</span>
+                   <span class="n">selected_points</span> <span class="o">*</span> <span class="n">reshape_factor</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
 
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
     <span class="n">base_filter_num</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="mi">32</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">)</span>
@@ -627,18 +632,29 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pointnet_plus&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="pointnet_plus_modelnet40_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.pointnet_plus_modelnet40_pretrained">[docs]</a><span class="k">def</span> <span class="nf">pointnet_plus_modelnet40_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="pointnet_plus_modelnet40_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.pointnet_plus_modelnet40_pretrained">[docs]</a><span class="k">def</span> <span class="nf">pointnet_plus_modelnet40_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `pointnet_plus` model that was trained on</span>
 <span class="sd">    ModelNet40 dataset.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9a49fcdf4742f0bfefb6e16c006d66d4064d9fc0ee30abc1bbd2341f5c5f8fec&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w4_a4.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b4f0ae9a25e2f5ee6068ed5818ac839359dfb5e9e4af880479a70338dc08734b&#39;</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_iq8_wq4_aq4.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;8c6cb08a72909a50e2792f9b0b52c17e9972a9a42e8ace11443e811c18b6573c&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w4_a4.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e4d0388248e169f67a92c2473e4db8f9192fb80296f32026157ae512ea062257&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40.h5&#39;</span>
+        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1499e8d629642c0f67436bdc8ba7d883c2f1cc1f5993a758588fa177a3fc585c&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4c9ce75c9acc9a98070ba3a385f388e3672a534972f6e921e2746b1b8e451e92&#39;</span>
+
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;pointnet_plus&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>

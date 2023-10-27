@@ -475,6 +475,9 @@
 <span class="sd">ResNet18 but without skip connections and using SeparableConvolution layers.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;akidanet18_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;akidanet18_imagenet_pretrained&quot;</span><span class="p">]</span>
+
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -492,6 +495,9 @@
                         <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span>
                         <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the AkidaNet18 architecture.</span>
+
+<span class="sd">    Note: input preprocessing is included as part of the model (as a Rescaling layer). This model</span>
+<span class="sd">    expects inputs to be float tensors of pixels with values in the [0, 255] range.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): shape tuple. Defaults to None.</span>
@@ -515,7 +521,7 @@
 <span class="sd">            (64, 128, 256, 512).</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset to apply to</span>
 <span class="sd">            inputs. Defaults to (128, -1). Note that following Akida convention,</span>
-<span class="sd">            the scale factor is an integer used as a divider.</span>
+<span class="sd">            the scale factor is an integer used as a divisor.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for AkidaNet/ImageNet.</span>
@@ -620,21 +626,28 @@
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;akidanet18_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">classes</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="akidanet18_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet18_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet18_imagenet_pretrained</span><span class="p">():</span>
+<div class="viewcode-block" id="akidanet18_imagenet_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet18_imagenet_pretrained">[docs]</a><span class="k">def</span> <span class="nf">akidanet18_imagenet_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet18_imagenet` model that was trained on ImageNet dataset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
+<span class="sd">            quantized or not. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Note: cannot be converted to v1 so we should ultimately removed v1 support and only keep v2</span>
-    <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet18_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-    <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;d3a0a3f37b5d3a5998981705e772b40670fdab0dd68e5894dc8af717bbaae136&#39;</span>
-    <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet18_imagenet_224_i8_w8_a8.h5&#39;</span>
-    <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;736d07851c9a3967f61ba2efcdde1f224fc0ca8b7f6fc1110417bd6de14979bf&#39;</span>
-    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet18&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
-                                                       <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet18_imagenet_224_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;736d07851c9a3967f61ba2efcdde1f224fc0ca8b7f6fc1110417bd6de14979bf&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet18_imagenet_224.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e52cf2a20b786a488b75f371b8b89f0c95a383dafc1331eea51b2356552d9704&#39;</span>
+
+    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet18&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span>
+                                                       <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
                             <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                             <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
