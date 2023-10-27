@@ -34,15 +34,15 @@ Akida models API
 
     Gamma constraint
     ----------------
-    .. autofunction:: add_gamma_constraint
+    .. autofunction:: akida_models.gamma_constraint.add_gamma_constraint
 
     Unfusing SeparableConvolutional
     -------------------------------
-    .. autofunction:: unfuse_sepconv2d
+    .. autofunction:: akida_models.unfuse_sepconv_layers.unfuse_sepconv2d
 
     Extract samples
     ---------------
-    .. autofunction:: extract_samples
+    .. autofunction:: akida_models.extract.extract_samples
 
 
     Knowledge distillation
@@ -112,9 +112,6 @@ Akida models API
 
     Preprocessing
     *************
-    .. autofunction:: akida_models.kws.preprocessing.prepare_model_settings
-    .. autofunction:: akida_models.kws.preprocessing.prepare_words_list
-    .. autofunction:: akida_models.kws.preprocessing.which_set
     .. autoclass:: akida_models.kws.preprocessing.AudioProcessor
         :members:
 
