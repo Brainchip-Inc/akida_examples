@@ -418,7 +418,7 @@ plot_discretized_weights(w, wq)
 # code snippet below illustrates how to use the provided tool. Note that it must
 # be applied on the Keras float (or quantized) model before folding BN layers.
 
-from akida_models import add_gamma_constraint
+from akida_models.gamma_constraint import add_gamma_constraint
 
 # Add BN gamma constraint on all BN layers of the model
 model_keras_with_gamma_constraint = add_gamma_constraint(model_keras)
