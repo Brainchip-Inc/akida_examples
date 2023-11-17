@@ -35,6 +35,10 @@ sphinx-build -D plot_gallery=0 -b html ./doc ./build
 
 Note that by removing the *-D plot_gallery=0* option in the previous command,
 examples will be executed for a nicer rendering but it will take much more time.
+If needed (e.g. for debugging), a set of selected examples can be rendered through the command:
+~~~~
+sphinx-build -b html ./doc ./build -D sphinx_gallery_conf.filename_pattern=regex_my_examples.py
+~~~~
 
 * Open *.build/index.html* once done
 
