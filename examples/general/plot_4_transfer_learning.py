@@ -51,6 +51,10 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 #   4. Quantize the whole model
 #   5. Optionally perform QAT for a few epochs to recover accuracy
 #
+# The transfer learning process operates in float precision,
+# ensuring seamless integration with users existing familiarity in setting
+# hyperparameters, adding a new head, and deciding on layer freezing.
+#
 # While this process will apply to most of the tasks, there might be cases where
 # variants are needed:
 #
