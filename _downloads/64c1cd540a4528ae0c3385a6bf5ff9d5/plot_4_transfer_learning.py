@@ -47,22 +47,21 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 #
 #   1. Get a trained float AkidaNet base model
 #   2. Add a classification head to the model
-#   3. Optionally freeze the base model
-#   4. Train the model head for a few epochs
-#   5. Quantize the whole model
-#   6. Optionally perform QAT for a few epochs to recover accuracy
+#   3. Tune the whole model for a few epochs
+#   4. Quantize the whole model
+#   5. Optionally perform QAT for a few epochs to recover accuracy
+#
+# The transfer learning process operates in float precision,
+# ensuring seamless integration with users' existing familiarity in setting
+# hyperparameters, adding a new head, and deciding on layer freezing.
 #
 # While this process will apply to most of the tasks, there might be cases where
 # variants are needed:
 #
-#   - for some target datasets, freezing the base model will not produce the
-#     best accuracy. In such a case, the base model should stay trainable and the
-#     learning rate when tuning the model should be small enough to preserve
-#     features learned by the features extractor.
-#   - quantization in the 5th step might lead to drop in accuracy. In such a
-#     case, an additional step of fine tuning is needed and consists in training
-#     for a few additional epochs with a lower learning rate (e.g 10 to 100
-#     times lower than the initial rate) and with the base model unfrozen.
+#   - Quantization in the 4th step might lead to drop in accuracy (especially for 4
+#     bits quantization). In such a case, an additional step of fine tuning is needed
+#     and consists in training for a few additional epochs with a lower learning rate
+#     (e.g 10 to 100 times lower than the initial rate).
 
 ######################################################################
 # 1. Dataset preparation
@@ -159,31 +158,18 @@ model_keras = Model(base_model.input, x, name='akidanet_plantvillage')
 model_keras.summary()
 
 ######################################################################
-# 4. Freeze the base model
-# ------------------------
-#
-# Freezing can be done by setting the `trainable` attribute of a layer to False. The following code
-# will freeze all layers up to (but not including) the classification head.
-
-trainable = False
-for layer in model_keras.layers:
-    if layer.name == 'fc1':
-        trainable = True
-    layer.trainable = trainable
-
-######################################################################
-# 5. Train for a few epochs
+# 4. Train for a few epochs
 # -------------------------
 #
 # Only giving textual information for training in this tutorial:
 #
 #   - the model is compiled with an Adam optimizer and the sparse categorical
 #     crossentropy loss is used,
-#   - the initial learning rate is set to 1e-2 and ends at 1e-4 with a linear decay,
+#   - the initial learning rate is set to 1e-3 and ends at 1e-5 with an exponential decay,
 #   - the training lasts for 10 epochs.
 
 ######################################################################
-# 6. Quantize the model
+# 5. Quantize the model
 # ---------------------
 #
 # Quantization is done using QuantizeML `quantize
@@ -211,7 +197,7 @@ model_quantized = quantize(model_keras, qparams=qparams,
 # quantization and not require this extra QAT step.
 
 ######################################################################
-# 7. Compute accuracy
+# 6. Compute accuracy
 # -------------------
 #
 # Because training is not included in this tutorial, the pretrained Keras model
