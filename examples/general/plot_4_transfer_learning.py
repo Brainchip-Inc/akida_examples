@@ -52,7 +52,7 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 #   5. Optionally perform QAT for a few epochs to recover accuracy
 #
 # The transfer learning process operates in float precision,
-# ensuring seamless integration with users existing familiarity in setting
+# ensuring seamless integration with users' existing familiarity in setting
 # hyperparameters, adding a new head, and deciding on layer freezing.
 #
 # While this process will apply to most of the tasks, there might be cases where
@@ -165,7 +165,7 @@ model_keras.summary()
 #
 #   - the model is compiled with an Adam optimizer and the sparse categorical
 #     crossentropy loss is used,
-#   - the initial learning rate is set to 1e-3 and ends at 1e-5 with a linear decay,
+#   - the initial learning rate is set to 1e-3 and ends at 1e-5 with an exponential decay,
 #   - the training lasts for 10 epochs.
 
 ######################################################################
