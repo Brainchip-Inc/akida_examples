@@ -6,3 +6,4 @@ User guide
    quantizeml.rst
    cnn2snn.rst
    akida_models.rst
+   engine.rst
