@@ -84,7 +84,7 @@ The Akida Neuromorphic ML Framework
   * a simulator (software backend) - a CPU implementation of the Akida Neuromorphic
     Processor IP,
 
-  * and the `Akida Engine Library <user_guide/engine.html>`_` - a C++ library supporting the instantiation of model
+  * and the `Akida Engine Library <user_guide/engine.html>`_ - a C++ library supporting the instantiation of model
     programs produced by the model library on actual hardware devices and inference on
     programmed devices.
 

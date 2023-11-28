@@ -9,7 +9,7 @@ Engine is a C++ library that is part of the Akida software and is responsible fo
 programming different Akida chips, and performing inference on them.
 
 
-It is is a "lightweight" library tagetting MCU. Models that have been
+It is is a "lightweight" library tagetting Micro Controller Unit (MCU). Models that have been
 trained/converted models (offline) can be passed for inference.
 
 The program generation part must be done on a host PC, using the whole Akida
@@ -48,9 +48,10 @@ Engine directory structure
 The Engine contains the following directories:
 
 - ``api`` contains the headers that can be used as entry point when working with the Akida engine. It contains these subdirectories:
+
     - ``akida``, containing the most commonly used API when working with the engine,
     - ``infra``, with generic utility functions, and the `system.h` header containing a list of the functions that should be implemented to have a working engine library,
-    - ``akd1500`` and ``akd1000``, with headers that can be used to build device drivers for the available devices containing Akida produced by Brainchip,
+    - ``akd1500`` and ``akd1000``, with headers that can be used to build device drivers for the available devices containing Akida that have been produced by Brainchip,
 - ``cmake`` contains a Cmake file to fetch dependencies and build the engine library,
 - ``devices`` provides driver instances that can be used with the available devices containing Akida produced by Brainchip,
 - ``inc``, containing internal headers used by the engine sources,
@@ -88,7 +89,7 @@ To interact with an Akida device, the main entry point is the ``HardwareDevice``
 
 
 .. note::
-    The ``HardwareDevice`` API in the engine is different from the Python API for the `HardwareDevice <../akida_examples/api_reference/akida_apis.html#hwdevice>`__. This is because the Python API is intended to be a higher-level, easy to use API that introduces to the concepts of Akida's hardware device programming. However, it can be observed that there are several similarities, as the Python API will end up calling the C++ instance.
+    The ``HardwareDevice`` API in the engine is different from the Python API for the `HardwareDevice <../api_reference/akida_apis.html#hwdevice>`__. This is because the Python API is intended to be a higher-level, easy to use API that introduces to the concepts of Akida's hardware device programming. However, it can be observed that there are several similarities, as the Python API will end up calling the C++ instance.
 
 Dense
 ^^^^^
@@ -97,7 +98,7 @@ In akida, all input and output buffers are wrapped in an abstract ``Dense`` clas
 
 - ``create``, a static function to allocate a buffer of a given ``TensorType``, ``Shape`` and ``Dense::Layout``, and create a ``Dense`` unique pointer that holds the buffer.
 - ``create_view``, another static function, similar to the previous one, but whose data buffer is not allocated, but rather provided by the calling function. This function can be used to create a ``Dense`` instance to use as inference input coming from a user-provided buffer.
-- ``split``, to obtain a vector of 3D ``Dense`` inputs that might have been prepared in four dimensions. The inference functions in the ``HardwareDevice`` require a vector of 3D inputs o be provided.
+- ``split``, to obtain a vector of 3D ``Dense`` inputs that might have been prepared in four dimensions. The inference functions in the ``HardwareDevice`` require a vector of 3D inputs to be provided.
 - ``buffer`` to obtain a pointer to the underlying ``Buffer`` object, that will provide a ``size`` and ``data`` methods. These could be used to read the output values.
 - ``dimensions``, returrning the shape of the Dense object.
 - ``operator==``, that can be used to compare with another ``Dense`` object.
