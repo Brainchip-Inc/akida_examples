@@ -50,11 +50,8 @@ The Engine contains the following directories:
 - ``api`` contains the headers that can be used as entry point when working with the Akida engine. It contains these subdirectories:
 
     - ``akida``, containing the most commonly used API when working with the engine,
-    - ``infra``, with generic utility functions, and the `system.h` header containing
-    a list of the functions that should be implemented to have a working engine library,
-    - ``akd1500`` and ``akd1000``, with headers that can be used to build device drivers for
-    drivers for the engineering-sample chips that Brainchip designed and delivers as part
-    of its development kits,
+    - ``infra``, with generic utility functions, and the `system.h` header containing a list of functions that should be implemented to have a working engine library,
+    - ``akd1500`` and ``akd1000``, with headers that can be used to build device drivers for drivers for the engineering-sample chips that Brainchip designed and delivers as part of its development kits,
 - ``cmake`` contains a Cmake file to fetch dependencies and build the engine library,
 - ``devices`` provides driver instances for akd1000 and akd1500 in embedded environments.
 - ``inc``, containing internal headers used by the engine sources,
