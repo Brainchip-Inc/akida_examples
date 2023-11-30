@@ -171,3 +171,20 @@ QuantizeML API
     .. autoclass:: quantizeml.tensors.QFloat
         :members:
         :show-inheritance:
+
+    ONNX support
+    ============
+
+    Layers
+    ------
+    .. autofunction:: quantizeml.onnx_support.layers.OnnxLayer
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConv2D
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDepthwise2D
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDense1D
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedAdd
+    .. autofunction:: quantizeml.onnx_support.layers.InputQuantizer
+    .. autofunction:: quantizeml.onnx_support.layers.Dequantizer
+
+    Custom patterns
+    ---------------
+    .. autofunction:: quantizeml.onnx_support.quantization.custom_pattern_scope
