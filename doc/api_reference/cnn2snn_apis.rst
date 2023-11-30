@@ -20,11 +20,7 @@ CNN2SNN Toolkit API
     Conversion
     ==========
     .. autofunction:: convert
-
-    A detailed description of the input_scaling parameter is given in the
-    `user guide <../user_guide/cnn2snn.html#input-scaling>`__.
-
-    .. autofunction:: cnn2snn.quantizeml.compatibility_checks.check_model_compatibility
+    .. autofunction:: check_model_compatibility
 
     Legacy quantization API
     =======================
@@ -35,7 +31,10 @@ CNN2SNN Toolkit API
 
     Utils
     -----
-    .. autofunction:: check_model_compatibility
+    A detailed description of the input_scaling parameter is given in the
+    `user guide <../user_guide/cnn2snn.html#input-scaling>`__.
+
+    .. autofunction:: cnn2snn.compatibility_checks.check_model_compatibility
     .. autofunction:: load_quantized_model
 
     Calibration

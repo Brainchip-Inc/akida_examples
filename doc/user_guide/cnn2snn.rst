@@ -31,19 +31,11 @@ targets KWS task as an example:
 Conversion compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is possible to check if a quantized model is compatible with Akida conversion using the
-`check_model_compatibility
-<../api_reference/cnn2snn_apis.html#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility>`__
-helper. Note that this helper will not convert the model or check compatibility with an Akida
-hardware, it only checks that the model quantization scheme is allowed and that building blocks are
-compatible with Akida layers blocks.
-
-.. note::
-    `cnn2snn.quantizeml.compatibility_checks.check_model_compatibility
-    <../api_reference/cnn2snn_apis.html#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility>`__
-    only applies to a model quantized via QuantizeML. For a CNN2SNN-quantized model, instead use the
-    deprecated
-    `cnn2snn.check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__.
+It is possible to check if a float model is compatible with Akida conversion using the
+`check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__
+helper. This helper will check that the model quantization scheme is allowed and that building
+blocks are compatible with Akida layers blocks, convert the model and optionally map on an Akida
+hardware.
 
 Command-line interface
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -167,13 +159,16 @@ distinct levels before the quantization stage:
 
 
 All these design compatibility constraints are summarized in the CNN2SNN
-`check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`_
+`check_model_compatibility
+<../api_reference/cnn2snn_apis.html#cnn2snn.compatibility_checks.check_model_compatibility>`_
 function. A good practice is to check model compatibility before going through
 the training process [#fn-2]_.
 
 .. warning::
-    The CNN2SNN `check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`_
-    API is deprecated. It only applies to models targeting Akida 1.0 IP and quantized with the CNN2NN toolkit.
+    The CNN2SNN `check_model_compatibility
+    <../api_reference/cnn2snn_apis.html#cnn2snn.compatibility_checks.check_model_compatibility>`_
+    API is deprecated. It only applies to models targeting Akida 1.0 IP and quantized with the
+    CNN2NN toolkit.
 
 Helpers (see `Layer Blocks <../api_reference/akida_models_apis.html#layer-blocks>`_) are available
 in the ``akida_models`` PyPI package to easily create a compatible model from scratch.
