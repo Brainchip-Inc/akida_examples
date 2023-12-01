@@ -109,7 +109,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/cnn2snn.html#legacy-quantization-api">Legacy quantization API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#typical-quantization-scenario">Typical quantization scenario</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#id4">Command-line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#id3">Command-line interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
 </ul>
@@ -237,6 +237,11 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#qtensor">QTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#fixedpoint">FixedPoint</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#qfloat">QFloat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 </ul>
@@ -726,7 +731,7 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bc_vit_ti16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16">[docs]</a><span class="k">def</span> <span class="nf">bc_vit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="bc_vit_ti16"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.bc_vit_ti16">[docs]</a><span class="k">def</span> <span class="nf">bc_vit_ti16</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">include_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_blocks</span><span class="o">=</span><span class="mi">12</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the ViT-Tiny 16 architecture adapted for implementation on hardware,</span>
 <span class="sd">    that is:</span>
 
@@ -739,10 +744,14 @@
 <span class="sd">        classes (int, optional): number of classes. Defaults to 1000.</span>
 <span class="sd">        include_top (bool, optional): whether to include the final classifier network.</span>
 <span class="sd">            Defaults to True.</span>
+<span class="sd">        num_blocks (int, optional): the number of transformer blocks to use. Defaults to 12.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: the requested model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_ti</span> <span class="o">=</span> <span class="n">CONFIG_TI</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">config_ti</span><span class="p">[</span><span class="s2">&quot;num_blocks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_blocks</span>
+
     <span class="k">return</span> <span class="n">vit_imagenet</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
         <span class="n">patch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
@@ -753,7 +762,7 @@
         <span class="n">softmax</span><span class="o">=</span><span class="s2">&quot;softmax2&quot;</span><span class="p">,</span>
         <span class="n">act</span><span class="o">=</span><span class="s2">&quot;ReLU8&quot;</span><span class="p">,</span>
         <span class="n">include_top</span><span class="o">=</span><span class="n">include_top</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">CONFIG_TI</span>
+        <span class="o">**</span><span class="n">config_ti</span>
     <span class="p">)</span></div>
 
 

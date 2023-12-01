@@ -109,7 +109,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/cnn2snn.html#legacy-quantization-api">Legacy quantization API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#typical-quantization-scenario">Typical quantization scenario</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#id4">Command-line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#id3">Command-line interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
 </ul>
@@ -237,6 +237,11 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#qtensor">QTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#fixedpoint">FixedPoint</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#qfloat">QFloat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 </ul>
@@ -487,32 +492,70 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Sequential</span>
 <span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
 <span class="kn">from</span> <span class="nn">.model_generator</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">cnn2snn_generate_model</span>
 <span class="kn">from</span> <span class="nn">.quantizeml</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">qml_generate_model</span>
 
-<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">sequentialize</span><span class="p">,</span> <span class="n">syncretize</span><span class="p">,</span> <span class="n">fix_v1_activation_variables</span>
+<span class="kn">from</span> <span class="nn">.akida_versions</span> <span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">fix_v1_activation_variables</span><span class="p">,</span> <span class="n">prepare_to_convert</span>
 <span class="kn">from</span> <span class="nn">.compatibility_checks</span> <span class="kn">import</span> <span class="n">check_sequential_compatibility</span>
+<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_qml</span>
 
 
-<span class="k">def</span> <span class="nf">_sync_and_check_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="c1"># Make sure the model is sequential</span>
-    <span class="n">seq_model</span> <span class="o">=</span> <span class="n">sequentialize</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<div class="viewcode-block" id="check_model_compatibility"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">[docs]</a><span class="k">def</span> <span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that a float Keras or ONNX model is Akida compatible.</span>
 
-    <span class="c1"># For now, we support only models with a single branch</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seq_model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;The model contains more than one sequential branch.&quot;</span><span class="p">)</span>
+<span class="sd">    The process stops on the first incompatibility encountered with an exception. The</span>
+<span class="sd">    problematic step (quantization or conversion or mapping) is indicated in the exception message.</span>
+<span class="sd">    Then if errors occurs, issues must be fixed iteratively in order to obtain an Akida</span>
+<span class="sd">    compatible model.</span>
+<span class="sd">    Note that the version context is used to determine compatibility.</span>
 
-    <span class="c1"># Transform model to prepare conversion: change the order of layers,</span>
-    <span class="c1"># fold BN, freeze quantizers, remove useless layers.</span>
-    <span class="n">sync_model</span> <span class="o">=</span> <span class="n">syncretize</span><span class="p">(</span><span class="n">seq_model</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`tf.keras.Model` or :obj:`onnx.ModelProto`): the model to check.</span>
+<span class="sd">        device (:obj:`akida.HwDevice`, optional): the device to map on. If a device is provided,</span>
+<span class="sd">            there will be a check that the model can fully run on such device. Defaults to None.</span>
 
-    <span class="c1"># Check model compatibility</span>
-    <span class="n">check_sequential_compatibility</span><span class="p">(</span><span class="n">sync_model</span><span class="p">)</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if model type is incompatbile with Akida version context.</span>
+<span class="sd">        ValueError: if device is incompatibile with Akida version context.</span>
+<span class="sd">        Exception: if an incompatibility is encountered on quantization/conversion/mapping steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Preliminary checks:</span>
+    <span class="c1"># Onnx models are not supported on Akida v1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">==</span> <span class="n">ModelProto</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Akida v1 does not support ONNX models. Use Akida v2 instead.&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">sync_model</span>
+    <span class="c1"># if a device is provided, it should be consistent with the Akida version used.</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">product_id</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xa1</span><span class="p">]</span> \
+            <span class="ow">and</span> <span class="p">(</span><span class="n">get_akida_version</span><span class="p">()</span> <span class="o">!=</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The device </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2"> is inconsistent with the Akida version used.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Quantization step</span>
+    <span class="k">if</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="c1"># 4 bits weights and activation per tensor</span>
+        <span class="n">q_param</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">(</span><span class="n">activation_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">weight_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                     <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">q_param</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model_q</span> <span class="o">=</span> <span class="n">quantize_qml</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">q_param</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)(</span><span class="s1">&#39;Incompatibility found during quantization: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="c1"># Conversion step</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model_ak</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_q</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)(</span><span class="s1">&#39;Incompatibility found during conversion: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Mapping step</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">model_ak</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)(</span><span class="s1">&#39;Incompatibility found during mapping: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">[docs]</a><span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -665,8 +708,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The scale factor &#39;input_scaling[0]&#39; must be strictly&quot;</span>
                          <span class="sa">f</span><span class="s2">&quot; positive. Receives: input_scaling=</span><span class="si">{</span><span class="n">input_scaling</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Prepare model for conversion and check its compatibility</span>
-    <span class="n">sync_model</span> <span class="o">=</span> <span class="n">_sync_and_check_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="c1"># Prepare model for conversion</span>
+    <span class="n">sync_model</span> <span class="o">=</span> <span class="n">prepare_to_convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Check model compatibility</span>
+    <span class="n">check_sequential_compatibility</span><span class="p">(</span><span class="n">sync_model</span><span class="p">)</span>
 
     <span class="c1"># Generate Akida model with converted weights/thresholds</span>
     <span class="n">ak_model</span> <span class="o">=</span> <span class="n">cnn2snn_generate_model</span><span class="p">(</span><span class="n">sync_model</span><span class="p">,</span> <span class="n">input_scaling</span><span class="p">)</span>
@@ -704,141 +750,6 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">layer</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="o">-</span><span class="n">layer</span><span class="o">.</span><span class="n">offset</span> <span class="o">/</span> <span class="n">layer</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">None</span>
-
-
-<div class="viewcode-block" id="check_model_compatibility"><a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">[docs]</a><span class="k">def</span> <span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Checks if a Keras model is compatible for cnn2snn conversion.</span>
-
-<span class="sd">    This function doesn&#39;t convert the Keras model to an Akida model</span>
-<span class="sd">    but only checks if the model design is compatible.</span>
-
-<span class="sd">    Note that this function doesn&#39;t check if the model is compatible with</span>
-<span class="sd">    Akida hardware.</span>
-<span class="sd">    To check compatibility with a specific hardware device, convert the model</span>
-<span class="sd">    and call `model.map` with this device as argument.</span>
-
-<span class="sd">    **1. How to build a compatible Keras quantized model?**</span>
-
-<span class="sd">    The following lines give details and constraints on how to build a Keras</span>
-<span class="sd">    model compatible for the conversion to an Akida model.</span>
-
-
-<span class="sd">    **2. General information about layers**</span>
-
-<span class="sd">    An Akida layer must be seen as a block of Keras layers starting with a</span>
-<span class="sd">    processing layer (Conv2D, SeparableConv2D,</span>
-<span class="sd">    Dense). All blocks of Keras layers except the last block must have</span>
-<span class="sd">    exactly one activation layer (ReLU or ActivationDiscreteRelu). Other</span>
-<span class="sd">    optional layers can be present in a block such as a pooling layer or a</span>
-<span class="sd">    batch normalization layer.</span>
-<span class="sd">    Here are all the supported Keras layers for an Akida-compatible model:</span>
-
-<span class="sd">    - Processing layers:</span>
-
-<span class="sd">      - tf.keras Conv2D/SeparableConv2D/Dense</span>
-<span class="sd">      - cnn2snn QuantizedConv2D/QuantizedSeparableConv2D/QuantizedDense</span>
-
-<span class="sd">    - Activation layers:</span>
-
-<span class="sd">      - tf.keras ReLU</span>
-<span class="sd">      - cnn2snn ActivationDiscreteRelu</span>
-<span class="sd">      - any increasing activation function (only for the last block of layers)</span>
-<span class="sd">        such as softmax, sigmoid set as last layer. This layer must derive from</span>
-<span class="sd">        tf.keras.layers.Activation, and it will be removed during conversion to</span>
-<span class="sd">        an Akida model.</span>
-
-<span class="sd">    - Pooling layers:</span>
-
-<span class="sd">      - MaxPool2D</span>
-<span class="sd">      - GlobalAvgPool2D</span>
-
-<span class="sd">    - BatchNormalization</span>
-<span class="sd">    - Dropout</span>
-<span class="sd">    - Flatten</span>
-<span class="sd">    - Input</span>
-<span class="sd">    - Reshape</span>
-
-<span class="sd">    Example of a block of Keras layers::</span>
-
-<span class="sd">              ----------</span>
-<span class="sd">              | Conv2D |</span>
-<span class="sd">              ----------</span>
-<span class="sd">                  ||</span>
-<span class="sd">                  \/</span>
-<span class="sd">        ----------------------</span>
-<span class="sd">        | BatchNormalization |</span>
-<span class="sd">        ----------------------</span>
-<span class="sd">                  ||</span>
-<span class="sd">                  \/</span>
-<span class="sd">             -------------</span>
-<span class="sd">             | MaxPool2D |</span>
-<span class="sd">             -------------</span>
-<span class="sd">                  ||</span>
-<span class="sd">                  \/</span>
-<span class="sd">       --------------------------</span>
-<span class="sd">       | ActivationDiscreteRelu |</span>
-<span class="sd">       --------------------------</span>
-
-
-<span class="sd">    **3. Constraints about inputs**</span>
-
-<span class="sd">    An Akida model can accept two types of inputs: sparse events or 8-bit</span>
-<span class="sd">    images. Whatever the input type, the Keras inputs must respect the</span>
-<span class="sd">    following relation:</span>
-
-<span class="sd">        input_akida = scale * input_keras + shift</span>
-
-<span class="sd">    where the Akida inputs must be positive integers, the input scale must be</span>
-<span class="sd">    a float value and the input shift must be an integer. In other words,</span>
-<span class="sd">    scale * input_keras must be integers.</span>
-
-<span class="sd">    Depending on the input type:</span>
-
-<span class="sd">    - if the inputs are events (sparse), the first layer of the Keras model can</span>
-<span class="sd">      be any processing layer. The input shift must be zero.</span>
-<span class="sd">    - if the inputs are images, the first layer must be a Conv2D</span>
-<span class="sd">      layer.</span>
-
-
-<span class="sd">    **4. Constraints about layers&#39; parameters**</span>
-
-<span class="sd">    To be Akida-compatible, the Keras layers must observe the following rules:</span>
-
-<span class="sd">    - all layers with the &#39;data_format&#39; parameter must be &#39;channels_last&#39;</span>
-<span class="sd">    - all processing quantized layers and ActivationDiscreteRelu must have a</span>
-<span class="sd">      valid quantization bitwidth</span>
-<span class="sd">    - a Dense layer must have an input shape of (N,) or (1, 1, N)</span>
-<span class="sd">    - a BatchNormalization layer must have &#39;axis&#39; set to -1 (default)</span>
-<span class="sd">    - a BatchNormalization layer cannot have negative gammas</span>
-<span class="sd">    - Reshape layers can only be used to transform a tensor of shape (N,) to a</span>
-<span class="sd">      tensor of shape (1, 1, N), and vice-versa</span>
-<span class="sd">    - only one pooling layer can be used in each block</span>
-<span class="sd">    - a MaxPool2D layer must have the same &#39;padding&#39; as the corresponding</span>
-<span class="sd">      processing quantized layer</span>
-
-<span class="sd">    **5. Constraints about the order of layers**</span>
-
-<span class="sd">    To be Akida-compatible, the order of Keras layers must observe the following</span>
-<span class="sd">    rules:</span>
-
-<span class="sd">    - a block of Keras layers must start with a processing quantized layer</span>
-<span class="sd">    - where present, a BatchNormalization/GlobalAvgPool2D layer must be placed</span>
-<span class="sd">      before the activation</span>
-<span class="sd">    - a Flatten layer can only be used before a Dense layer</span>
-<span class="sd">    - an Activation layer other than ReLU can only be used in the last layer</span>
-
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (:obj:`tf.keras.Model`): the model to check.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_sync_and_check_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;The Keras quantized model is not compatible for a conversion &quot;</span>
-            <span class="s2">&quot;to an Akida model:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-        <span class="k">return</span> <span class="kc">False</span></div>
 </pre></div>
 
            </div>

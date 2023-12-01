@@ -112,7 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#legacy-quantization-api">Legacy quantization API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#typical-quantization-scenario">Typical quantization scenario</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id4">Command-line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id3">Command-line interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
 </ul>
@@ -240,6 +240,11 @@
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#qtensor">QTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#fixedpoint">FixedPoint</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#qfloat">QFloat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#onnx-support">ONNX support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#id2">Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 </ul>
@@ -545,27 +550,29 @@ below.</p>
 </dl>
 </dd></dl>
 
-<p>A detailed description of the input_scaling parameter is given in the
-<a class="reference external" href="../user_guide/cnn2snn.html#input-scaling">user guide</a>.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="cnn2snn.quantizeml.compatibility_checks.check_model_compatibility">
-<span class="sig-prename descclassname"><span class="pre">cnn2snn.quantizeml.compatibility_checks.</span></span><span class="sig-name descname"><span class="pre">check_model_compatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/quantizeml/compatibility_checks.html#check_model_compatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.quantizeml.compatibility_checks.check_model_compatibility" title="Permalink to this definition"></a></dt>
-<dd><p>Checks if a QuantizeML model is compatible for Akida conversion.</p>
-<p>This function does NOT:</p>
-<ul class="simple">
-<li><p>convert the QuantizeML model to an Akida model,</p></li>
-<li><p>check if the model is compatible with Akida hardware</p></li>
-</ul>
-<p>It ONLY checks if the model design is compatible with Akida.</p>
+<dt class="sig sig-object py" id="cnn2snn.check_model_compatibility">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.</span></span><span class="sig-name descname"><span class="pre">check_model_compatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/converter.html#check_model_compatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.check_model_compatibility" title="Permalink to this definition"></a></dt>
+<dd><p>Checks that a float Keras or ONNX model is Akida compatible.</p>
+<p>The process stops on the first incompatibility encountered with an exception. The
+problematic step (quantization or conversion or mapping) is indicated in the exception message.
+Then if errors occurs, issues must be fixed iteratively in order to obtain an Akida
+compatible model.
+Note that the version context is used to determine compatibility.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code>) – the model to check.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">onnx.ModelProto</span></code>) – the model to check.</p></li>
+<li><p><strong>device</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">akida.HwDevice</span></code>, optional) – the device to map on. If a device is provided,
+there will be a check that the model can fully run on such device. Defaults to None.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of sequences of the non_skippable layers (‘blocks’).</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – if model type is incompatbile with Akida version context.</p></li>
+<li><p><strong>ValueError</strong> – if device is incompatibile with Akida version context.</p></li>
+<li><p><strong>Exception</strong> – if an incompatibility is encountered on quantization/conversion/mapping steps.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -578,9 +585,11 @@ usage is deprecated. You should rather use
 <a class="reference external" href="../user_guide/quantizeml.html#">QuantizeML</a> tool to quantize a model whenever possible.</p>
 <section id="utils">
 <h3>Utils<a class="headerlink" href="#utils" title="Permalink to this headline"></a></h3>
+<p>A detailed description of the input_scaling parameter is given in the
+<a class="reference external" href="../user_guide/cnn2snn.html#input-scaling">user guide</a>.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="cnn2snn.check_model_compatibility">
-<span class="sig-prename descclassname"><span class="pre">cnn2snn.</span></span><span class="sig-name descname"><span class="pre">check_model_compatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/converter.html#check_model_compatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.check_model_compatibility" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="cnn2snn.compatibility_checks.check_model_compatibility">
+<span class="sig-prename descclassname"><span class="pre">cnn2snn.compatibility_checks.</span></span><span class="sig-name descname"><span class="pre">check_model_compatibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cnn2snn/compatibility_checks.html#check_model_compatibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cnn2snn.compatibility_checks.check_model_compatibility" title="Permalink to this definition"></a></dt>
 <dd><p>Checks if a Keras model is compatible for cnn2snn conversion.</p>
 <p>This function doesn’t convert the Keras model to an Akida model
 but only checks if the model design is compatible.</p>

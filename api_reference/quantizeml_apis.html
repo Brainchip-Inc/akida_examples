@@ -113,7 +113,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/cnn2snn.html#legacy-quantization-api">Legacy quantization API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#typical-quantization-scenario">Typical quantization scenario</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id4">Command-line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#id3">Command-line interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
 </ul>
@@ -241,6 +241,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#qtensor">QTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#fixedpoint">FixedPoint</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#qfloat">QFloat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-support">ONNX support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 </ul>
@@ -2757,6 +2762,135 @@ to the optimal range for the specified value bits.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+</section>
+</section>
+<section id="onnx-support">
+<h2>ONNX support<a class="headerlink" href="#onnx-support" title="Permalink to this headline"></a></h2>
+<section id="id2">
+<h3>Layers<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.OnnxLayer">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">OnnxLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_imports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/base_layer.html#OnnxLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.OnnxLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Abstract class that represents an onnx subgraph in brainchip domain.</p>
+<p>Child must define the attributes on __init__ and return the node list (subgraph) on
+build_subgraph(). If these requirements are met, make_node() could be used to
+define/register the custom node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_name</strong> (<em>str</em>) – the operation type base name.</p></li>
+<li><p><strong>opset_imports</strong> (<em>list of OperatorSetIdProto</em><em>, </em><em>optional</em>) – the custom opset. Defaults to None.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – the custom attributes. Each attribute type will be
+infered by <code class="docutils literal notranslate"><span class="pre">onnx.helper.make_attribute()</span></code>. Defaults to {}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedConv2D">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2d.html#QuantizedConv2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2D" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of QLinearConv() + MaxPool() + ReLU() as an exportable node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strides</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
+<li><p><strong>pool_type</strong> (<em>str</em><em>, </em><em>optional</em>) – the pool type, one of {“none”, “max”, “gap”}. Defaults to “none”.</p></li>
+<li><p><strong>pool_size</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the kernel pool shape.
+Ignore it when pool_type != “max”. Defaults to (2, 2).</p></li>
+<li><p><strong>pool_stride</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the kernel strides.
+Ignore it when pool_type != “max”. Defaults to (2, 2).</p></li>
+<li><p><strong>pool_pads</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the size of each padding dimension.
+Ignore it when pool_type != “max”. Defaults to [0, 0, 0, 0].</p></li>
+<li><p><strong>input_conv</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether it is extended the set of operations of
+the basic QuantizedConv2D, allowing to modify the padding value per input channel.
+Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwise2D">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/depthwise2d.html#QuantizedDepthwise2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2D" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of Conv() + MaxPool() + ReLU() as an exportable node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strides</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDense1D">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDense1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/dense.html#QuantizedDense1D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDense1D" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of Flatten() + QGemm() + ReLU() as an exportable node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flatten</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to flatten the inputs. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedAdd">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of Add() as an exportable node.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.InputQuantizer">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">InputQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/quantizers.html#InputQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.InputQuantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of QuantizeLinear(), use to quantize the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_tp</strong> (<em>TensorProto</em>) – the input of the ONNX model.</p></li>
+<li><p><strong>input_signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the input is signed. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.Dequantizer">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">Dequantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/quantizers.html#Dequantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.Dequantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of DequantizeLinear(), use to dequantize the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="custom-patterns">
+<h3>Custom patterns<a class="headerlink" href="#custom-patterns" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.quantization.custom_pattern_scope">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.quantization.</span></span><span class="sig-name descname"><span class="pre">custom_pattern_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patterns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/quantization/register_patterns.html#custom_pattern_scope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.quantization.custom_pattern_scope" title="Permalink to this definition"></a></dt>
+<dd><p>Register a custom pattern in the context to be used at quantization time.</p>
+<p>A pattern is understood as a sequence of continuous operations in the graph,
+whose representation can converge in an <code class="docutils literal notranslate"><span class="pre">OnnxLayer</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>patterns</strong> (<em>dict</em>) – a list of sequence of nodes (keys) and their mapper function (values).</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

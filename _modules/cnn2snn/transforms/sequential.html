@@ -109,7 +109,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/cnn2snn.html#legacy-quantization-api">Legacy quantization API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#typical-quantization-scenario">Typical quantization scenario</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#design-compatibility-constraints">Design compatibility constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#id4">Command-line interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#id3">Command-line interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#layers-considerations">Layers Considerations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../user_guide/cnn2snn.html#tips-and-tricks">Tips and Tricks</a></li>
 </ul>
@@ -237,6 +237,11 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#qtensor">QTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#fixedpoint">FixedPoint</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#qfloat">QFloat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 </ul>
@@ -492,6 +497,22 @@
 <span class="kn">from</span> <span class="nn">.clone</span> <span class="kn">import</span> <span class="p">(</span><span class="n">clone_model_with_weights</span><span class="p">,</span> <span class="n">clone_layer</span><span class="p">,</span>
                     <span class="n">clone_layer_and_add_to_model</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.batch_normalization</span> <span class="kn">import</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batchnorm</span>
+
+
+<span class="k">def</span> <span class="nf">prepare_to_convert</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="c1"># Make sure the model is sequential</span>
+    <span class="n">seq_model</span> <span class="o">=</span> <span class="n">sequentialize</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># For now, we support only models with a single branch</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seq_model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;The model contains more than one sequential branch.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Transform model to prepare conversion: change the order of layers,</span>
+    <span class="c1"># fold BN, freeze quantizers, remove useless layers.</span>
+    <span class="n">sync_model</span> <span class="o">=</span> <span class="n">syncretize</span><span class="p">(</span><span class="n">seq_model</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sync_model</span>
 
 
 <span class="k">def</span> <span class="nf">sequential_remove_useless_layers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
