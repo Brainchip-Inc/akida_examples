@@ -28,10 +28,13 @@ Akida runtime API
     .. autoclass:: akida.Layer.Mapping
         :members:
 
-    Akida V1 layers
-    ===============
+    Akida layers
+    ============
     .. autoclass:: InputData
         :members:
+
+    Akida V1 layers
+    ===============
     .. autoclass:: InputConvolutional
         :members:
     .. autoclass:: FullyConnected

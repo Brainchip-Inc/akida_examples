@@ -96,6 +96,7 @@ Akida 1.0 layers
 Akida 2.0 layers
 """"""""""""""""
 
+- `InputData <../api_reference/akida_apis.html#akida.InputData>`__
 - `InputConv2D <../api_reference/akida_apis.html#akida.InputConv2D>`__
 - `Stem <../api_reference/akida_apis.html#akida.Stem>`__
 - `Conv2D <../api_reference/akida_apis.html#akida.Conv2D>`__
