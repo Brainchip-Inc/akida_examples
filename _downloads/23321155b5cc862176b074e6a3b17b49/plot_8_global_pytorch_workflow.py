@@ -146,20 +146,16 @@ print(model_torch)
 #
 
 # Define training rules
-device = "cuda" if torch.cuda.is_available() else "cpu"
 optimizer = torch.optim.Adam(model_torch.parameters(), lr=1e-4)
 criterion = torch.nn.CrossEntropyLoss()
 epochs = 10
 
 # Loop over the dataset multiple times
-model_torch = model_torch.to(device)
 for epoch in range(epochs):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # Get the inputs and labels
         inputs, labels = data
-        inputs = inputs.to(device)
-        labels = labels.to(device)
 
         # Zero the parameter gradients
         optimizer.zero_grad()
@@ -189,8 +185,6 @@ total = 0
 with torch.no_grad():
     for data in testloader:
         inputs, labels = data
-        inputs = inputs.to(device)
-        labels = labels.to(device)
         # Calculate outputs by running images through the network
         outputs = model_torch(inputs)
         # The class with the highest score is the prediction
@@ -210,27 +204,13 @@ print(f'Test accuracy: {100 * correct // total} %')
 # to use an intermediate format. Like many other machine learning frameworks,
 # PyTorch has tools to export modules in the `ONNX <https://onnx.ai>`__ format.
 #
-# Note that several versions are available to `map the operation set in ONNX
-# <https://onnx.ai/onnx/intro/concepts.html#what-is-an-opset-version>`__.
-# QuantizeML uses the most recent opset version, provided by the installed onnx package.
-# This can be verified as follows:
+# Therefore, the model is exported by the following code:
 #
 
-import onnx
-
-opset_version = onnx.defs.onnx_opset_version()
-print("Current opset version:", onnx.defs.onnx_opset_version())
-
-######################################################################
-# Then, the model is exported by the following code:
-#
-
-model_torch = model_torch.cpu()
 sample, _ = next(iter(trainloader))
 torch.onnx.export(model_torch,
-                  sample.cpu(),
+                  sample,
                   f="mnist_cnn.onnx",
-                  opset_version=opset_version,
                   input_names=["inputs"],
                   output_names=["outputs"],
                   dynamic_axes={'inputs': {0: 'batch_size'}, 'outputs': {0: 'batch_size'}})
@@ -264,6 +244,7 @@ torch.onnx.export(model_torch,
 #  shown in the following steps.
 #
 
+import onnx
 from quantizeml.models import quantize
 
 # Read the exported ONNX model
