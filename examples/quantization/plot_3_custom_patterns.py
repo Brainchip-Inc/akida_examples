@@ -241,7 +241,7 @@ print(*PATTERNS_MAP, sep='\n')
 #
 #       1. transforms the following operators for general purposes:
 #
-#          * ``Conv`` -> ``DepthwiseConv`` when kernel size is 1x1 and ``group`` is required
+#          * ``Conv`` -> ``DepthwiseConv`` when kernel size is 1 x Kx x Ky and ``group`` is required
 #          * ``Clip`` > ``Relu`` (if ``min = 0.0``)
 #
 #       2. uses `Graph Optimizations in ONNX Runtime
