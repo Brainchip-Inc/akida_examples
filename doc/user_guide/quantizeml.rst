@@ -5,7 +5,7 @@ QuantizeML toolkit
 Overview
 --------
 
-QuantizeML package provides base layers and quantization tools for deep-learning models. It  allows
+QuantizeML package provides base layers and quantization tools for deep-learning models. It allows
 the quantization of CNN and Vision Transformer models using low-bitwidth weights and outputs. Once
 quantized with the provided tools, CNN2SNN toolkit will be able to convert the model and execute it
 with Akida runtime.
@@ -44,10 +44,16 @@ only operations [#fn-1]_.
 Quantization flow
 -----------------
 
-The first step in the workflow is to train a standard Keras model. This trained model is the
-starting point for the quantization stage. Once it is established that the overall model
-configuration prior to quantization yields a satisfactory performance on the task, one can proceed
-with quantization.
+The first step in the workflow is to train a model.The trained model is the starting point for the
+quantization stage. Once it is established that the overall model configuration prior to
+quantization yields a satisfactory performance on the task, one can proceed with quantization.
+
+.. note:: For simplicity, the following leverages the Keras API to define a model, but QuantizeML
+          also comes with ONNX support, see the `PyTorch to Akida
+          <../examples/general/plot_8_global_pytorch_workflow.html#sphx-glr-examples-general-plot-8-global-pytorch-workflow-py>`__
+          or `off-the-shelf models
+          <../examples/quantization/plot_2_off_the_shelf_quantization.html#sphx-glr-examples-quantization-plot-2-off-the-shelf-quantization-py>`__
+          examples for more information.
 
 Let's take the `DS-CNN <../api_reference/akida_models_apis.html#ds-cnn>`__ model from our zoo that
 targets KWS task as an example:
@@ -223,6 +229,7 @@ the default per-axis quantization:
 
     quantizeml quantize -m model_keras.h5 -i 8 -w 4 -a 4 --per_tensor_activations
 
+.. note:: The quantize CLI is the same for Keras and ONNX models.
 
 config CLI
 ~~~~~~~~~~
@@ -244,6 +251,7 @@ option.
     accuracy or even model graph. This should be reserved to users deeply familiar with QuantizeML
     concepts.
 
+.. note:: This is only available for Keras models.
 
 check CLI
 ~~~~~~~~~
@@ -254,6 +262,8 @@ weight scales quantization or saturation in integer operations.
 .. code-block:: bash
 
     quantizeml check -m model_keras_i8_w8_a8.h5
+
+.. note:: This is only available for Keras models.
 
 insert_rescaling CLI
 ~~~~~~~~~~~~~~~~~~~~
@@ -269,8 +279,13 @@ a Rescaling layer at the beginning of a given model.
 
 where :math:`0.007843 = 1/127.5`.
 
+.. note:: This is only available for Keras models.
+
 Supported layer types
 ---------------------
+
+Keras support
+~~~~~~~~~~~~~
 
 The QuantizeML toolkit provides quantization of the following layer types which are standard Keras
 layers for most part and custom QuantizeML layers for some of them:
@@ -321,6 +336,47 @@ layers for most part and custom QuantizeML layers for some of them:
 - Others
     - `Rescaling <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedRescaling>`__
     - `Dropout <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDropout>`__
+
+ONNX support
+~~~~~~~~~~~~
+
+The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' and quantize towards:
+
+- `QuantizedConv2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2D>`__
+  when the pattern is:
+
+    - <Conv, Relu, GlobalAveragePool>
+    - <Conv, Relu, MaxPool>
+    - <Conv, GlobalAveragePool>
+    - <Conv, Relu>
+    - <Conv>
+
+- `QuantizedDepthwise2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2D>`__
+  when the pattern is:
+
+    - <DepthwiseConv, Relu>
+    - <DepthwiseConv>
+
+- `QuantizedDense1D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDense1D>`__
+  when the pattern is:
+
+    - <Flatten, Gemm, Relu>
+    - <Flatten, Gemm>
+    - <Gemm, Relu>
+    - <Gemm>
+
+- `QuantizedAdd <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedAdd>`__
+  when the pattern is:
+
+    - <Add>
+
+
+While Akida directly supports the most important models, it is not feasible to support all
+possibilities. There might occasionally have models which is nearly compatible with Akida but which
+will fail to quantize due to just a few incompatibilities. The `custom pattern feature
+<../api_reference/quantizeml_apis.html#quantizeml.onnx_support.quantization.custom_pattern_scope>`__
+allows to handle such models as show in `the dedicated advanced example
+<../examples/quantization/plot_3_custom_patterns.html#sphx-glr-examples-quantization-plot-3-custom-patterns-py>`__.
 
 ____
 
