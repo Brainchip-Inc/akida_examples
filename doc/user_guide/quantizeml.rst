@@ -44,7 +44,7 @@ only operations [#fn-1]_.
 Quantization flow
 -----------------
 
-The first step in the workflow is to train a model.The trained model is the starting point for the
+The first step in the workflow is to train a model. The trained model is the starting point for the
 quantization stage. Once it is established that the overall model configuration prior to
 quantization yields a satisfactory performance on the task, one can proceed with quantization.
 
@@ -372,10 +372,10 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 
 
 While Akida directly supports the most important models, it is not feasible to support all
-possibilities. There might occasionally have models which is nearly compatible with Akida but which
+possibilities. There might occasionally be models which are nearly compatible with Akida but which
 will fail to quantize due to just a few incompatibilities. The `custom pattern feature
 <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.quantization.custom_pattern_scope>`__
-allows to handle such models as show in `the dedicated advanced example
+allows to handle such models as illustrated in `the dedicated advanced example
 <../examples/quantization/plot_3_custom_patterns.html#sphx-glr-examples-quantization-plot-3-custom-patterns-py>`__.
 
 ____
