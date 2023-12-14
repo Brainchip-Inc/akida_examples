@@ -7,11 +7,14 @@ Changelog
   generator and `GitHub Pages <https://docs.github.com/pages>`_ documentation
   for rendering.
 
-| Please refer to:
-
-* `2.3.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.3.0-doc-1/>`_ for MetaTF previous version,
-* the repository `release area <https://github.com/Brainchip-Inc/akida_examples/releases>`_
+| Please refer to the repository `release area <https://github.com/Brainchip-Inc/akida_examples/releases>`_
   for the full changelog.
+
+.. dropdown:: MetaTF documentation previous versions
+   :animate: fade-in
+
+   * `2.4.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.4.0-doc-1/>`_
+   * `2.3.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.3.0-doc-1/>`_
 
 .. dropdown::
    :animate: fade-in
