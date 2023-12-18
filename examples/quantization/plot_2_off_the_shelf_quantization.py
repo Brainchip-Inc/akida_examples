@@ -183,13 +183,12 @@ def evaluate_onnx_model(model):
     outputs = sess.run(None, {model.graph.input[0].name: x_test})
     # The class with the highest score is what we choose as prediction
     predicted = np.squeeze(np.argmax(outputs[0], 1))
-    # Compute the model accuracy
-    accuracy = (predicted == labels_test).sum() / num_images
-    return accuracy
+    # Compute the number of valid predictions
+    return int((predicted == labels_test).sum())
 
 
-accuracy_floating = evaluate_onnx_model(model_onnx)
-print(f'Floating point model accuracy: {100 * accuracy_floating:.2f} %')
+correctly_classified_floating = evaluate_onnx_model(model_onnx)
+print(f'Floating point model accuracy: {correctly_classified_floating}/{num_images}.')
 
 
 ######################################################################
@@ -227,8 +226,8 @@ qparams = QuantizationParams(per_tensor_activations=True)
 model_quantized = quantize(model_onnx, qparams=qparams, num_samples=5)
 
 # Evaluate the quantized model performance
-accuracy = evaluate_onnx_model(model_quantized)
-print(f'Quantized model accuracy: {100 * accuracy:.2f} %')
+correctly_classified = evaluate_onnx_model(model_quantized)
+print(f'Quantized model accuracy: {correctly_classified_floating}/{num_images}.')
 
 ######################################################################
 # .. Note:: Once the model is quantized, the `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__

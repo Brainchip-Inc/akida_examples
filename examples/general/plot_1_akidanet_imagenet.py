@@ -124,8 +124,7 @@ print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
 
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 accuracy_keras = np.sum(np.equal(preds_keras, labels_test)) / num_images
-
-print(f"Keras accuracy: {accuracy_keras*100:.2f} %")
+print(f"Keras accuracy: {accuracy_keras*num_images:.0f}/{num_images}.")
 
 ######################################################################
 # 3. Conversion to Akida
@@ -161,7 +160,7 @@ start = timer()
 accuracy_akida = model_akida.evaluate(x_test, labels_test)
 end = timer()
 print(f'Inference on {num_images} images took {end-start:.2f} s.\n')
-print(f"Accuracy: {accuracy_akida*100:.2f} %")
+print(f"Accuracy: {accuracy_akida*num_images:.0f}/{num_images}.")
 
 # For non-regression purposes
 assert accuracy_akida >= 0.8
