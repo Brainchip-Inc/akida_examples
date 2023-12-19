@@ -635,17 +635,16 @@ Accuracy on the full ImageNet validation set is reported at the end.</p>
     <span class="n">outputs</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">x_test</span><span class="p">})</span>
     <span class="c1"># The class with the highest score is what we choose as prediction</span>
     <span class="n">predicted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="c1"># Compute the model accuracy</span>
-    <span class="n">accuracy</span> <span class="o">=</span> <span class="p">(</span><span class="n">predicted</span> <span class="o">==</span> <span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_images</span>
-    <span class="k">return</span> <span class="n">accuracy</span>
+    <span class="c1"># Compute the number of valid predictions</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="n">predicted</span> <span class="o">==</span> <span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 
 
 <span class="c1"># Evaluate over test dataset</span>
-<span class="n">accuracy_floating</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floating point model accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">accuracy_floating</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> %&#39;</span><span class="p">)</span>
+<span class="n">correctly_classified_floating</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floating point model accuracy: </span><span class="si">{</span><span class="n">correctly_classified_floating</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 100.00 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 10/10.
 </pre></div>
 </div>
 </section>
@@ -716,18 +715,18 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fcaa3aee040&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7fcaa3aee040&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fcaa3aee040&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7fcaa3aee040&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7fcaa3aee040&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7fcaa3a834c0&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7fcaa3a834c0&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fcaa3a83820&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7fcaa3a83820&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fcaa3a83820&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7fcaa3a83820&gt;)
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7fcaa3a83c10&gt;)
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7f722faee040&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7f722faee040&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7f722faee040&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7f722faee040&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7f722faee040&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7f722fa824c0&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7f722fa824c0&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7f722fa82820&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7f722fa82820&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7f722fa82820&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7f722fa82820&gt;)
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7f722fa82c10&gt;)
 </pre></div>
 </div>
 <p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">ReLU</span></code> operation on its own or
@@ -842,11 +841,11 @@ the GAP here does indeed follow one of the isolated ReLU ops).</p>
 </div>
 <p>The full model is now quantized successfully.
 At this point we can re-check its accuracy:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">accuracy</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">accuracy</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> %&#39;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Quantized model accuracy: 100.00 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Quantized model accuracy: 10/10.
 </pre></div>
 </div>
 </section>
@@ -990,8 +989,8 @@ place the smaller kernel weights eccentrically within the larger kernels.</p>
     <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 
 <span class="c1"># Evaluate quantized model performance</span>
-<span class="n">accuracy</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">accuracy</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> %&#39;</span><span class="p">)</span>
+<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
@@ -1002,7 +1001,7 @@ Kernel updated in resnetv17_stage3_conv3_fwd from 1x1 to 3x3.
 Kernel updated in resnetv17_stage3_conv0_fwd from 1x1 to 3x3.
 Kernel updated in resnetv17_stage4_conv3_fwd from 1x1 to 3x3.
 Kernel updated in resnetv17_stage4_conv0_fwd from 1x1 to 3x3.
-Quantized model accuracy: 100.00 %
+Quantized model accuracy: 10/10.
 </pre></div>
 </div>
 </section>
@@ -1060,7 +1059,7 @@ the input image prior to sending instead.</p>
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 38.194 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 39.531 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>

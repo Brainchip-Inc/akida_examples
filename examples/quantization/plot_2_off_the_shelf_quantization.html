@@ -649,16 +649,16 @@ is used for downloading and exporting models to ONNX.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Framework not specified. Using pt to export to ONNX.
 
 config.json:   0%|          | 0.00/69.8k [00:00&lt;?, ?B/s]
-config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 432kB/s]
-config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 429kB/s]
+config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 378kB/s]
+config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 377kB/s]
 
 model.safetensors:   0%|          | 0.00/14.2M [00:00&lt;?, ?B/s]
-model.safetensors:  74%|███████▍  | 10.5M/14.2M [00:01&lt;00:00, 6.28MB/s]
-model.safetensors: 100%|██████████| 14.2M/14.2M [00:01&lt;00:00, 7.44MB/s]
-model.safetensors: 100%|██████████| 14.2M/14.2M [00:01&lt;00:00, 7.14MB/s]
+model.safetensors:  74%|███████▍  | 10.5M/14.2M [00:04&lt;00:01, 2.62MB/s]
+model.safetensors: 100%|██████████| 14.2M/14.2M [00:04&lt;00:00, 3.47MB/s]
+model.safetensors: 100%|██████████| 14.2M/14.2M [00:04&lt;00:00, 3.24MB/s]
 
 preprocessor_config.json:   0%|          | 0.00/406 [00:00&lt;?, ?B/s]
-preprocessor_config.json: 100%|██████████| 406/406 [00:00&lt;00:00, 612kB/s]
+preprocessor_config.json: 100%|██████████| 406/406 [00:00&lt;00:00, 296kB/s]
 /usr/local/lib/python3.8/dist-packages/transformers/models/mobilenet_v2/feature_extraction_mobilenet_v2.py:28: FutureWarning: The class MobileNetV2FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use MobileNetV2ImageProcessor instead.
   warnings.warn(
 Using the export variant default. Available variants are:
@@ -1883,16 +1883,15 @@ their performances.</p>
     <span class="n">outputs</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">x_test</span><span class="p">})</span>
     <span class="c1"># The class with the highest score is what we choose as prediction</span>
     <span class="n">predicted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="c1"># Compute the model accuracy</span>
-    <span class="n">accuracy</span> <span class="o">=</span> <span class="p">(</span><span class="n">predicted</span> <span class="o">==</span> <span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_images</span>
-    <span class="k">return</span> <span class="n">accuracy</span>
+    <span class="c1"># Compute the number of valid predictions</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="n">predicted</span> <span class="o">==</span> <span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 
 
-<span class="n">accuracy_floating</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_onnx</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floating point model accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">accuracy_floating</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> %&#39;</span><span class="p">)</span>
+<span class="n">correctly_classified_floating</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_onnx</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floating point model accuracy: </span><span class="si">{</span><span class="n">correctly_classified_floating</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 100.00 %
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 10/10.
 </pre></div>
 </div>
 </section>
@@ -1950,12 +1949,12 @@ about quantization parameters.</p>
 <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model_onnx</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">qparams</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
 <span class="c1"># Evaluate the quantized model performance</span>
-<span class="n">accuracy</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">accuracy</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> %&#39;</span><span class="p">)</span>
+<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified_floating</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 5/5.0 samples
-Quantized model accuracy: 100.00 %
+Quantized model accuracy: 10/10.
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1964,7 +1963,7 @@ Quantized model accuracy: 100.00 %
 function must be used to retrieve a model in Akida format ready for inference. Please
 refer to the <a class="reference external" href="../general/plot_8_global_pytorch_workflow.html">PyTorch to Akida workflow</a> for further details.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 15.331 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 21.709 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-2-off-the-shelf-quantization-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/14135bb429c6b69940b3b3da0b5c2156/plot_2_off_the_shelf_quantization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_2_off_the_shelf_quantization.ipynb</span></code></a></p>

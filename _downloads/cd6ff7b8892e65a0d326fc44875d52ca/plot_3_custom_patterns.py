@@ -140,14 +140,13 @@ def evaluate_onnx_model(model):
     outputs = sess.run(None, {model.graph.input[0].name: x_test})
     # The class with the highest score is what we choose as prediction
     predicted = np.squeeze(np.argmax(outputs[0], 1))
-    # Compute the model accuracy
-    accuracy = (predicted == labels_test).sum() / num_images
-    return accuracy
+    # Compute the number of valid predictions
+    return int((predicted == labels_test).sum())
 
 
 # Evaluate over test dataset
-accuracy_floating = evaluate_onnx_model(onnx_model)
-print(f'Floating point model accuracy: {100 * accuracy_floating:.2f} %')
+correctly_classified_floating = evaluate_onnx_model(onnx_model)
+print(f'Floating point model accuracy: {correctly_classified_floating}/{num_images}.')
 
 ######################################################################
 # 2. Quantize
@@ -344,9 +343,8 @@ with custom_pattern_scope(quantization_pattern_map):
 # The full model is now quantized successfully.
 # At this point we can re-check its accuracy:
 
-accuracy = evaluate_onnx_model(model_quantized)
-print(f'Quantized model accuracy: {100 * accuracy:.2f} %')
-
+correctly_classified = evaluate_onnx_model(model_quantized)
+print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 
 ######################################################################
 # 3. Conversion
@@ -490,8 +488,8 @@ with custom_pattern_scope(quantization_pattern_map):
     model_quantized = quantize(onnx_model, samples=x_test)
 
 # Evaluate quantized model performance
-accuracy = evaluate_onnx_model(model_quantized)
-print(f'Quantized model accuracy: {100 * accuracy:.2f} %')
+correctly_classified = evaluate_onnx_model(model_quantized)
+print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 
 ######################################################################
 # 3.2. Successful Conversion
