@@ -76,4 +76,5 @@ rect rgb(171, 170, 166)
     [...]-->>+2.4.0: Ubuntu 18.04 (EOL April 2023)
     [...]->>+Today: Ubuntu 20.04, 22.04
 end
+%%{init:{'theme':'base'}}%%
 ```
