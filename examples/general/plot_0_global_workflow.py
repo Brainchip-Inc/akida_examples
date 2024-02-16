@@ -134,8 +134,7 @@ print('Test accuracy:', score[1])
 #           corresponding neural layers. The new weights are computed according to this folding
 #           operation.
 
-from quantizeml.models import quantize
-from quantizeml.layers import QuantizationParams
+from quantizeml.models import quantize, QuantizationParams
 
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits=8)
 model_quantized = quantize(model_keras, qparams=qparams)

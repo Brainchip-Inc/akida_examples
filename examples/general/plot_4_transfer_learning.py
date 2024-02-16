@@ -178,8 +178,7 @@ model_keras.summary()
 # In order to get the best possible model, calibration samples should be provided to the model.
 # Using here samples from the train set.
 
-from quantizeml.models import quantize
-from quantizeml.layers import QuantizationParams
+from quantizeml.models import quantize, QuantizationParams
 
 train_batches = train_ds.map(format_example).batch(BATCH_SIZE)
 

@@ -99,13 +99,6 @@ QuantizeML API
         :members:
         :show-inheritance:
 
-    Quantization parameters
-    -----------------------
-    .. autoclass:: quantizeml.layers.QuantizationParams
-        :members:
-    .. autofunction:: quantizeml.layers.get_quantization_params
-    .. autofunction:: quantizeml.layers.quantization
-
     Calibration
     -----------
     .. autoclass::  quantizeml.layers.OutputObserver
@@ -139,6 +132,13 @@ QuantizeML API
     .. autofunction:: quantizeml.models.dump_config
     .. autofunction:: quantizeml.models.check_quantization
     .. autofunction:: quantizeml.models.record_quantization_variables
+
+    Quantization parameters
+    -----------------------
+    .. autoclass:: quantizeml.models.QuantizationParams
+        :members:
+    .. autofunction:: quantizeml.models.get_quantization_params
+    .. autofunction:: quantizeml.models.quantization
 
     Calibration
     -----------

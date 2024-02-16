@@ -212,8 +212,7 @@ model_keras.summary()
 # to `Advanced QuantizeML tutorial <../quantization/plot_0_advanced_quantizeml.html>`__.
 
 # Using QuantizeML to perform quantization
-from quantizeml.models import quantize
-from quantizeml.layers import QuantizationParams
+from quantizeml.models import quantize, QuantizationParams
 
 # Define the quantization parameters.
 qparams = QuantizationParams(weight_bits=8, activation_bits=8)

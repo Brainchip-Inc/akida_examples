@@ -75,21 +75,21 @@ pipeline.
 The quantization scheme used by
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ can be configured
 using
-`QuantizationParams <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__.
+`QuantizationParams <../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams>`__.
 If none is given, an 8-bit configuration scheme will be selected.
 
 Here's an example for 8-bit quantization:
 
 .. code-block:: python
 
-    from quantizeml.layers import QuantizationParams
+    from quantizeml.models import QuantizationParams
     qparams8 = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits=8)
 
 Here's an example for 4-bit quantization (with first layer weights set to 8-bit):
 
 .. code-block:: python
 
-    from quantizeml.layers import QuantizationParams
+    from quantizeml.models import QuantizationParams
     qparams4 = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
 Note that quantizating the first weights to 8-bit helps preserving accuracy.

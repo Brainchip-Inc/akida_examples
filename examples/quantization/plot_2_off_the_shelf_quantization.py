@@ -218,8 +218,7 @@ print(f'Floating point model accuracy: {correctly_classified_floating}/{num_imag
 #    about quantization parameters.
 #
 
-from quantizeml.layers import QuantizationParams
-from quantizeml.models import quantize
+from quantizeml.models import quantize, QuantizationParams
 
 # Quantize with activations quantized per tensor
 qparams = QuantizationParams(per_tensor_activations=True)
