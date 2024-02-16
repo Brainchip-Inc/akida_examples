@@ -24,7 +24,7 @@ layers with quantized, integer only layers from `QuantizeML <../../user_guide/qu
 #
 # The first part in this section explains how to define a quantization scheme using
 # `QuantizationParams
-# <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__,
+# <../../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams>`__,
 # which defines a homogeneous scheme that applies to all layers, and the second part explains how to
 # fully customize the quantization scheme using a configuration file.
 #
@@ -36,9 +36,9 @@ layers with quantized, integer only layers from `QuantizeML <../../user_guide/qu
 # The easiest way to customize quantization is to use the ``qparams`` parameter of the `quantize
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`_ function. This is made
 # possible by creating a `QuantizationParams
-# <../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams>`__ object.
+# <../../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams>`__ object.
 
-from quantizeml.layers import QuantizationParams
+from quantizeml.models import QuantizationParams
 
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits=8,
                              per_tensor_activations=False, output_bits=8, buffer_bits=32)
@@ -93,8 +93,7 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 
 import keras
 import json
-from quantizeml.models import quantize, dump_config
-from quantizeml.layers import QuantizationParams
+from quantizeml.models import quantize, dump_config, QuantizationParams
 
 # Define an example model with few layers to keep what follows readable
 input = keras.layers.Input((28, 28, 3))

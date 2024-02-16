@@ -229,7 +229,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -237,6 +236,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#models">Models</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
 </ul>
@@ -517,14 +517,14 @@ layers with quantized, integer only layers from <a class="reference external" hr
 quantization such as per-axis or per-tensor, and the bitwidth used for inputs, outputs and
 weights.</p>
 <p>The first part in this section explains how to define a quantization scheme using
-<a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams">QuantizationParams</a>,
+<a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams">QuantizationParams</a>,
 which defines a homogeneous scheme that applies to all layers, and the second part explains how to
 fully customize the quantization scheme using a configuration file.</p>
 <section id="the-quantization-parameters">
 <h3>1.1. The quantization parameters<a class="headerlink" href="#the-quantization-parameters" title="Permalink to this headline"></a></h3>
 <p>The easiest way to customize quantization is to use the <code class="docutils literal notranslate"><span class="pre">qparams</span></code> parameter of the <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">quantize</a> function. This is made
-possible by creating a <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizationParams">QuantizationParams</a> object.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">QuantizationParams</span>
+possible by creating a <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams">QuantizationParams</a> object.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">QuantizationParams</span>
 
 <span class="n">qparams</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">(</span><span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">activation_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                              <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
@@ -580,8 +580,7 @@ rely on argument defaults to set non-specified values.</p>
 customize quantization.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">dump_config</span>
-<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">QuantizationParams</span>
+<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">dump_config</span><span class="p">,</span> <span class="n">QuantizationParams</span>
 
 <span class="c1"># Define an example model with few layers to keep what follows readable</span>
 <span class="nb">input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -602,24 +601,24 @@ customize quantization.</p>
 <span class="n">quantized_model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:37
-  63/1024 [&gt;.............................] - ETA: 0s  
- 126/1024 [==&gt;...........................] - ETA: 0s
- 188/1024 [====&gt;.........................] - ETA: 0s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:36
+  61/1024 [&gt;.............................] - ETA: 0s  
+ 125/1024 [==&gt;...........................] - ETA: 0s
+ 186/1024 [====&gt;.........................] - ETA: 0s
  250/1024 [======&gt;.......................] - ETA: 0s
- 313/1024 [========&gt;.....................] - ETA: 0s
- 376/1024 [==========&gt;...................] - ETA: 0s
- 438/1024 [===========&gt;..................] - ETA: 0s
- 501/1024 [=============&gt;................] - ETA: 0s
- 566/1024 [===============&gt;..............] - ETA: 0s
- 629/1024 [=================&gt;............] - ETA: 0s
- 693/1024 [===================&gt;..........] - ETA: 0s
- 755/1024 [=====================&gt;........] - ETA: 0s
- 817/1024 [======================&gt;.......] - ETA: 0s
- 881/1024 [========================&gt;.....] - ETA: 0s
- 944/1024 [==========================&gt;...] - ETA: 0s
-1006/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 801us/step
+ 314/1024 [========&gt;.....................] - ETA: 0s
+ 378/1024 [==========&gt;...................] - ETA: 0s
+ 441/1024 [===========&gt;..................] - ETA: 0s
+ 505/1024 [=============&gt;................] - ETA: 0s
+ 568/1024 [===============&gt;..............] - ETA: 0s
+ 632/1024 [=================&gt;............] - ETA: 0s
+ 695/1024 [===================&gt;..........] - ETA: 0s
+ 758/1024 [=====================&gt;........] - ETA: 0s
+ 820/1024 [=======================&gt;......] - ETA: 0s
+ 883/1024 [========================&gt;.....] - ETA: 0s
+ 946/1024 [==========================&gt;...] - ETA: 0s
+1007/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 802us/step
 Model: &quot;model_5&quot;
 _________________________________________________________________
  Layer (type)                Output Shape              Param #
@@ -743,24 +742,23 @@ quantized using the given configuration and the other layers will use what is pr
 <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">new_config</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:22
-  63/1024 [&gt;.............................] - ETA: 0s  
- 125/1024 [==&gt;...........................] - ETA: 0s
- 188/1024 [====&gt;.........................] - ETA: 0s
- 251/1024 [======&gt;.......................] - ETA: 0s
- 313/1024 [========&gt;.....................] - ETA: 0s
- 379/1024 [==========&gt;...................] - ETA: 0s
- 442/1024 [===========&gt;..................] - ETA: 0s
- 504/1024 [=============&gt;................] - ETA: 0s
- 567/1024 [===============&gt;..............] - ETA: 0s
- 631/1024 [=================&gt;............] - ETA: 0s
- 693/1024 [===================&gt;..........] - ETA: 0s
- 755/1024 [=====================&gt;........] - ETA: 0s
- 818/1024 [======================&gt;.......] - ETA: 0s
- 882/1024 [========================&gt;.....] - ETA: 0s
- 944/1024 [==========================&gt;...] - ETA: 0s
-1008/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 799us/step
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:21
+  65/1024 [&gt;.............................] - ETA: 0s  
+ 129/1024 [==&gt;...........................] - ETA: 0s
+ 192/1024 [====&gt;.........................] - ETA: 0s
+ 255/1024 [======&gt;.......................] - ETA: 0s
+ 322/1024 [========&gt;.....................] - ETA: 0s
+ 386/1024 [==========&gt;...................] - ETA: 0s
+ 450/1024 [============&gt;.................] - ETA: 0s
+ 514/1024 [==============&gt;...............] - ETA: 0s
+ 578/1024 [===============&gt;..............] - ETA: 0s
+ 643/1024 [=================&gt;............] - ETA: 0s
+ 707/1024 [===================&gt;..........] - ETA: 0s
+ 771/1024 [=====================&gt;........] - ETA: 0s
+ 835/1024 [=======================&gt;......] - ETA: 0s
+ 898/1024 [=========================&gt;....] - ETA: 0s
+ 963/1024 [===========================&gt;..] - ETA: 0s
+1024/1024 [==============================] - 1s 787us/step
 {
     &quot;dw_conv&quot;: {
         &quot;output_quantizer&quot;: {
@@ -865,7 +863,7 @@ that is made on the first batch of samples. The recommended value is 100.</p>
 <p>It is the number of iterations over the calibration samples. Increasing the value will allow for
 more updates of the <code class="docutils literal notranslate"><span class="pre">range_max</span></code> variables thanks to the momentum policy without requiring a huge
 amount of samples. The recommended value is 2.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.519 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.480 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-0-advanced-quantizeml-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/cd1062e93ddc7ea7bc6cf2b21b24d697/plot_0_advanced_quantizeml.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_0_advanced_quantizeml.ipynb</span></code></a></p>
