@@ -513,11 +513,10 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;recording&quot;</span><span class="p">,</span> <span class="s2">&quot;Recorder&quot;</span><span class="p">,</span> <span class="s2">&quot;TensorRecorder&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;FixedPointRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;QFloatRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;NonTrackVariable&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;recording&quot;</span><span class="p">,</span> <span class="s2">&quot;TensorRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;FixedPointRecorder&quot;</span><span class="p">,</span> <span class="s2">&quot;QFloatRecorder&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;NonTrackVariable&quot;</span><span class="p">,</span> <span class="s2">&quot;NonTrackFixedPointVariable&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 
@@ -546,14 +545,35 @@
             <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">RECORDING_ENV</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">NonTrackVariable</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;  A wrapper class for the temporary variables that should be tracked only during the call and</span>
+<span class="k">class</span> <span class="nc">BaseNonTrackVariable</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base interface class for temporary variables that should be tracked only during the call and</span>
 <span class="sd">        which does not require to be serialized within the layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">set_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">init_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<div class="viewcode-block" id="NonTrackVariable"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.NonTrackVariable">[docs]</a><span class="k">class</span> <span class="nc">NonTrackVariable</span><span class="p">(</span><span class="n">BaseNonTrackVariable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper class for the temporary Tensor variables that should be tracked only during the</span>
+<span class="sd">        call and which does not require to be serialized within the layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -577,6 +597,7 @@
 <span class="sd">                value of unknown shape. If True the shape of initial_value must be known.</span>
 <span class="sd">                Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                     <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
@@ -586,17 +607,79 @@
     <span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Reset internal var.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Recorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.Recorder">[docs]</a><span class="k">class</span> <span class="nc">Recorder</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class that exhibits a &#39;recording&#39; property.</span>
-
-<span class="sd">    All objects inheriting from this class share the same &#39;recording&#39; property.</span>
-
-<span class="sd">    The property cannot be set: its value is deduced from the RECORDING_ENABLED</span>
-<span class="sd">    environment variable.</span>
+<div class="viewcode-block" id="NonTrackFixedPointVariable"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.NonTrackFixedPointVariable">[docs]</a><span class="k">class</span> <span class="nc">NonTrackFixedPointVariable</span><span class="p">(</span><span class="n">BaseNonTrackVariable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper class for the temporary FixedPoint variables that should be tracked only during</span>
+<span class="sd">        the call and which does not require to be serialized within the layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span><span class="p">,</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">promote</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_value_bits</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">promote</span><span class="p">(</span><span class="n">target_value_bits</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_value_bits</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">target_value_bits</span><span class="p">)</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">set_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_value</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">new_value</span><span class="p">,</span> <span class="n">FixedPoint</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">new_value</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">new_value</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="n">new_value</span><span class="o">.</span><span class="n">value_bits</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">init_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_value</span><span class="p">,</span> <span class="n">validate_shape</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function that creates and initializes a variable, if it doesn&#39;t exist. This variable will</span>
+<span class="sd">            be integrated in the layer graph and tracked (but not within the main layer variables).</span>
+<span class="sd">            See pattern defined here: https://www.tensorflow.org/guide/function#creating_tfvariables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            init_value (FixedPoint): initial FixedPoint variable.</span>
+<span class="sd">            validate_shape (bool, optional): If False, allows the variable to be initialized with a</span>
+<span class="sd">                value of unknown shape. If True the shape of initial_value must be known.</span>
+<span class="sd">                Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">init_value</span><span class="p">,</span> <span class="n">FixedPoint</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                          <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s2">&quot;/frac_bits&quot;</span><span class="p">,</span>
+                                          <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="n">init_value</span><span class="o">.</span><span class="n">value_bits</span>
+
+    <span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Reset internal var.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TensorRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.TensorRecorder">[docs]</a><span class="k">class</span> <span class="nc">TensorRecorder</span><span class="p">(</span><span class="n">NonTrackVariable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class to store and retrieve a tf.Tensor extracted from a graph.</span>
+
+<span class="sd">    This is mainly used to recover FixedPoint alignment shift information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;record&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">recording</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -606,17 +689,7 @@
 <span class="sd">            bool: True if recording mode is enabled, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RECORDING_ENV</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="TensorRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.TensorRecorder">[docs]</a><span class="k">class</span> <span class="nc">TensorRecorder</span><span class="p">(</span><span class="n">Recorder</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class to store and retrieve a tf.Tensor extracted from a graph.</span>
-
-<span class="sd">    This is mainly used to recover FixedPoint alignment shift information.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -627,7 +700,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Record the values of the inputs if recording is True.</span>
 
 <span class="sd">        Args:</span>
@@ -636,31 +709,30 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            tf.Tensor: the inputs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_var</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recording</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Create a new variable to copy values from the graph</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
-                    <span class="n">inputs</span><span class="p">,</span>
-                    <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/record&quot;</span><span class="p">,</span>
-                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Store the new values</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_var</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="c1"># Store the new values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span></div>
 
 
-<div class="viewcode-block" id="FixedPointRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.FixedPointRecorder">[docs]</a><span class="k">class</span> <span class="nc">FixedPointRecorder</span><span class="p">(</span><span class="n">Recorder</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<div class="viewcode-block" id="FixedPointRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.FixedPointRecorder">[docs]</a><span class="k">class</span> <span class="nc">FixedPointRecorder</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class to store and retrieve a FixedPoint extracted from a graph.</span>
 
 <span class="sd">    This is mainly used to recover FixedPoint quantized weights.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;/&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;values/record&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;frac_bits/record&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;record&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -673,7 +745,11 @@
                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span><span class="p">,</span>
                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">recording</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">recording</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Record the values of the inputs if recording is True.</span>
 
 <span class="sd">        Args:</span>
@@ -684,20 +760,27 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recording</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span></div>
 
 
-<div class="viewcode-block" id="QFloatRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QFloatRecorder">[docs]</a><span class="k">class</span> <span class="nc">QFloatRecorder</span><span class="p">(</span><span class="n">Recorder</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<div class="viewcode-block" id="QFloatRecorder"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QFloatRecorder">[docs]</a><span class="k">class</span> <span class="nc">QFloatRecorder</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class to store and retrieve a QFloat extracted from a graph.</span>
 
 <span class="sd">    This is mainly used to recover QFloat quantized weights.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span> <span class="o">=</span> <span class="n">FixedPointRecorder</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span> <span class="o">=</span> <span class="n">FixedPointRecorder</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">scales_name</span> <span class="o">=</span> <span class="s2">&quot;scales/record&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">scales_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">scales_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="n">scales_name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -708,7 +791,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">QFloat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">recording</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="o">.</span><span class="n">recording</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Record the values of the inputs if recording is True.</span>
 
 <span class="sd">        Args:</span>
@@ -717,9 +804,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            :obj:`QFloat`: the inputs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recording</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fp</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scales</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span></div>
 </pre></div>
 

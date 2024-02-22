@@ -638,7 +638,7 @@
                 <span class="n">frac_bits</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
         <span class="c1"># Project float into fixed-point representation space</span>
         <span class="n">x_scaled</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pow2</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;quantize&quot;</span><span class="p">)</span>
-        <span class="c1"># Round or ceil to obtain integer values</span>
+        <span class="c1"># Round to obtain integer values</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">round_through</span><span class="p">(</span><span class="n">x_scaled</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">)</span></div>
 
@@ -768,21 +768,11 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            :obj:`FixedPoint`: the upscaled FixedPoint</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">value_bits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">value_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span>
         <span class="n">frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="n">assert_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">,</span>
                           <span class="sa">f</span><span class="s2">&quot;Cannot increase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> precision because the target precision &quot;</span>
                           <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">frac_bits</span><span class="si">}</span><span class="s2">) is lower than the current one (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-        <span class="c1"># Evaluate the shift to apply to reach the target precision</span>
-        <span class="n">shift</span> <span class="o">=</span> <span class="n">frac_bits</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span>
-        <span class="n">assert_less</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;Cannot upscale </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">frac_bits</span><span class="si">}</span><span class="s2"> fractional bits as it saturates its&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">value_bits</span><span class="si">}</span><span class="s2">-bit buffer.&quot;</span><span class="p">)</span>
-        <span class="c1"># Apply shift</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">pow2</span><span class="p">(</span><span class="n">shift</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upscale&quot;</span><span class="p">)</span>
-        <span class="c1"># return a new FixedPoint with the target precision and bitwidth</span>
-        <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">),</span> <span class="n">shift</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FixedPoint.expand"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.FixedPoint.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Expand the FixedPoint to the specified bitwidth</span>

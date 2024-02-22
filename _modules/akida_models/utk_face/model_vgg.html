@@ -519,7 +519,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;vgg_utk_face&quot;</span><span class="p">,</span> <span class="s2">&quot;vgg_utk_face_pretrained&quot;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
@@ -551,7 +551,7 @@
         <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
 
     <span class="c1"># Model version management</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">relu_activation</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">post_relu_gap</span><span class="p">,</span> <span class="n">relu_activation</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -603,10 +603,11 @@
                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv_4&#39;</span><span class="p">,</span>
                    <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
+                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;global_avg&#39;</span><span class="p">,</span>
+                   <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">,</span>
                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dropout_5&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;flatten&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                     <span class="n">units</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
@@ -637,12 +638,12 @@
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_iq8_wq2_aq2.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;e341d2d5e4655846ddc7aceff0d4e324cbfbcca16f3cfefc65e7b0863e4a23a3&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;06a892b9e831767537b1da937bbacf05825c7493b7a5a9ba46bea4900de0563a&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;06036da929d1606ed38ec7c76cf80f8e784cebcd3e5340dfcd7f25705f3c0bc2&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;3f9084c452ef006a16f10f2d124804b6db267f7a5149b735a9c383a9b00a4922&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7cd9e976913041ea0e0e730e31523c049c2d5e5b24f6d0379114af2042317b58&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;f1fc29e4ab0c1615902d0dd48afc6bad1f3bbf4b1a6a2e3642e5c2ee37208121&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;vgg&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

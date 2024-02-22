@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>quantizeml.layers.quantizers.quantizers &mdash; Akida Examples  documentation</title>
+  <title>akida_models.detection.widerface.data &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/sg_gallery.css" type="text/css" />
@@ -486,7 +486,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">quantizeml.layers.quantizers.quantizers</li>
+      <li class="breadcrumb-item active">akida_models.detection.widerface.data</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -495,10 +495,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for quantizeml.layers.quantizers.quantizers</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.detection.widerface.data</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2022 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2024 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -512,119 +512,106 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load Widerface dataset</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Quantizer&quot;</span><span class="p">,</span> <span class="s2">&quot;Dequantizer&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_widerface_dataset&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Layer</span>
 
-<span class="kn">from</span> <span class="nn">...tensors</span> <span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">QFloat</span>
-<span class="kn">from</span> <span class="nn">..recorders</span> <span class="kn">import</span> <span class="n">TensorRecorder</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tensorflow_datasets</span> <span class="k">as</span> <span class="nn">tfds</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">tfds</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">from</span> <span class="nn">..data_utils</span> <span class="kn">import</span> <span class="n">Coord</span><span class="p">,</span> <span class="n">get_dataset_length</span><span class="p">,</span> <span class="n">remove_empty_objects</span>
 
 
-<div class="viewcode-block" id="Quantizer"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.layers.Quantizer">[docs]</a><span class="k">class</span> <span class="nc">Quantizer</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The base class for all quantizers.</span>
-
-<span class="sd">    The bitwidth defines the number of quantization levels on which the</span>
-<span class="sd">    values will be quantized.</span>
-<span class="sd">    For a quantizer that accepts unsigned values, the maximum quantization</span>
-<span class="sd">    level is :math:`2 ^ {bitwidth} - 1`.</span>
-<span class="sd">    For a quantizer that accepts signed values, we lose one bit of precision to</span>
-<span class="sd">    store the sign.</span>
-<span class="sd">    When the quantizer is signed, the quantization interval is asymmetric around</span>
-<span class="sd">    zero (i.e range: :math:`[- 2 ^ {bitwidth - 1}, 2 ^ {bitwidth - 1} - 1]`).</span>
+<div class="viewcode-block" id="get_widerface_dataset"><a class="viewcode-back" href="../../../../api_reference/akida_models_apis.html#akida_models.detection.widerface.data.get_widerface_dataset">[docs]</a><span class="k">def</span> <span class="nf">get_widerface_dataset</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Loads wider_face dataset and builds a tf.dataset out of it.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        bitwidth (int): the quantization bitwidth.</span>
-<span class="sd">        signed (bool, optional): whether the quantizer expects signed values or unsigned.</span>
-<span class="sd">            Defaults to True.</span>
+<span class="sd">        data_path (str): path to the folder containing widerface tfrecords.</span>
+<span class="sd">        training (bool, optional): True to retrieve training data,</span>
+<span class="sd">            False for validation. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.dataset, int: the requested dataset (train or validation)</span>
+<span class="sd">            and the dataset size.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bitwidth</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">min_bitwidth</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bitwidth</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">bitwidth</span> <span class="o">&lt;</span> <span class="n">min_bitwidth</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Bitwidth should be an int &gt;= </span><span class="si">{</span><span class="n">min_bitwidth</span><span class="si">}</span><span class="s2">, currently </span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span> <span class="o">=</span> <span class="n">bitwidth</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="o">=</span> <span class="n">signed</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span> <span class="o">=</span> <span class="n">bitwidth</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="n">bitwidth</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">tfds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;To load wider_face dataset, tensorflow-datasets module must</span><span class="se">\</span>
+<span class="s2">        be installed.&quot;</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the config of the layer.</span>
+    <span class="n">write_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;tfds&#39;</span><span class="p">)</span>
+    <span class="n">download_and_prepare_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;download_config&#39;</span><span class="p">:</span> <span class="n">tfds</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">DownloadConfig</span><span class="p">(</span><span class="n">manual_dir</span><span class="o">=</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="p">}</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            dict: the config of the layer.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;bitwidth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span><span class="p">})</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;signed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+    <span class="n">tfrecords_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">write_dir</span><span class="p">,</span> <span class="s1">&#39;wider_face&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tfrecords_path</span><span class="p">):</span>
+        <span class="n">_check_zip_files</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+
+    <span class="n">split</span> <span class="o">=</span> <span class="s1">&#39;train&#39;</span> <span class="k">if</span> <span class="n">training</span> <span class="k">else</span> <span class="s1">&#39;validation&#39;</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">tfds</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+        <span class="s1">&#39;wider_face&#39;</span><span class="p">,</span>
+        <span class="n">data_dir</span><span class="o">=</span><span class="n">write_dir</span><span class="p">,</span>
+        <span class="n">split</span><span class="o">=</span><span class="n">split</span><span class="p">,</span>
+        <span class="n">shuffle_files</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
+        <span class="n">download_and_prepare_kwargs</span><span class="o">=</span><span class="n">download_and_prepare_kwargs</span>
+    <span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_is_valid_box</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">remove_empty_objects</span><span class="p">)</span>
+    <span class="n">len_dataset</span> <span class="o">=</span> <span class="n">get_dataset_length</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">len_dataset</span></div>
 
 
-<div class="viewcode-block" id="Dequantizer"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">Dequantizer</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Layer that allows to dequantize its inputs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">scales</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">frac_bits</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">def</span> <span class="nf">_is_valid_box</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+    <span class="n">h_img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">w_img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">image</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_build</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-            <span class="n">record_fb</span> <span class="o">=</span> <span class="n">record_scale</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="c1"># From Keras documentation, any variable creation taking place</span>
-            <span class="c1"># in call should be wrapped with tf.init_scope</span>
-            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QTensor</span><span class="p">):</span>
-                    <span class="n">record_fb</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/record_fb&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">):</span>
-                    <span class="n">record_scale</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/record_scale&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">record_fb</span><span class="p">,</span> <span class="n">record_scale</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;faces&#39;</span><span class="p">]</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]],</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Nothing to do</span>
-            <span class="k">return</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-            <span class="c1"># Manage single inputs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">_build</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-            <span class="k">return</span>
+    <span class="n">w_box</span> <span class="o">=</span> <span class="p">((</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]))</span> <span class="o">*</span> <span class="n">w_img</span>
+    <span class="n">h_box</span> <span class="o">=</span> <span class="p">((</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]))</span> <span class="o">*</span> <span class="n">h_img</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
-                <span class="n">frac_bits</span><span class="p">,</span> <span class="n">scales</span> <span class="o">=</span> <span class="n">_build</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
+    <span class="n">box_area</span> <span class="o">=</span> <span class="n">w_box</span> <span class="o">*</span> <span class="n">h_box</span>
+    <span class="n">img_area</span> <span class="o">=</span> <span class="n">w_img</span> <span class="o">*</span> <span class="n">h_img</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">box_area</span> <span class="o">&gt;=</span> <span class="n">img_area</span> <span class="o">/</span> <span class="mf">60.0</span>
 
-<div class="viewcode-block" id="Dequantizer.call"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert QTensor inputs to float.</span>
+    <span class="n">new_sample</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+        <span class="s1">&#39;objects&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>
+            <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            inputs (tf.Tensor or :obj:`QTensor`): the inputs tensor(s).</span>
+    <span class="k">return</span> <span class="n">new_sample</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            tf.Tensor: the dequantized tensor(s).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">dequantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">frac_bits_recorder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scales_recorder</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QTensor</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">frac_bits_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">frac_bits_recorder</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">frac_bits</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">scales_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">scales_recorder</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">x</span>
-
-        <span class="c1"># Build records</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_records</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-        <span class="c1"># Apply dequantizer</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">dequantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fb</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">fb</span><span class="p">,</span> <span class="n">scales</span> <span class="ow">in</span>
-                    <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)]</span>
-
-        <span class="k">return</span> <span class="n">dequantize</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span></div></div>
+<span class="k">def</span> <span class="nf">_check_zip_files</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+    <span class="n">zip_files</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;wider_face_split.zip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;WIDER_train.zip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;WIDER_val.zip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;WIDER_test.zip&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">zip_file</span> <span class="ow">in</span> <span class="n">zip_files</span><span class="p">:</span>
+        <span class="n">zip_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">zip_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">zip_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Zip file </span><span class="si">{</span><span class="n">zip_file</span><span class="si">}</span><span class="s2"> not found in the specified data_path. &quot;</span>
+                <span class="s2">&quot;Data can be downloaded at http://shuoyang1213.me/WIDERFACE/&quot;</span>
+            <span class="p">)</span>
 </pre></div>
 
            </div>

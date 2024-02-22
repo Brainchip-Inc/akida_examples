@@ -515,10 +515,10 @@
 <span class="sd">        &gt;&gt;&gt;  b1 = b &lt;&lt; b_shift</span>
 <span class="sd">        &gt;&gt;&gt;  intermediate_output = a1 + b1</span>
 <span class="sd">        &gt;&gt;&gt;  for i, shift in enumerate(output_shift):</span>
-<span class="sd">        &gt;&gt;&gt;      if shift&gt;0:</span>
-<span class="sd">        &gt;&gt;&gt;          output[i] = intermediate_output[i] &lt;&lt; shift</span>
+<span class="sd">        &gt;&gt;&gt;      if shift &gt; 0:</span>
+<span class="sd">        &gt;&gt;&gt;          output[i] = intermediate_output[i] &lt;&lt; |shift|</span>
 <span class="sd">        &gt;&gt;&gt;      else:</span>
-<span class="sd">        &gt;&gt;&gt;          output[i] = intermediate_output[i] &gt;&gt; shift</span>
+<span class="sd">        &gt;&gt;&gt;          output[i] = intermediate_output[i] &gt;&gt; |shift|</span>
 
 <span class="sd">    Note that output values will be saturated on the range that can be</span>
 <span class="sd">    represented with output_bits.</span>
@@ -526,16 +526,18 @@
 <span class="sd">    Args:</span>
 <span class="sd">        output_bits (int, optional): output bitwidth. Defaults to 4.</span>
 <span class="sd">        buffer_bits (int, optional): internal bitwidth. Defaults to 32.</span>
+<span class="sd">        post_op_buffer_bits (int, optional): internal bitwidth for post operations. Defaults to 32.</span>
 <span class="sd">        name (str, optional): name of the layer. Defaults to empty string.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">post_op_buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">params</span> <span class="o">=</span> <span class="n">LayerParams</span><span class="p">(</span>
                 <span class="n">LayerType</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="p">{</span>
                     <span class="s2">&quot;output_bits&quot;</span><span class="p">:</span> <span class="n">output_bits</span><span class="p">,</span>
                     <span class="s2">&quot;buffer_bits&quot;</span><span class="p">:</span> <span class="n">buffer_bits</span><span class="p">,</span>
+                    <span class="s2">&quot;post_op_buffer_bits&quot;</span><span class="p">:</span> <span class="n">post_op_buffer_bits</span><span class="p">,</span>
                 <span class="p">})</span>
             <span class="c1"># Call parent constructor to initialize C++ bindings</span>
             <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>

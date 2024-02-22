@@ -516,14 +516,13 @@
 <span class="sd">Processing tools for YOLO data handling.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BoundingBox&quot;</span><span class="p">,</span> <span class="s2">&quot;load_image&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_image&quot;</span><span class="p">,</span> <span class="s2">&quot;decode_output&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;parse_voc_annotations&quot;</span><span class="p">,</span> <span class="s2">&quot;parse_widerface_annotations&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BoundingBox&quot;</span><span class="p">,</span> <span class="s2">&quot;load_image&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_image&quot;</span><span class="p">,</span> <span class="s2">&quot;decode_output&quot;</span><span class="p">,</span> <span class="s2">&quot;create_yolo_targets&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">et</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">.data_utils</span> <span class="kn">import</span> <span class="n">Coord</span>
+<span class="kn">from</span> <span class="nn">.box_utils</span> <span class="kn">import</span> <span class="n">compute_center_wh</span><span class="p">,</span> <span class="n">compute_center_xy</span>
 
 
 <div class="viewcode-block" id="BoundingBox"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.BoundingBox">[docs]</a><span class="k">class</span> <span class="nc">BoundingBox</span><span class="p">:</span>
@@ -554,8 +553,7 @@
 <span class="sd">            Index of the label as an integer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
-
+            <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span></div>
 
 <div class="viewcode-block" id="BoundingBox.get_score"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.BoundingBox.get_score">[docs]</a>    <span class="k">def</span> <span class="nf">get_score</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -582,14 +580,18 @@
         <span class="k">def</span> <span class="nf">_interval_overlap</span><span class="p">(</span><span class="n">interval_1</span><span class="p">,</span> <span class="n">interval_2</span><span class="p">):</span>
             <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">interval_1</span>
             <span class="n">x3</span><span class="p">,</span> <span class="n">x4</span> <span class="o">=</span> <span class="n">interval_2</span>
+            <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">,</span> <span class="n">x4</span> <span class="o">=</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                              <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                              <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                              <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="n">x3</span> <span class="o">&lt;</span> <span class="n">x1</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">x4</span> <span class="o">&lt;</span> <span class="n">x1</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="mi">0</span>
-                <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x4</span><span class="p">)</span> <span class="o">-</span> <span class="n">x1</span>
+                    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x4</span><span class="p">)</span> <span class="o">-</span> <span class="n">x1</span>
             <span class="k">if</span> <span class="n">x2</span> <span class="o">&lt;</span> <span class="n">x3</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mi">0</span>
-            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x4</span><span class="p">)</span> <span class="o">-</span> <span class="n">x3</span>
+                <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">x4</span><span class="p">)</span> <span class="o">-</span> <span class="n">x3</span>
 
         <span class="n">intersect_w</span> <span class="o">=</span> <span class="n">_interval_overlap</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span><span class="p">],</span>
                                         <span class="p">[</span><span class="n">other</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">x2</span><span class="p">])</span>
@@ -603,7 +605,7 @@
 
         <span class="n">union</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">*</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">w2</span> <span class="o">*</span> <span class="n">h2</span> <span class="o">-</span> <span class="n">intersect</span>
 
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">intersect</span><span class="p">)</span> <span class="o">/</span> <span class="n">union</span></div></div>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">intersect</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">union</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="load_image"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image">[docs]</a><span class="k">def</span> <span class="nf">load_image</span><span class="p">(</span><span class="n">image_path</span><span class="p">):</span>
@@ -636,6 +638,78 @@
                                       <span class="n">method</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">ResizeMethod</span><span class="o">.</span><span class="n">BILINEAR</span><span class="p">,</span>
                                       <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="create_yolo_targets"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.create_yolo_targets">[docs]</a><span class="k">def</span> <span class="nf">create_yolo_targets</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span>
+                        <span class="n">grid_size</span><span class="p">,</span>
+                        <span class="n">num_classes</span><span class="p">,</span>
+                        <span class="n">anchors</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates YOLO-style targets tensor for the given objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        objects (dict): Dictionary containing information about objects in the image,</span>
+<span class="sd">            including labels and bounding boxes.</span>
+<span class="sd">        grid_size (tuple): The grid size used for YOLO target generation.</span>
+<span class="sd">        num_classes (int): The number of classes.</span>
+<span class="sd">        anchors (list): List of anchor boxes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        targets (tf.Tensor): The targets output tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_update_bbox_target</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">indices_bbox</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">i</span><span class="p">]]</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensor_scatter_nd_update</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">indices_bbox</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="p">[</span><span class="n">bbox</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">targets</span>
+
+    <span class="k">def</span> <span class="nf">_update_confidence_target</span><span class="p">(</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="n">indices_confidence</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensor_scatter_nd_update</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">indices_confidence</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_update_class_target</span><span class="p">(</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">obj_indx</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="n">indices_class</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="mi">5</span> <span class="o">+</span> <span class="n">obj_indx</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)]]</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensor_scatter_nd_update</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">indices_class</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">])</span>
+
+    <span class="n">n_anchors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span>
+    <span class="n">anchors</span> <span class="o">=</span> <span class="p">[</span><span class="n">BoundingBox</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">anchors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">anchors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">))]</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_anchors</span><span class="p">,</span> <span class="mi">5</span> <span class="o">+</span> <span class="n">num_classes</span><span class="p">),</span>
+                       <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">num_objects</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_objects</span><span class="p">):</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]:</span>
+            <span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span> <span class="o">=</span> <span class="n">compute_center_xy</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+
+            <span class="c1"># find grid index where the center is located</span>
+            <span class="n">grid_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">center_x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            <span class="n">grid_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">center_y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">grid_x</span> <span class="o">&lt;</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">grid_y</span> <span class="o">&lt;</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">obj_indx</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+
+                <span class="n">center_w</span><span class="p">,</span> <span class="n">center_h</span> <span class="o">=</span> <span class="n">compute_center_wh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+
+                <span class="n">box</span> <span class="o">=</span> <span class="p">[</span><span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span><span class="p">,</span> <span class="n">center_w</span><span class="p">,</span> <span class="n">center_h</span><span class="p">]</span>
+                <span class="c1"># find the anchor that best predicts this box</span>
+                <span class="n">best_anchor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">max_iou</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+                <span class="n">shifted_box</span> <span class="o">=</span> <span class="n">BoundingBox</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">center_w</span><span class="p">,</span> <span class="n">center_h</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">anchor_id</span><span class="p">,</span> <span class="n">anchor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">anchors</span><span class="p">):</span>
+                    <span class="n">iou</span> <span class="o">=</span> <span class="n">shifted_box</span><span class="o">.</span><span class="n">iou</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">max_iou</span> <span class="o">&lt;</span> <span class="n">iou</span><span class="p">:</span>
+                        <span class="n">best_anchor</span> <span class="o">=</span> <span class="n">anchor_id</span>
+                        <span class="n">max_iou</span> <span class="o">=</span> <span class="n">iou</span>
+
+                <span class="n">targets</span> <span class="o">=</span> <span class="n">_update_bbox_target</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="n">_update_confidence_target</span><span class="p">(</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="n">_update_class_target</span><span class="p">(</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="n">best_anchor</span><span class="p">,</span> <span class="n">obj_indx</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">targets</span></div>
 
 
 <div class="viewcode-block" id="decode_output"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output">[docs]</a><span class="k">def</span> <span class="nf">decode_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span>
@@ -729,162 +803,6 @@
     <span class="n">boxes</span> <span class="o">=</span> <span class="p">[</span><span class="n">box</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span> <span class="k">if</span> <span class="n">box</span><span class="o">.</span><span class="n">get_score</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">obj_threshold</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">boxes</span></div>
-
-
-<div class="viewcode-block" id="parse_voc_annotations"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_voc_annotations">[docs]</a><span class="k">def</span> <span class="nf">parse_voc_annotations</span><span class="p">(</span><span class="n">gt_folder</span><span class="p">,</span> <span class="n">image_folder</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Loads PASCAL-VOC data.</span>
-
-<span class="sd">    Data is loaded using the groundtruth informations and stored in a</span>
-<span class="sd">    dictionary.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        gt_folder (str): path to the folder containing ground truth files</span>
-<span class="sd">        image_folder (str): path to the folder containing the images</span>
-<span class="sd">        file_path (str): file containing the list of files to parse</span>
-<span class="sd">        labels (list): list of labels of interest</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        dict: a dictionnary containing all data present in the ground truth file</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">_build_list</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Builds a list of file names from a text file path.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            file_path (string): path of the file containing the names</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            list: list of file names</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">file_list</span>
-
-    <span class="n">file_list</span> <span class="o">=</span> <span class="n">_build_list</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
-
-    <span class="n">all_data</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
-        <span class="n">tree</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gt_folder</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.xml&quot;</span><span class="p">)</span>
-
-        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">[]}</span>
-
-        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">iter</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">in</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;image_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">image_folder</span><span class="p">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;size&#39;</span> <span class="ow">in</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="s1">&#39;width&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="s1">&#39;height&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="n">height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="s1">&#39;depth&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="n">depth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;image_shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s1">&#39;object&#39;</span> <span class="ow">in</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                <span class="n">box</span> <span class="o">=</span> <span class="p">{}</span>
-
-                <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="s1">&#39;difficult&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">box</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-                            <span class="k">break</span>
-
-                    <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="n">box</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">text</span>
-
-                        <span class="k">if</span> <span class="n">box</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
-                            <span class="n">box</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-                            <span class="k">break</span>
-
-                    <span class="k">if</span> <span class="s1">&#39;bndbox&#39;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
-                            <span class="k">if</span> <span class="s1">&#39;xmin&#39;</span> <span class="ow">in</span> <span class="n">dim</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                                <span class="n">box</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">text</span><span class="p">)))</span>
-                            <span class="k">if</span> <span class="s1">&#39;ymin&#39;</span> <span class="ow">in</span> <span class="n">dim</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                                <span class="n">box</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">text</span><span class="p">)))</span>
-                            <span class="k">if</span> <span class="s1">&#39;xmax&#39;</span> <span class="ow">in</span> <span class="n">dim</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                                <span class="n">box</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">text</span><span class="p">)))</span>
-                            <span class="k">if</span> <span class="s1">&#39;ymax&#39;</span> <span class="ow">in</span> <span class="n">dim</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span>
-                                <span class="n">box</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">text</span><span class="p">)))</span>
-
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">box</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
-                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">all_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">all_data</span></div>
-
-
-<div class="viewcode-block" id="parse_widerface_annotations"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_widerface_annotations">[docs]</a><span class="k">def</span> <span class="nf">parse_widerface_annotations</span><span class="p">(</span><span class="n">gt_file</span><span class="p">,</span> <span class="n">image_folder</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Loads WiderFace data.</span>
-
-<span class="sd">    Data is loaded using the groundtruth informations and stored in a</span>
-<span class="sd">    dictionary.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        gt_file (str): path to the ground truth file</span>
-<span class="sd">        image_folder (str): path to the directory containing the images</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        dict: a dictionnary containing all data present in the ground truth file</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">_is_valid_box</span><span class="p">(</span><span class="n">w_box</span><span class="p">,</span> <span class="n">h_box</span><span class="p">,</span> <span class="n">w_img</span><span class="p">,</span> <span class="n">h_img</span><span class="p">):</span>
-        <span class="n">box_area</span> <span class="o">=</span> <span class="n">w_box</span> <span class="o">*</span> <span class="n">h_box</span>
-        <span class="n">img_area</span> <span class="o">=</span> <span class="n">w_img</span> <span class="o">*</span> <span class="n">h_img</span>
-        <span class="k">return</span> <span class="n">box_area</span> <span class="o">&gt;=</span> <span class="n">img_area</span> <span class="o">/</span> <span class="mf">60.0</span>
-
-    <span class="n">all_data</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">gt_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">file_path</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
-            <span class="n">full_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">image_folder</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">full_file_path</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not a file path: </span><span class="si">{</span><span class="n">full_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="n">image</span> <span class="o">=</span> <span class="n">load_image</span><span class="p">(</span><span class="n">full_file_path</span><span class="p">)</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-
-            <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;image_path&quot;</span><span class="p">:</span> <span class="n">full_file_path</span><span class="p">,</span>
-                <span class="s2">&quot;image_shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span>
-                <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">[]</span>
-            <span class="p">}</span>
-
-            <span class="n">nb_boxes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">nb_boxes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_boxes</span><span class="p">):</span>
-                <span class="n">annotation</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-
-                <span class="n">x1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">y1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="n">w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-                <span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-
-                <span class="k">if</span> <span class="n">_is_valid_box</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                    <span class="n">box</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="s2">&quot;x1&quot;</span><span class="p">:</span> <span class="n">x1</span><span class="p">,</span>
-                        <span class="s2">&quot;y1&quot;</span><span class="p">:</span> <span class="n">y1</span><span class="p">,</span>
-                        <span class="s2">&quot;x2&quot;</span><span class="p">:</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span>
-                        <span class="s2">&quot;y2&quot;</span><span class="p">:</span> <span class="n">y1</span> <span class="o">+</span> <span class="n">h</span><span class="p">,</span>
-                        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;face&quot;</span>
-                    <span class="p">}</span>
-                    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">all_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">all_data</span></div>
 </pre></div>
 
            </div>

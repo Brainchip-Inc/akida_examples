@@ -527,6 +527,7 @@
 
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.data_utils</span> <span class="kn">import</span> <span class="n">Coord</span>
 
 
 <span class="k">def</span> <span class="nf">_iou</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">centroids</span><span class="p">):</span>
@@ -592,12 +593,12 @@
         <span class="n">prev_assignments</span> <span class="o">=</span> <span class="n">assignments</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="generate_anchors"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.generate_anchors.generate_anchors">[docs]</a><span class="k">def</span> <span class="nf">generate_anchors</span><span class="p">(</span><span class="n">annotations_data</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">grid_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)):</span>
+<div class="viewcode-block" id="generate_anchors"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.generate_anchors.generate_anchors">[docs]</a><span class="k">def</span> <span class="nf">generate_anchors</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">grid_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Creates anchors by clustering dimensions of the ground truth boxes</span>
 <span class="sd">    from the training dataset.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        annotations_data (dict): dictionnary of preprocessed VOC data</span>
+<span class="sd">        dataset (tf.Dataset): dataset used to generate anchors</span>
 <span class="sd">        num_anchors (int, optional): number of anchors</span>
 <span class="sd">        grid_size (tuple, optional): size of the YOLO grid</span>
 
@@ -606,14 +607,19 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">annotation_dims</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="c1"># run k_mean to find the anchors</span>
-    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">annotations_data</span><span class="p">:</span>
-        <span class="n">cell_w</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image_shape&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">cell_h</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image_shape&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">image_height</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">]:</span>
-            <span class="n">relative_w</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">cell_w</span>
-            <span class="n">relative_h</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">cell_h</span>
+        <span class="n">cell_w</span> <span class="o">=</span> <span class="n">image_width</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">cell_h</span> <span class="o">=</span> <span class="n">image_height</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">][</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="c1"># Tensorflow box (ymin/height, xmin/width, ymax/height, xmax/width)</span>
+            <span class="n">relative_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_width</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">cell_w</span>
+            <span class="n">relative_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_height</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">cell_h</span>
             <span class="n">annotation_dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">(</span><span class="n">relative_w</span><span class="p">,</span> <span class="n">relative_h</span><span class="p">))))</span>
 
     <span class="n">annotation_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">annotation_dims</span><span class="p">)</span>

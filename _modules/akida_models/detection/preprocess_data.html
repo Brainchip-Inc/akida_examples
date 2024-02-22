@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida.layers.depthwise_conv2d &mdash; Akida Examples  documentation</title>
+  <title>akida_models.detection.preprocess_data &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -486,7 +486,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">akida.layers.depthwise_conv2d</li>
+      <li class="breadcrumb-item active">akida_models.detection.preprocess_data</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -495,80 +495,161 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida.layers.depthwise_conv2d</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Padding</span><span class="p">,</span> <span class="n">PoolType</span><span class="p">)</span>
+  <h1>Source code for akida_models.detection.preprocess_data</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="c1"># Copyright 2024 Brainchip Holdings Ltd.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#    http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Apply transformations on images and labels</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;preprocess_dataset&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="DepthwiseConv2D"><a class="viewcode-back" href="../../../api_reference/akida_apis.html#akida.DepthwiseConv2D">[docs]</a><span class="k">class</span> <span class="nc">DepthwiseConv2D</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This represents a depthwise convolutional layer.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-<span class="sd">    This is like a standard convolution, except it acts on each input channel separately.</span>
-<span class="sd">    There is a single filter per input channel, so weights shape is (X, Y, F).</span>
-<span class="sd">    Being the result of a quantized operation, it is possible to apply some shifts to adjust the</span>
-<span class="sd">    inputs/outputs scales to the equivalent operation performed on floats, while maintaining a</span>
-<span class="sd">    limited usage of bits and performing the operations on integer values.</span>
+<span class="kn">from</span> <span class="nn">.data_augmentation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">augment_sample</span><span class="p">,</span>
+                                <span class="n">init_random_vars</span><span class="p">,</span>
+                                <span class="n">resize_image</span><span class="p">,</span>
+                                <span class="n">fix_obj_position_and_size</span><span class="p">)</span>
 
-<span class="sd">    Note: this layer applies a real convolution, and not a cross-correlation. It can optionally</span>
-<span class="sd">    apply a step-wise ReLU activation to its outputs.</span>
-<span class="sd">    The layer expects a 4D tensor whose first dimension is the sample index as input.</span>
 
-<span class="sd">    It returns a 4D tensor whose first dimension is the sample index and the last dimension is the</span>
-<span class="sd">    number of convolution filters, so the same as input channels.</span>
-<span class="sd">    The order of the input spatial dimensions is preserved, but their value may change according to</span>
-<span class="sd">    the convolution and pooling parameters.</span>
+<span class="k">def</span> <span class="nf">_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">):</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">objects</span>
+
+
+<span class="k">def</span> <span class="nf">_to_numpy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">):</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">objects</span>
+
+
+<span class="k">def</span> <span class="nf">_to_absolute_coord</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">boxes</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_to_relative_coord</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">boxes</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Preprocesses an image and its associated objects.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        kernel_size (int): Integer representing the spatial dimensions of the depthwise kernel.</span>
-<span class="sd">        kernel_stride (int, optional): Integer representing the spatial convolution stride.</span>
-<span class="sd">            Defaults to 1.</span>
-<span class="sd">        padding (:obj:`Padding`, optional): type of convolution. Defaults to Padding.Same.</span>
-<span class="sd">        pool_type (:obj:`PoolType`, optional): pooling type (NoPooling, or Max). Defaults to</span>
-<span class="sd">            PoolType.NoPooling.</span>
-<span class="sd">        pool_size (int, optional): Integer representing the window size over which to take the</span>
-<span class="sd">            maximum. Defaults to -1.</span>
-<span class="sd">        pool_stride (int, optional): Integer representing the pooling stride dimensions. A value of</span>
-<span class="sd">            -1 means same as pool_size. Defaults to -1.</span>
-<span class="sd">        output_bits (int, optional): output bitwidth. Defaults to 8.</span>
-<span class="sd">        buffer_bits (int, optional): buffer bitwidth. Defaults to 28.</span>
-<span class="sd">        post_op_buffer_bits (int, optional): internal bitwidth for post operations. Defaults to 32.</span>
-<span class="sd">        activation (bool, optional): enable or disable relu activation function. Defaults to True.</span>
-<span class="sd">        name (str, optional): name of the layer. Defaults to empty string.</span>
+<span class="sd">        image (np.ndarray): the input image as a NumPy array.</span>
+<span class="sd">        objects (dict): dictionary containing information about objects in the image,</span>
+<span class="sd">            including labels and bounding boxes.</span>
+<span class="sd">        aug_pipe (iaa.Augmenter): the augmentation pipeline.</span>
+<span class="sd">        labels (list): list of labels of interest.</span>
+<span class="sd">        input_shape (tuple): the desired input shape for the image.</span>
+<span class="sd">        training (bool): enable training in the augmentation pipeline.</span>
 
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray, dict: processed image and objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">_to_numpy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">kernel_size</span><span class="p">,</span>
-                 <span class="n">kernel_stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">padding</span><span class="o">=</span><span class="n">Padding</span><span class="o">.</span><span class="n">Same</span><span class="p">,</span>
-                 <span class="n">pool_type</span><span class="o">=</span><span class="n">PoolType</span><span class="o">.</span><span class="n">NoPooling</span><span class="p">,</span>
-                 <span class="n">pool_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">pool_stride</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                 <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
-                 <span class="n">post_op_buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">params</span> <span class="o">=</span> <span class="n">LayerParams</span><span class="p">(</span>
-                <span class="n">LayerType</span><span class="o">.</span><span class="n">DepthwiseConv2D</span><span class="p">,</span> <span class="p">{</span>
-                    <span class="s2">&quot;kernel_size&quot;</span><span class="p">:</span> <span class="n">kernel_size</span><span class="p">,</span>
-                    <span class="s2">&quot;kernel_stride&quot;</span><span class="p">:</span> <span class="n">kernel_stride</span><span class="p">,</span>
-                    <span class="s2">&quot;padding&quot;</span><span class="p">:</span> <span class="n">padding</span><span class="p">,</span>
-                    <span class="s2">&quot;pool_type&quot;</span><span class="p">:</span> <span class="n">pool_type</span><span class="p">,</span>
-                    <span class="s2">&quot;pool_size&quot;</span><span class="p">:</span> <span class="n">pool_size</span><span class="p">,</span>
-                    <span class="s2">&quot;pool_stride&quot;</span><span class="p">:</span> <span class="n">pool_stride</span><span class="p">,</span>
-                    <span class="s2">&quot;output_bits&quot;</span><span class="p">:</span> <span class="n">output_bits</span><span class="p">,</span>
-                    <span class="s2">&quot;buffer_bits&quot;</span><span class="p">:</span> <span class="n">buffer_bits</span><span class="p">,</span>
-                    <span class="s2">&quot;post_op_buffer_bits&quot;</span><span class="p">:</span> <span class="n">post_op_buffer_bits</span><span class="p">,</span>
-                    <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">activation</span>
-                <span class="p">})</span>
-            <span class="c1"># Call parent constructor to initialize C++ bindings</span>
-            <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>
-            <span class="c1"># specified in pybind documentation</span>
-            <span class="n">Layer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-            <span class="bp">self</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">raise</span></div>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Transform bbox coordinates to absolute so they are compatible with imgaug</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_to_absolute_coord</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span> <span class="o">=</span> <span class="n">init_random_vars</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
+        <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">augment_sample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">)</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">fix_obj_position_and_size</span><span class="p">(</span>
+        <span class="n">objects</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">flip</span><span class="p">)</span>
+
+    <span class="c1"># Transform bbox coordinates back to relative</span>
+    <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_to_relative_coord</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">objects</span>
+
+
+<div class="viewcode-block" id="preprocess_dataset"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.preprocess_data.preprocess_dataset">[docs]</a><span class="k">def</span> <span class="nf">preprocess_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span>
+                       <span class="n">input_shape</span><span class="p">,</span>
+                       <span class="n">grid_size</span><span class="p">,</span>
+                       <span class="n">labels</span><span class="p">,</span>
+                       <span class="n">batch_size</span><span class="p">,</span>
+                       <span class="n">aug_pipe</span><span class="p">,</span>
+                       <span class="n">create_targets_fn</span><span class="p">,</span>
+                       <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">buffer_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                       <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                       <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Preprocesses the input dataset by applying the necessary image and label transformations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dataset (tf.data.Dataset): The input dataset.</span>
+<span class="sd">        input_shape (tuple): The desired input shape for the image.</span>
+<span class="sd">        grid_size (tuple): The grid size used for YOLO target generation.</span>
+<span class="sd">        labels (list[str]): List of class labels.</span>
+<span class="sd">        batch_size (int): Batch size for the preprocessed dataset.</span>
+<span class="sd">        aug_pipe (iaa.Augmenter): The augmentation pipeline.</span>
+<span class="sd">        create_targets_fn (callable): Function for creating target labels.</span>
+<span class="sd">            It should accept the following parameters: objects, grid_size, num_classes</span>
+<span class="sd">            and others arguments such as anchors.</span>
+<span class="sd">        training (bool, optional): Flag indicating whether the dataset is</span>
+<span class="sd">                for training or not. Defaults to True.</span>
+<span class="sd">        buffer_size (int, optional): Buffer size for shuffling. Default to 1000.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dataset (tf.data.Dataset): The preprocessed dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">preprocess_sample</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_apply_transformation</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+            <span class="n">objects</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="n">bbox</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+            <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+
+        <span class="n">image</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">py_function</span><span class="p">(</span><span class="n">_apply_transformation</span><span class="p">,</span>
+                                            <span class="n">inp</span><span class="o">=</span><span class="p">[</span><span class="n">sample</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span>
+                                                 <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">][</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span>
+                                                 <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]],</span>
+                                            <span class="n">Tout</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">])</span>
+
+        <span class="c1"># Set the shape of the image to avoid unknown shape errors</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">objects</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="n">bbox</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">create_targets_fn</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">targets</span>
+
+    <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">preprocess_sample</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">repeat</span><span class="p">()</span>
+                          <span class="o">.</span><span class="n">prefetch</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">preprocess_sample</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dataset</span></div>
 </pre></div>
 
            </div>

@@ -522,7 +522,7 @@
                           <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Conv3D</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span>
 <span class="kn">from</span> <span class="nn">keras.initializers</span> <span class="kn">import</span> <span class="n">TruncatedNormal</span>
-<span class="kn">from</span> <span class="nn">tensorflow_addons.layers</span> <span class="kn">import</span> <span class="n">GELU</span><span class="p">,</span> <span class="n">GroupNormalization</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Attention</span><span class="p">,</span> <span class="n">LayerMadNormalization</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
                                <span class="n">ExtractToken</span><span class="p">)</span>
@@ -800,7 +800,7 @@
     <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;LN&#39;</span><span class="p">:</span>
         <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">LayerNormalization</span>
     <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;GN1&#39;</span><span class="p">:</span>
-        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">GroupNormalization</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">GroupNormalization</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;BN&#39;</span><span class="p">:</span>
         <span class="n">norm_funct</span> <span class="o">=</span> <span class="n">BatchNormalization</span>
     <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;LMN&#39;</span><span class="p">:</span>
@@ -1202,6 +1202,39 @@
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_pw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">class</span> <span class="nc">GELU</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian Error Linear Unit.</span>
+
+<span class="sd">    A smoother version of ReLU generally used</span>
+<span class="sd">    in the BERT or BERT architecture based models.</span>
+<span class="sd">    Original paper: https://arxiv.org/abs/1606.08415</span>
+
+<span class="sd">    Input shape:</span>
+<span class="sd">        Arbitrary. Use the keyword argument `input_shape`</span>
+<span class="sd">        (tuple of integers, does not include the samples axis)</span>
+<span class="sd">        when using this layer as the first layer in a model.</span>
+
+<span class="sd">    Output shape:</span>
+<span class="sd">        Same shape as the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">approximate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approximate</span> <span class="o">=</span> <span class="n">approximate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports_masking</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">approximate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approximate</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;approximate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">approximate</span><span class="p">}</span>
+        <span class="n">base_config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">base_config</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">input_shape</span>
 </pre></div>
 
            </div>

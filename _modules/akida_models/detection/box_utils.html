@@ -516,10 +516,13 @@
 <span class="sd">This module provides some utils to handle boxes and calculate the jaccard overlap score.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;xywh_to_xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;xyxy_to_xywh&quot;</span><span class="p">,</span> <span class="s2">&quot;compute_overlap&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;xywh_to_xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;xyxy_to_xywh&quot;</span><span class="p">,</span> <span class="s2">&quot;compute_center_xy&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;compute_center_wh&quot;</span><span class="p">,</span> <span class="s2">&quot;compute_overlap&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.data_utils</span> <span class="kn">import</span> <span class="n">Coord</span>
 
 
 <div class="viewcode-block" id="xywh_to_xyxy"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.box_utils.xywh_to_xyxy">[docs]</a><span class="k">def</span> <span class="nf">xywh_to_xyxy</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
@@ -562,6 +565,42 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">xy</span><span class="p">,</span> <span class="n">wh</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">xy</span><span class="p">,</span> <span class="n">wh</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_center_xy"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.box_utils.compute_center_xy">[docs]</a><span class="k">def</span> <span class="nf">compute_center_xy</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the center coordinates (x, y) of a bounding box relative to the grid.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bbox (tf.Tensor): Bounding box coordinates (ymin, xmin, ymax, xmax).</span>
+<span class="sd">        grid_size (tuple): The grid size in the format (h, w).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the center coordinates (center_x, center_y).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">center_x</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">])</span>
+    <span class="n">center_x</span> <span class="o">=</span> <span class="n">center_x</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">center_y</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">])</span>
+    <span class="n">center_y</span> <span class="o">=</span> <span class="n">center_y</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">center_x</span><span class="p">,</span> <span class="n">center_y</span></div>
+
+
+<div class="viewcode-block" id="compute_center_wh"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.box_utils.compute_center_wh">[docs]</a><span class="k">def</span> <span class="nf">compute_center_wh</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the width and height of a bounding box relative to a grid.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bbox (tf.Tensor): Bounding box coordinates (ymin, xmin, ymax, xmax).</span>
+<span class="sd">        grid_size (tuple): The grid size in the format (h, w).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: The width and height of the bounding box.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">center_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">])</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">center_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">])</span> <span class="o">*</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">center_w</span><span class="p">,</span> <span class="n">center_h</span></div>
 
 
 <div class="viewcode-block" id="compute_overlap"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.box_utils.compute_overlap">[docs]</a><span class="k">def</span> <span class="nf">compute_overlap</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;element_wise&quot;</span><span class="p">,</span> <span class="n">box_format</span><span class="o">=</span><span class="s2">&quot;xywh&quot;</span><span class="p">):</span>

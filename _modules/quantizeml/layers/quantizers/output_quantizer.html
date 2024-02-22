@@ -540,16 +540,24 @@
 <span class="sd">            corresponding to the last axis (&#39;per-axis&#39;). Defaults to &#39;per-tensor&#39;.</span>
 <span class="sd">        scale_bits: (int, optional): the bitwidth to use when quantizing output scales.</span>
 <span class="sd">            Defaults to 8.</span>
+<span class="sd">        buffer_bitwidth: (int, optional): buffer bitwidth value. Defaults to 32.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span> <span class="n">scale_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">bitwidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                 <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span>
+                 <span class="n">scale_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                 <span class="n">buffer_bitwidth</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bitwidth</span><span class="p">,</span> <span class="n">signed</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span> <span class="s2">&quot;per-axis&quot;</span><span class="p">]):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only support reduction &#39;per-tensor&#39; or &#39;per-axis&#39;. Given </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scale_bits</span> <span class="o">=</span> <span class="n">scale_bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="n">buffer_bitwidth</span>
         <span class="c1"># Add object that will store the shift values.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/shift&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OutputQuantizer.build"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the layer.</span>
@@ -613,20 +621,24 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_bits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> receives QFloat inputs: the scale_bits parameter&quot;</span>
                                  <span class="s2">&quot; needs to be specified.&quot;</span><span class="p">)</span>
+            <span class="n">inputs_value_bits</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">value_bits</span>
             <span class="c1"># Apply cross layer equalization rescaling</span>
             <span class="n">rescaled_inputs</span> <span class="o">=</span> <span class="n">QFloat</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">scales</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rescaling_rate</span><span class="p">)</span>
+            <span class="n">rescaled_inputs</span> <span class="o">=</span> <span class="n">rescaled_inputs</span><span class="o">.</span><span class="n">promote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span><span class="p">)</span>
             <span class="n">inputs</span><span class="p">,</span> <span class="n">qscales</span> <span class="o">=</span> <span class="n">rescaled_inputs</span><span class="o">.</span><span class="n">to_fixed_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_bits</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;qscales&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># From Keras documentation, any variable creation taking place in call</span>
                 <span class="c1"># should be wrapped with tf.init_scope</span>
                 <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">qscales</span> <span class="o">=</span> <span class="n">FixedPointRecorder</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">qscales</span> <span class="o">=</span> <span class="n">FixedPointRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/qscales&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">qscales</span><span class="p">(</span><span class="n">qscales</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs_value_bits</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span>
 
-        <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Quantizing a </span><span class="si">{</span><span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span><span class="si">}</span><span class="s2">-bit QTensor to &quot;</span>\
+        <span class="k">if</span> <span class="n">inputs_value_bits</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Quantizing a </span><span class="si">{</span><span class="n">inputs_value_bits</span><span class="si">}</span><span class="s2">-bit QTensor to &quot;</span>\
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="si">}</span><span class="s2">-bit is pointless.&quot;</span>
-            <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">inputs_value_bits</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; Use a promotion instead.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -646,6 +658,7 @@
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;scale_bits&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_bits</span><span class="p">})</span>
         <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;axis&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">})</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;buffer_bitwidth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span></div></div>
 </pre></div>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.centernet.centernet_batch_generator &mdash; Akida Examples  documentation</title>
+  <title>akida_models.detection.data_utils &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -486,7 +486,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">akida_models.centernet.centernet_batch_generator</li>
+      <li class="breadcrumb-item active">akida_models.detection.data_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -495,10 +495,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.centernet.centernet_batch_generator</h1><div class="highlight"><pre>
+  <h1>Source code for akida_models.detection.data_utils</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2023 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2024 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -513,312 +513,57 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Data generator for CenterNet training</span>
+<span class="sd">Utils for VOC and Widerface datasets.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BatchCenternetGenerator&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Coord&quot;</span><span class="p">,</span> <span class="s2">&quot;remove_empty_objects&quot;</span><span class="p">,</span> <span class="s2">&quot;get_dataset_length&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">imgaug</span> <span class="kn">import</span> <span class="n">augmenters</span> <span class="k">as</span> <span class="n">iaa</span>
-
-<span class="kn">from</span> <span class="nn">..detection.batch_generator</span> <span class="kn">import</span> <span class="n">BatchGenerator</span>
 
 
-<div class="viewcode-block" id="BatchCenternetGenerator"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet.centernet_batch_generator.BatchCenternetGenerator">[docs]</a><span class="k">class</span> <span class="nc">BatchCenternetGenerator</span><span class="p">(</span><span class="n">BatchGenerator</span><span class="p">):</span>
+<div class="viewcode-block" id="Coord"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_utils.Coord">[docs]</a><span class="k">class</span> <span class="nc">Coord</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Data generator used for the training process</span>
+<span class="sd">    Static class representing bounding box coordinates.</span>
+
+<span class="sd">    These values align with the TensorFlow Datasets (tfds) bounding box format.</span>
+<span class="sd">    In tfds, the &quot;bbox&quot; feature is formatted as :</span>
+<span class="sd">    tfds.features.BBox(ymin / height, xmin / width, ymax / height, xmax / width).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">build_aug_pipeline</span><span class="p">():</span>
-        <span class="c1"># augmentors by https://github.com/aleju/imgaug</span>
-        <span class="k">def</span> <span class="nf">sometimes</span><span class="p">(</span><span class="n">aug</span><span class="p">):</span> <span class="k">return</span> <span class="n">iaa</span><span class="o">.</span><span class="n">Sometimes</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">aug</span><span class="p">)</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="mi">2</span></div>
 
-        <span class="c1"># All augmenters with per_channel=0.5 will sample one value per</span>
-        <span class="c1"># image in 50% of all cases. In all other cases they will sample new</span>
-        <span class="c1"># values per channel.</span>
-        <span class="k">return</span> <span class="n">iaa</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="c1"># apply the following augmenters to most images</span>
-                <span class="n">sometimes</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">()),</span>
-                <span class="n">sometimes</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Cutout</span><span class="p">(</span><span class="n">nb_iterations</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">))),</span>
-                <span class="c1"># execute 0 to 5 of the following (less important) augmenters</span>
-                <span class="c1"># per image. Don&#39;t execute all of them, as that would often be</span>
-                <span class="c1"># way too strong</span>
-                <span class="n">iaa</span><span class="o">.</span><span class="n">SomeOf</span><span class="p">(</span>
-                    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                    <span class="p">[</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span>
-                            <span class="c1"># blur images with a sigma between 0 and 3.0</span>
-                            <span class="n">iaa</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)),</span>
-                            <span class="c1"># blur image using local means (kernel sizes between 2 and 7)</span>
-                            <span class="n">iaa</span><span class="o">.</span><span class="n">AverageBlur</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">)),</span>
-                            <span class="c1"># blur image using local medians (kernel sizes between 3 and 11)</span>
-                            <span class="n">iaa</span><span class="o">.</span><span class="n">MedianBlur</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">)),</span>
-                        <span class="p">]),</span>
-                        <span class="c1"># sharpen images</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">Sharpen</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">lightness</span><span class="o">=</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)),</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">LinearContrast</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="n">per_channel</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">AdditiveGaussianNoise</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="mi">255</span><span class="p">),</span> <span class="n">per_channel</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-                        <span class="c1"># randomly remove up to 10% of the pixels</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span><span class="n">iaa</span><span class="o">.</span><span class="n">Dropout</span><span class="p">((</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">per_channel</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-                                   <span class="n">iaa</span><span class="o">.</span><span class="n">CoarseDropout</span><span class="p">((</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span> <span class="n">size_percent</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)]),</span>
-                        <span class="c1"># change brightness of images</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">Add</span><span class="p">((</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">per_channel</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">Multiply</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span> <span class="n">per_channel</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-                        <span class="n">iaa</span><span class="o">.</span><span class="n">OneOf</span><span class="p">([</span>
-                            <span class="n">iaa</span><span class="o">.</span><span class="n">pillike</span><span class="o">.</span><span class="n">Equalize</span><span class="p">(),</span>
-                            <span class="n">iaa</span><span class="o">.</span><span class="n">pillike</span><span class="o">.</span><span class="n">Autocontrast</span><span class="p">()</span>
-                        <span class="p">])</span>
-                    <span class="p">],</span> <span class="n">random_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="p">],</span>
-            <span class="n">random_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
-        <span class="n">lower_bound</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span>
-        <span class="n">upper_bound</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span>
+<div class="viewcode-block" id="remove_empty_objects"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_utils.remove_empty_objects">[docs]</a><span class="k">def</span> <span class="nf">remove_empty_objects</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove samples with empty objects.</span>
 
-        <span class="k">if</span> <span class="n">upper_bound</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_length</span><span class="p">:</span>
-            <span class="n">upper_bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_length</span>
-            <span class="n">lower_bound</span> <span class="o">=</span> <span class="n">upper_bound</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span>
+<span class="sd">    Args:</span>
+<span class="sd">        sample (dict): A dictionary representing a sample with object information.</span>
+<span class="sd">            {&#39;image&#39;, &#39;objects&#39;: {&#39;bbox&#39;, &#39;label&#39;}}.</span>
 
-        <span class="n">instance_count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Tensor: A boolean tensor indicating whether the sample has non-empty objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_empty</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_all</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">][</span><span class="s1">&#39;bbox&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">is_empty</span><span class="p">)</span></div>
 
-        <span class="n">N</span> <span class="o">=</span> <span class="n">upper_bound</span> <span class="o">-</span> <span class="n">lower_bound</span>
-        <span class="n">x_batch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-        <span class="n">y_batch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)))</span>
 
-        <span class="k">for</span> <span class="n">train_instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">lower_bound</span><span class="p">:</span><span class="n">upper_bound</span><span class="p">]:</span>
-            <span class="c1"># augment input image and fix object&#39;s position and size</span>
-            <span class="n">img</span><span class="p">,</span> <span class="n">all_objs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_image</span><span class="p">(</span><span class="n">train_instance</span><span class="p">,</span> <span class="n">jitter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_jitter</span><span class="p">)</span>
+<div class="viewcode-block" id="get_dataset_length"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_utils.get_dataset_length">[docs]</a><span class="k">def</span> <span class="nf">get_dataset_length</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the length of a TF dataset.</span>
 
-            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">all_objs</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">:</span>
-                    <span class="c1"># find center</span>
-                    <span class="n">center_x</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">])</span>
-                    <span class="c1"># express it in output size</span>
-                    <span class="n">center_x</span> <span class="o">=</span> <span class="n">center_x</span> <span class="o">/</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">center_y</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">])</span>
-                    <span class="n">center_y</span> <span class="o">=</span> <span class="n">center_y</span> <span class="o">/</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset (tf.data.Dataset): A TF dataset containing elements.</span>
 
-                    <span class="n">grid_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center_x</span><span class="p">))</span>
-                    <span class="n">grid_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center_y</span><span class="p">))</span>
-
-                    <span class="k">if</span> <span class="n">grid_x</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">grid_y</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                        <span class="n">obj_indx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
-                        <span class="n">scale_box_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">])</span> <span class="o">/</span> \
-                            <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                        <span class="n">scale_box_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
-                            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-                        <span class="c1"># get the center point and use a gaussian kernel as the target</span>
-                        <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gaussian_radius</span><span class="p">([</span><span class="n">scale_box_h</span><span class="p">,</span> <span class="n">scale_box_w</span><span class="p">],</span> <span class="n">min_overlap</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
-
-                        <span class="c1"># check that the radius is positive</span>
-                        <span class="n">radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">radius</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-                        <span class="n">heatmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)))</span>
-                        <span class="n">heatmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gaussian_target</span><span class="p">(</span>
-                            <span class="n">heatmap</span><span class="p">,</span> <span class="p">[</span><span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">],</span> <span class="n">obj_indx</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
-
-                        <span class="c1"># assign ground truth to y_batch</span>
-                        <span class="n">y_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">heatmap</span>
-                        <span class="n">y_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_box_w</span>
-                        <span class="n">y_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_box_h</span>
-                        <span class="n">y_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_x</span> <span class="o">-</span> <span class="n">grid_x</span>
-                        <span class="n">y_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_y</span> <span class="o">-</span> <span class="n">grid_y</span>
-
-            <span class="c1"># assign input image to x_batch</span>
-            <span class="n">x_batch</span><span class="p">[</span><span class="n">instance_count</span><span class="p">]</span> <span class="o">=</span> <span class="n">img</span>
-
-            <span class="c1"># increase instance counter in current batch</span>
-            <span class="n">instance_count</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="k">return</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_gaussian2D</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">epsilon</span><span class="p">()):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate 2D gaussian kernel.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            radius (int): Radius of gaussian kernel.</span>
-<span class="sd">            sigma (int, optional): Sigma of gaussian function. Defaults to 1.</span>
-<span class="sd">            eps (float, optional): Epsilon value. Defaults to 1e-7.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            np.array: Gaussian kernel with a ``(2 * radius + 1) * (2 * radius + 1)`` shape.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">))</span>
-        <span class="c1"># Clamp smaller values to zero</span>
-        <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">eps</span> <span class="o">*</span> <span class="n">h</span><span class="o">.</span><span class="n">max</span><span class="p">())]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="n">h</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_gen_gaussian_target</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">obj_idx</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate 2D gaussian heatmap.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            heatmap (np.array): Input heatmap, the gaussian kernel will cover on it and maintain</span>
-<span class="sd">                the max value.</span>
-<span class="sd">            center (list[int]): Coordinates of gaussian kernel&#39;s center.</span>
-<span class="sd">            obj_idx (int): The class index for the center point.</span>
-<span class="sd">            radius (int): Radius of gaussian kernel.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            out_heatmap (np.array): Updated heatmap covered by gaussian kernel.</span>
-
-<span class="sd">        Note:</span>
-<span class="sd">            Taken from pytorch</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">diameter</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">gaussian_kernel</span> <span class="o">=</span> <span class="n">BatchCenternetGenerator</span><span class="o">.</span><span class="n">_gaussian2D</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">diameter</span> <span class="o">/</span> <span class="mi">6</span><span class="p">)</span>
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">center</span>
-        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
-
-        <span class="c1"># Find the smallest value so that if the point is near the edge we don&#39;t end outside</span>
-        <span class="c1"># (e.g. x = 3 and radius is 10, then we go from the x-3 to x+10)</span>
-        <span class="n">left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="p">])</span>
-        <span class="n">right</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">width</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-        <span class="n">top</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="n">radius</span><span class="p">])</span>
-        <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">height</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-
-        <span class="c1"># Compare the gaussian kernel to the heatmap (in case there&#39;s already a point of</span>
-        <span class="c1"># interest there) and keep the max value</span>
-        <span class="n">flattened_kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">gaussian_kernel</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-        <span class="c1"># Range the dimensions</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">d0</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">d1</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">):</span>
-                <span class="n">heatmap</span><span class="p">[</span><span class="n">d1</span><span class="p">,</span> <span class="n">d0</span><span class="p">,</span> <span class="n">obj_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">flattened_kernel</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">heatmap</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_gaussian_radius</span><span class="p">(</span><span class="n">det_size</span><span class="p">,</span> <span class="n">min_overlap</span><span class="p">):</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Generate 2D gaussian radius.</span>
-
-<span class="sd">        This function is modified from the `official github repo</span>
-<span class="sd">        &lt;https://github.com/princeton-vl/CornerNet-Lite/blob/master/core/sample/</span>
-<span class="sd">        utils.py#L65&gt;`_.</span>
-
-<span class="sd">        Given ``min_overlap``, radius could computed by a quadratic equation</span>
-<span class="sd">        according to Vieta&#39;s formulas.</span>
-
-<span class="sd">        There are 3 cases for computing gaussian radius, details are following:</span>
-
-<span class="sd">        - Case 1: one corner is inside the gt box and the other is outside.</span>
-
-<span class="sd">        .. code:: text</span>
-
-<span class="sd">            |&lt;   width   &gt;|</span>
-
-<span class="sd">            lt-+----------+         -</span>
-<span class="sd">            |  |          |         ^</span>
-<span class="sd">            +--x----------+--+</span>
-<span class="sd">            |  |          |  |</span>
-<span class="sd">            |  |          |  |    height</span>
-<span class="sd">            |  | overlap  |  |</span>
-<span class="sd">            |  |          |  |</span>
-<span class="sd">            |  |          |  |      v</span>
-<span class="sd">            +--+---------br--+      -</span>
-<span class="sd">            |          |  |</span>
-<span class="sd">            +----------+--x</span>
-
-<span class="sd">        To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
-
-<span class="sd">        .. math::</span>
-<span class="sd">            \cfrac{(w-r)*(h-r)}{w*h+(w+h)r-r^2} \ge {iou} \quad\Rightarrow\quad</span>
-<span class="sd">            {r^2-(w+h)r+\cfrac{1-iou}{1+iou}*w*h} \ge 0 \\</span>
-<span class="sd">            {a} = 1,\quad{b} = {-(w+h)},\quad{c} = {\cfrac{1-iou}{1+iou}*w*h}</span>
-<span class="sd">            {r} \le \cfrac{-b-\sqrt{b^2-4*a*c}}{2*a}</span>
-
-<span class="sd">        - Case 2: both two corners are inside the gt box.</span>
-
-<span class="sd">        .. code:: text</span>
-
-<span class="sd">            |&lt;   width   &gt;|</span>
-
-<span class="sd">            lt-+----------+         -</span>
-<span class="sd">            |  |          |         ^</span>
-<span class="sd">            +--x-------+  |</span>
-<span class="sd">            |  |       |  |</span>
-<span class="sd">            |  |overlap|  |       height</span>
-<span class="sd">            |  |       |  |</span>
-<span class="sd">            |  +-------x--+</span>
-<span class="sd">            |          |  |         v</span>
-<span class="sd">            +----------+-br         -</span>
-
-<span class="sd">        To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
-
-<span class="sd">        .. math::</span>
-<span class="sd">            \cfrac{(w-2*r)*(h-2*r)}{w*h} \ge {iou} \quad\Rightarrow\quad</span>
-<span class="sd">            {4r^2-2(w+h)r+(1-iou)*w*h} \ge 0 \\</span>
-<span class="sd">            {a} = 4,\quad {b} = {-2(w+h)},\quad {c} = {(1-iou)*w*h}</span>
-<span class="sd">            {r} \le \cfrac{-b-\sqrt{b^2-4*a*c}}{2*a}</span>
-
-<span class="sd">        - Case 3: both two corners are outside the gt box.</span>
-
-<span class="sd">        .. code:: text</span>
-
-<span class="sd">            |&lt;   width   &gt;|</span>
-
-<span class="sd">            x--+----------------+</span>
-<span class="sd">            |  |                |</span>
-<span class="sd">            +-lt-------------+  |   -</span>
-<span class="sd">            |  |             |  |   ^</span>
-<span class="sd">            |  |             |  |</span>
-<span class="sd">            |  |   overlap   |  | height</span>
-<span class="sd">            |  |             |  |</span>
-<span class="sd">            |  |             |  |   v</span>
-<span class="sd">            |  +------------br--+   -</span>
-<span class="sd">            |                |  |</span>
-<span class="sd">            +----------------+--x</span>
-
-<span class="sd">        To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
-
-<span class="sd">        .. math::</span>
-<span class="sd">            \cfrac{w*h}{(w+2*r)*(h+2*r)} \ge {iou} \quad\Rightarrow\quad</span>
-<span class="sd">            {4*iou*r^2+2*iou*(w+h)r+(iou-1)*w*h} \le 0 \\</span>
-<span class="sd">            {a} = {4*iou},\quad {b} = {2*iou*(w+h)},\quad {c} = {(iou-1)*w*h} \\</span>
-<span class="sd">            {r} \le \cfrac{-b+\sqrt{b^2-4*a*c}}{2*a}</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            det_size (list[int]): Shape of object.</span>
-<span class="sd">            min_overlap (float): Min IoU with ground truth for boxes generated by</span>
-<span class="sd">                keypoints inside the gaussian kernel.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            radius (int): Radius of gaussian kernel.</span>
-
-<span class="sd">        Notes:</span>
-<span class="sd">            Explanation of figure: ``lt`` and ``br`` indicates the left-top and bottom-right</span>
-<span class="sd">            corner of ground truth box. ``x`` indicates the generated corner at the limited</span>
-<span class="sd">            position when ``radius=r``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">det_size</span>
-
-        <span class="n">a1</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">b1</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
-        <span class="n">c1</span> <span class="o">=</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">min_overlap</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">min_overlap</span><span class="p">)</span>
-        <span class="n">sq1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">c1</span><span class="p">)</span>
-        <span class="n">r1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b1</span> <span class="o">-</span> <span class="n">sq1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a1</span><span class="p">)</span>
-
-        <span class="n">a2</span> <span class="o">=</span> <span class="mi">4</span>
-        <span class="n">b2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
-        <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">min_overlap</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
-        <span class="n">sq2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b2</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">c2</span><span class="p">)</span>
-        <span class="n">r2</span> <span class="o">=</span> <span class="p">(</span><span class="n">b2</span> <span class="o">-</span> <span class="n">sq2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a2</span><span class="p">)</span>
-
-        <span class="n">a3</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">min_overlap</span>
-        <span class="n">b3</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">min_overlap</span> <span class="o">*</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
-        <span class="n">c3</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_overlap</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
-        <span class="n">sq3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b3</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a3</span> <span class="o">*</span> <span class="n">c3</span><span class="p">)</span>
-        <span class="n">r3</span> <span class="o">=</span> <span class="p">(</span><span class="n">b3</span> <span class="o">+</span> <span class="n">sq3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a3</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span><span class="p">])</span></div>
+<span class="sd">    Returns:</span>
+<span class="sd">        int: The number of elements in the dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">count</span></div>
 </pre></div>
 
            </div>
