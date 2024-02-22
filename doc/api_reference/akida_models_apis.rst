@@ -133,6 +133,29 @@ Akida models API
     .. autofunction:: akida_models.yolo_base
     .. autofunction:: akida_models.yolo_widerface_pretrained
     .. autofunction:: akida_models.yolo_voc_pretrained
+    
+    Detection data
+    ~~~~~~~~~~~~~~
+
+    VOC
+    ***
+    .. autofunction:: akida_models.detection.voc.data.get_voc_dataset
+    
+    Widerface
+    *********
+    .. autofunction:: akida_models.detection.widerface.data.get_widerface_dataset
+    
+    Preprocessing
+    *************
+    .. autofunction:: akida_models.detection.preprocess_data.preprocess_dataset
+
+    
+    Utils
+    *****
+    .. autofunction:: akida_models.detection.data_utils.remove_empty_objects
+    .. autofunction:: akida_models.detection.data_utils.get_dataset_length
+    .. autoclass:: akida_models.detection.data_utils.Coord
+        :members:
 
     YOLO Toolkit
     ~~~~~~~~~~~~
@@ -142,11 +165,17 @@ Akida models API
     .. autofunction:: akida_models.detection.processing.load_image
     .. autofunction:: akida_models.detection.processing.preprocess_image
     .. autofunction:: akida_models.detection.processing.decode_output
-    .. autofunction:: akida_models.detection.processing.parse_voc_annotations
-    .. autofunction:: akida_models.detection.processing.parse_widerface_annotations
+    .. autofunction:: akida_models.detection.processing.create_yolo_targets
     .. autoclass:: akida_models.detection.processing.BoundingBox
         :members:
 
+    YOLO Data Augmentation
+    **********************
+    .. autofunction:: akida_models.detection.data_augmentation.augment_sample
+    .. autofunction:: akida_models.detection.data_augmentation.build_yolo_aug_pipeline
+    .. autofunction:: akida_models.detection.data_augmentation.init_random_vars
+    .. autofunction:: akida_models.detection.data_augmentation.resize_image
+    
     Performance
     ***********
     .. autoclass:: akida_models.detection.map_evaluation.MapEvaluation
@@ -156,16 +185,13 @@ Akida models API
     *******
     .. autofunction:: akida_models.detection.generate_anchors.generate_anchors
 
-    BatchGenerator
-    **************
-    .. autofunction:: akida_models.detection.batch_generator.BatchGenerator
-    .. autofunction:: akida_models.detection.batch_generator.BatchYoloGenerator
-
     Utils
     *****
     .. autofunction:: akida_models.detection.box_utils.xywh_to_xyxy
     .. autofunction:: akida_models.detection.box_utils.xyxy_to_xywh
     .. autofunction:: akida_models.detection.box_utils.compute_overlap
+    .. autofunction:: akida_models.detection.box_utils.compute_center_xy
+    .. autofunction:: akida_models.detection.box_utils.compute_center_wh
 
     PointNet++
     ----------
@@ -193,8 +219,9 @@ Akida models API
     .. autofunction:: akida_models.centernet_base
     .. autofunction:: akida_models.centernet_voc_pretrained
     .. autofunction:: akida_models.centernet.centernet_processing.decode_output
+    .. autofunction:: akida_models.centernet.centernet_utils.create_centernet_targets
+    .. autofunction:: akida_models.centernet.centernet_utils.build_centernet_aug_pipeline
     .. autoclass:: akida_models.centernet.centernet_loss.CenternetLoss
-    .. autoclass:: akida_models.centernet.centernet_batch_generator.BatchCenternetGenerator
 
     AkidaUNet
     ---------
