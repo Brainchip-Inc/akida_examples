@@ -106,10 +106,11 @@ QuantizeML API
     Recording
     ---------
     .. autofunction:: quantizeml.layers.recording
-    .. autoclass:: quantizeml.layers.Recorder
     .. autoclass:: quantizeml.layers.TensorRecorder
     .. autoclass:: quantizeml.layers.FixedPointRecorder
     .. autoclass:: quantizeml.layers.QFloatRecorder
+    .. autoclass:: quantizeml.layers.NonTrackVariable
+    .. autoclass:: quantizeml.layers.NonTrackFixedPointVariable
 
     Models
     ======
