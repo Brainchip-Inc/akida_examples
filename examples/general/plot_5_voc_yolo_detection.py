@@ -71,10 +71,10 @@ tackle this object detection problem.
 #
 # As this example focuses on car and person detection only, a subset of VOC has
 # been prepared with test images from VOC2007 that contains at least one
-# of the occurence of the two classes. The dataset is represented
-# as a tfrecord file, containing images, labels, and bounding boxes.
+# of the two classes. The dataset is represented as a tfrecord file,
+# containing images, labels, and bounding boxes.
 #
-# The `load_tf_dataset` function is a helper function that facilitate the loading
+# The `load_tf_dataset` function is a helper function that facilitates the loading
 # and parsing of the tfrecord file.
 #
 # The `YOLO toolkit <../../api_reference/akida_models_apis.html#yolo-toolkit>`_
