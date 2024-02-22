@@ -24,10 +24,10 @@ tackle this object detection problem.
 #  - object classification that consists in assigning a class label to an image
 #    like shown in the `AkidaNet/ImageNet inference <plot_1_akidanet_imagenet.html>`_
 #    example
-#  - object localization that consists in drawing a bounding box around one or
+#  - object localization that consists of drawing a bounding box around one or
 #    several objects in an image
 #
-# One can learn more about the subject reading this `introduction to object
+# One can learn more about the subject by reading this `introduction to object
 # detection blog article
 # <https://machinelearningmastery.com/object-recognition-with-deep-learning/>`_.
 #
@@ -71,40 +71,86 @@ tackle this object detection problem.
 #
 # As this example focuses on car and person detection only, a subset of VOC has
 # been prepared with test images from VOC2007 that contains at least one
-# of the occurence of the two classes. Just like the VOC dataset, the subset
-# contains an image folder, an annotation folder and a text file listing the
-# file names of interest.
+# of the occurence of the two classes. The dataset is represented
+# as a tfrecord file, containing images, labels, and bounding boxes.
+#
+# The `load_tf_dataset` function is a helper function that facilitate the loading
+# and parsing of the tfrecord file.
 #
 # The `YOLO toolkit <../../api_reference/akida_models_apis.html#yolo-toolkit>`_
 # offers several methods to prepare data for processing, see
 # `load_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image>`_,
-# `preprocess_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_
-# or `parse_voc_annotations <../../api_reference/akida_models_apis.html#akida_models.detection.processing.parse_voc_annotations>`_.
+# `preprocess_image <../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image>`_.
 #
 #
 
-import os
+import tensorflow as tf
 
 from akida_models import fetch_file
-from akida_models.detection.processing import parse_voc_annotations
 
-# Download validation set from Brainchip data server
+# Download TFrecords test set from Brainchip data server
 data_path = fetch_file(
-    fname="voc_test_car_person.tar.gz",
-    origin="https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tar.gz",
+    fname="voc_test_car_person.tfrecord",
+    origin="https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tfrecord",
     cache_subdir='datasets/voc',
     extract=True)
 
-data_dir = os.path.dirname(data_path)
-gt_folder = os.path.join(data_dir, 'voc_test_car_person', 'Annotations')
-image_folder = os.path.join(data_dir, 'voc_test_car_person', 'JPEGImages')
-file_path = os.path.join(
-    data_dir, 'voc_test_car_person', 'test_car_person.txt')
+
+# Helper function to load and parse the Tfrecord file.
+def load_tf_dataset(tf_record_file_path):
+    tfrecord_files = [tf_record_file_path]
+
+    # Feature description for parsing the TFRecord
+    feature_description = {
+        'image': tf.io.FixedLenFeature([], tf.string),
+        'objects/bbox': tf.io.VarLenFeature(tf.float32),
+        'objects/label': tf.io.VarLenFeature(tf.int64),
+    }
+
+    def _count_tfrecord_examples(dataset):
+        return len(list(dataset.as_numpy_iterator()))
+
+    def _parse_tfrecord_fn(example_proto):
+        example = tf.io.parse_single_example(example_proto, feature_description)
+
+        # Decode the image from bytes
+        example['image'] = tf.io.decode_jpeg(example['image'], channels=3)
+
+        # Convert the VarLenFeature to a dense tensor
+        example['objects/label'] = tf.sparse.to_dense(example['objects/label'], default_value=0)
+
+        example['objects/bbox'] = tf.sparse.to_dense(example['objects/bbox'])
+        # Boxes were flattenned that's why we need to reshape them
+        example['objects/bbox'] = tf.reshape(example['objects/bbox'],
+                                             (tf.shape(example['objects/label'])[0], 4))
+        # Create a new dictionary structure
+        objects = {
+            'label': example['objects/label'],
+            'bbox': example['objects/bbox'],
+        }
+
+        # Remove unnecessary keys
+        example.pop('objects/label')
+        example.pop('objects/bbox')
+
+        # Add 'objects' key to the main dictionary
+        example['objects'] = objects
+
+        return example
+
+    # Create a TFRecordDataset
+    dataset = tf.data.TFRecordDataset(tfrecord_files)
+    len_dataset = _count_tfrecord_examples(dataset)
+    parsed_dataset = dataset.map(_parse_tfrecord_fn)
+
+    return parsed_dataset, len_dataset
+
+
 labels = ['car', 'person']
 
-val_data = parse_voc_annotations(gt_folder, image_folder, file_path, labels)
+val_dataset, len_val_dataset = load_tf_dataset(data_path)
 print("Loaded VOC2007 test data for car and person classes: "
-      f"{len(val_data)} images.")
+      f"{len_val_dataset} images.")
 
 ######################################################################
 # Anchors can also be computed easily using YOLO toolkit.
@@ -116,7 +162,7 @@ from akida_models.detection.generate_anchors import generate_anchors
 
 num_anchors = 5
 grid_size = (7, 7)
-anchors_example = generate_anchors(val_data, num_anchors, grid_size)
+anchors_example = generate_anchors(val_dataset, num_anchors, grid_size)
 
 ######################################################################
 # 3. Model architecture
@@ -217,8 +263,8 @@ model_keras = Model(model_keras.input, output)
 # Create the mAP evaluator object
 num_images = 100
 
-map_evaluator = MapEvaluation(model_keras, val_data[:num_images], labels,
-                              anchors)
+map_evaluator = MapEvaluation(model_keras, val_dataset.take(num_images),
+                              num_images, labels, anchors)
 
 # Compute the scores for all validation images
 start = timer()
@@ -262,7 +308,8 @@ model_akida.summary()
 
 # Create the mAP evaluator object
 map_evaluator_ak = MapEvaluation(model_akida,
-                                 val_data[:num_images],
+                                 val_dataset.take(num_images),
+                                 num_images,
                                  labels,
                                  anchors,
                                  is_keras_model=False)
@@ -286,15 +333,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from akida_models.detection.processing import load_image, preprocess_image, decode_output
+from akida_models.detection.processing import preprocess_image, decode_output
 
-# Take a random test image
-i = np.random.randint(len(val_data))
+# Shuffle the data to take a random test image
+val_dataset = val_dataset.shuffle(buffer_size=num_images)
 
 input_shape = model_akida.layers[0].input_dims
 
 # Load the image
-raw_image = load_image(val_data[i]['image_path'])
+raw_image = next(iter(val_dataset))['image']
 
 # Keep the original image size for later bounding boxes rescaling
 raw_height, raw_width, _ = raw_image.shape
