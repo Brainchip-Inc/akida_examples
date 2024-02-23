@@ -42,59 +42,23 @@ use the following workarounds:
 #
 # Given that the reference model was trained on `ImageNet <https://www.image-net.org/>`__ dataset
 # (which is not publicly available), this tutorial uses a set of 10 copyright free images.
-# See `data preparation <../general/plot_1_akidanet_imagenet.html#dataset-preparation>`__
-# for more details.
+# A helper function ``imagenet.preprocessing.get_preprocessed_samples`` loads
+# and preprocesses (decodes, crops and extracts a square 224x224x3 patch from an input image)
+# these images.
 #
 
-import os
-import csv
 import numpy as np
 
-from tensorflow.io import read_file
-from tensorflow.image import decode_jpeg
-from tensorflow.keras.utils import get_file
-
-from akida_models.imagenet import preprocessing
+from akida_models.imagenet import get_preprocessed_samples
 from akida_models.imagenet.imagenet_utils import IMAGENET_MEAN, IMAGENET_STD
 
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
 IMAGE_SIZE = 224
 
-num_images = 10
-
-# Retrieve dataset file from Brainchip data server
-file_path = get_file(
-    "imagenet_like.zip",
-    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-    cache_subdir='datasets/imagenet_like',
-    extract=True)
-data_folder = os.path.dirname(file_path)
-
-# Load images for test set
-x_test_files = []
-x_test_raw = np.zeros((num_images, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(num_images):
-    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
-    x_test_files.append(test_file)
-    img_path = os.path.join(data_folder, test_file)
-    base_image = read_file(img_path)
-    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, (IMAGE_SIZE, IMAGE_SIZE))
-    x_test_raw[id, :, :, :] = np.expand_dims(image, axis=0)
-
-# Parse labels file
-fname = os.path.join(data_folder, 'labels_validation.txt')
-validation_labels = dict()
-with open(fname, newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=' ')
-    for row in reader:
-        validation_labels[row[0]] = row[1]
-
-# Get labels for the test set by index
-labels_test = np.zeros(num_images)
-for i in range(num_images):
-    labels_test[i] = int(validation_labels[x_test_files[i]])
+# Load the preprocessed images and their corresponding labels for the test set
+x_test_raw, labels_test = get_preprocessed_samples(IMAGE_SIZE, NUM_CHANNELS)
+num_images = x_test_raw.shape[0]
 
 # Normalize images as models expects
 imagenet_mean_255 = np.array(IMAGENET_MEAN, dtype="float32") * 255.0
@@ -104,7 +68,7 @@ x_test = ((x_test_raw - imagenet_mean_255) / imagenet_std_255)
 # Transpose the channels to the first axis as per the default for ONNX models
 x_test = np.transpose(x_test, (0, 3, 1, 2))
 
-print(f'{num_images} images loaded and preprocessed.')
+print(f'{num_images} images and their labels are loaded and preprocessed.')
 
 ######################################################################
 # 1.2 Download the model
