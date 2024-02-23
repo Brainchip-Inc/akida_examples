@@ -27,7 +27,7 @@ names.
 # Test images all have at least 256 pixels in the smallest dimension. They must
 # be preprocessed to fit in the model. The ``imagenet.preprocessing.get_preprocessed_samples``
 # function loads and preprocesses (decodes, crops and extracts a square
-# 224x224x3 patch from an input image) a 10 ImageNet-like images.
+# 224x224x3 patch from an input image) a set of 10 ImageNet-like images.
 #
 # .. Note:: Input size is here set to 224x224x3 as this is what is used by the
 #           model presented in the next section.
