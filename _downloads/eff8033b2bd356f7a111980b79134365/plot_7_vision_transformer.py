@@ -279,15 +279,10 @@ model_akida.summary()
 # images are not publicly available, this example uses a set of 10 copyright free images that were
 # found on Google using ImageNet class names.
 #
-# Get sample images and preprocess them:
+# Get the preprocessed sample images:
 
-import os
 import numpy as np
-
-from tensorflow.io import read_file
-from tensorflow.image import decode_jpeg
-
-from akida_models.imagenet import preprocessing
+from akida_models.imagenet import get_preprocessed_samples
 
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
@@ -295,25 +290,8 @@ IMAGE_SIZE = 224
 
 NUM_IMAGES = 10
 
-# Retrieve dataset file from Brainchip data server
-file_path = fetch_file(
-    fname="imagenet_like.zip",
-    origin="https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-    cache_subdir='datasets/imagenet_like',
-    extract=True)
-data_folder = os.path.dirname(file_path)
-
-# Load images for test set
-x_test_files = []
-x_test = np.zeros((NUM_IMAGES, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(NUM_IMAGES):
-    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
-    x_test_files.append(test_file)
-    img_path = os.path.join(data_folder, test_file)
-    base_image = read_file(img_path)
-    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, (IMAGE_SIZE, IMAGE_SIZE))
-    x_test[id, :, :, :] = np.expand_dims(image, axis=0)
+# Load the preprocessed images
+x_test, _ = get_preprocessed_samples(IMAGE_SIZE, NUM_CHANNELS)
 
 print(f'{NUM_IMAGES} images loaded and preprocessed.')
 

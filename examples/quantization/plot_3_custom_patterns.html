@@ -537,57 +537,21 @@ some sample data to test on, plus the pretrained model.</p>
 <h3>1.1 Data<a class="headerlink" href="#data" title="Permalink to this headline"></a></h3>
 <p>Given that the reference model was trained on <a class="reference external" href="https://www.image-net.org/">ImageNet</a> dataset
 (which is not publicly available), this tutorial uses a set of 10 copyright free images.
-See <a class="reference external" href="../general/plot_1_akidanet_imagenet.html#dataset-preparation">data preparation</a>
-for more details.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">csv</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+A helper function <code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.get_preprocessed_samples</span></code> loads
+and preprocesses (decodes, crops and extracts a square 224x224x3 patch from an input image)
+these images.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.io</span> <span class="kn">import</span> <span class="n">read_file</span>
-<span class="kn">from</span> <span class="nn">tensorflow.image</span> <span class="kn">import</span> <span class="n">decode_jpeg</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
-
-<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">get_preprocessed_samples</span>
 <span class="kn">from</span> <span class="nn">akida_models.imagenet.imagenet_utils</span> <span class="kn">import</span> <span class="n">IMAGENET_MEAN</span><span class="p">,</span> <span class="n">IMAGENET_STD</span>
 
 <span class="c1"># Model specification and hyperparameters</span>
 <span class="n">NUM_CHANNELS</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">IMAGE_SIZE</span> <span class="o">=</span> <span class="mi">224</span>
 
-<span class="n">num_images</span> <span class="o">=</span> <span class="mi">10</span>
-
-<span class="c1"># Retrieve dataset file from Brainchip data server</span>
-<span class="n">file_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span>
-    <span class="s2">&quot;imagenet_like.zip&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip&quot;</span><span class="p">,</span>
-    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/imagenet_like&#39;</span><span class="p">,</span>
-    <span class="n">extract</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">data_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
-
-<span class="c1"># Load images for test set</span>
-<span class="n">x_test_files</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">x_test_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_images</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">NUM_CHANNELS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
-<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_images</span><span class="p">):</span>
-    <span class="n">test_file</span> <span class="o">=</span> <span class="s1">&#39;image_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.jpg&#39;</span>
-    <span class="n">x_test_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_file</span><span class="p">)</span>
-    <span class="n">img_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
-    <span class="n">base_image</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">decode_jpeg</span><span class="p">(</span><span class="n">base_image</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">NUM_CHANNELS</span><span class="p">)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">))</span>
-    <span class="n">x_test_raw</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="c1"># Parse labels file</span>
-<span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s1">&#39;labels_validation.txt&#39;</span><span class="p">)</span>
-<span class="n">validation_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
-    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-        <span class="n">validation_labels</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-<span class="c1"># Get labels for the test set by index</span>
-<span class="n">labels_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_images</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_images</span><span class="p">):</span>
-    <span class="n">labels_test</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">validation_labels</span><span class="p">[</span><span class="n">x_test_files</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+<span class="c1"># Load the preprocessed images and their corresponding labels for the test set</span>
+<span class="n">x_test_raw</span><span class="p">,</span> <span class="n">labels_test</span> <span class="o">=</span> <span class="n">get_preprocessed_samples</span><span class="p">(</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">NUM_CHANNELS</span><span class="p">)</span>
+<span class="n">num_images</span> <span class="o">=</span> <span class="n">x_test_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># Normalize images as models expects</span>
 <span class="n">imagenet_mean_255</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">IMAGENET_MEAN</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">255.0</span>
@@ -597,10 +561,10 @@ for more details.</p>
 <span class="c1"># Transpose the channels to the first axis as per the default for ONNX models</span>
 <span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images loaded and preprocessed.&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images and their labels are loaded and preprocessed.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>10 images loaded and preprocessed.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>10 images and their labels are loaded and preprocessed.
 </pre></div>
 </div>
 </section>
@@ -715,18 +679,18 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fa597af69d0&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7fa597af69d0&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fa597af69d0&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7fa597af69d0&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7fa597af69d0&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7fa597a88e50&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7fa597a88e50&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fa597a8d1f0&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7fa597a8d1f0&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fa597a8d1f0&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7fa597a8d1f0&gt;)
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7fa597a8d5e0&gt;)
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7f8bf7af78b0&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7f8bf7af78b0&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7f8bf7af78b0&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7f8bf7af78b0&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7f8bf7af78b0&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7f8bf7a88d30&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7f8bf7a88d30&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7f8bf7a8e0d0&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7f8bf7a8e0d0&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7f8bf7a8e0d0&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7f8bf7a8e0d0&gt;)
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7f8bf7a8e4c0&gt;)
 </pre></div>
 </div>
 <p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">ReLU</span></code> operation on its own or
@@ -1059,7 +1023,7 @@ the input image prior to sending instead.</p>
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 40.427 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 34.772 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>

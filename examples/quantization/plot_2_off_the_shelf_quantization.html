@@ -559,63 +559,29 @@ models.</p>
 <h2>2. Data preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline"></a></h2>
 <p>Given that the reference model was trained on <a class="reference external" href="https://www.image-net.org/">ImageNet</a> dataset
 (which is not publicly available), this tutorial used a subset of 10 copyright free images.
-See <a class="reference external" href="../general/plot_1_akidanet_imagenet.html#dataset-preparation">data preparation</a>
-for more details.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">csv</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="kn">from</span> <span class="nn">tensorflow.io</span> <span class="kn">import</span> <span class="n">read_file</span>
-<span class="kn">from</span> <span class="nn">tensorflow.image</span> <span class="kn">import</span> <span class="n">decode_jpeg</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">get_file</span>
-
-<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+A helper function <code class="docutils literal notranslate"><span class="pre">imagenet.preprocessing.get_preprocessed_samples</span></code> loads
+and preprocesses (decodes, crops and extracts a square 224x224x3 patch from an input image)
+these images.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">akida_models.imagenet</span> <span class="kn">import</span> <span class="n">get_preprocessed_samples</span>
 
 <span class="c1"># Model specification and hyperparameters</span>
 <span class="n">NUM_CHANNELS</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">IMAGE_SIZE</span> <span class="o">=</span> <span class="mi">224</span>
 
-<span class="n">num_images</span> <span class="o">=</span> <span class="mi">10</span>
-
-<span class="c1"># Retrieve dataset file from Brainchip data server</span>
-<span class="n">file_path</span> <span class="o">=</span> <span class="n">get_file</span><span class="p">(</span>
-    <span class="s2">&quot;imagenet_like.zip&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip&quot;</span><span class="p">,</span>
-    <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/imagenet_like&#39;</span><span class="p">,</span>
-    <span class="n">extract</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">data_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
-
-<span class="c1"># Load images for test set</span>
-<span class="n">x_test_files</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">x_test_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_images</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">NUM_CHANNELS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
-<span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_images</span><span class="p">):</span>
-    <span class="n">test_file</span> <span class="o">=</span> <span class="s1">&#39;image_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.jpg&#39;</span>
-    <span class="n">x_test_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_file</span><span class="p">)</span>
-    <span class="n">img_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="n">test_file</span><span class="p">)</span>
-    <span class="n">base_image</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">decode_jpeg</span><span class="p">(</span><span class="n">base_image</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">NUM_CHANNELS</span><span class="p">)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">IMAGE_SIZE</span><span class="p">))</span>
-    <span class="n">x_test_raw</span><span class="p">[</span><span class="nb">id</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="c1"># Parse labels file</span>
-<span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_folder</span><span class="p">,</span> <span class="s1">&#39;labels_validation.txt&#39;</span><span class="p">)</span>
-<span class="n">validation_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
-    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-        <span class="n">validation_labels</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="c1"># Load the preprocessed images and their corresponding labels for the test set</span>
+<span class="n">x_test_raw</span><span class="p">,</span> <span class="n">labels_test</span> <span class="o">=</span> <span class="n">get_preprocessed_samples</span><span class="p">(</span><span class="n">IMAGE_SIZE</span><span class="p">,</span> <span class="n">NUM_CHANNELS</span><span class="p">)</span>
+<span class="n">num_images</span> <span class="o">=</span> <span class="n">x_test_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># Get labels for the test set by index</span>
 <span class="c1"># Note: Hugging Face models reserve the first index to null predictions</span>
 <span class="c1"># (labeled as &#39;background&#39; id). That is why we increase in &#39;1&#39; the original label id.</span>
-<span class="n">labels_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_images</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_images</span><span class="p">):</span>
-    <span class="n">labels_test</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">validation_labels</span><span class="p">[</span><span class="n">x_test_files</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">labels_test</span> <span class="o">=</span> <span class="n">labels_test</span> <span class="o">+</span> <span class="mi">1</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images loaded and preprocessed.&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1"> images and their labels are loaded and preprocessed.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>10 images loaded and preprocessed.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>10 images and their labels are loaded and preprocessed.
 </pre></div>
 </div>
 <p>As illustrated in <a class="reference internal" href="#workflow-overview">1. Workflow overview</a>, the model’s source is at the user’s
@@ -649,16 +615,16 @@ is used for downloading and exporting models to ONNX.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Framework not specified. Using pt to export to ONNX.
 
 config.json:   0%|          | 0.00/69.8k [00:00&lt;?, ?B/s]
-config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 398kB/s]
-config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 395kB/s]
+config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 436kB/s]
+config.json: 100%|██████████| 69.8k/69.8k [00:00&lt;00:00, 433kB/s]
 
 model.safetensors:   0%|          | 0.00/14.2M [00:00&lt;?, ?B/s]
-model.safetensors:  74%|███████▍  | 10.5M/14.2M [00:01&lt;00:00, 6.51MB/s]
-model.safetensors: 100%|██████████| 14.2M/14.2M [00:01&lt;00:00, 7.66MB/s]
-model.safetensors: 100%|██████████| 14.2M/14.2M [00:01&lt;00:00, 7.37MB/s]
+model.safetensors:  74%|███████▍  | 10.5M/14.2M [00:01&lt;00:00, 5.68MB/s]
+model.safetensors: 100%|██████████| 14.2M/14.2M [00:02&lt;00:00, 7.03MB/s]
+model.safetensors: 100%|██████████| 14.2M/14.2M [00:02&lt;00:00, 6.67MB/s]
 
 preprocessor_config.json:   0%|          | 0.00/406 [00:00&lt;?, ?B/s]
-preprocessor_config.json: 100%|██████████| 406/406 [00:00&lt;00:00, 188kB/s]
+preprocessor_config.json: 100%|██████████| 406/406 [00:00&lt;00:00, 193kB/s]
 /usr/local/lib/python3.8/dist-packages/transformers/models/mobilenet_v2/feature_extraction_mobilenet_v2.py:28: FutureWarning: The class MobileNetV2FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use MobileNetV2ImageProcessor instead.
   warnings.warn(
 Using the export variant default. Available variants are:
@@ -1962,7 +1928,7 @@ Quantized model accuracy: 10/10.
 function must be used to retrieve a model in Akida format ready for inference. Please
 refer to the <a class="reference external" href="../general/plot_8_global_pytorch_workflow.html">PyTorch to Akida workflow</a> for further details.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 15.772 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 15.909 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-2-off-the-shelf-quantization-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/14135bb429c6b69940b3b3da0b5c2156/plot_2_off_the_shelf_quantization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_2_off_the_shelf_quantization.ipynb</span></code></a></p>

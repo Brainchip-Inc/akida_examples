@@ -60,62 +60,28 @@ Off-the-shelf models quantization
 #
 # Given that the reference model was trained on `ImageNet <https://www.image-net.org/>`__ dataset
 # (which is not publicly available), this tutorial used a subset of 10 copyright free images.
-# See `data preparation <../general/plot_1_akidanet_imagenet.html#dataset-preparation>`__
-# for more details.
+# A helper function ``imagenet.preprocessing.get_preprocessed_samples`` loads
+# and preprocesses (decodes, crops and extracts a square 224x224x3 patch from an input image)
+# these images.
 #
 
-import os
-import csv
 import numpy as np
-
-from tensorflow.io import read_file
-from tensorflow.image import decode_jpeg
-from tensorflow.keras.utils import get_file
-
-from akida_models.imagenet import preprocessing
+from akida_models.imagenet import get_preprocessed_samples
 
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
 IMAGE_SIZE = 224
 
-num_images = 10
-
-# Retrieve dataset file from Brainchip data server
-file_path = get_file(
-    "imagenet_like.zip",
-    "https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-    cache_subdir='datasets/imagenet_like',
-    extract=True)
-data_folder = os.path.dirname(file_path)
-
-# Load images for test set
-x_test_files = []
-x_test_raw = np.zeros((num_images, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(num_images):
-    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
-    x_test_files.append(test_file)
-    img_path = os.path.join(data_folder, test_file)
-    base_image = read_file(img_path)
-    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, (IMAGE_SIZE, IMAGE_SIZE))
-    x_test_raw[id, :, :, :] = np.expand_dims(image, axis=0)
-
-# Parse labels file
-fname = os.path.join(data_folder, 'labels_validation.txt')
-validation_labels = dict()
-with open(fname, newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=' ')
-    for row in reader:
-        validation_labels[row[0]] = row[1]
+# Load the preprocessed images and their corresponding labels for the test set
+x_test_raw, labels_test = get_preprocessed_samples(IMAGE_SIZE, NUM_CHANNELS)
+num_images = x_test_raw.shape[0]
 
 # Get labels for the test set by index
 # Note: Hugging Face models reserve the first index to null predictions
 # (labeled as 'background' id). That is why we increase in '1' the original label id.
-labels_test = np.zeros(num_images)
-for i in range(num_images):
-    labels_test[i] = int(validation_labels[x_test_files[i]]) + 1
+labels_test = labels_test + 1
 
-print(f'{num_images} images loaded and preprocessed.')
+print(f'{num_images} images and their labels are loaded and preprocessed.')
 
 ######################################################################
 # As illustrated in `1. Workflow overview`_, the model's source is at the user's
