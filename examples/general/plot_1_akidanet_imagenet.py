@@ -25,69 +25,24 @@ names.
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # Test images all have at least 256 pixels in the smallest dimension. They must
-# be preprocessed to fit in the model. The ``imagenet.preprocessing.preprocess_image``
-# function decodes, crops and extracts a square 224x224x3 patch from an input image.
+# be preprocessed to fit in the model. The ``imagenet.preprocessing.get_preprocessed_samples``
+# function loads and preprocesses (decodes, crops and extracts a square
+# 224x224x3 patch from an input image) a 10 ImageNet-like images.
 #
 # .. Note:: Input size is here set to 224x224x3 as this is what is used by the
 #           model presented in the next section.
 
 import akida
-import os
 import numpy as np
-
-from tensorflow.io import read_file
-from tensorflow.image import decode_jpeg
-
-from akida_models import fetch_file
-from akida_models.imagenet import preprocessing
+from akida_models.imagenet import get_preprocessed_samples
 
 # Model specification and hyperparameters
 NUM_CHANNELS = 3
 IMAGE_SIZE = 224
 
-num_images = 10
-
-# Retrieve dataset file from Brainchip data server
-file_path = fetch_file(
-    fname="imagenet_like.zip",
-    origin="https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip",
-    cache_subdir='datasets/imagenet_like',
-    extract=True)
-data_folder = os.path.dirname(file_path)
-
-# Load images for test set
-x_test_files = []
-x_test = np.zeros((num_images, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS)).astype('uint8')
-for id in range(num_images):
-    test_file = 'image_' + str(id + 1).zfill(2) + '.jpg'
-    x_test_files.append(test_file)
-    img_path = os.path.join(data_folder, test_file)
-    base_image = read_file(img_path)
-    image = decode_jpeg(base_image, channels=NUM_CHANNELS)
-    image = preprocessing.preprocess_image(image, (IMAGE_SIZE, IMAGE_SIZE))
-    x_test[id, :, :, :] = np.expand_dims(image, axis=0)
-
-print(f'{num_images} images loaded and preprocessed.')
-
-######################################################################
-# Labels for test images are stored in the akida_models package. The matching
-# between names (*string*) and labels (*integer*) is given through the
-# ``imagenet.preprocessing.index_to_label`` method.
-
-import csv
-
-# Parse labels file
-fname = os.path.join(data_folder, 'labels_validation.txt')
-validation_labels = dict()
-with open(fname, newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=' ')
-    for row in reader:
-        validation_labels[row[0]] = row[1]
-
-# Get labels for the test set by index
-labels_test = np.zeros(num_images)
-for i in range(num_images):
-    labels_test[i] = int(validation_labels[x_test_files[i]])
+# Load the preprocessed images and their corresponding labels for the test set
+x_test, labels_test = get_preprocessed_samples(IMAGE_SIZE, NUM_CHANNELS)
+print(f'{x_test.shape[0]} images and their labels are loaded and preprocessed.')
 
 ######################################################################
 # 2. Pretrained quantized model
@@ -168,9 +123,15 @@ assert accuracy_akida >= 0.8
 ######################################################################
 # 3.3 Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Labels for test images are stored in the akida_models package. The matching
+# between names (*string*) and labels (*integer*) is given through the
+# ``imagenet.preprocessing.index_to_label`` method.
+
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as lines
+from akida_models.imagenet import preprocessing
 
 
 # Functions used to display the top5 results
@@ -288,7 +249,7 @@ img = np.random.randint(num_images)
 outputs_akida = model_akida.predict(np.expand_dims(x_test[img], axis=0)).squeeze()
 
 # Get top 5 prediction labels and associated names
-true_label = int(validation_labels[x_test_files[img]])
+true_label = labels_test[img]
 top5, yvals, class_name = get_top5(outputs_akida, true_label)
 
 # Draw Plots
