@@ -321,7 +321,7 @@ print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 # As indicated above, while most imcompatibilities will be picked up at the
 # quantization step, some constraints are specific to the target hardware
 # device, and can only be applied at the conversion step. We can detect these
-# either with the `check_model_compatibility <../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__tool,
+# either with the `check_model_compatibility <../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__ tool,
 # or by trying to `convert the model into Akida <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__.
 
 from cnn2snn import convert
