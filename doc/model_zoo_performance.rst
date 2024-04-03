@@ -623,6 +623,22 @@ Keyword spotting
 +--------------+-----------------------+---------+--------------+----------------+------------+
 
 
+Classification
+""""""""""""""
+
+.. |audio_vit_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/audio_vit/bc_vit_urbansound_i8_w8_a8.h5
+
++---------------+------------+--------------+---------+--------------+-----------------+----------------+
+| Architecture  | Resolution | Dataset      | #Params | Quantization | Accuracy        | Download       |
++===============+============+==============+=========+==============+=================+================+
+| ViT (1 block) | 224        | Urbansound8k | 539.9K  | 8            | 97.25% [#fn-6]_ | |audio_vit_dl| |
++---------------+------------+--------------+---------+--------------+-----------------+----------------+
+
+.. [#fn-6] PTQ accuracy boosted with 5 epochs QAT.
+
+
 |pointcloud_icon_ref| Point cloud
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
