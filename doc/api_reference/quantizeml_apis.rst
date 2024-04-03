@@ -149,7 +149,6 @@ QuantizeML API
     Utils
     -----
     .. autofunction:: quantizeml.models.load_model
-    .. autofunction:: quantizeml.models.deep_clone_model
     .. autofunction:: quantizeml.models.apply_weights_to_model
 
     Tensors
