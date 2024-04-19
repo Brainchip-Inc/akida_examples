@@ -90,6 +90,7 @@ Current available models for creation are:
  * bc_vit_ti16
  * deit_ti16
  * bc_deit_ti16
+ * vit_urbansound
 
 Command-line interface for model training
 -----------------------------------------
@@ -171,6 +172,7 @@ Current training pipelines available are:
 * imagenet_train
 * portrait128_train
 * centernet_train
+* urbansound_train
 
 Command-line interface for model evaluation
 -------------------------------------------
