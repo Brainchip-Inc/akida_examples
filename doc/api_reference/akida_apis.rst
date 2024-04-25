@@ -64,6 +64,8 @@ Akida runtime API
         :members:
     .. autoclass:: Attention
         :members:
+    .. autoclass:: VitEncoderBlock
+        :members:
     .. autoclass:: Add
         :members:
     .. autoclass:: Concatenate

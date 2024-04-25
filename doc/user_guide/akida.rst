@@ -106,6 +106,7 @@ Akida 2.0 layers
 - `DepthwiseConv2D <../api_reference/akida_apis.html#akida.DepthwiseConv2D>`__
 - `DepthwiseConv2DTranspose <../api_reference/akida_apis.html#akida.DepthwiseConv2DTranspose>`__
 - `Attention <../api_reference/akida_apis.html#akida.Attention>`__
+- `VitEncoderBlock <../api_reference/akida_apis.html#akida.VitEncoderBlock>`__
 - `Add <../api_reference/akida_apis.html#akida.Add>`__
 - `Concatenate <../api_reference/akida_apis.html#akida.Concatenate>`__
 - `ExtractToken <../api_reference/akida_apis.html#akida.ExtractToken>`__
