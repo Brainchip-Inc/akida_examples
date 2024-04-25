@@ -138,18 +138,14 @@ Akida models API
     Detection data
     ~~~~~~~~~~~~~~
 
-    VOC
-    ***
+    .. autofunction:: akida_models.detection.data.get_detection_datasets
     .. autofunction:: akida_models.detection.voc.data.get_voc_dataset
-
-    Widerface
-    *********
+    .. autofunction:: akida_models.detection.coco.data.get_coco_dataset
     .. autofunction:: akida_models.detection.widerface.data.get_widerface_dataset
 
     Preprocessing
     *************
     .. autofunction:: akida_models.detection.preprocess_data.preprocess_dataset
-
 
     Utils
     *****
