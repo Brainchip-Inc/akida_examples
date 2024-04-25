@@ -70,7 +70,7 @@ tackle this object detection problem.
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # A subset of VOC has been prepared with test images from VOC2007
-# that contains 5 examples for each class. The dataset is represented as
+# that contains 5 examples of each class. The dataset is represented as
 # a tfrecord file, containing images, labels, and bounding boxes.
 #
 # The `load_tf_dataset` function is a helper function that facilitates the loading
