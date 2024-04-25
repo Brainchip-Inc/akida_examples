@@ -5,7 +5,7 @@ YOLO/PASCAL-VOC detection tutorial
 This tutorial demonstrates that Akida can perform object detection. This is illustrated using a
 subset of the
 `PASCAL-VOC 2007 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2007/htmldoc/index.html>`__
-with "car" and "person" classes only. The YOLOv2 architecture from
+which contains 20 classes. The YOLOv2 architecture from
 `Redmon et al (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
 tackle this object detection problem.
 
@@ -69,10 +69,9 @@ tackle this object detection problem.
 # 2. Preprocessing tools
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# As this example focuses on car and person detection only, a subset of VOC has
-# been prepared with test images from VOC2007 that contains at least one
-# of the two classes. The dataset is represented as a tfrecord file,
-# containing images, labels, and bounding boxes.
+# A subset of VOC has been prepared with test images from VOC2007
+# that contains 5 examples of each class. The dataset is represented as
+# a tfrecord file, containing images, labels, and bounding boxes.
 #
 # The `load_tf_dataset` function is a helper function that facilitates the loading
 # and parsing of the tfrecord file.
@@ -90,8 +89,8 @@ from akida_models import fetch_file
 
 # Download TFrecords test set from Brainchip data server
 data_path = fetch_file(
-    fname="voc_test_car_person.tfrecord",
-    origin="https://data.brainchip.com/dataset-mirror/voc/voc_test_car_person.tfrecord",
+    fname="voc_test_20_classes.tfrecord",
+    origin="https://data.brainchip.com/dataset-mirror/voc/test_20_classes.tfrecord",
     cache_subdir='datasets/voc',
     extract=True)
 
@@ -146,11 +145,13 @@ def load_tf_dataset(tf_record_file_path):
     return parsed_dataset, len_dataset
 
 
-labels = ['car', 'person']
+labels = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
+          'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse',
+          'motorbike', 'person', 'pottedplant', 'sheep', 'sofa',
+          'train', 'tvmonitor']
 
 val_dataset, len_val_dataset = load_tf_dataset(data_path)
-print("Loaded VOC2007 test data for car and person classes: "
-      f"{len_val_dataset} images.")
+print(f"Loaded VOC2007 sample test data: {len_val_dataset} images.")
 
 ######################################################################
 # Anchors can also be computed easily using YOLO toolkit.
@@ -179,8 +180,8 @@ anchors_example = generate_anchors(val_dataset, num_anchors, grid_size)
 
 from akida_models import yolo_base
 
-# Create a yolo model for 2 classes with 5 anchors and grid size of 7
-classes = 2
+# Create a yolo model for 20 classes with 5 anchors and grid size of 7
+classes = len(labels)
 
 model = yolo_base(input_shape=(224, 224, 3),
                   classes=classes,
@@ -221,6 +222,18 @@ full_model.output
 # training a YOLO model. See the `PlantVillage transfer learning example
 # <plot_4_transfer_learning.html>`_ for a detail explanation on transfer
 # learning principles.
+# Additionally, for achieving optimal results, consider the following approach:
+#
+# 1. Initially, train the model on the COCO dataset. This process helps in learning
+# general object detection features and improves the model's ability to detect various
+# objects across different contexts.
+#
+# 2. After training on COCO, transfer the learned weights to a model equipped with a
+# VOC head.
+#
+# 3. Fine-tune the transferred weights on the VOC dataset. This step allows the model
+# to adapt to the specific characteristics and nuances of the VOC dataset, further
+# enhancing its performance on VOC-related tasks.
 #
 
 ######################################################################
@@ -230,14 +243,15 @@ full_model.output
 # The model zoo also contains an `helper method
 # <../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained>`_
 # that allows to create a YOLO model for VOC and load pretrained weights for the
-# car and person detection task and the corresponding anchors. The anchors are
-# used to interpret the model outputs.
+# detection task and the corresponding anchors. The anchors are used to interpret
+# the model outputs.
 #
 # The metric used to evaluate YOLO is the mean average precision (mAP) which is
 # the percentage of correct prediction and is given for an intersection over
 # union (IoU) ratio. Scores in this example are given for the standard IoU of
-# 0.5 meaning that a detection is considered valid if the intersection over
-# union ratio with its ground truth equivalent is above 0.5.
+# 0.5, 0.75 and the mean across IoU thresholds ranging from 0.5 to 0.95, meaning
+# that a detection is considered valid if the intersection over union ratio with
+# its ground truth equivalent is above 0.5 for mAP 50 or above 0.75 for mAP 75.
 #
 #  .. Note:: A call to `evaluate_map <../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map>`_
 #            will preprocess the images, make the call to ``Model.predict`` and
@@ -261,20 +275,22 @@ output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),
 model_keras = Model(model_keras.input, output)
 
 # Create the mAP evaluator object
-num_images = 100
-
-map_evaluator = MapEvaluation(model_keras, val_dataset.take(num_images),
-                              num_images, labels, anchors)
+map_evaluator = MapEvaluation(model_keras, val_dataset,
+                              len_val_dataset, labels, anchors)
 
 # Compute the scores for all validation images
 start = timer()
-mAP, average_precisions = map_evaluator.evaluate_map()
+
+map_dict, average_precisions = map_evaluator.evaluate_map()
+mAP = sum(map_dict.values()) / len(map_dict)
 end = timer()
 
 for label, average_precision in average_precisions.items():
     print(labels[label], '{:.4f}'.format(average_precision))
+print('mAP 50: {:.4f}'.format(map_dict[0.5]))
+print('mAP 75: {:.4f}'.format(map_dict[0.75]))
 print('mAP: {:.4f}'.format(mAP))
-print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
+print(f'Keras inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
 # 6. Conversion to Akida
@@ -308,21 +324,24 @@ model_akida.summary()
 
 # Create the mAP evaluator object
 map_evaluator_ak = MapEvaluation(model_akida,
-                                 val_dataset.take(num_images),
-                                 num_images,
+                                 val_dataset,
+                                 len_val_dataset,
                                  labels,
                                  anchors,
                                  is_keras_model=False)
 
 # Compute the scores for all validation images
 start = timer()
-mAP_ak, average_precisions_ak = map_evaluator_ak.evaluate_map()
+map_ak_dict, average_precisions_ak = map_evaluator_ak.evaluate_map()
+mAP_ak = sum(map_ak_dict.values()) / len(map_ak_dict)
 end = timer()
 
 for label, average_precision in average_precisions_ak.items():
     print(labels[label], '{:.4f}'.format(average_precision))
+print('mAP 50: {:.4f}'.format(map_ak_dict[0.5]))
+print('mAP 75: {:.4f}'.format(map_ak_dict[0.75]))
 print('mAP: {:.4f}'.format(mAP_ak))
-print(f'Akida inference on {num_images} images took {end-start:.2f} s.\n')
+print(f'Akida inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
 # 6.2 Show predictions for a random image
@@ -336,7 +355,7 @@ import matplotlib.patches as patches
 from akida_models.detection.processing import preprocess_image, decode_output
 
 # Shuffle the data to take a random test image
-val_dataset = val_dataset.shuffle(buffer_size=num_images)
+val_dataset = val_dataset.shuffle(buffer_size=len_val_dataset)
 
 input_shape = model_akida.layers[0].input_dims
 
@@ -368,7 +387,7 @@ pred_boxes = np.array([[
     box.get_score()
 ] for box in raw_boxes])
 
-fig = plt.figure(num='VOC2012 car and person detection by Akida')
+fig = plt.figure(num='VOC detection by Akida')
 ax = fig.subplots(1)
 img_plot = ax.imshow(np.zeros(raw_image.shape, dtype=np.uint8))
 img_plot.set_data(raw_image)

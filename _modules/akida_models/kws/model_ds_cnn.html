@@ -520,7 +520,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ds_cnn_kws&quot;</span><span class="p">,</span> <span class="s2">&quot;ds_cnn_kws_pretrained&quot;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Rescaling</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
@@ -620,11 +620,7 @@
                              <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">,</span>
                              <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">)</span>
 
-    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-
     <span class="k">if</span> <span class="n">include_top</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;flatten&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                         <span class="n">units</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dense_5&#39;</span><span class="p">,</span>
@@ -632,6 +628,9 @@
                         <span class="n">relu_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reshape_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">img_input</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ds_cnn_kws&#39;</span><span class="p">)</span></div>
 
@@ -653,12 +652,12 @@
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;2ba6220bb9545857c99a327ec14d2d777420c7848cb6a9b17d87e5a01951fe6f&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_edge_i8_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;02a6b5c5496e8ef8fb576ee7b2833427ebdd7a70df26cc87db5e416f756042d5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;30e514563be67251a89705c296a137bd79b15918bdb8d6ca7daa02a05506775b&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;95a51677b340ee2420015a8576a8aaf41e84138ac0334cd42080b60499b4f146&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;54a4071833ef2f0a2da4fd300c2d1534acf211ee7e2838c7f55df5135cf4a8c4&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e897da2760206aad1328179c2b6861bae4f0e56a9380c78cf1287d18929a2143&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;ds_cnn&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

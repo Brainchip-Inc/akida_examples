@@ -577,7 +577,13 @@
     <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span> <span class="o">=</span> <span class="n">init_random_vars</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
-        <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">augment_sample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">)</span>
+        <span class="n">augmented_image</span><span class="p">,</span> <span class="n">augmented_objects</span> <span class="o">=</span> <span class="n">augment_sample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span>
+                                                            <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">)</span>
+        <span class="c1"># Due to some transformation, some bboxes get deleted which throws an error in the next</span>
+        <span class="c1"># steps. A quick fix is to not augment these images.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">augmented_objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">augmented_image</span>
+            <span class="n">objects</span> <span class="o">=</span> <span class="n">augmented_objects</span>
 
     <span class="n">image</span> <span class="o">=</span> <span class="n">resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
     <span class="n">objects</span> <span class="o">=</span> <span class="n">fix_obj_position_and_size</span><span class="p">(</span>

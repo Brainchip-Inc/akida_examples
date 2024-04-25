@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida.layers.dense1d &mdash; Akida Examples  documentation</title>
+  <title>akida.layers.vit_encoder_block &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -487,7 +487,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">akida.layers.dense1d</li>
+      <li class="breadcrumb-item active">akida.layers.vit_encoder_block</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -496,57 +496,71 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida.layers.dense1d</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">)</span>
+  <h1>Source code for akida.layers.vit_encoder_block</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">LayerType</span>
 
 
-<div class="viewcode-block" id="Dense1D"><a class="viewcode-back" href="../../../api_reference/akida_apis.html#akida.Dense1D">[docs]</a><span class="k">class</span> <span class="nc">Dense1D</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dense layer capable of working on 1D inputs.</span>
+<div class="viewcode-block" id="VitEncoderBlock"><a class="viewcode-back" href="../../../api_reference/akida_apis.html#akida.VitEncoderBlock">[docs]</a><span class="k">class</span> <span class="nc">VitEncoderBlock</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Layer corresponding to a ViT encoder block.</span>
 
-<span class="sd">    This is a simple dotproduct between an input of shape (1, 1, X) and a kernel</span>
-<span class="sd">    of shape (X, F) to output a tensor of shape (1, 1, F). Being the result of a</span>
-<span class="sd">    quantized operation, it is possible to apply some shifts to adjust the</span>
-<span class="sd">    inputs/outputs scales to the equivalent operation performed on floats, while</span>
-<span class="sd">    maintaining a limited usage of bits and performing the operations on integer</span>
-<span class="sd">    values.</span>
+<span class="sd">     It&#39;s composed of the following layers:</span>
 
-<span class="sd">    The 1D Dense operation can be described as follows:</span>
+<span class="sd">        - a pre-attention MadNorm layer</span>
+<span class="sd">        - Query, Key and Value Dense layers</span>
+<span class="sd">        - an Attention layer and it Dense projection layer</span>
+<span class="sd">        - a skip connection (Add) between the input and the output of attention projection</span>
+<span class="sd">        - a pre-ML MadNorm layer</span>
+<span class="sd">        - a MLP composed of two Dense layers</span>
+<span class="sd">        - a skip connection (Add) between the MLP output and the previous Add layer</span>
+<span class="sd">        - optionally when tokens_to_extract is set to a non zero value, a BatchNormalization</span>
+<span class="sd">          layer and the given ExtractToken number (1 or 2)</span>
+<span class="sd">        - optionally when num_classes is set a classification head with one or 2 Dense layers</span>
+<span class="sd">          depending on the number of tokens</span>
 
-<span class="sd">        &gt;&gt;&gt; inputs = inputs &lt;&lt; input_shift</span>
-<span class="sd">        &gt;&gt;&gt; prod = matmul(inputs, weights)</span>
-<span class="sd">        &gt;&gt;&gt; output = prod + (bias &lt;&lt; bias_shift)</span>
-<span class="sd">        &gt;&gt;&gt; output = output * output_scale &gt;&gt; output_shift</span>
+<span class="sd">    This layer covers all the above layers operations.</span>
 
-<span class="sd">    Inputs shape must be (1, 1, X), if not it&#39;s reshaped automatically at the</span>
-<span class="sd">    beginning. Note that output values will be saturated on the range that can be</span>
-<span class="sd">    represented with output_bits.</span>
+<span class="sd">    Note that final output values will be saturated on the range that can be represented with</span>
+<span class="sd">    output_bits.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        units (int): Positive integer, dimensionality of the output space.</span>
+<span class="sd">        hidden_size (int, optional): internal shape of the block. Defaults to 192.</span>
+<span class="sd">        mlp_dim (int, optional): dimension of the first dense layer of the MLP. Defaults to 768.</span>
+<span class="sd">        num_heads (int, optional): number of heads in the multi-head attention. Defaults to 3.</span>
+<span class="sd">        num_classes (int, optional): number of classes to set in the classification head, if zero</span>
+<span class="sd">            no classification head is added. &#39;tokens_to_extract&#39; must be different from 0. Defaults</span>
+<span class="sd">            to 0.</span>
+<span class="sd">        tokens_to_extract (int, optional): number of non patch tokens to extract. Defaults to 0.</span>
 <span class="sd">        output_bits (int, optional): output bitwidth. Defaults to 8.</span>
-<span class="sd">        buffer_bits (int, optional): buffer bitwidth. Defaults to 28.</span>
+<span class="sd">        buffer_bits (int, optional): buffer bitwidth. Defaults to 32.</span>
 <span class="sd">        post_op_buffer_bits (int, optional): internal bitwidth for post operations. Defaults to 32.</span>
-<span class="sd">        activation (bool, optional): apply a ReLU activation. Defaults to False.</span>
+<span class="sd">        head_bits (int, optional): similar to &#39;output_bits&#39; but for the optional head(s). Defaults</span>
+<span class="sd">            to 28.</span>
 <span class="sd">        name (str, optional): name of the layer. Defaults to empty string.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">units</span><span class="p">,</span>
+                 <span class="n">hidden_size</span><span class="o">=</span><span class="mi">192</span><span class="p">,</span>
+                 <span class="n">mlp_dim</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span>
+                 <span class="n">num_heads</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">num_classes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">tokens_to_extract</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                 <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
+                 <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                  <span class="n">post_op_buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">head_bits</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">params</span> <span class="o">=</span> <span class="n">LayerParams</span><span class="p">(</span>
-                <span class="n">LayerType</span><span class="o">.</span><span class="n">Dense2D</span><span class="p">,</span> <span class="p">{</span>
-                    <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span>
+                <span class="n">LayerType</span><span class="o">.</span><span class="n">VitEncoderBlock</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="s2">&quot;hidden_size&quot;</span><span class="p">:</span> <span class="n">hidden_size</span><span class="p">,</span>
+                    <span class="s2">&quot;mlp_dim&quot;</span><span class="p">:</span> <span class="n">mlp_dim</span><span class="p">,</span>
+                    <span class="s2">&quot;num_heads&quot;</span><span class="p">:</span> <span class="n">num_heads</span><span class="p">,</span>
+                    <span class="s2">&quot;num_classes&quot;</span><span class="p">:</span> <span class="n">num_classes</span><span class="p">,</span>
+                    <span class="s2">&quot;tokens_to_extract&quot;</span><span class="p">:</span> <span class="n">tokens_to_extract</span><span class="p">,</span>
                     <span class="s2">&quot;output_bits&quot;</span><span class="p">:</span> <span class="n">output_bits</span><span class="p">,</span>
                     <span class="s2">&quot;buffer_bits&quot;</span><span class="p">:</span> <span class="n">buffer_bits</span><span class="p">,</span>
                     <span class="s2">&quot;post_op_buffer_bits&quot;</span><span class="p">:</span> <span class="n">post_op_buffer_bits</span><span class="p">,</span>
-                    <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">activation</span><span class="p">,</span>
-                    <span class="s2">&quot;collapse_dims&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;head_bits&quot;</span><span class="p">:</span> <span class="n">head_bits</span>
                 <span class="p">})</span>
             <span class="c1"># Call parent constructor to initialize C++ bindings</span>
             <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>

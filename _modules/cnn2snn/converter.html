@@ -521,7 +521,9 @@
 <span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
 <span class="kn">from</span> <span class="nn">.model_generator</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">cnn2snn_generate_model</span>
 <span class="kn">from</span> <span class="nn">.quantizeml</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">qml_generate_model</span>
+<span class="kn">from</span> <span class="nn">.quantizeml.vit_encoder_block</span> <span class="kn">import</span> <span class="n">fold_vitencoderblock</span>
 
+<span class="kn">import</span> <span class="nn">akida</span>
 <span class="kn">from</span> <span class="nn">.akida_versions</span> <span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 <span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">fix_v1_activation_variables</span><span class="p">,</span> <span class="n">prepare_to_convert</span>
 <span class="kn">from</span> <span class="nn">.compatibility_checks</span> <span class="kn">import</span> <span class="n">check_sequential_compatibility</span>
@@ -549,7 +551,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Preliminary checks:</span>
     <span class="c1"># Onnx models are not supported on Akida v1</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">==</span> <span class="n">ModelProto</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ModelProto</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Akida v1 does not support ONNX models. Use Akida v2 instead.&quot;</span><span class="p">)</span>
 
     <span class="c1"># if a device is provided, it should be consistent with the Akida version used.</span>
@@ -622,9 +624,8 @@
                                       <span class="s2">&quot; quantizeml models to akida.&quot;</span><span class="p">))</span>
         <span class="n">ak_model</span> <span class="o">=</span> <span class="n">_convert_quantizeml</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-    <span class="c1"># check if the akida v1 model has an unvalid act_step, that prevents the model</span>
-    <span class="c1"># to map on HW. If so equalize the Akida model activation variables.</span>
-    <span class="n">fix_v1_activation_variables</span><span class="p">(</span><span class="n">ak_model</span><span class="p">)</span>
+    <span class="c1"># Perform post conversion checks on the model</span>
+    <span class="n">ak_model</span> <span class="o">=</span> <span class="n">_post_conversion_checks</span><span class="p">(</span><span class="n">ak_model</span><span class="p">)</span>
 
     <span class="c1"># Save model if file_path is given</span>
     <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
@@ -778,6 +779,24 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">layer</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="o">-</span><span class="n">layer</span><span class="o">.</span><span class="n">offset</span> <span class="o">/</span> <span class="n">layer</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_post_conversion_checks</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Perform post-conversion checks on an akida model.</span>
+
+<span class="sd">    The model is not necessarily changed and can be the original one.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (Model): the model to check</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="c1"># check if the akida v1 model has an unvalid act_step, that prevents the model</span>
+        <span class="c1"># to map on HW. If so equalize the Akida model activation variables.</span>
+        <span class="n">fix_v1_activation_variables</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
+        <span class="c1"># look for attention and group constitutive layers into VitEncoderBlock layer when possible</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">fold_vitencoderblock</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
 </pre></div>
 
            </div>
