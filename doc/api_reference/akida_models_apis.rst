@@ -134,23 +134,23 @@ Akida models API
     .. autofunction:: akida_models.yolo_base
     .. autofunction:: akida_models.yolo_widerface_pretrained
     .. autofunction:: akida_models.yolo_voc_pretrained
-    
+
     Detection data
     ~~~~~~~~~~~~~~
 
     VOC
     ***
     .. autofunction:: akida_models.detection.voc.data.get_voc_dataset
-    
+
     Widerface
     *********
     .. autofunction:: akida_models.detection.widerface.data.get_widerface_dataset
-    
+
     Preprocessing
     *************
     .. autofunction:: akida_models.detection.preprocess_data.preprocess_dataset
 
-    
+
     Utils
     *****
     .. autofunction:: akida_models.detection.data_utils.remove_empty_objects
@@ -176,7 +176,7 @@ Akida models API
     .. autofunction:: akida_models.detection.data_augmentation.build_yolo_aug_pipeline
     .. autofunction:: akida_models.detection.data_augmentation.init_random_vars
     .. autofunction:: akida_models.detection.data_augmentation.resize_image
-    
+
     Performance
     ***********
     .. autoclass:: akida_models.detection.map_evaluation.MapEvaluation
