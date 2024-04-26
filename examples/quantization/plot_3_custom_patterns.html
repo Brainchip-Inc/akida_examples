@@ -680,18 +680,18 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fa743aa9790&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7fa743aa9790&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fa743aa9790&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7fa743aa9790&gt;)
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7fa743aa9790&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7fa743ab5c10&gt;)
-QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7fa743ab5c10&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fa743ab5f70&gt;)
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7fa743ab5f70&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fa743ab5f70&gt;)
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7fa743ab5f70&gt;)
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7fa743abe3a0&gt;)
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fcf56ae9790&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=&lt;function get_qconv at 0x7fcf56ae9790&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=&lt;function get_qconv at 0x7fcf56ae9790&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=&lt;function get_qconv at 0x7fcf56ae9790&gt;)
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=&lt;function get_qconv at 0x7fcf56ae9790&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;, &#39;Relu&#39;), f=&lt;function get_qdepthwise at 0x7fcf56af5c10&gt;)
+QuantizerPattern(pattern=(&#39;DepthwiseConv&#39;,), f=&lt;function get_qdepthwise at 0x7fcf56af5c10&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fcf56af5f70&gt;)
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=&lt;function get_qgemm at 0x7fcf56af5f70&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=&lt;function get_qgemm at 0x7fcf56af5f70&gt;)
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=&lt;function get_qgemm at 0x7fcf56af5f70&gt;)
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=&lt;function get_qadd at 0x7fcf56afe3a0&gt;)
 </pre></div>
 </div>
 <p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">ReLU</span></code> operation on its own or
@@ -884,71 +884,6 @@ the problem layer:</p>
 <span class="p">}</span>
 <span class="k">with</span> <span class="n">custom_pattern_scope</span><span class="p">(</span><span class="n">quantization_pattern_map</span><span class="p">):</span>
     <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model_temp</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
-Setting Akida pads in first convolution...
-</pre></div>
-</div>
-<p>Let’s try to convert again:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
-    <span class="n">akida_model</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ResNet50 is not fully accelerated by Akida. Reason: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The error message now indicates that there is a problem with a stride 2 operation,
-because the required kernel size is not supported. Looking at the ResNet50 definition,
-we can see that there’s a very unusual kernel-size 1 / stride 2 conv operation
-applied within the stride-2 blocks at the beginning of each stage.
-That’s a good candidate for the workaround mentioned earlier:
-we can simply swap in a compatible kernel-size 3 / stride 2 convolution, placing
-the weights from the original size 1 kernel within (otherwise zero-valued) size
-3 kernels. In Akida (and Keras), the kernel-size 3/ stride 2 conv operation has padding
-[0, 0, 1, 1], so to make the replacement operation equivalent we need to
-place the smaller kernel weights eccentrically within the larger kernels.</p>
-<p>We’ll combine that with the previous padding fix within a single function.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">align_conv_with_akida</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pattern function that handles convolutions incompatible with Akida</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Recover initial ONNXLayer from block nodes and graph</span>
-    <span class="n">qconv</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qconv</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-
-    <span class="c1"># Force the pads in first convolution to Akida compatible values</span>
-    <span class="k">if</span> <span class="n">qconv</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;resnetv17_conv0_fwd&#39;</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting Akida pads in first convolution...&quot;</span><span class="p">)</span>
-        <span class="c1"># Note: pads in convolution include spatial dimension</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
-        <span class="n">graph_tools</span><span class="o">.</span><span class="n">replace_field</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="s2">&quot;pool_pads&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-
-    <span class="c1"># Replace 1x1 kernel with strides 2x2 by a padded 3x3 one</span>
-    <span class="n">kernel</span> <span class="o">=</span> <span class="n">qconv</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">]</span>
-    <span class="n">strides</span> <span class="o">=</span> <span class="n">graph_tools</span><span class="o">.</span><span class="n">get_field</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="s2">&quot;strides&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">strides</span> <span class="o">==</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
-        <span class="c1"># Only spatial dimensions are padded</span>
-        <span class="c1"># The original weights are placed eccentrically in the new kernel</span>
-        <span class="n">new_kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
-        <span class="c1"># Set new kernel in the layer</span>
-        <span class="c1"># This operation requires a specific padding pattern for Akida compatibility.</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="n">new_kernel</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Kernel updated in </span><span class="si">{</span><span class="n">qconv</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> from 1x1 to 3x3.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">qconv</span>
-
-
-<span class="c1"># Infer intermediate shape: This is required for some custom pattern functions</span>
-<span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">shape_inference</span><span class="o">.</span><span class="n">infer_shapes</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
-
-<span class="c1"># Quantize model with custom patterns</span>
-<span class="n">quantization_pattern_map</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">,</span> <span class="s2">&quot;MaxPool&quot;</span><span class="p">):</span> <span class="n">align_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">):</span> <span class="n">align_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,):</span> <span class="n">align_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;Relu&quot;</span><span class="p">,</span> <span class="s2">&quot;GlobalAveragePool&quot;</span><span class="p">):</span> <span class="n">activation_pattern_fn</span><span class="p">,</span>
-    <span class="s2">&quot;Relu&quot;</span><span class="p">:</span> <span class="n">activation_pattern_fn</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="k">with</span> <span class="n">custom_pattern_scope</span><span class="p">(</span><span class="n">quantization_pattern_map</span><span class="p">):</span>
-    <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 
 <span class="c1"># Evaluate quantized model performance</span>
 <span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
@@ -957,12 +892,6 @@ place the smaller kernel weights eccentrically within the larger kernels.</p>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
 Setting Akida pads in first convolution...
-Kernel updated in resnetv17_stage2_conv3_fwd from 1x1 to 3x3.
-Kernel updated in resnetv17_stage2_conv0_fwd from 1x1 to 3x3.
-Kernel updated in resnetv17_stage3_conv3_fwd from 1x1 to 3x3.
-Kernel updated in resnetv17_stage3_conv0_fwd from 1x1 to 3x3.
-Kernel updated in resnetv17_stage4_conv3_fwd from 1x1 to 3x3.
-Kernel updated in resnetv17_stage4_conv0_fwd from 1x1 to 3x3.
 Quantized model accuracy: 10/10.
 </pre></div>
 </div>
@@ -1021,7 +950,7 @@ the input image prior to sending instead.</p>
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 43.587 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 36.318 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>
