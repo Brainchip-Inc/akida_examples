@@ -409,7 +409,7 @@ Classification
 
 .. |gx2_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i2_w2_a1.h5
+   :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i4_w4_a4.h5
 
 CNNs
 ++++
@@ -477,7 +477,7 @@ CNNs
 |                  |            |                    |         |              |          |                  |
 |                  |            |                    |         | 4            | 68.52%   | |mb_224_4_dl|    |
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
-| GXNOR            | 28         | MNIST              | 1.6M    | 2/2/1        | 98.98%   | |gx2_dl|         |
+| GXNOR            | 28         | MNIST              | 1.6M    | 4            | 98.81%   | |gx2_dl|         |
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 
 Transformers
