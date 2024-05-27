@@ -197,6 +197,15 @@ in a model.
 
    akida_models macs -m akidanet_imagenet_224_alpha_0.5.h5 -v
 
+Command-line interface to display summary
+-----------------------------------------
+
+CLI comes with a ``summary`` action that allows to display a model summary (supports Keras, ONNX and
+Akida model files).
+
+.. code-block:: bash
+
+   akida_models summary -m akidanet_imagenet_224_alpha_0.5.h5
 
 Layer Blocks
 ------------
