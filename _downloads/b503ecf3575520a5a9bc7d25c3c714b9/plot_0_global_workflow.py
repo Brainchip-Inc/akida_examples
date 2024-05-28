@@ -116,7 +116,7 @@ print('Test accuracy:', score[1])
 # 2.1. 8-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# An Akida accelerator processes 8, 4, 2, or 1 bit integer activations and weights. Therefore,
+# An Akida accelerator processes 8 or 4-bits integer activations and weights. Therefore,
 # the floating point Keras model must be quantized in preparation to run on an Akida accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
@@ -295,15 +295,3 @@ print(outputs.squeeze())
 # In the bar chart above, you can see the outputs from all 10 neurons. It is easy to see that neuron
 # 7 responds much more strongly than the others. The first sample is indeed a number 7.
 #
-
-######################################################################
-# 4. GXNOR/MNIST
-# ~~~~~~~~~~~~~~
-#
-# A more robust model called GXNOR/MNIST is provided in `the model zoo
-# <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist>`__ It is inspired from the
-# `GXNOR-Net paper <https://arxiv.org/pdf/1705.09283.pdf>`__. It comes with its
-# `pretrained 2/2/1 helper
-# <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained>`__ for which the
-# float training was done for 20 epochs, then the model was then gradually quantized following:
-# 4/4/4 --> 4/4/2 --> 2/2/2 --> 2/2/1 with a 15 epochs QAT step at each quantization stage.
