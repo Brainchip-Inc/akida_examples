@@ -235,6 +235,173 @@ from the `model statistics <../api_reference/akida_apis.html#akida.Model.statist
 An example of power and FPS measurements is given in the `AkidaNet/ImageNet
 tutorial <../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance>`__.
 
+Command-line interface for model evaluation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In addition to the aforementioned APIs, the akida python package provides a command-line interface
+for `mapping <../api_reference/akida_apis.html#akida.Model.map>`__ a model to the available
+`device <../api_reference/akida_apis.html#akida.devices>`__ and sending data for inference so that
+hardware details can be retrieved.
+
+.. code-block:: bash
+
+    akida run -h
+
+    usage: akida run [-h] -m MODEL [-i INPUT]
+
+    options:
+        -h, --help              show this help message and exit
+        -m MODEL, --model MODEL The source model path
+        -i INPUT, --input INPUT Input image or a numpy array
+
+
+| If no input data is provided a random sample will be generated and used for inference.
+| CLI outputs a summary of the mapped model with details regarding NP units allocation,
+  `statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__ and
+  `metrics <../api_reference/akida_apis.html#akida.HardwareDevice.metrics>`__.
+
+.. note:: About the model statistics:
+
+    * it shows the inference power/energy when measurable (i.e. whenever the inference
+      is lasting long enough to collect meaningful data),
+    * displayed numbers include the floor power.
+
+| The two examples below show:
+
+   * the CLI output using a pretrained DS-CNN model and a random input
+   * the CLI output using a pretrained AkidaNet model and a 10 images input
+
+.. code-block:: bash
+
+   wget https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws_i8_w4_a4_laq1.h5
+   CNN2SNN_TARGET_AKIDA_VERSION=v1 cnn2snn convert -m ds_cnn_kws_i8_w4_a4_laq1.h5
+   akida run -m ds_cnn_kws_i8_w4_a4_laq1.fbz
+
+        Model Summary # Summary with NP units allocation
+        ___________________________________________________
+        Input shape  Output shape  Sequences  Layers  NPs
+        ===================================================
+        [49, 10, 1]  [1, 1, 33]    1          6       65
+        ___________________________________________________
+
+        ____________________________________________________________
+        Layer (type)             Output shape  Kernel shape    NPs
+
+        ===== HW/conv_0-dense_5 (Hardware) - size: 88748 bytes =====
+
+        conv_0 (InputConv.)      [25, 5, 64]   (5, 5, 1, 64)   N/A
+        ____________________________________________________________
+        separable_1 (Sep.Conv.)  [25, 5, 64]   (3, 3, 64, 1)   16
+        ____________________________________________________________
+                                               (1, 1, 64, 64)
+        ____________________________________________________________
+        separable_2 (Sep.Conv.)  [25, 5, 64]   (3, 3, 64, 1)   16
+        ____________________________________________________________
+                                               (1, 1, 64, 64)
+        ____________________________________________________________
+        separable_3 (Sep.Conv.)  [25, 5, 64]   (3, 3, 64, 1)   16
+        ____________________________________________________________
+                                               (1, 1, 64, 64)
+        ____________________________________________________________
+        separable_4 (Sep.Conv.)  [1, 1, 64]    (3, 3, 64, 1)   16
+        ____________________________________________________________
+                                               (1, 1, 64, 64)
+        ____________________________________________________________
+        dense_5 (Fully.)         [1, 1, 33]    (1, 1, 64, 33)  1
+        ____________________________________________________________
+
+        No input provided, using random data.
+
+        Floor power (mW): 914.03                # Reference board floor power
+        Average framerate = 62.50 fps           # Model statistics
+
+        Model metrics:                          # Model metrics:
+          inference_frames: 1                   #  - number of frames sent for inference
+          inference_clk: 93965                  #  - number of hardware clocks used for inference
+          program_clk: 152396                   #  - number of hardware clocks used for model programming
+
+
+.. code-block:: bash
+
+   wget https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   wget https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.npy
+   CNN2SNN_TARGET_AKIDA_VERSION=v1 cnn2snn convert -m akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+   akida run -m akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.fbz -i imagenet_like.npy
+
+        Model Summary # Summary with NP units allocation
+        _____________________________________________________
+        Input shape    Output shape  Sequences  Layers  NPs
+        =====================================================
+        [224, 224, 3]  [1, 1, 1000]  1          15      32
+        _____________________________________________________
+
+        __________________________________________________________________
+        Layer (type)              Output shape    Kernel shape       NPs
+
+        ====== HW/conv_0-classifier (Hardware) - size: 1231036 bytes =====
+
+        conv_0 (InputConv.)       [112, 112, 16]  (3, 3, 3, 16)      N/A
+        __________________________________________________________________
+        conv_1 (Conv.)            [112, 112, 32]  (3, 3, 16, 32)     4
+        __________________________________________________________________
+        conv_2 (Conv.)            [56, 56, 64]    (3, 3, 32, 64)     6
+        __________________________________________________________________
+        conv_3 (Conv.)            [56, 56, 64]    (3, 3, 64, 64)     3
+        __________________________________________________________________
+        separable_4 (Sep.Conv.)   [28, 28, 128]   (3, 3, 64, 1)      3
+        __________________________________________________________________
+                                                  (1, 1, 64, 128)
+        __________________________________________________________________
+        separable_5 (Sep.Conv.)   [28, 28, 128]   (3, 3, 128, 1)     2
+        __________________________________________________________________
+                                                  (1, 1, 128, 128)
+        __________________________________________________________________
+        separable_6 (Sep.Conv.)   [14, 14, 256]   (3, 3, 128, 1)     2
+        __________________________________________________________________
+                                                  (1, 1, 128, 256)
+        __________________________________________________________________
+        separable_7 (Sep.Conv.)   [14, 14, 256]   (3, 3, 256, 1)     1
+        __________________________________________________________________
+                                                  (1, 1, 256, 256)
+        __________________________________________________________________
+        separable_8 (Sep.Conv.)   [14, 14, 256]   (3, 3, 256, 1)     1
+        __________________________________________________________________
+                                                  (1, 1, 256, 256)
+        __________________________________________________________________
+        separable_9 (Sep.Conv.)   [14, 14, 256]   (3, 3, 256, 1)     1
+        __________________________________________________________________
+                                                  (1, 1, 256, 256)
+        __________________________________________________________________
+        separable_10 (Sep.Conv.)  [14, 14, 256]   (3, 3, 256, 1)     1
+        __________________________________________________________________
+                                                  (1, 1, 256, 256)
+        __________________________________________________________________
+        separable_11 (Sep.Conv.)  [14, 14, 256]   (3, 3, 256, 1)     1
+        __________________________________________________________________
+                                                  (1, 1, 256, 256)
+        __________________________________________________________________
+        separable_12 (Sep.Conv.)  [7, 7, 512]     (3, 3, 256, 1)     2
+        __________________________________________________________________
+                                                  (1, 1, 256, 512)
+        __________________________________________________________________
+        separable_13 (Sep.Conv.)  [1, 1, 512]     (3, 3, 512, 1)     4
+        __________________________________________________________________
+                                                  (1, 1, 512, 512)
+        __________________________________________________________________
+        classifier (Fully.)       [1, 1, 1000]    (1, 1, 512, 1000)  1
+        __________________________________________________________________
+
+
+        Floor power (mW): 914.03                # Reference board floor power
+        Average framerate = 23.42 fps           # Model statistics
+        Last inference power range (mW):  Avg 1079.00 / Min 927.00 / Max 1144.00 / Std 89.16
+        Last inference energy consumed (mJ/frame): 46.07
+
+        Model metrics:                          # Model metrics:
+          inference_frames: 10                  #  - number of frames sent for inference
+          inference_clk: 116126900              #  - number of hardware clocks used for inference
+          program_clk: 681303                   #  - number of hardware clocks used for model programming
+
 
 Using Akida Edge learning
 -------------------------
