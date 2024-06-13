@@ -74,6 +74,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#model-mapping">Model mapping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#advanced-mapping-details-and-hardware-devices-usage">Advanced Mapping Details and Hardware Devices Usage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performance-measurement">Performance measurement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#using-akida-edge-learning">Using Akida Edge learning</a><ul>
@@ -704,6 +705,175 @@ from the <a class="reference external" href="../api_reference/akida_apis.html#ak
 </div>
 <p>An example of power and FPS measurements is given in the <a class="reference external" href="../examples/general/plot_1_akidanet_imagenet.html#hardware-mapping-and-performance">AkidaNet/ImageNet
 tutorial</a>.</p>
+</section>
+<section id="command-line-interface-for-model-evaluation">
+<h3>Command-line interface for model evaluation<a class="headerlink" href="#command-line-interface-for-model-evaluation" title="Permalink to this headline"></a></h3>
+<p>In addition to the aforementioned APIs, the akida python package provides a command-line interface
+for <a class="reference external" href="../api_reference/akida_apis.html#akida.Model.map">mapping</a> a model to the available
+<a class="reference external" href="../api_reference/akida_apis.html#akida.devices">device</a> and sending data for inference so that
+hardware details can be retrieved.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>akida<span class="w"> </span>run<span class="w"> </span>-h
+
+usage:<span class="w"> </span>akida<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-m<span class="w"> </span>MODEL<span class="w"> </span><span class="o">[</span>-i<span class="w"> </span>INPUT<span class="o">]</span>
+
+options:
+<span class="w">    </span>-h,<span class="w"> </span>--help<span class="w">              </span>show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">    </span>-m<span class="w"> </span>MODEL,<span class="w"> </span>--model<span class="w"> </span>MODEL<span class="w"> </span>The<span class="w"> </span><span class="nb">source</span><span class="w"> </span>model<span class="w"> </span>path
+<span class="w">    </span>-i<span class="w"> </span>INPUT,<span class="w"> </span>--input<span class="w"> </span>INPUT<span class="w"> </span>Input<span class="w"> </span>image<span class="w"> </span>or<span class="w"> </span>a<span class="w"> </span>numpy<span class="w"> </span>array
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line">If no input data is provided a random sample will be generated and used for inference.</div>
+<div class="line">CLI outputs a summary of the mapped model with details regarding NP units allocation,
+<a class="reference external" href="../api_reference/akida_apis.html#akida.Model.statistics">statistics</a> and
+<a class="reference external" href="../api_reference/akida_apis.html#akida.HardwareDevice.metrics">metrics</a>.</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>About the model statistics:</p>
+<ul class="simple">
+<li><p>it shows the inference power/energy when measurable (i.e. whenever the inference
+is lasting long enough to collect meaningful data),</p></li>
+<li><p>displayed numbers include the floor power.</p></li>
+</ul>
+</div>
+<div class="line-block">
+<div class="line">The two examples below show:</div>
+</div>
+<blockquote>
+<div><ul class="simple">
+<li><p>the CLI output using a pretrained DS-CNN model and a random input</p></li>
+<li><p>the CLI output using a pretrained AkidaNet model and a 10 images input</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://data.brainchip.com/models/AkidaV1/ds_cnn/ds_cnn_kws_i8_w4_a4_laq1.h5
+<span class="nv">CNN2SNN_TARGET_AKIDA_VERSION</span><span class="o">=</span>v1<span class="w"> </span>cnn2snn<span class="w"> </span>convert<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws_i8_w4_a4_laq1.h5
+akida<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws_i8_w4_a4_laq1.fbz
+
+<span class="w">     </span>Model<span class="w"> </span>Summary<span class="w"> </span><span class="c1"># Summary with NP units allocation</span>
+<span class="w">     </span>___________________________________________________
+<span class="w">     </span>Input<span class="w"> </span>shape<span class="w">  </span>Output<span class="w"> </span>shape<span class="w">  </span>Sequences<span class="w">  </span>Layers<span class="w">  </span><span class="nv">NPs</span>
+<span class="w">     </span><span class="o">===================================================</span>
+<span class="w">     </span><span class="o">[</span><span class="m">49</span>,<span class="w"> </span><span class="m">10</span>,<span class="w"> </span><span class="m">1</span><span class="o">]</span><span class="w">  </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">33</span><span class="o">]</span><span class="w">    </span><span class="m">1</span><span class="w">          </span><span class="m">6</span><span class="w">       </span><span class="m">65</span>
+<span class="w">     </span>___________________________________________________
+
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>Layer<span class="w"> </span><span class="o">(</span><span class="nb">type</span><span class="o">)</span><span class="w">             </span>Output<span class="w"> </span>shape<span class="w">  </span>Kernel<span class="w"> </span>shape<span class="w">    </span><span class="nv">NPs</span>
+
+<span class="w">     </span><span class="o">=====</span><span class="w"> </span>HW/conv_0-dense_5<span class="w"> </span><span class="o">(</span>Hardware<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>size:<span class="w"> </span><span class="m">88748</span><span class="w"> </span><span class="nv">bytes</span><span class="w"> </span><span class="o">=====</span>
+
+<span class="w">     </span>conv_0<span class="w"> </span><span class="o">(</span>InputConv.<span class="o">)</span><span class="w">      </span><span class="o">[</span><span class="m">25</span>,<span class="w"> </span><span class="m">5</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">5</span>,<span class="w"> </span><span class="m">5</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span><span class="w">   </span>N/A
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>separable_1<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">25</span>,<span class="w"> </span><span class="m">5</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">   </span><span class="m">16</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">                                            </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>separable_2<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">25</span>,<span class="w"> </span><span class="m">5</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">   </span><span class="m">16</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">                                            </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>separable_3<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">25</span>,<span class="w"> </span><span class="m">5</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">   </span><span class="m">16</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">                                            </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>separable_4<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">    </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">   </span><span class="m">16</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">                                            </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span>
+<span class="w">     </span>____________________________________________________________
+<span class="w">     </span>dense_5<span class="w"> </span><span class="o">(</span>Fully.<span class="o">)</span><span class="w">         </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">33</span><span class="o">]</span><span class="w">    </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">33</span><span class="o">)</span><span class="w">  </span><span class="m">1</span>
+<span class="w">     </span>____________________________________________________________
+
+<span class="w">     </span>No<span class="w"> </span>input<span class="w"> </span>provided,<span class="w"> </span>using<span class="w"> </span>random<span class="w"> </span>data.
+
+<span class="w">     </span>Floor<span class="w"> </span>power<span class="w"> </span><span class="o">(</span>mW<span class="o">)</span>:<span class="w"> </span><span class="m">914</span>.03<span class="w">                </span><span class="c1"># Reference board floor power</span>
+<span class="w">     </span>Average<span class="w"> </span><span class="nv">framerate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">62</span>.50<span class="w"> </span>fps<span class="w">           </span><span class="c1"># Model statistics</span>
+
+<span class="w">     </span>Model<span class="w"> </span>metrics:<span class="w">                          </span><span class="c1"># Model metrics:</span>
+<span class="w">       </span>inference_frames:<span class="w"> </span><span class="m">1</span><span class="w">                   </span><span class="c1">#  - number of frames sent for inference</span>
+<span class="w">       </span>inference_clk:<span class="w"> </span><span class="m">93965</span><span class="w">                  </span><span class="c1">#  - number of hardware clocks used for inference</span>
+<span class="w">       </span>program_clk:<span class="w"> </span><span class="m">152396</span><span class="w">                   </span><span class="c1">#  - number of hardware clocks used for model programming</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+wget<span class="w"> </span>https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.npy
+<span class="nv">CNN2SNN_TARGET_AKIDA_VERSION</span><span class="o">=</span>v1<span class="w"> </span>cnn2snn<span class="w"> </span>convert<span class="w"> </span>-m<span class="w"> </span>akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5
+akida<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.fbz<span class="w"> </span>-i<span class="w"> </span>imagenet_like.npy
+
+<span class="w">     </span>Model<span class="w"> </span>Summary<span class="w"> </span><span class="c1"># Summary with NP units allocation</span>
+<span class="w">     </span>_____________________________________________________
+<span class="w">     </span>Input<span class="w"> </span>shape<span class="w">    </span>Output<span class="w"> </span>shape<span class="w">  </span>Sequences<span class="w">  </span>Layers<span class="w">  </span><span class="nv">NPs</span>
+<span class="w">     </span><span class="o">=====================================================</span>
+<span class="w">     </span><span class="o">[</span><span class="m">224</span>,<span class="w"> </span><span class="m">224</span>,<span class="w"> </span><span class="m">3</span><span class="o">]</span><span class="w">  </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">1000</span><span class="o">]</span><span class="w">  </span><span class="m">1</span><span class="w">          </span><span class="m">15</span><span class="w">      </span><span class="m">32</span>
+<span class="w">     </span>_____________________________________________________
+
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>Layer<span class="w"> </span><span class="o">(</span><span class="nb">type</span><span class="o">)</span><span class="w">              </span>Output<span class="w"> </span>shape<span class="w">    </span>Kernel<span class="w"> </span>shape<span class="w">       </span><span class="nv">NPs</span>
+
+<span class="w">     </span><span class="o">======</span><span class="w"> </span>HW/conv_0-classifier<span class="w"> </span><span class="o">(</span>Hardware<span class="o">)</span><span class="w"> </span>-<span class="w"> </span>size:<span class="w"> </span><span class="m">1231036</span><span class="w"> </span><span class="nv">bytes</span><span class="w"> </span><span class="o">=====</span>
+
+<span class="w">     </span>conv_0<span class="w"> </span><span class="o">(</span>InputConv.<span class="o">)</span><span class="w">       </span><span class="o">[</span><span class="m">112</span>,<span class="w"> </span><span class="m">112</span>,<span class="w"> </span><span class="m">16</span><span class="o">]</span><span class="w">  </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">16</span><span class="o">)</span><span class="w">      </span>N/A
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>conv_1<span class="w"> </span><span class="o">(</span>Conv.<span class="o">)</span><span class="w">            </span><span class="o">[</span><span class="m">112</span>,<span class="w"> </span><span class="m">112</span>,<span class="w"> </span><span class="m">32</span><span class="o">]</span><span class="w">  </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">16</span>,<span class="w"> </span><span class="m">32</span><span class="o">)</span><span class="w">     </span><span class="m">4</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>conv_2<span class="w"> </span><span class="o">(</span>Conv.<span class="o">)</span><span class="w">            </span><span class="o">[</span><span class="m">56</span>,<span class="w"> </span><span class="m">56</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">    </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">32</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span><span class="w">     </span><span class="m">6</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>conv_3<span class="w"> </span><span class="o">(</span>Conv.<span class="o">)</span><span class="w">            </span><span class="o">[</span><span class="m">56</span>,<span class="w"> </span><span class="m">56</span>,<span class="w"> </span><span class="m">64</span><span class="o">]</span><span class="w">    </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">64</span><span class="o">)</span><span class="w">     </span><span class="m">3</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_4<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">28</span>,<span class="w"> </span><span class="m">28</span>,<span class="w"> </span><span class="m">128</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">      </span><span class="m">3</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">128</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_5<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">28</span>,<span class="w"> </span><span class="m">28</span>,<span class="w"> </span><span class="m">128</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">128</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">2</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">128</span>,<span class="w"> </span><span class="m">128</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_6<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">128</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">2</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">128</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_7<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_8<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_9<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">   </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_10<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_11<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">14</span>,<span class="w"> </span><span class="m">14</span>,<span class="w"> </span><span class="m">256</span><span class="o">]</span><span class="w">   </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">256</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_12<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">7</span>,<span class="w"> </span><span class="m">7</span>,<span class="w"> </span><span class="m">512</span><span class="o">]</span><span class="w">     </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">2</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">256</span>,<span class="w"> </span><span class="m">512</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>separable_13<span class="w"> </span><span class="o">(</span>Sep.Conv.<span class="o">)</span><span class="w">  </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">512</span><span class="o">]</span><span class="w">     </span><span class="o">(</span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">512</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w">     </span><span class="m">4</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">                                               </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">512</span>,<span class="w"> </span><span class="m">512</span><span class="o">)</span>
+<span class="w">     </span>__________________________________________________________________
+<span class="w">     </span>classifier<span class="w"> </span><span class="o">(</span>Fully.<span class="o">)</span><span class="w">       </span><span class="o">[</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">1000</span><span class="o">]</span><span class="w">    </span><span class="o">(</span><span class="m">1</span>,<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="m">512</span>,<span class="w"> </span><span class="m">1000</span><span class="o">)</span><span class="w">  </span><span class="m">1</span>
+<span class="w">     </span>__________________________________________________________________
+
+
+<span class="w">     </span>Floor<span class="w"> </span>power<span class="w"> </span><span class="o">(</span>mW<span class="o">)</span>:<span class="w"> </span><span class="m">914</span>.03<span class="w">                </span><span class="c1"># Reference board floor power</span>
+<span class="w">     </span>Average<span class="w"> </span><span class="nv">framerate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">23</span>.42<span class="w"> </span>fps<span class="w">           </span><span class="c1"># Model statistics</span>
+<span class="w">     </span>Last<span class="w"> </span>inference<span class="w"> </span>power<span class="w"> </span>range<span class="w"> </span><span class="o">(</span>mW<span class="o">)</span>:<span class="w">  </span>Avg<span class="w"> </span><span class="m">1079</span>.00<span class="w"> </span>/<span class="w"> </span>Min<span class="w"> </span><span class="m">927</span>.00<span class="w"> </span>/<span class="w"> </span>Max<span class="w"> </span><span class="m">1144</span>.00<span class="w"> </span>/<span class="w"> </span>Std<span class="w"> </span><span class="m">89</span>.16
+<span class="w">     </span>Last<span class="w"> </span>inference<span class="w"> </span>energy<span class="w"> </span>consumed<span class="w"> </span><span class="o">(</span>mJ/frame<span class="o">)</span>:<span class="w"> </span><span class="m">46</span>.07
+
+<span class="w">     </span>Model<span class="w"> </span>metrics:<span class="w">                          </span><span class="c1"># Model metrics:</span>
+<span class="w">       </span>inference_frames:<span class="w"> </span><span class="m">10</span><span class="w">                  </span><span class="c1">#  - number of frames sent for inference</span>
+<span class="w">       </span>inference_clk:<span class="w"> </span><span class="m">116126900</span><span class="w">              </span><span class="c1">#  - number of hardware clocks used for inference</span>
+<span class="w">       </span>program_clk:<span class="w"> </span><span class="m">681303</span><span class="w">                   </span><span class="c1">#  - number of hardware clocks used for model programming</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="using-akida-edge-learning">
