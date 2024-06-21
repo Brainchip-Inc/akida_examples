@@ -176,6 +176,11 @@ Akida runtime API
     .. autoclass:: akida.NP.Mapping
         :members:
 
+    MapMode
+    =======
+    .. autoclass:: akida.MapMode
+        :members:
+
     Tools
     =====
 
