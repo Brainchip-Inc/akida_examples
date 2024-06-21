@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -521,7 +529,7 @@
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span>
-                          <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">init_quant_config</span><span class="p">)</span>
+                          <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">OutputQuantizer</span>
 <span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">TensorRecorder</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span>
@@ -560,10 +568,12 @@
         <span class="k">return</span> <span class="n">config</span></div>
 
 
+<span class="c1"># Note that keras.layers.Add is not registered as a quantized target because the class name &#39;Add&#39; is</span>
+<span class="c1"># enough and shared between Keras and QuantizeML</span>
 <div class="viewcode-block" id="QuantizedAdd"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAdd">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">Add</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedAdd</span><span class="p">(</span><span class="n">Add</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedAdd</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sums two inputs and quantize the output.</span>
 
 <span class="sd">    The two inputs must be provided as a list or tuple of FixedPoint or Tensors.</span>
@@ -575,8 +585,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="n">apply_buffer_bitwidth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">out_quant_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_quant_cfg</span><span class="p">:</span>
@@ -608,19 +617,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">a_shift</span><span class="p">(</span><span class="n">shift_ab</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b_shift</span><span class="p">(</span><span class="n">shift_ba</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">outputs</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;quant_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="k">return</span> <span class="n">outputs</span></div>
 
 
 <div class="viewcode-block" id="QuantizedConcatenate"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedConcatenate">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">)</span>
 <span class="nd">@register_no_output_quantizer</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedConcatenate</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedConcatenate</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A Concatenate layer that operates on quantized inputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

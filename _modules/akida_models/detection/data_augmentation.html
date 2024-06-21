@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -517,7 +525,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Data augmentation for object detection</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;augment_sample&#39;</span><span class="p">,</span> <span class="s1">&#39;build_yolo_aug_pipeline&#39;</span><span class="p">,</span> <span class="s1">&#39;init_random_vars&#39;</span><span class="p">,</span> <span class="s1">&#39;resize_image&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;augment_sample&#39;</span><span class="p">,</span> <span class="s1">&#39;build_yolo_aug_pipeline&#39;</span><span class="p">,</span> <span class="s1">&#39;init_random_vars&#39;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -525,6 +533,7 @@
 <span class="kn">from</span> <span class="nn">imgaug.augmentables.bbs</span> <span class="kn">import</span> <span class="n">BoundingBoxesOnImage</span><span class="p">,</span> <span class="n">BoundingBox</span> <span class="k">as</span> <span class="n">BoundingBoxAug</span>
 
 <span class="kn">from</span> <span class="nn">.data_utils</span> <span class="kn">import</span> <span class="n">Coord</span>
+<span class="kn">from</span> <span class="nn">.processing</span> <span class="kn">import</span> <span class="n">apply_affine_transform_to_bboxes</span>
 
 
 <div class="viewcode-block" id="augment_sample"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_augmentation.augment_sample">[docs]</a><span class="k">def</span> <span class="nf">augment_sample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">):</span>
@@ -602,22 +611,10 @@
 <span class="sd">        dict: dictionary containing information about objects in the image,</span>
 <span class="sd">            including labels and bounding boxes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">objects_boxes</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">[</span>
-            <span class="n">bbox</span><span class="o">.</span><span class="n">y1</span><span class="p">,</span>
-            <span class="n">bbox</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span>
-            <span class="n">bbox</span><span class="o">.</span><span class="n">y2</span><span class="p">,</span>
-            <span class="n">bbox</span><span class="o">.</span><span class="n">x2</span><span class="p">,</span>
-        <span class="p">]</span> <span class="k">for</span> <span class="n">bbox</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">]</span>
-
-    <span class="n">objects_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">box</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">]</span>
-
-    <span class="n">objects</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="n">objects_boxes</span><span class="p">,</span>
-        <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">objects_labels</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="n">bbox</span><span class="o">.</span><span class="n">y1</span><span class="p">,</span> <span class="n">bbox</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="n">bbox</span><span class="o">.</span><span class="n">y2</span><span class="p">,</span> <span class="n">bbox</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="k">for</span> <span class="n">bbox</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">],</span>
+        <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">box</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">]</span>
     <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">objects</span>
 
 
 <div class="viewcode-block" id="init_random_vars"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_augmentation.init_random_vars">[docs]</a><span class="k">def</span> <span class="nf">init_random_vars</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
@@ -644,24 +641,8 @@
     <span class="k">return</span> <span class="n">flip</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span></div>
 
 
-<div class="viewcode-block" id="resize_image"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data_augmentation.resize_image">[docs]</a><span class="k">def</span> <span class="nf">resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Change image dimensions</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        image (np.ndarray): input image with size represented as (h, w, c).</span>
-<span class="sd">        input_shape (tuple): tuple containing desired image</span>
-<span class="sd">            dimension in form of (h, w, c).</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        np.ndarray: the resized image.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-
-    <span class="k">return</span> <span class="n">image</span></div>
-
-
-<span class="k">def</span> <span class="nf">fix_obj_position_and_size</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">flip</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">fix_obj_position_and_size</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span>
+                              <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">flip</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adjust object positions and sizes based on augmentation parameters.</span>
 
@@ -677,23 +658,33 @@
 <span class="sd">        training (bool, optional): True to augment training data,</span>
 <span class="sd">            False for validation.</span>
 <span class="sd">        flip (bool): binary value indicating whether to flip the image or not.</span>
+<span class="sd">        affine_transform (np.ndarray, optional): A 2x3 affine transformation matrix.</span>
+<span class="sd">            Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: updated objects information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_resize_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">input_h</span><span class="p">,</span> <span class="n">input_w</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">affine_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">apply_affine_transform_to_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">raw_target_size_aspect_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">h</span><span class="p">,</span>
+                                                      <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span><span class="p">,</span>
+                                                      <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">h</span><span class="p">,</span>
+                                                      <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span><span class="p">])</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes</span> <span class="o">*</span> <span class="n">raw_target_size_aspect_ratios</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">input_h</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_w</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_h</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_w</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">bboxes</span>
+
     <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">])</span>
-
-    <span class="n">aspect_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">h</span><span class="p">,</span>
-                             <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span><span class="p">,</span>
-                             <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">h</span><span class="p">,</span>
-                             <span class="nb">float</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span><span class="p">])</span>
-
     <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">offy</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">offx</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
         <span class="n">boxes</span> <span class="o">=</span> <span class="p">(</span><span class="n">boxes</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">-</span> <span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-    <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">boxes</span> <span class="o">*</span> <span class="n">aspect_ratios</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">input_shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">_resize_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">affine_transform</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">training</span> <span class="ow">and</span> <span class="n">flip</span><span class="p">:</span>
         <span class="n">xmin</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

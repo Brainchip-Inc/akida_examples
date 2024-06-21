@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -525,6 +533,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="n">yolo_head_block</span>
 <span class="kn">from</span> <span class="nn">..imagenet.model_akidanet</span> <span class="kn">import</span> <span class="n">akidanet_imagenet</span>
@@ -657,12 +666,20 @@
 <span class="sd">        keras.Model, list: a Keras Model instance and a list of anchors.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">anchors_name</span> <span class="o">=</span> <span class="s1">&#39;coco_anchors.pkl&#39;</span>
-    <span class="n">anchors_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
-        <span class="s1">&#39;https://data.brainchip.com/dataset-mirror/coco/&#39;</span> <span class="o">+</span> <span class="n">anchors_name</span><span class="p">,</span>
-        <span class="n">fname</span><span class="o">=</span><span class="n">anchors_name</span><span class="p">,</span>
-        <span class="n">file_hash</span><span class="o">=</span><span class="s1">&#39;36993699182495dd843158583515bd8d1412da978c55286ba0fefa88f5a8cace&#39;</span><span class="p">,</span>
-        <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/coco&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="n">anchors_name</span> <span class="o">=</span> <span class="s1">&#39;voc_anchors_v1.pkl&#39;</span>
+        <span class="n">anchors_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
+            <span class="s1">&#39;https://data.brainchip.com/dataset-mirror/voc/&#39;</span> <span class="o">+</span> <span class="n">anchors_name</span><span class="p">,</span>
+            <span class="n">fname</span><span class="o">=</span><span class="n">anchors_name</span><span class="p">,</span>
+            <span class="n">file_hash</span><span class="o">=</span><span class="s1">&#39;b1fe1ed12691e100646cf52b1320f05abd17b2f546d3e12cdee87758cc9ed0ba&#39;</span><span class="p">,</span>
+            <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/voc&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">anchors_name</span> <span class="o">=</span> <span class="s1">&#39;coco_anchors.pkl&#39;</span>
+        <span class="n">anchors_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
+            <span class="s1">&#39;https://data.brainchip.com/dataset-mirror/coco/&#39;</span> <span class="o">+</span> <span class="n">anchors_name</span><span class="p">,</span>
+            <span class="n">fname</span><span class="o">=</span><span class="n">anchors_name</span><span class="p">,</span>
+            <span class="n">file_hash</span><span class="o">=</span><span class="s1">&#39;36993699182495dd843158583515bd8d1412da978c55286ba0fefa88f5a8cace&#39;</span><span class="p">,</span>
+            <span class="n">cache_subdir</span><span class="o">=</span><span class="s1">&#39;datasets/coco&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">anchors_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
         <span class="n">anchors</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 

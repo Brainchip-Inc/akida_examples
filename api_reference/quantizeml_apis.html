@@ -194,6 +194,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -253,6 +254,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -1662,7 +1670,7 @@ model quantization ready.</p>
 <h3>Quantization<a class="headerlink" href="#quantization" title="Permalink to this headline"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.models.quantize">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">quantize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationParams(activation_bits=8,</span> <span class="pre">per_tensor_activations=False,</span> <span class="pre">weight_bits=8,</span> <span class="pre">output_bits=8,</span> <span class="pre">input_weight_bits=8,</span> <span class="pre">buffer_bits=32)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/quantize.html#quantize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.quantize" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">quantize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationParams(activation_bits=8,</span> <span class="pre">per_tensor_activations=False,</span> <span class="pre">weight_bits=8,</span> <span class="pre">output_bits=8,</span> <span class="pre">input_weight_bits=8,</span> <span class="pre">buffer_bits=32)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize_until</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/quantize.html#quantize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.quantize" title="Permalink to this definition"></a></dt>
 <dd><p>Quantizes a Keras or ONNX model using the provided configuration or parameters.</p>
 <p>Details on how this function behaves:</p>
 <ul class="simple">
@@ -1694,6 +1702,8 @@ samples to generate. Defaults to 1024.</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – the batch size. Defaults to None.</p></li>
 <li><p><strong>epochs</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of epochs. This parameter must be 1 for ONNX models.
 Defaults to 1.</p></li>
+<li><p><strong>quantize_until</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer/node until which to quantize:
+other ones after it will stay unchanged. Defaults to None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1719,28 +1729,6 @@ each quantized layer.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.check_quantization">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">check_quantization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/check_quantization.html#check_quantization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.check_quantization" title="Permalink to this definition"></a></dt>
-<dd><p>Checks the specified model quantization.</p>
-<p>It looks for errors that can be fixed in the quantization configuration:</p>
-<ul class="simple">
-<li><p>inaccurate weight scales quantization,</p></li>
-<li><p>saturation in integer operations.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – the model to check</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the quantization issues that were detected</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list(str)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1865,27 +1853,6 @@ requires calibration.</p>
 </section>
 <section id="utils">
 <h3>Utils<a class="headerlink" href="#utils" title="Permalink to this headline"></a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.load_model">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/utils.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.load_model" title="Permalink to this definition"></a></dt>
-<dd><p>Loads a model with quantizeml custom layers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model_path</strong> (<em>str</em>) – path of the model to load</p></li>
-<li><p><strong>custom_layers</strong> (<em>dict</em><em>, </em><em>optional</em>) – custom layers to add to the model. Defaults to None.</p></li>
-<li><p><strong>compile_model</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to compile the model. Defaults to True.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the loaded model</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.models.apply_weights_to_model">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">apply_weights_to_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/utils.html#apply_weights_to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.apply_weights_to_model" title="Permalink to this definition"></a></dt>
@@ -2261,7 +2228,7 @@ quantization ranges (this can be a negative number if the ranges are strictly lo
 0.5).</p>
 <p>From that it deduces the rightmost fractional bit indices.</p>
 <p>The resulting frac_bits can be a negative number if the ranges are higher than the biggest
-integer than can be represented with the specified value bits).</p>
+integer that can be represented with the specified value bits.</p>
 <p>If specified, the maximum fractional bits are clamped to the available value_bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2784,7 +2751,7 @@ to the optimal range for the specified value bits.</p>
 <h3>Layers<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.OnnxLayer">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">OnnxLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_imports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/base_layer.html#OnnxLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.OnnxLayer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">OnnxLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/base_layer.html#OnnxLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.OnnxLayer" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract class that represents an onnx subgraph in brainchip domain.</p>
 <p>Child must define the attributes on __init__ and return the node list (subgraph) on
 build_subgraph(). If these requirements are met, make_node() could be used to
@@ -2793,7 +2760,6 @@ define/register the custom node.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>base_name</strong> (<em>str</em>) – the operation type base name.</p></li>
-<li><p><strong>opset_imports</strong> (<em>list of OperatorSetIdProto</em><em>, </em><em>optional</em>) – the custom opset. Defaults to None.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 <li><p><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – the custom attributes. Each attribute type will be
 infered by <code class="docutils literal notranslate"><span class="pre">onnx.helper.make_attribute()</span></code>. Defaults to {}.</p></li>
@@ -2901,6 +2867,202 @@ whose representation can converge in an <code class="docutils literal notranslat
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>patterns</strong> (<em>dict</em>) – a list of sequence of nodes (keys) and their mapper function (values).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+<section id="model-i-o">
+<h2>Model I/O<a class="headerlink" href="#model-i-o" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.load_model">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.load_model" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Loads an Onnx or Keras model. An error is raised if the provided model</dt><dd><p>extension is not supported.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_path</strong> (<em>str</em>) – path of the model to load.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Loaded model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>keras.models.Model or onnx.ModelProto</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.save_model">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.save_model" title="Permalink to this definition"></a></dt>
+<dd><p>Save an ONNX or Keras model into a path.</p>
+<p>Note extension is overwritten given the model type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em><em>, </em><em>keras.Sequential</em><em> or </em><em>onnx.ModelProto</em>) – model to serialize.</p></li>
+<li><p><strong>model_path</strong> (<em>str</em>) – path to save the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the path where the model was saved.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="analysis">
+<h2>Analysis<a class="headerlink" href="#analysis" title="Permalink to this headline"></a></h2>
+<section id="kernel-distribution">
+<h3>Kernel distribution<a class="headerlink" href="#kernel-distribution" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.plot_kernel_distribution">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">plot_kernel_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logdir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/kernel_distribution.html#plot_kernel_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.plot_kernel_distribution" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the kernel distribution of each layer/node in the model.</p>
+<p>Distributions are plotted in two ways: histogram and boxplot</p>
+<p>After exporting them, the plots can be plotted through the command-line:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; tensorboard --logdir=`logdir`
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>onnx.ModelProto</em><em> or </em><em>tf.keras.Model</em>) – the model to plot the kernel distribution</p></li>
+<li><p><strong>logdir</strong> (<em>str</em>) – the directory to save the plots</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="quantization-error">
+<h3>Quantization error<a class="headerlink" href="#quantization-error" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.measure_layer_quantization_error">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">measure_layer_quantization_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/quantization_error_api.html#measure_layer_quantization_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.measure_layer_quantization_error" title="Permalink to this definition"></a></dt>
+<dd><p>Measures the layer quantization error</p>
+<p>Returns a dictionary where the keys are the name of each layer
+and the values are a dictionary composed of the set of the following metrics:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Weighted Mean Absolute Percentage Error (wMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.wmape()</span></code></p></li>
+<li><p>Saturation: Percentage of how many values in the quantized layer saturate</p></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">measure_layer_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;wMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fmodel</strong> (<em>onnx.ModelProto</em><em> or </em><em>tf.keras.Model</em>) – the float model.</p></li>
+<li><p><strong>qmodel</strong> (<em>onnx.ModelProto</em><em> or </em><em>tf.keras.Model</em>) – the quantized version of <cite>fmodel</cite>.</p></li>
+<li><p><strong>target_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – computation error is performed only in the target layer/node,
+expanding the analysis to each output channel. Defaults to None.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – the batch size of the samples to be generated.
+It allows a better metrics generalization, but consumes more resources. Defaults to 16.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – a random seed. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the quantization error for each layer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Layers/Nodes that do not produce quantization errors will not be taken into account
+(e.g. QuantizedReshape).</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.measure_cumulative_quantization_error">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">measure_cumulative_quantization_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/quantization_error_api.html#measure_cumulative_quantization_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.measure_cumulative_quantization_error" title="Permalink to this definition"></a></dt>
+<dd><p>Measures the cumulative quantization error</p>
+<p>Returns a dictionary where the keys are the name of each layer
+and the values are a dictionary composed of the set of the following metrics:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Weighted Mean Absolute Percentage Error (wMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.wmape()</span></code></p></li>
+<li><p>Saturation: Percentage of how many values in the quantized layer saturate</p></li>
+</ul>
+</div></blockquote>
+<p>Each metric measures the quantization error from the input to the layer.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">measure_cumulative_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;wMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fmodel</strong> (<em>onnx.ModelProto</em><em> or </em><em>tf.keras.Model</em>) – the float model.</p></li>
+<li><p><strong>qmodel</strong> (<em>onnx.ModelProto</em><em> or </em><em>tf.keras.Model</em>) – the quantized version of <cite>fmodel</cite>.</p></li>
+<li><p><strong>target_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – error computation is performed only in the target layer/node,
+expanding the analysis to each output channel. Defaults to None.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – the batch size of the samples to be generated.
+It allows a better metrics generalization, but consumes more resources. Defaults to 16.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – a random seed. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the quantization error for each layer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Layers/Nodes that do not produce quantization errors will not be taken into account
+(e.g. QuantizedReshape).</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="metrics">
+<h3>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.tools.WeightedMAPE">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.tools.</span></span><span class="sig-name descname"><span class="pre">WeightedMAPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/tools/metrics.html#WeightedMAPE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.tools.WeightedMAPE" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Weighted Mean Absolute Percentage Error (wMAPE) as
+<a href="#id3"><span class="problematic" id="id4">`https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE`_</span></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em>) – an epsilon value. Defaults to 1e-7.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.tools.Saturation">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.tools.</span></span><span class="sig-name descname"><span class="pre">Saturation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/tools/metrics.html#Saturation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.tools.Saturation" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the percentage of saturating values.</p>
+<p>We consider a value saturated if it is one of {min_value, max_value}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_value</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – the minimum of values.
+If not provided, it is inferred from the values type. Defaults to None.</p></li>
+<li><p><strong>max_value</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – the maximum of values.
+If not provided, it is inferred from the values type. Defaults to None.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

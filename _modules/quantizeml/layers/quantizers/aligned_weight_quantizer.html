@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -571,8 +579,22 @@
 
         <span class="n">other_value_bits</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">value_bits</span>
         <span class="n">other_frac_bits</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">frac_bits</span>
-        <span class="c1"># Compute the symmetric quantization ranges from the inputs</span>
-        <span class="n">ranges</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+
+        <span class="c1"># Compute the symmetric quantization ranges from the inputs. When the bitwidth</span>
+        <span class="c1"># is greater than 4 (e.g. 8 bits), experimentations have shown that models quantized</span>
+        <span class="c1"># per axis (especially for the bias) have a better performance.</span>
+        <span class="c1"># However for the 4bits, the performance was lower if we quantize per axis that&#39;s why</span>
+        <span class="c1"># we keep it per tensor.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c1"># if the inputs are 0D or 1D vector, the ranges will have the same shape as the inputs.</span>
+            <span class="c1"># In the other case for 2D or 3D (e.g. PositionEmbs), we reduce all axis</span>
+            <span class="c1"># except the last.</span>
+            <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ndims</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">ranges</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
         <span class="c1"># Evaluate the maximum fractional bits we can use for the specified ranges</span>
         <span class="n">frac_bits</span> <span class="o">=</span> <span class="n">QFloat</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">ranges</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
         <span class="c1"># Remove the input-dependent fractional bits from the gradient tape to avoid a loopback</span>

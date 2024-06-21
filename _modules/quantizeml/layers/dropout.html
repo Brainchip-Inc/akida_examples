@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -520,14 +528,15 @@
 <span class="kn">import</span> <span class="nn">keras</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span>
+<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span>
+                          <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">QTensor</span>
 
 
 <div class="viewcode-block" id="QuantizedDropout"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDropout">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">)</span>
 <span class="nd">@register_no_output_quantizer</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedDropout</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedDropout</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A dropout layer that operates on quantized inputs and weights.</span>
 
 <span class="sd">    It is only implemented as a passthrough.</span>
@@ -536,7 +545,10 @@
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">QTensor</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># QuantizedDropout act as a pass through.</span>
-        <span class="k">return</span> <span class="n">inputs</span></div>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

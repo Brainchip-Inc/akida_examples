@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -527,8 +535,7 @@
 <span class="kn">from</span> <span class="nn">.subgraph_ops.padding</span> <span class="kn">import</span> <span class="n">get_padding_ops</span><span class="p">,</span> <span class="n">transform_pads_into_array</span>
 <span class="kn">from</span> <span class="nn">.compute_shapes</span> <span class="kn">import</span> <span class="n">compute_onnx_conv_output</span>
 <span class="kn">from</span> <span class="nn">.node_constraints</span> <span class="kn">import</span> <span class="n">check_supported_attributes</span>
-<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span>
-                           <span class="n">value_info_to_tensor_shape</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">get_tensor_shape</span>
 <span class="kn">from</span> <span class="nn">..quantization.weights</span> <span class="kn">import</span> <span class="n">quantize_weights</span><span class="p">,</span> <span class="n">quantize_vector</span><span class="p">,</span> <span class="n">fold_zero_point</span><span class="p">,</span> <span class="n">align_to</span>
 <span class="kn">from</span> <span class="nn">..quantization.outputs</span> <span class="kn">import</span> <span class="n">downscale</span>
 
@@ -687,7 +694,7 @@
 
         <span class="c1"># Fold spatial dimension when GAP</span>
         <span class="k">if</span> <span class="s2">&quot;GlobalAvgPool&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
-            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">value_info_to_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">get_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
             <span class="n">input_shape</span> <span class="o">=</span> <span class="n">compute_onnx_conv_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">apply_pool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">i_scale</span> <span class="o">*=</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 

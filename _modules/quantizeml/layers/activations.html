@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -522,28 +530,27 @@
 <span class="kn">import</span> <span class="nn">keras</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span>
-                          <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">init_quant_config</span><span class="p">)</span>
+                          <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">QTensor</span>
 
 
 <div class="viewcode-block" id="QuantizedReLU"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedReLU</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedReLU</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized version of the ReLU activation layer applicable on FixedPoint tensor.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        max_value (float, optional): ReLU maximum value. Defaults to 6.</span>
 <span class="sd">        quant_config (dict, optional): the serialized quantization configuration. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">unsupported_args</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;negative_slope&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
         <span class="s1">&#39;threshold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">ignored_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;negative_slope&#39;</span><span class="p">,</span> <span class="s1">&#39;threshold&#39;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Use quant_config to build quantizers</span>
         <span class="n">out_quant_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -598,10 +605,7 @@
 
     <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-            <span class="s2">&quot;max_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">,</span>
-            <span class="s2">&quot;quant_config&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="p">})</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;max_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span></div>
 </pre></div>
 

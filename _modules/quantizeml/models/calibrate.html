@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -526,9 +534,9 @@
 
 <span class="kn">from</span> <span class="nn">.transforms.insert_layer</span> <span class="kn">import</span> <span class="n">insert_in_config</span>
 <span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span><span class="p">,</span> <span class="n">get_model_input_dtype</span>
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
-                      <span class="n">Attention</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
+                      <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_log2</span>
 
 
@@ -642,9 +650,8 @@
     <span class="n">target_layer</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
     <span class="n">target_layer</span><span class="o">.</span><span class="n">out_quantizer</span><span class="o">.</span><span class="n">range_max</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">range_max</span><span class="p">)</span>
 
-    <span class="c1"># Skip Attention layers because they do not perform a scale out so rescaling rate cannot be</span>
-    <span class="c1"># applied</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_layer</span><span class="p">,</span> <span class="n">Attention</span><span class="p">):</span>
+    <span class="c1"># Skip layers that only perform out_shift since rescaling rate needs a scale out to be applied</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">target_layer</span><span class="o">.</span><span class="n">out_quantizer</span><span class="p">,</span> <span class="s1">&#39;qscales&#39;</span><span class="p">):</span>
         <span class="k">return</span>
 
     <span class="c1"># Define layers that will support or can be skipped when equalizing</span>
@@ -713,8 +720,9 @@
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
         <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">new_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">new_weights</span><span class="p">,</span> <span class="n">axes</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Expand dims to allow broadcasting on the expected dimension</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">):</span>
+        <span class="c1"># Expand dims to allow broadcasting on the expected dimension. Skipping Conv2dTranspose</span>
+        <span class="c1"># since their kernel is (H, W, F, C), where C is the dimension of rescaling_rate</span>
         <span class="n">rescaling_rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">rescaling_rate</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># Apply rescaling rate</span>
@@ -788,6 +796,7 @@
 <span class="sd">        - batch_size is the same batch_size provided to the calibration.</span>
 <span class="sd">        - Seq is a dataset parameter that defines the temporally coherent data (eg number of frames</span>
 <span class="sd">          per video clips).</span>
+
 <span class="sd">    and [batch_size, (model.input_shape)] for recurrent TENNs.</span>
 
 <span class="sd">    When no samples are provided, random samples are generated.</span>
@@ -818,15 +827,7 @@
     <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Generate random samples</span>
         <span class="n">samples_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-        <span class="c1"># Handle image like samples (channels in [1, 3]) as uint8, recurrent TENNs as int16 and</span>
-        <span class="c1"># other as int8</span>
-        <span class="k">if</span> <span class="n">samples_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
-            <span class="n">samples_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">rec_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">samples_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">samples_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span>
+        <span class="n">samples_type</span> <span class="o">=</span> <span class="n">get_model_input_dtype</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">as_numpy_dtype</span>
 
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
         <span class="n">iinfo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">samples_type</span><span class="p">)</span>
@@ -873,8 +874,15 @@
         <span class="k">if</span> <span class="n">rec_layers</span><span class="p">:</span>
             <span class="c1"># Ensure graph execution</span>
             <span class="n">model_func</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                <span class="n">model_func</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">in_shape</span> <span class="o">=</span> <span class="n">calibration_model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Allow to &quot;cut&quot; the calibration samples in portions compatible with</span>
+            <span class="c1"># the stateful model input shape.</span>
+            <span class="k">assert</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">in_shape</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Each sample length </span><span class="si">{</span><span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;should be a multiple of the model input size </span><span class="si">{</span><span class="n">in_shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">in_step</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">in_shape</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">in_step</span><span class="p">):</span>
+                <span class="n">model_func</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">*</span> <span class="n">in_shape</span><span class="p">:(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">in_shape</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Set default calib samples and number of steps</span>
             <span class="n">calib_samples</span> <span class="o">=</span> <span class="n">samples</span>

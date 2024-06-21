@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -518,9 +526,12 @@
 <span class="sd">Processing tools for YOLO data handling.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BoundingBox&quot;</span><span class="p">,</span> <span class="s2">&quot;load_image&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_image&quot;</span><span class="p">,</span> <span class="s2">&quot;decode_output&quot;</span><span class="p">,</span> <span class="s2">&quot;create_yolo_targets&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BoundingBox&quot;</span><span class="p">,</span> <span class="s2">&quot;load_image&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess_image&quot;</span><span class="p">,</span> <span class="s2">&quot;get_affine_transform&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;apply_affine_transform_to_bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;desize_bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;decode_output&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;create_yolo_targets&quot;</span><span class="p">]</span>
 
 
+<span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">.data_utils</span> <span class="kn">import</span> <span class="n">Coord</span>
@@ -623,23 +634,168 @@
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_jpeg</span><span class="p">(</span><span class="n">raw_image</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="preprocess_image"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image">[docs]</a><span class="k">def</span> <span class="nf">preprocess_image</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="n">output_size</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Preprocess an image for YOLO inference.</span>
+<div class="viewcode-block" id="get_affine_transform"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.get_affine_transform">[docs]</a><span class="k">def</span> <span class="nf">get_affine_transform</span><span class="p">(</span><span class="n">source_point</span><span class="p">,</span> <span class="n">source_size</span><span class="p">,</span> <span class="n">dest_size</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an affine transformation matrix to map between source and destination sizes.</span>
+<span class="sd">    Note that to construct an affine transformation we need three points.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        image_buffer (tf.Tensor): image to preprocess</span>
-<span class="sd">        output_size (tuple): shape of the image after preprocessing</span>
+<span class="sd">        source_point (np.ndarray): A point in the source image to be mapped, usually the center.</span>
+<span class="sd">        source_size (tuple): The size of the source image in the form (width, height).</span>
+<span class="sd">        dest_size (tuple): The desired image size in the form (width, height).</span>
+<span class="sd">        inverse (bool, optional): If True, compute the inverse affine transformation.</span>
+<span class="sd">            Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A resized and normalized image as a Numpy array.</span>
+<span class="sd">        np.ndarray: A 2x3 affine transformation matrix.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Resize</span>
-    <span class="n">width</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">height</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">output_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image_buffer</span><span class="p">,</span> <span class="p">[</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">],</span>
-                                      <span class="n">method</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">ResizeMethod</span><span class="o">.</span><span class="n">BILINEAR</span><span class="p">,</span>
-                                      <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span></div>
+    <span class="k">def</span> <span class="nf">_get_3rd_point</span><span class="p">(</span><span class="n">point1</span><span class="p">,</span> <span class="n">point2</span><span class="p">):</span>
+        <span class="c1"># The third point, which is obtained by rotating the vector</span>
+        <span class="c1"># from the first to the second point by 90 degrees and adding</span>
+        <span class="c1"># it to the second point. This ensures that the</span>
+        <span class="c1"># resizing is aspect-ratio maintaining.</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">point1</span> <span class="o">-</span> <span class="n">point2</span>
+        <span class="n">orthogonal_to_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">point2</span> <span class="o">+</span> <span class="n">orthogonal_to_vector</span>
+
+    <span class="c1"># Calculate the scale ratio to preserve the aspect ratio</span>
+    <span class="n">scale_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">dest_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">source_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dest_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">source_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Destination image center point</span>
+    <span class="n">dest_center_x</span> <span class="o">=</span> <span class="n">dest_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">dest_center_y</span> <span class="o">=</span> <span class="n">dest_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">dest_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dest_center_x</span><span class="p">,</span> <span class="n">dest_center_y</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Initialize source and destination points arrays</span>
+    <span class="n">source_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">dest_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Set the first points to be the source center point and destination center point</span>
+    <span class="n">source_points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_point</span>
+    <span class="n">dest_points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dest_point</span>
+
+    <span class="c1"># Set the second points based on the magnitude (in this case 100 pixels up from the center)</span>
+    <span class="n">magnitude</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="n">source_points</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_point</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">magnitude</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">dst_dir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">magnitude</span> <span class="o">*</span> <span class="n">scale_ratio</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">dest_points</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dest_point</span> <span class="o">+</span> <span class="n">dst_dir</span>
+
+    <span class="c1"># Third point</span>
+    <span class="n">source_points</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_get_3rd_point</span><span class="p">(</span><span class="n">source_points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">source_points</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="n">dest_points</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_get_3rd_point</span><span class="p">(</span><span class="n">dest_points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dest_points</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="c1"># Compute the affine transformation matrix</span>
+    <span class="k">if</span> <span class="n">inverse</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getAffineTransform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">dest_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">source_points</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">getAffineTransform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">source_points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">dest_points</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">transform</span></div>
+
+
+<div class="viewcode-block" id="preprocess_image"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image">[docs]</a><span class="k">def</span> <span class="nf">preprocess_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resize an image to the specified dimensions using either a normal resize or</span>
+<span class="sd">    an affine transformation in order to preserve aspect ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image (np.ndarray): input image with size represented as (h, w, c).</span>
+<span class="sd">        input_shape (tuple): tuple containing desired image</span>
+<span class="sd">            dimension in form of (h, w, c).</span>
+<span class="sd">        affine_transform (np.ndarray, optional): A 2x3 affine transformation matrix.</span>
+<span class="sd">            Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: the resized image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">affine_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">,</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                               <span class="n">flags</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                          <span class="n">method</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">ResizeMethod</span><span class="o">.</span><span class="n">BILINEAR</span><span class="p">,</span>
+                                          <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+<div class="viewcode-block" id="apply_affine_transform_to_bboxes"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.apply_affine_transform_to_bboxes">[docs]</a><span class="k">def</span> <span class="nf">apply_affine_transform_to_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply an affine transformation to multiple bounding boxes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bboxes (np.ndarray): A numpy array of shape (N, 4) representing N bounding boxes,</span>
+<span class="sd">            each defined by the coordinates [y1, x1, y2, x2].</span>
+<span class="sd">        affine_transform (np.ndarray): A 2x3 affine transformation matrix.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: A numpy array of shape (N, 4) with the transformed bounding boxes,</span>
+<span class="sd">        in the format of [y1, x1, y2, x2].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Reshape bounding boxes to have shape (num_boxes, 2, 2)</span>
+    <span class="c1"># to treat them as point [(y1, x1), (y2, x2)]</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># ((y1, x1), (y2, x2)) -&gt; ((x1, y1), (x2, y2))</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Stack bounding box coordinates with ones to apply affine transform as it is</span>
+    <span class="c1"># a 2x3 matrix</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># Apply the transformation matrix</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="c1"># ((x1, y1), (x2, y2)) - &gt; ((y1, x1), (y2, x2))</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Reshape to to [y1, x1, y2, x2] format</span>
+    <span class="k">return</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="desize_bboxes"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.desize_bboxes">[docs]</a><span class="k">def</span> <span class="nf">desize_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">raw_height</span><span class="p">,</span> <span class="n">raw_width</span><span class="p">,</span>
+                  <span class="n">input_height</span><span class="p">,</span> <span class="n">input_width</span><span class="p">,</span> <span class="n">preserve_aspect_ratio</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reverse the resizing of bounding boxes to match the original image dimensions.</span>
+
+<span class="sd">    This operation must be the inverse of the resizing applied during preprocessing</span>
+<span class="sd">    in the validation or testing pipelines. The version defined here is for an aspect-ratio</span>
+<span class="sd">    conserving resize, scaled by the longest side.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bboxes (np.ndarray): A numpy array of shape (N, 4) representing N bounding boxes,</span>
+<span class="sd">            each defined by the coordinates [y1, x1, y2, x2].</span>
+<span class="sd">        raw_height (int): The original height of the image.</span>
+<span class="sd">        raw_width (int): The original width of the image.</span>
+<span class="sd">        input_height (int): The height of the resized image used during processing.</span>
+<span class="sd">        input_width (int): The width of the resized image used during processing.</span>
+<span class="sd">        preserve_aspect_ratio (bool): Whether aspect ratio is preserved during resizing or not.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: A numpy array of shape (N, 4) with the bounding boxes resized to</span>
+<span class="sd">                    match the original image dimensions, each defined by the coordinates</span>
+<span class="sd">                    [y1, x1, y2, x2].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">preserve_aspect_ratio</span><span class="p">:</span>
+        <span class="c1"># To absolute coordinates with respect to the resized image</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">box</span><span class="o">.</span><span class="n">y1</span> <span class="o">*</span> <span class="n">input_height</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">x1</span> <span class="o">*</span> <span class="n">input_width</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">y2</span> <span class="o">*</span> <span class="n">input_height</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">x2</span> <span class="o">*</span> <span class="n">input_width</span><span class="p">]</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">])</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">raw_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">raw_height</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">inverse_affine_transform</span> <span class="o">=</span> <span class="n">get_affine_transform</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="p">[</span><span class="n">raw_width</span><span class="p">,</span> <span class="n">raw_height</span><span class="p">],</span>
+                                                        <span class="p">[</span><span class="n">input_width</span><span class="p">,</span> <span class="n">input_height</span><span class="p">],</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">apply_affine_transform_to_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">inverse_affine_transform</span><span class="p">)</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">raw_height</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw_width</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw_height</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw_width</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">])</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span>
+                           <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># To absolute coordinates with respect to the original image</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">box</span><span class="o">.</span><span class="n">x1</span> <span class="o">*</span> <span class="n">raw_width</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">y1</span> <span class="o">*</span> <span class="n">raw_height</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">x2</span> <span class="o">*</span> <span class="n">raw_width</span><span class="p">,</span>
+                            <span class="n">box</span><span class="o">.</span><span class="n">y2</span> <span class="o">*</span> <span class="n">raw_height</span><span class="p">]</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">bboxes</span><span class="p">])</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">bboxes</span></div>
 
 
 <div class="viewcode-block" id="create_yolo_targets"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.processing.create_yolo_targets">[docs]</a><span class="k">def</span> <span class="nf">create_yolo_targets</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span>

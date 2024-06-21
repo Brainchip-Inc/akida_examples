@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -554,23 +562,28 @@
     <span class="k">return</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">valid_data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">num_train</span><span class="p">,</span> <span class="n">num_valid</span>
 
 
-<div class="viewcode-block" id="get_detection_datasets"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data.get_detection_datasets">[docs]</a><span class="k">def</span> <span class="nf">get_detection_datasets</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
+<div class="viewcode-block" id="get_detection_datasets"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.data.get_detection_datasets">[docs]</a><span class="k">def</span> <span class="nf">get_detection_datasets</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">full_set</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Loads VOC, Widerface or COCO data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        data_path (str): path to the folder containing tfrecords files</span>
 <span class="sd">            for VOC, Widerface or COCO data.</span>
 <span class="sd">        dataset_name (str): Name of the dataset. Choices in [coco, voc, widerface].</span>
+<span class="sd">        full_set (bool, optional): When dataset is &#39;voc&#39;, set to False to limit to &#39;car&#39; and</span>
+<span class="sd">            &#39;person&#39; labels. Defaults to True.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.dataset, tf.dataset, list, int, int: train and validation data, labels, sizes of train</span>
 <span class="sd">        and validation data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dataset_name</span> <span class="o">==</span> <span class="s2">&quot;voc&quot;</span><span class="p">:</span>
-        <span class="n">labels_of_interest</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span>
-                              <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">full_set</span><span class="p">:</span>
+            <span class="n">labels_of_interest</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labels_of_interest</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">]</span>
         <span class="n">train_data</span><span class="p">,</span> <span class="n">valid_data</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">num_train</span><span class="p">,</span> <span class="n">num_valid</span> <span class="o">=</span> <span class="n">_get_voc_data</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span>
                                                                              <span class="n">labels_of_interest</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">dataset_name</span> <span class="o">==</span> <span class="s2">&quot;coco&quot;</span><span class="p">:</span>

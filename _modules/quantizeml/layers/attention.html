@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -521,7 +529,7 @@
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span>
-                          <span class="n">init_quant_config</span><span class="p">)</span>
+                          <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.reshaping</span> <span class="kn">import</span> <span class="n">QuantizedReshape</span><span class="p">,</span> <span class="n">QuantizedPermute</span>
 <span class="kn">from</span> <span class="nn">.shiftmax</span> <span class="kn">import</span> <span class="n">shiftmax</span><span class="p">,</span> <span class="n">QuantizedShiftmax</span>
 <span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">TensorRecorder</span>
@@ -656,7 +664,7 @@
 <div class="viewcode-block" id="QuantizedAttention"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAttention">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">Attention</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedAttention</span><span class="p">(</span><span class="n">Attention</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedAttention</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">Attention</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An Attention layer that operates on quantized inputs</span>
 
 <span class="sd">    Args:</span>
@@ -664,13 +672,10 @@
 <span class="sd">        quant_config (dict, optional): the serialized quantization configuration. Defaults to None.</span>
 <span class="sd">        softmax (str, optional): &#39;softmax&#39; or &#39;shiftmax&#39;. Defaults to &#39;shiftmax&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;softmax&#39;</span><span class="p">:</span> <span class="s1">&#39;shiftmax&#39;</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="s1">&#39;shiftmax&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">softmax</span> <span class="o">!=</span> <span class="s1">&#39;shiftmax&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Only shiftmax is supported for quantized attention&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_heads</span><span class="o">=</span><span class="n">num_heads</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="n">softmax</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="n">out_quant_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_quant_cfg</span><span class="p">:</span>
@@ -720,12 +725,7 @@
         <span class="c1"># Refine output bitwidth precision if needed</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">mask</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;quant_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">mask</span></div>
 </pre></div>
 
            </div>

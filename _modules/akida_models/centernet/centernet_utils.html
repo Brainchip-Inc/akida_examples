@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -583,13 +591,17 @@
     <span class="n">flattened_kernel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">gaussian_kernel</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="c1"># Range the dimensions</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">d0</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">d1</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">):</span>
-            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensor_scatter_nd_update</span><span class="p">(</span>
-                <span class="n">heatmap</span><span class="p">,</span> <span class="p">[[</span><span class="n">d1</span><span class="p">,</span> <span class="n">d0</span><span class="p">,</span> <span class="n">obj_idx</span><span class="p">]],</span> <span class="p">[</span><span class="n">flattened_kernel</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
-            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># Generate the grid of indices</span>
+    <span class="n">d0_range</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">)</span>
+    <span class="n">d1_range</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span>
+    <span class="n">d1_grid</span><span class="p">,</span> <span class="n">d0_grid</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">d1_range</span><span class="p">,</span> <span class="n">d0_range</span><span class="p">)</span>
 
+    <span class="c1"># Flatten the grid of indices</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">d1_grid</span><span class="p">,</span> <span class="n">d0_grid</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">d0_grid</span><span class="p">),</span> <span class="n">obj_idx</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+    <span class="c1"># Update heatmap</span>
+    <span class="n">heatmap</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensor_scatter_nd_update</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">flattened_kernel</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">heatmap</span>
 
 
@@ -733,8 +745,7 @@
     <span class="k">return</span> <span class="n">iaa</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
         <span class="p">[</span>
             <span class="c1"># apply the following augmenters to most images</span>
-            <span class="n">sometimes</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">()),</span>
-            <span class="n">sometimes</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Cutout</span><span class="p">(</span><span class="n">nb_iterations</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">))),</span>
+            <span class="n">sometimes</span><span class="p">(</span><span class="n">iaa</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span><span class="n">rotate</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
             <span class="c1"># execute 0 to 5 of the following (less important) augmenters</span>
             <span class="c1"># per image. Don&#39;t execute all of them, as that would often be</span>
             <span class="c1"># way too strong</span>

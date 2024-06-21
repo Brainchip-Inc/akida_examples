@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -524,7 +532,7 @@
 <span class="kn">from</span> <span class="nn">.subgraph_ops</span> <span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops.activation</span> <span class="kn">import</span> <span class="n">get_activation_ops</span>
 <span class="kn">from</span> <span class="nn">.node_constraints</span> <span class="kn">import</span> <span class="n">check_supported_attributes</span>
-<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">value_info_to_tensor_shape</span>
+<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">get_tensor_shape</span>
 <span class="kn">from</span> <span class="nn">..quantization.weights</span> <span class="kn">import</span> <span class="n">quantize_weights</span><span class="p">,</span> <span class="n">quantize_vector</span><span class="p">,</span> <span class="n">align_to</span>
 <span class="kn">from</span> <span class="nn">..quantization.outputs</span> <span class="kn">import</span> <span class="n">downscale</span>
 
@@ -591,7 +599,7 @@
         <span class="k">assert</span> <span class="n">i_scale</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="s1">&#39;Flatten&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
             <span class="c1"># If flatten is there, we need to reshape weights to apply input scale</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">value_info_to_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">get_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
             <span class="c1"># Unroll first flattened inputs</span>
             <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
             <span class="c1"># Divide kernel by input shape (that has shape of c)</span>

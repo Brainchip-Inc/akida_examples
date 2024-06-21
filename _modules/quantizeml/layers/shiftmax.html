@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -521,7 +529,7 @@
 <span class="kn">import</span> <span class="nn">keras</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span>
-                          <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">init_quant_config</span><span class="p">)</span>
+                          <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">TensorRecorder</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_through</span><span class="p">,</span> <span class="n">round_log2</span><span class="p">,</span> <span class="n">pow2</span>
 
@@ -600,7 +608,7 @@
 <span class="nd">@register_no_output_quantizer</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedShiftmax</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedShiftmax</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A quantized layer to do a quantized function similar to the softmax, but</span>
 <span class="sd">    using base 2 instead of e. So we replace</span>
 
@@ -629,8 +637,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="n">apply_buffer_bitwidth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exp_bitwidth&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span><span class="p">:</span>
@@ -713,12 +720,7 @@
 
         <span class="c1"># Since sum_exp &gt; exp, the results are between [0,1].</span>
         <span class="c1"># We can therefore rewrite the output as:</span>
-        <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;quant_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_bitwidth</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

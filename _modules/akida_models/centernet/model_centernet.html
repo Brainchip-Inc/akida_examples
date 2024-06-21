@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -523,67 +531,91 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">initializers</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">Add</span>
 
 <span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">set_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">akidanet_imagenet</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">akidanet18_imagenet</span>
 <span class="kn">from</span> <span class="nn">..layer_blocks</span> <span class="kn">import</span> <span class="p">(</span><span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">conv_transpose_block</span><span class="p">,</span>
                             <span class="n">sepconv_transpose_block</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span>
 <span class="kn">from</span> <span class="nn">..model_io</span> <span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span> <span class="nn">..imagenet.imagenet_train</span> <span class="kn">import</span> <span class="n">rescale</span>
 
 
-<div class="viewcode-block" id="centernet_base"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet_base">[docs]</a><span class="k">def</span> <span class="nf">centernet_base</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                   <span class="n">classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                   <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                   <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">127</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+<div class="viewcode-block" id="centernet_base"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet_base">[docs]</a><span class="k">def</span> <span class="nf">centernet_base</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">384</span><span class="p">,</span> <span class="mi">384</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                   <span class="n">classes</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                   <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">127</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                   <span class="n">separable_cutoff</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A Keras Model implementing the CenterNet architecture, on top of an AkidaNet backbone</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (224, 224, 3).</span>
-<span class="sd">        classes (int, optional): number of output classes. Defaults to 2.</span>
-<span class="sd">        alpha (float, optional): controls the width of the model. Defaults to 0.5.</span>
+<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (384, 384, 3).</span>
+<span class="sd">        classes (int, optional): number of output classes. Defaults to 20.</span>
 <span class="sd">        input_scaling (tuple, optional): input scaling. Defaults to (127, -1).</span>
+<span class="sd">        separable_cutoff (int, optional): maximum number of filters for standard Conv layers.</span>
+<span class="sd">            Layers with more filters than this will be defined as separable Convs. Defaults to 64.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_build_backbone</span><span class="p">():</span>
+        <span class="n">base_model</span> <span class="o">=</span> <span class="n">akidanet18_imagenet</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                         <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                         <span class="n">pooling</span><span class="o">=</span><span class="s2">&quot;avg&quot;</span><span class="p">,</span>
+                                         <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
+        <span class="c1"># Last three layers immediately prior to stride-2 layers.</span>
+        <span class="c1"># And a final layer, immediately prior to the GAP pooling op</span>
+        <span class="n">outputs_layer_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;stage_0/conv_3/relu&#39;</span><span class="p">,</span> <span class="s1">&#39;stage_1/conv_3/relu&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;pw_stage_2/conv_3/relu&#39;</span><span class="p">,</span> <span class="s1">&#39;pw_stage_3/conv_3/relu&#39;</span><span class="p">]</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">base_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">output</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">outputs_layer_names</span><span class="p">]</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">backbone</span>
+
+    <span class="k">def</span> <span class="nf">_get_block_params</span><span class="p">(</span><span class="n">n_filt</span><span class="p">,</span> <span class="n">separable_cutoff</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n_filt</span> <span class="o">&lt;=</span> <span class="n">separable_cutoff</span><span class="p">:</span>
+            <span class="n">neck_convs_ks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">curr_block</span> <span class="o">=</span> <span class="n">conv_block</span>
+            <span class="n">block_type</span> <span class="o">=</span> <span class="s2">&quot;conv&quot;</span>
+            <span class="n">transpose_block</span> <span class="o">=</span> <span class="n">conv_transpose_block</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">neck_convs_ks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+            <span class="n">curr_block</span> <span class="o">=</span> <span class="n">separable_conv_block</span>
+            <span class="n">block_type</span> <span class="o">=</span> <span class="s2">&quot;sepconv&quot;</span>
+            <span class="n">transpose_block</span> <span class="o">=</span> <span class="n">sepconv_transpose_block</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fused&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">neck_convs_ks</span><span class="p">,</span> <span class="n">curr_block</span><span class="p">,</span> <span class="n">block_type</span><span class="p">,</span> <span class="n">transpose_block</span><span class="p">,</span> <span class="n">kwargs</span>
+
     <span class="c1"># This model is only available for Akida 2.0</span>
     <span class="k">with</span> <span class="n">set_akida_version</span><span class="p">(</span><span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">):</span>
         <span class="c1"># Create an AkidaNet network without top layers</span>
-        <span class="n">base_model</span> <span class="o">=</span> <span class="n">akidanet_imagenet</span><span class="p">(</span>
-            <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-            <span class="n">include_top</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">input_scaling</span><span class="o">=</span><span class="n">input_scaling</span><span class="p">)</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">_build_backbone</span><span class="p">()</span>
 
-        <span class="n">x</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span>
+        <span class="c1"># Rescale the backbone input shape</span>
+        <span class="k">if</span> <span class="n">backbone</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">backbone</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">backbone</span> <span class="o">=</span> <span class="n">rescale</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
 
-        <span class="c1"># Build the neck with up convolutions</span>
-        <span class="n">num_deconv_filters</span> <span class="o">=</span> <span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+        <span class="c1"># Extract skip connections</span>
+        <span class="n">skips</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">output</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">num_deconv_filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">skip</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">skip</span> <span class="ow">in</span> <span class="n">skips</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">n_filt</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">num_deconv_filters</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">n_filt</span> <span class="o">&lt;=</span> <span class="mi">128</span><span class="p">:</span>
-                <span class="n">curr_block</span> <span class="o">=</span> <span class="n">conv_block</span>
-                <span class="n">block_type</span> <span class="o">=</span> <span class="s2">&quot;conv&quot;</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="n">transpose_block</span> <span class="o">=</span> <span class="n">conv_transpose_block</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">curr_block</span> <span class="o">=</span> <span class="n">separable_conv_block</span>
-                <span class="n">block_type</span> <span class="o">=</span> <span class="s2">&quot;sepconv&quot;</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;fused&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
-                <span class="n">transpose_block</span> <span class="o">=</span> <span class="n">sepconv_transpose_block</span>
+            <span class="n">neck_convs_ks</span><span class="p">,</span> <span class="n">curr_block</span><span class="p">,</span> <span class="n">block_type</span><span class="p">,</span> <span class="n">transpose_block</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> \
+                <span class="n">_get_block_params</span><span class="p">(</span><span class="n">n_filt</span><span class="p">,</span> <span class="n">separable_cutoff</span><span class="p">)</span>
 
             <span class="n">x</span> <span class="o">=</span> <span class="n">curr_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                            <span class="n">filters</span><span class="o">=</span><span class="n">n_filt</span><span class="p">,</span>
                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;neck_</span><span class="si">{</span><span class="n">block_type</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                           <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                           <span class="n">kernel_size</span><span class="o">=</span><span class="n">neck_convs_ks</span><span class="p">,</span>
                            <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU7.5&#39;</span><span class="p">,</span>
                            <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
             <span class="n">x</span> <span class="o">=</span> <span class="n">transpose_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                                 <span class="n">filters</span><span class="o">=</span><span class="n">n_filt</span><span class="p">,</span>
                                 <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;neck_transpose_</span><span class="si">{</span><span class="n">block_type</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -593,6 +625,7 @@
                                 <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                 <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU7.5&#39;</span><span class="p">,</span>
                                 <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;neck_add_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)([</span><span class="n">x</span><span class="p">,</span> <span class="n">skips</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
 
         <span class="c1"># Build the head which is composed of 2 consecutive convs</span>
         <span class="n">bias_initializer</span> <span class="o">=</span> <span class="n">initializers</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.1</span><span class="p">)))</span>
@@ -616,7 +649,7 @@
                    <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">init_kernel</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="c1"># Build the model</span>
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">base_model</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;centernet_base&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">backbone</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;centernet_base&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="centernet_voc_pretrained"><a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.centernet_voc_pretrained">[docs]</a><span class="k">def</span> <span class="nf">centernet_voc_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -632,11 +665,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet_voc_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e5d37942e28e8dac80a36238dba1ee39c8ce59c577bf79a569a8e48b786aa2af&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet18_voc_384_i8_w8_a8.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;cae0f8f36b2d8d01d6049f03185c05d5a9eb3deed47516f7968dc91bb051d81e&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet_voc.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e8dfbb5af77c24c386eda4250a5f765014f92ac41091e6d23dbe7713b55e48e9&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;centernet_akidanet18_voc_384.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;64f220a63aacf653bd672804a5500f98a8dda06029cbe58d327413c9edd4a12f&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;centernet&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span>
                                                        <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>

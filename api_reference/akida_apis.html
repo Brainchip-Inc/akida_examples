@@ -194,6 +194,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#sparsity">Sparsity</a></li>
 </ul>
@@ -253,6 +254,13 @@
 <li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -582,7 +590,7 @@ it will be added automatically.</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.get_layer_count" title="akida.Model.get_layer_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer_count</span></code></a>(self)</p></td>
 <td><p>The number of layers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.map" title="akida.Model.map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">map</span></code></a>(self, device, hw_only)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.map" title="akida.Model.map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">map</span></code></a>(device[, hw_only, mode])</p></td>
 <td><p>Map the model to a Device using a target backend.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.pop_layer" title="akida.Model.pop_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop_layer</span></code></a>(self)</p></td>
@@ -594,7 +602,7 @@ it will be added automatically.</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.predict_classes" title="akida.Model.predict_classes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_classes</span></code></a>(inputs[, num_classes, ...])</p></td>
 <td><p>Predicts the class labels for the specified inputs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.save" title="akida.Model.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(self, arg0)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.Model.save" title="akida.Model.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(self, model_file)</p></td>
 <td><p>Saves all the model configuration (all layers and weights) to a file on disk.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.Model.summary" title="akida.Model.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
@@ -967,7 +975,7 @@ access to the underlying layers.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="akida.Model.map">
-<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">akida.core.Model</span></em>, <em class="sig-param"><span class="pre">device:</span> <span class="pre">akida::Device</span></em>, <em class="sig-param"><span class="pre">hw_only:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#akida.Model.map" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hw_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">MapMode.AllNps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#akida.Model.map" title="Permalink to this definition"></a></dt>
 <dd><p>Map the model to a Device using a target backend.</p>
 <p>This method tries to map a Model to the specified Device, implicitly
 identifying one or more layer sequences that are mapped individually on
@@ -975,11 +983,22 @@ the Device Mesh.</p>
 <p>An optional hw_only parameter can be specified to force the mapping
 strategy to use only one hardware sequence, thus reducing software
 intervention on the inference.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Default mapping gives a higher throughput, lower latency, and better NP concurrent
+utilization but an optimal mapping depends on the system characteristics.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use a custom MeshMapper, use the mapping mode MapMode.Minimal.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>device</strong> (<cite>Device</cite>) – the target Device or None</p></li>
-<li><p><strong>hw_only</strong> (<em>bool</em>) – when true, the model should be mapped in one sequence</p></li>
+<li><p><strong>device</strong> (<a class="reference internal" href="#akida.Device" title="akida.Device"><em>Device</em></a>) – the target Device or None</p></li>
+<li><p><strong>hw_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – when true, the model should be mapped in one sequence.
+Defaults to False.</p></li>
+<li><p><strong>mode</strong> (<a class="reference internal" href="#akida.MapMode" title="akida.MapMode"><em>MapMode</em></a><em>, </em><em>optional</em>) – mapping mode. Defaults to MapMode.AllNps.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1066,7 +1085,7 @@ processed at a time</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="akida.Model.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.Model" title="akida.core.Model"><span class="pre">akida.core.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#akida.Model.save" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#akida.Model" title="akida.core.Model"><span class="pre">akida.core.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#akida.Model.save" title="Permalink to this definition"></a></dt>
 <dd><p>Saves all the model configuration (all layers and weights) to a
 file on disk.</p>
 <dl class="field-list simple">
@@ -1402,7 +1421,7 @@ thresholds used during inference:</p>
 <h2>Akida layers<a class="headerlink" href="#akida-layers" title="Permalink to this headline"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.InputData">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">InputData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/input_data.html#InputData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.InputData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">InputData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/input_data.html#InputData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.InputData" title="Permalink to this definition"></a></dt>
 <dd><p>This layer is used to specify the Model input dimensions and bitwidth.</p>
 <p>It specifically targets Models accepting signed or low bitwidth inputs, or if
 the channel number is neither 1 nor 3.
@@ -1412,8 +1431,6 @@ For images input, model must start instead with an image-specific input layer.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_shape</strong> (<em>tuple</em>) – the 3D input shape.</p></li>
 <li><p><strong>input_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – input bitwidth. Defaults to 4.</p></li>
-<li><p><strong>input_signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the input is signed or not.
-Defaults to False.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer. Defaults to empty string.</p></li>
 </ul>
 </dd>
@@ -1664,7 +1681,7 @@ Defaults to True.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="akida.Stem">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">Stem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">192</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_op_buffer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_non_patch_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/stem.html#Stem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.Stem" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">Stem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">192</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">28</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_op_buffer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_non_patch_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/stem.html#Stem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.Stem" title="Permalink to this definition"></a></dt>
 <dd><p>Stem layer corresponding to the Stem block of Transformer models.</p>
 <p>It’s composed of the following layers:</p>
 <blockquote>
@@ -2934,6 +2951,9 @@ events are replaced by newer events.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.Mesh.nps" title="akida.NP.Mesh.nps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nps</span></code></a></p></td>
 <td><p>Neural processors</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.Mesh.skip_dmas" title="akida.NP.Mesh.skip_dmas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skip_dmas</span></code></a></p></td>
+<td><p>Skip dmas</p></td>
+</tr>
 </tbody>
 </table>
 <dl class="py property">
@@ -2952,6 +2972,12 @@ events are replaced by newer events.</p>
 <dt class="sig sig-object py" id="akida.NP.Mesh.nps">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nps</span></span><a class="headerlink" href="#akida.NP.Mesh.nps" title="Permalink to this definition"></a></dt>
 <dd><p>Neural processors</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.Mesh.skip_dmas">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">skip_dmas</span></span><a class="headerlink" href="#akida.NP.Mesh.skip_dmas" title="Permalink to this definition"></a></dt>
+<dd><p>Skip dmas</p>
 </dd></dl>
 
 </dd></dl>
@@ -3038,7 +3064,7 @@ events are replaced by newer events.</p>
 <p>CNP2 : Convolutional Neural Processor Type 2</p>
 <p>FNP2 : FullyConnected Neural Processor (external memory)</p>
 <p>FNP3 : FullyConnected Neural Processor (internal memory)</p>
-<p>VIT_NODE : FullyConnected Neural Processor (internal memory)</p>
+<p>VIT_BLOCK : FullyConnected Neural Processor (internal memory)</p>
 </dd></dl>
 
 <dl class="py class">
@@ -3088,6 +3114,53 @@ events are replaced by newer events.</p>
 <dt class="sig sig-object py" id="akida.NP.Mapping.type">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#akida.NP.Mapping.type" title="Permalink to this definition"></a></dt>
 <dd><p>Neural Processor type</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="mapmode">
+<h2>MapMode<a class="headerlink" href="#mapmode" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="akida.MapMode">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">MapMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/mapping.html#MapMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.MapMode" title="Permalink to this definition"></a></dt>
+<dd><p>Mapping mode</p>
+<p>Define the strategy for the hardware mapping.</p>
+<p><strong>Attributes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapMode.AllNps" title="akida.MapMode.AllNps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AllNps</span></code></a></p></td>
+<td><p>Maximize HW ressources (number of NPs used) with minimum HW passes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.MapMode.HwPr" title="akida.MapMode.HwPr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HwPr</span></code></a></p></td>
+<td><p>Maximize HW ressources (number of NPs used) with maximum HW passes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapMode.Minimal" title="akida.MapMode.Minimal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Minimal</span></code></a></p></td>
+<td><p>Minimize HW ressources or mode to use a custom MeshMapper</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="akida.MapMode.AllNps">
+<span class="sig-name descname"><span class="pre">AllNps</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#akida.MapMode.AllNps" title="Permalink to this definition"></a></dt>
+<dd><p>Maximize HW ressources (number of NPs used) with minimum HW passes.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="akida.MapMode.HwPr">
+<span class="sig-name descname"><span class="pre">HwPr</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#akida.MapMode.HwPr" title="Permalink to this definition"></a></dt>
+<dd><p>Maximize HW ressources (number of NPs used) with maximum HW passes.
+This mode provides the potential for higher-performances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="akida.MapMode.Minimal">
+<span class="sig-name descname"><span class="pre">Minimal</span></span><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#akida.MapMode.Minimal" title="Permalink to this definition"></a></dt>
+<dd><p>Minimize HW ressources or mode to use a custom MeshMapper</p>
 </dd></dl>
 
 </dd></dl>

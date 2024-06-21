@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -524,7 +532,7 @@
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span>
                           <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span>
-                          <span class="n">init_quant_config</span><span class="p">)</span>
+                          <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">FixedPoint</span>
 
@@ -597,7 +605,7 @@
 <div class="viewcode-block" id="QuantizedClassToken"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedClassToken">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">ClassToken</span><span class="p">)</span>
 <span class="nd">@register_no_output_quantizer</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedClassToken</span><span class="p">(</span><span class="n">ClassToken</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedClassToken</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">ClassToken</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantize the :class:`ClassToken` layer, allowing quantization of the output.</span>
 
 <span class="sd">    Args:</span>
@@ -605,8 +613,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">cls_quantizer_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cls_quantizer&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cls_quantizer</span> <span class="o">=</span> <span class="n">AlignedWeightQuantizer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cls_quantizer&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">cls_quantizer_cfg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="n">apply_buffer_bitwidth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -621,17 +628,12 @@
         <span class="c1"># We need to broadcast the token along the batch size and set its token dimension to 1</span>
         <span class="n">cls_broadcasted</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">cls_broadcasted</span><span class="p">,</span> <span class="n">inputs</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;quant_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">cls_broadcasted</span><span class="p">,</span> <span class="n">inputs</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="QuantizedAddPositionEmbs"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAddPositionEmbs">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">AddPositionEmbs</span><span class="p">)</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedAddPositionEmbs</span><span class="p">(</span><span class="n">AddPositionEmbs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedAddPositionEmbs</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">AddPositionEmbs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantize the :class:`AddPositionEmbs` layer, allowing operations in FixedPoint domain.</span>
 
 <span class="sd">    Args:</span>
@@ -639,8 +641,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span> <span class="o">=</span> <span class="n">init_quant_config</span><span class="p">(</span><span class="n">quant_config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">out_quant_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_quant_cfg</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span> <span class="o">=</span> <span class="n">OutputQuantizer</span><span class="p">(</span>
@@ -658,12 +659,7 @@
         <span class="n">pe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pe_quantizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pe</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
 
         <span class="c1"># Add position embeddings</span>
-        <span class="k">return</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">pe</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;quant_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="k">return</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">pe</span></div>
 
 
 <div class="viewcode-block" id="ExtractToken"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.ExtractToken">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
@@ -695,13 +691,16 @@
 <span class="nd">@register_no_output_quantizer</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedExtractToken</span><span class="p">(</span><span class="n">ExtractToken</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedExtractToken</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">ExtractToken</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Quantized version of the ExtractToken layer. Accepts only FixedPoint inputs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">FixedPoint</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExtractToken</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

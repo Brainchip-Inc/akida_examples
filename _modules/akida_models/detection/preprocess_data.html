@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -526,8 +534,8 @@
 
 <span class="kn">from</span> <span class="nn">.data_augmentation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">augment_sample</span><span class="p">,</span>
                                 <span class="n">init_random_vars</span><span class="p">,</span>
-                                <span class="n">resize_image</span><span class="p">,</span>
                                 <span class="n">fix_obj_position_and_size</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.processing</span> <span class="kn">import</span> <span class="n">get_affine_transform</span><span class="p">,</span> <span class="n">preprocess_image</span>
 
 
 <span class="k">def</span> <span class="nf">_to_tensor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">):</span>
@@ -554,7 +562,7 @@
     <span class="k">return</span> <span class="n">boxes</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">])</span>
 
 
-<span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">preserve_aspect_ratio</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Preprocesses an image and its associated objects.</span>
 
@@ -566,6 +574,7 @@
 <span class="sd">        labels (list): list of labels of interest.</span>
 <span class="sd">        input_shape (tuple): the desired input shape for the image.</span>
 <span class="sd">        training (bool): enable training in the augmentation pipeline.</span>
+<span class="sd">        preserve_aspect_ratio (bool): Whether aspect ratio is preserved during resizing or not.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        np.ndarray, dict: processed image and objects.</span>
@@ -586,9 +595,16 @@
             <span class="n">image</span> <span class="o">=</span> <span class="n">augmented_image</span>
             <span class="n">objects</span> <span class="o">=</span> <span class="n">augmented_objects</span>
 
-    <span class="n">image</span> <span class="o">=</span> <span class="n">resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+    <span class="n">affine_transform</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">preserve_aspect_ratio</span><span class="p">:</span>
+        <span class="c1"># We compute the affine transformation from the center point</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">w</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">h</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">affine_transform</span> <span class="o">=</span> <span class="n">get_affine_transform</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">preprocess_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">)</span>
     <span class="n">objects</span> <span class="o">=</span> <span class="n">fix_obj_position_and_size</span><span class="p">(</span>
-        <span class="n">objects</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">flip</span><span class="p">)</span>
+        <span class="n">objects</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offx</span><span class="p">,</span> <span class="n">offy</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">flip</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">)</span>
 
     <span class="c1"># Transform bbox coordinates back to relative</span>
     <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_to_relative_coord</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -605,7 +621,7 @@
                        <span class="n">aug_pipe</span><span class="p">,</span>
                        <span class="n">create_targets_fn</span><span class="p">,</span>
                        <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                       <span class="n">buffer_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                       <span class="n">preserve_aspect_ratio</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
                        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -622,8 +638,9 @@
 <span class="sd">            It should accept the following parameters: objects, grid_size, num_classes</span>
 <span class="sd">            and others arguments such as anchors.</span>
 <span class="sd">        training (bool, optional): Flag indicating whether the dataset is</span>
-<span class="sd">                for training or not. Defaults to True.</span>
-<span class="sd">        buffer_size (int, optional): Buffer size for shuffling. Default to 1000.</span>
+<span class="sd">            for training or not. Defaults to True.</span>
+<span class="sd">        preserve_aspect_ratio (bool, optional): Whether aspect ratio is preserved</span>
+<span class="sd">            during resizing. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dataset (tf.data.Dataset): The preprocessed dataset.</span>
@@ -631,7 +648,8 @@
     <span class="k">def</span> <span class="nf">preprocess_sample</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">_apply_transformation</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
             <span class="n">objects</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bbox&#39;</span><span class="p">:</span> <span class="n">bbox</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
-            <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">)</span>
+            <span class="n">image</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">aug_pipe</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span>
+                                        <span class="n">input_shape</span><span class="p">,</span> <span class="n">training</span><span class="p">,</span> <span class="n">preserve_aspect_ratio</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">],</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
 
         <span class="n">image</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">py_function</span><span class="p">(</span><span class="n">_apply_transformation</span><span class="p">,</span>
@@ -648,7 +666,7 @@
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">targets</span>
 
     <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
-        <span class="n">dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">)</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">)</span>
                           <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">preprocess_sample</span><span class="p">,</span> <span class="n">num_parallel_calls</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">AUTOTUNE</span><span class="p">)</span>
                           <span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                           <span class="o">.</span><span class="n">repeat</span><span class="p">()</span>

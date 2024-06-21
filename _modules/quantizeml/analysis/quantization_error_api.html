@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>quantizeml.models.check_quantization &mdash; Akida Examples  documentation</title>
+  <title>quantizeml.analysis.quantization_error_api &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
@@ -190,6 +190,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#powermeter">PowerMeter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#np">NP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapmode">MapMode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#tools">Tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#sparsity">Sparsity</a></li>
 </ul>
@@ -249,6 +250,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#analysis">Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#metrics">Metrics</a></li>
 </ul>
 </li>
 </ul>
@@ -488,7 +496,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">quantizeml.models.check_quantization</li>
+      <li class="breadcrumb-item active">quantizeml.analysis.quantization_error_api</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -497,10 +505,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for quantizeml.models.check_quantization</h1><div class="highlight"><pre>
+  <h1>Source code for quantizeml.analysis.quantization_error_api</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2022 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2024 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -514,74 +522,120 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;measure_layer_quantization_error&quot;</span><span class="p">,</span> <span class="s2">&quot;measure_cumulative_quantization_error&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">import</span> <span class="nn">onnx</span>
 
-<span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="n">WeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">QFloatRecorder</span>
-<span class="kn">from</span> <span class="nn">.record</span> <span class="kn">import</span> <span class="n">record_quantization_variables</span>
+<span class="kn">from</span> <span class="nn">.quantization_error</span> <span class="kn">import</span> <span class="p">(</span><span class="n">keras_layer_quantization_error</span><span class="p">,</span> <span class="n">onnx_node_quantization_error</span><span class="p">,</span>
+                                 <span class="n">keras_cumulative_quantization_error</span><span class="p">,</span>
+                                 <span class="n">onnx_cumulative_quantization_error</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="check_quantization"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.check_quantization">[docs]</a><span class="k">def</span> <span class="nf">check_quantization</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks the specified model quantization.</span>
+<div class="viewcode-block" id="measure_layer_quantization_error"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_layer_quantization_error">[docs]</a><span class="k">def</span> <span class="nf">measure_layer_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">,</span> <span class="n">target_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Measures the layer quantization error</span>
 
-<span class="sd">    It looks for errors that can be fixed in the quantization configuration:</span>
+<span class="sd">    Returns a dictionary where the keys are the name of each layer</span>
+<span class="sd">    and the values are a dictionary composed of the set of the following metrics:</span>
+<span class="sd">        * Weighted Mean Absolute Percentage Error (wMAPE): :func:`tools.metrics.wmape`</span>
+<span class="sd">        * Saturation: Percentage of how many values in the quantized layer saturate</span>
 
-<span class="sd">    - inaccurate weight scales quantization,</span>
-<span class="sd">    - saturation in integer operations.</span>
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; summary = measure_layer_quantization_error(fmodel, qmodel)</span>
+<span class="sd">        &gt;&gt;&gt; assert isinstance(summary[a_layer_name], dict)</span>
+<span class="sd">        &gt;&gt;&gt; assert &quot;wMAPE&quot; in summary[a_layer_name]</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model (keras.Model): the model to check</span>
+<span class="sd">        fmodel (onnx.ModelProto or tf.keras.Model): the float model.</span>
+<span class="sd">        qmodel (onnx.ModelProto or tf.keras.Model): the quantized version of `fmodel`.</span>
+<span class="sd">        target_layer (str, optional): computation error is performed only in the target layer/node,</span>
+<span class="sd">            expanding the analysis to each output channel. Defaults to None.</span>
+<span class="sd">        batch_size (int, optional): the batch size of the samples to be generated.</span>
+<span class="sd">            It allows a better metrics generalization, but consumes more resources. Defaults to 16.</span>
+<span class="sd">        seed (int, optional): a random seed. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list(str): the quantization issues that were detected</span>
+<span class="sd">        dict: the quantization error for each layer</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        * Layers/Nodes that do not produce quantization errors will not be taken into account</span>
+<span class="sd">          (e.g. QuantizedReshape).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># First record the model variables to store qscales in output quantizers</span>
-    <span class="n">record_quantization_variables</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">keras_model_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span>
+    <span class="c1"># Check both models have the same type</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">):</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">onnx_node_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span>
+                                               <span class="n">qmodel</span><span class="p">,</span>
+                                               <span class="n">target_node</span><span class="o">=</span><span class="n">target_layer</span><span class="p">,</span>
+                                               <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                               <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">keras_model_types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">keras_model_types</span><span class="p">):</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">keras_layer_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span>
+                                                 <span class="n">qmodel</span><span class="p">,</span>
+                                                 <span class="n">target_layer</span><span class="o">=</span><span class="n">target_layer</span><span class="p">,</span>
+                                                 <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">,</span> <span class="o">*</span><span class="n">keras_model_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Both models should be the same type, one of </span><span class="si">{</span><span class="n">model_types</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">fmodel</span><span class="p">)</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">fmodel</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">summary</span></div>
 
-    <span class="n">messages</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">OutputQuantizer</span><span class="p">):</span>
-                <span class="n">quantizer</span> <span class="o">=</span> <span class="n">attr</span>
-                <span class="n">range_max</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_all</span><span class="p">(</span><span class="n">range_max</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
-                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">quantizer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not calibrated.&quot;</span><span class="p">)</span>
-                    <span class="k">continue</span>
-                <span class="c1"># Evaluate the maximum left shift for this quantizer</span>
-                <span class="n">maximum_shift</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">value_bits</span> <span class="o">-</span> <span class="n">layer</span><span class="o">.</span><span class="n">buffer_bitwidth</span>
-                <span class="c1"># There might be a saturation in integer operations if we reached the maximum shift</span>
-                <span class="n">output_shift</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">shift</span><span class="o">.</span><span class="n">value</span>
-                <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_any</span><span class="p">(</span><span class="n">output_shift</span> <span class="o">&lt;=</span> <span class="n">maximum_shift</span><span class="p">):</span>
-                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Possible saturation detected in </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
-                                    <span class="s2">&quot;try to reduce weights bits and/or scale bits.&quot;</span><span class="p">)</span>
 
-                <span class="c1"># Check inaccurate weight scales quantization.</span>
-                <span class="n">qscales</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">quantizer</span><span class="p">,</span> <span class="s1">&#39;qscales&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">qscales</span><span class="p">:</span>
-                    <span class="c1"># Retrieve the original scales. They are located in the WeightQuantizer of the</span>
-                    <span class="c1"># layer if there is one, or in all WeightQuantizer if they are several (eg.</span>
-                    <span class="c1"># SeparableConvolution)</span>
-                    <span class="n">ideal_scales</span> <span class="o">=</span> <span class="kc">None</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">)</span> <span class="ow">and</span>
-                                <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">qweights</span><span class="p">,</span> <span class="n">QFloatRecorder</span><span class="p">)):</span>
-                            <span class="k">if</span> <span class="n">ideal_scales</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                                <span class="n">ideal_scales</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">qweights</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">scales</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="n">ideal_scales</span> <span class="o">*=</span> <span class="n">attr</span><span class="o">.</span><span class="n">qweights</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">scales</span>
+<div class="viewcode-block" id="measure_cumulative_quantization_error"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_cumulative_quantization_error">[docs]</a><span class="k">def</span> <span class="nf">measure_cumulative_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span>
+                                          <span class="n">qmodel</span><span class="p">,</span>
+                                          <span class="n">target_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                          <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                                          <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Measures the cumulative quantization error</span>
 
-                    <span class="k">if</span> <span class="n">ideal_scales</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">err</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ideal_scales</span> <span class="o">-</span> <span class="n">qscales</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">to_float</span><span class="p">())</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ideal_scales</span><span class="p">)</span>
-                        <span class="n">mean_err</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">mean_err</span> <span class="o">&gt;</span> <span class="mf">5e-2</span><span class="p">:</span>
-                            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Scales quantization relative error is high in &quot;</span> \
-                                      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">quantizer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">mean_err</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">.&quot;</span>
-                            <span class="k">if</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">_axis</span> <span class="o">==</span> <span class="s2">&quot;per-tensor&quot;</span><span class="p">:</span>
-                                <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;Use a per-axis quantizer and/or increase scales bits.&quot;</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;Try increasing scales bits.&quot;</span>
-                            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">messages</span></div>
+<span class="sd">    Returns a dictionary where the keys are the name of each layer</span>
+<span class="sd">    and the values are a dictionary composed of the set of the following metrics:</span>
+<span class="sd">        * Weighted Mean Absolute Percentage Error (wMAPE): :func:`tools.metrics.wmape`</span>
+<span class="sd">        * Saturation: Percentage of how many values in the quantized layer saturate</span>
+
+<span class="sd">    Each metric measures the quantization error from the input to the layer.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; summary = measure_cumulative_quantization_error(fmodel, qmodel)</span>
+<span class="sd">        &gt;&gt;&gt; assert isinstance(summary[a_layer_name], dict)</span>
+<span class="sd">        &gt;&gt;&gt; assert &quot;wMAPE&quot; in summary[a_layer_name]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fmodel (onnx.ModelProto or tf.keras.Model): the float model.</span>
+<span class="sd">        qmodel (onnx.ModelProto or tf.keras.Model): the quantized version of `fmodel`.</span>
+<span class="sd">        target_layer (str, optional): error computation is performed only in the target layer/node,</span>
+<span class="sd">            expanding the analysis to each output channel. Defaults to None.</span>
+<span class="sd">        batch_size (int, optional): the batch size of the samples to be generated.</span>
+<span class="sd">            It allows a better metrics generalization, but consumes more resources. Defaults to 16.</span>
+<span class="sd">        seed (int, optional): a random seed. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: the quantization error for each layer</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        * Layers/Nodes that do not produce quantization errors will not be taken into account</span>
+<span class="sd">          (e.g. QuantizedReshape).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keras_model_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span>
+    <span class="c1"># Check both models have the same type</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">):</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">onnx_cumulative_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span>
+                                                     <span class="n">qmodel</span><span class="p">,</span>
+                                                     <span class="n">target_node</span><span class="o">=</span><span class="n">target_layer</span><span class="p">,</span>
+                                                     <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                                     <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">keras_model_types</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">keras_model_types</span><span class="p">):</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">keras_cumulative_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span>
+                                                      <span class="n">qmodel</span><span class="p">,</span>
+                                                      <span class="n">target_layer</span><span class="o">=</span><span class="n">target_layer</span><span class="p">,</span>
+                                                      <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                                      <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">,</span> <span class="o">*</span><span class="n">keras_model_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Both models should be the same type, one of </span><span class="si">{</span><span class="n">model_types</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">fmodel</span><span class="p">)</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">fmodel</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">summary</span></div>
 </pre></div>
 
            </div>
