@@ -161,6 +161,9 @@ Akida models API
     **********
     .. autofunction:: akida_models.detection.processing.load_image
     .. autofunction:: akida_models.detection.processing.preprocess_image
+    .. autofunction:: akida_models.detection.processing.get_affine_transform
+    .. autofunction:: akida_models.detection.processing.apply_affine_transform_to_bboxes
+    .. autofunction:: akida_models.detection.processing.desize_bboxes
     .. autofunction:: akida_models.detection.processing.decode_output
     .. autofunction:: akida_models.detection.processing.create_yolo_targets
     .. autoclass:: akida_models.detection.processing.BoundingBox
