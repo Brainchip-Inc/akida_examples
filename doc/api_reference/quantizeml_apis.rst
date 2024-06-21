@@ -147,7 +147,6 @@ QuantizeML API
 
     Utils
     -----
-    .. autofunction:: quantizeml.models.load_model
     .. autofunction:: quantizeml.models.apply_weights_to_model
 
     Tensors
@@ -187,3 +186,8 @@ QuantizeML API
     Custom patterns
     ---------------
     .. autofunction:: quantizeml.onnx_support.quantization.custom_pattern_scope
+
+    Model I/O
+    =========
+    .. autofunction:: quantizeml.load_model
+    .. autofunction:: quantizeml.save_model
