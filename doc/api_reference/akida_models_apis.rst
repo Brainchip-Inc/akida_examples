@@ -171,7 +171,6 @@ Akida models API
     .. autofunction:: akida_models.detection.data_augmentation.augment_sample
     .. autofunction:: akida_models.detection.data_augmentation.build_yolo_aug_pipeline
     .. autofunction:: akida_models.detection.data_augmentation.init_random_vars
-    .. autofunction:: akida_models.detection.data_augmentation.resize_image
 
     Performance
     ***********

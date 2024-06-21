@@ -131,7 +131,6 @@ QuantizeML API
     ------------
     .. autofunction:: quantizeml.models.quantize
     .. autofunction:: quantizeml.models.dump_config
-    .. autofunction:: quantizeml.models.check_quantization
     .. autofunction:: quantizeml.models.record_quantization_variables
 
     Quantization parameters
