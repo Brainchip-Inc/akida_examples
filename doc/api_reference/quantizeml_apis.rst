@@ -191,3 +191,20 @@ QuantizeML API
     =========
     .. autofunction:: quantizeml.load_model
     .. autofunction:: quantizeml.save_model
+
+    Analysis
+    ========
+
+    Kernel distribution
+    -------------------
+    .. autofunction:: quantizeml.analysis.plot_kernel_distribution
+
+    Quantization error
+    ------------------
+    .. autofunction:: quantizeml.analysis.measure_layer_quantization_error
+    .. autofunction:: quantizeml.analysis.measure_cumulative_quantization_error
+
+    Metrics
+    -------
+    .. autofunction:: quantizeml.analysis.tools.WeightedMAPE
+    .. autofunction:: quantizeml.analysis.tools.Saturation
