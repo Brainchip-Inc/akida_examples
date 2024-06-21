@@ -378,6 +378,250 @@ will fail to quantize due to just a few incompatibilities. The `custom pattern f
 allows to handle such models as illustrated in `the dedicated advanced example
 <../examples/quantization/plot_3_custom_patterns.html#sphx-glr-examples-quantization-plot-3-custom-patterns-py>`__.
 
+
+Analysis module
+---------------
+
+QuantizeML package comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
+submodule that provides tools to check kernel distribution or quantization error in a model. This
+allows to better analysis impact of quantization: while no simple and generic solution can be
+provided to solve accuracy issues, the analyis tool can help pinpoint faulty layers or kernels that
+might be poorly quantized and thus harm accuracy.
+
+Kernel distribution
+~~~~~~~~~~~~~~~~~~~
+
+This tool leverages `Tensorboard visualization toolkit <https://www.tensorflow.org/tensorboard>`__
+to allow a visual check of kernel distribution of a given model. The `plot_kernel_distribution
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.plot_kernel_distribution>`__ API takes
+the model of interest and a path to save a preset Tensorboard configuration to display. The
+following command line will enable the histogram and boxplot displays:
+
+.. code-block:: bash
+
+    tensorboard --logdir=`logdir`
+
+Since QuantizeML is based on a uniform quantization scheme centered on zero, the kernel distribution
+tool can be used to check for large outliers or oddly distributed kernels that might be poorly
+quantized.
+
+Example output for the classification layer of the `DS-CNN/KWS
+<../model_zoo_performance.html#id11>`__ model:
+
+.. image:: ../img/kernel_distrib.png
+    :scale: 75 %
+
+
+Quantization error
+~~~~~~~~~~~~~~~~~~
+
+The tools offers 2 possible ways to check quantization error in a model:
+
+    - for all layers: a quantization error is computed on each layer output
+    - for a single layer: per-channel error is then reported
+
+This is accessible using the `measure_layer_quantization_error
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_layer_quantization_error>`__ API
+and quantization error is then computed independently for each layer or channel. The cumulated
+error, that is error is propagated from layer to layer, is computed with the
+`measure_cumulative_quantization_error
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_cumulative_quantization_error>`__
+dedicated API. Both APIs will return a python dictionnary containing the metrics and a that can be
+displayed using the `print_metric_table
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.print_metric_table>`__ function.
+
+A `batch_size` parameter is present in the quantization error functions and can be used to better
+refine the computed error by averaging error on more data.
+
+Metrics
+~~~~~~~~~~~~
+
+The quantization error tools will report `wMAPE
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.WeightedMAPE>`__ and `saturation
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.Saturation>`__ metrics.
+
+The `weighted mean absolute percentage error
+<https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE>`__ (WMAPE) measures error as:
+
+.. math::
+    wMAPE = \frac{\sum{|x_{float} - x_{quantized}|}}{\sum{|x_{float}|}}
+
+The saturation metrics is the percentage of saturated values for the given layer or channel. A value
+is saturated when it is equal to the minimum or maximum value allowed for by a given bitwidth.
+
+Command line
+~~~~~~~~~~~~
+
+The analysis tools are accessible via command-line using the `analysis` action:
+
+.. code-block:: bash
+
+    quantizeml analysis -h
+
+    usage: quantizeml analysis [-h] {kernel_distribution,quantization_error} ...
+
+    positional arguments:
+    {kernel_distribution,quantization_error}
+        kernel_distribution Plot kernel distribution
+        quantization_error  Measure quantization error
+
+    options:
+    -h, --help              Show this help message and exit
+
+.. note::
+    The sections below use the `DS-CNN/KWS <../model_zoo_performance.html#id11>`__ model for
+    illustration purposes, but this model does not exhibit quantization issues.
+
+Kernel distribution from command-line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A model and a directory must be provided:
+
+.. code-block:: bash
+
+    quantizeml analysis kernel_distribution -h
+
+    usage: quantizeml analysis kernel_distribution [-h] -m MODEL -l LOGDIR
+
+    options:
+    -h, --help                 Show this help message and exit
+    -m MODEL, --model MODEL    Model to analyze
+    -l LOGDIR, --logdir LOGDIR Log directory to save plots
+
+Tensorboard should then be called on the given directory that has been populated with the relevant
+information:
+
+.. code-block:: bash
+
+    quantizeml analysis kernel_distribution -m ds_cnn_kws.h5 -l .\logs
+    tensorboard --logdir=.\logs
+
+
+Quantization error from command-line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All the options described in the previous section are accessible through parameters:
+
+.. code-block:: bash
+
+    usage: quantizeml analysis quantization_error [-h] -m MODEL -qm QUANTIZED_MODEL [-tl TARGET_LAYER] [-bs BATCH_SIZE] [-c]
+
+    options:
+    -h, --help                                             Show this help message and exit
+    -m MODEL, --model MODEL                                Model to analyze
+    -qm QUANTIZED_MODEL, --quantized_model QUANTIZED_MODEL The quantized model to analyze
+    -tl TARGET_LAYER, --target_layer TARGET_LAYER          Compute per_channel error for a specific
+                                                           layer/node. Defaults to None
+    -bs BATCH_SIZE, --batch_size BATCH_SIZE                Batch size to generate samples. Defaults
+                                                           to 16
+    -c, --cumulative                                       Compute cumulative quantization error
+                                                           instead of isolated one. Defaults to
+                                                           False
+
+Only providing a model and it's quantized version will print out quantization error per-layer
+individually:
+
+.. code-block:: bash
+
+    quantizeml analysis quantization_error -m ds_cnn_kws.h5 -qm ds_cnn_kws_i8_w8_a8.h5
+
+    Quantization error for ds_cnn_kws:
+    =====================================================================================
+    Layer/node                                                  | wMAPE  | Saturation (%)
+    =====================================================================================
+    conv_0 (QuantizedConv2D)                                    | 0.0089 | 0.0000
+    conv_0/relu (QuantizedReLU)                                 | 0.3182 | 5.3203
+    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.2476 | 0.5219
+    pw_separable_1 (QuantizedConv2D)                            | 0.3962 | 0.0000
+    pw_separable_1/relu (QuantizedReLU)                         | 0.4646 | 7.5070
+    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.3265 | 2.0727
+    pw_separable_2 (QuantizedConv2D)                            | 0.4841 | 0.0000
+    pw_separable_2/relu (QuantizedReLU)                         | 0.4648 | 2.5117
+    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.3111 | 0.3305
+    pw_separable_3 (QuantizedConv2D)                            | 0.4799 | 0.0000
+    pw_separable_3/relu (QuantizedReLU)                         | 0.4542 | 0.3117
+    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.3495 | 0.0422
+    pw_separable_4 (QuantizedConv2D)                            | 0.4514 | 0.0000
+    pw_separable_4/relu (QuantizedReLU)                         | 0.0005 | 0.0000
+    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.3096 | 0.8789
+    dense_5 (QuantizedDense)                                    | 0.4475 | 0.0000
+    =====================================================================================
+
+Using the `cumulative` option will display a similar report where error is cumulated top-down from
+layer to layer:
+
+.. code-block:: bash
+
+    quantizeml analysis quantization_error -m ds_cnn_kws.h5 -qm ds_cnn_kws_i8_w8_a8.h5 -c
+
+    Quantization error for ds_cnn_kws:
+    =====================================================================================
+    Layer/node                                                  | wMAPE  | Saturation (%)
+    =====================================================================================
+    conv_0 (QuantizedConv2D)                                    | 0.0090 | 0.0000
+    conv_0/relu (QuantizedReLU)                                 | 0.3168 | 5.3164
+    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.3404 | 0.5344
+    pw_separable_1 (QuantizedConv2D)                            | 0.1830 | 0.0000
+    pw_separable_1/relu (QuantizedReLU)                         | 0.5654 | 7.8820
+    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.3940 | 2.3109
+    pw_separable_2 (QuantizedConv2D)                            | 0.2326 | 0.0000
+    pw_separable_2/relu (QuantizedReLU)                         | 0.5711 | 2.7477
+    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.3959 | 0.4023
+    pw_separable_3 (QuantizedConv2D)                            | 0.2628 | 0.0000
+    pw_separable_3/relu (QuantizedReLU)                         | 0.5861 | 0.3453
+    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.4268 | 0.0398
+    pw_separable_4 (QuantizedConv2D)                            | 0.3880 | 0.0000
+    pw_separable_4/relu (QuantizedReLU)                         | 0.3254 | 0.0000
+    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.3353 | 1.1719
+    dense_5 (QuantizedDense)                                    | 0.1196 | 0.0000
+    =====================================================================================
+
+The `target_layer` allows to focus on a given layer and display a per-axis error on all output
+channels for this layer, for example on the classification dense layer:
+
+.. code-block:: bash
+
+    quantizeml analysis quantization_error -m ds_cnn_kws.h5 -qm ds_cnn_kws_i8_w8_a8.h5 -tl dense_5
+
+    Quantization error for ds_cnn_kws:
+    =====================================================
+    Layer/node                  | wMAPE  | Saturation (%)
+    =====================================================
+    dense_5 (QuantizedDense):1  | 0.4635 | 0.0000
+    dense_5 (QuantizedDense):2  | 0.4499 | 0.0000
+    dense_5 (QuantizedDense):3  | 0.4480 | 0.0000
+    dense_5 (QuantizedDense):4  | 0.4651 | 0.0000
+    dense_5 (QuantizedDense):5  | 0.4542 | 0.0000
+    dense_5 (QuantizedDense):6  | 0.4475 | 0.0000
+    dense_5 (QuantizedDense):7  | 0.4350 | 0.0000
+    dense_5 (QuantizedDense):8  | 0.4426 | 0.0000
+    dense_5 (QuantizedDense):9  | 0.4437 | 0.0000
+    dense_5 (QuantizedDense):10 | 0.4459 | 0.0000
+    dense_5 (QuantizedDense):11 | 0.4461 | 0.0000
+    dense_5 (QuantizedDense):12 | 0.4396 | 0.0000
+    dense_5 (QuantizedDense):13 | 0.4381 | 0.0000
+    dense_5 (QuantizedDense):14 | 0.4366 | 0.0000
+    dense_5 (QuantizedDense):15 | 0.4435 | 0.0000
+    dense_5 (QuantizedDense):16 | 0.4382 | 0.0000
+    dense_5 (QuantizedDense):17 | 0.4445 | 0.0000
+    dense_5 (QuantizedDense):18 | 0.4333 | 0.0000
+    dense_5 (QuantizedDense):19 | 0.4354 | 0.0000
+    dense_5 (QuantizedDense):20 | 0.4416 | 0.0000
+    dense_5 (QuantizedDense):21 | 0.4511 | 0.0000
+    dense_5 (QuantizedDense):22 | 0.4446 | 0.0000
+    dense_5 (QuantizedDense):23 | 0.4416 | 0.0000
+    dense_5 (QuantizedDense):24 | 0.4782 | 0.0000
+    dense_5 (QuantizedDense):25 | 0.4456 | 0.0000
+    dense_5 (QuantizedDense):26 | 0.4458 | 0.0000
+    dense_5 (QuantizedDense):27 | 0.4513 | 0.0000
+    dense_5 (QuantizedDense):28 | 0.4531 | 0.0000
+    dense_5 (QuantizedDense):29 | 0.4514 | 0.0000
+    dense_5 (QuantizedDense):30 | 0.4450 | 0.0000
+    dense_5 (QuantizedDense):31 | 0.4469 | 0.0000
+    dense_5 (QuantizedDense):32 | 0.4399 | 0.0000
+    dense_5 (QuantizedDense):33 | 0.4543 | 0.0000
+    =====================================================
+
 ____
 
 .. [#fn-1] See https://en.wikipedia.org/wiki/Fixed-point_arithmetic for more details on the
