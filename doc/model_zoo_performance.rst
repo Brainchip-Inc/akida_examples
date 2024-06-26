@@ -31,7 +31,7 @@ Model zoo performance
 Akida 1.0 models
 ----------------
 
-For 1.0 models, 4-bit accuracy are provided and are always obtained through a QAT phase.
+For 1.0 models, 4-bit accuracy is provided and is always obtained through a QAT phase.
 
 .. note::
     The "8/4/4" quantization scheme stands for 8-bit weights in the input layer, 4-bit weights in
