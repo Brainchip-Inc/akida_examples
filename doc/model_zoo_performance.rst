@@ -37,6 +37,12 @@ For 1.0 models, 4-bit accuracy are provided and are always obtained through a QA
     The "8/4/4" quantization scheme stands for 8-bit weights in the input layer, 4-bit weights in
     other layers and 4-bit activations.
 
+.. note::
+    The NPs column provides the minimal number of neural processors required for the model excecution
+    on the Akida IP. The numbers given are the result of the
+    `map <api_reference/akida_apis.html#akida.Model.map>`_ operation using the
+    `Minimal MapMode <api_reference/akida_apis.html#akida.MapMode>`_ targetting AKD1000 reference SoC.
+
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
