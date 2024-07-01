@@ -105,6 +105,13 @@
 <li class="toctree-l4"><a class="reference internal" href="#onnx-support">ONNX support</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis-module">Analysis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kernel-distribution">Kernel distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quantization-error">Quantization error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#metrics">Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#command-line">Command line</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cnn2snn.html">CNN2SNN toolkit</a><ul>
@@ -907,6 +914,219 @@ when the pattern is:</p>
 possibilities. There might occasionally be models which are nearly compatible with Akida but which
 will fail to quantize due to just a few incompatibilities. The <a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.onnx_support.quantization.custom_pattern_scope">custom pattern feature</a>
 allows to handle such models as illustrated in <a class="reference external" href="../examples/quantization/plot_3_custom_patterns.html#sphx-glr-examples-quantization-plot-3-custom-patterns-py">the dedicated advanced example</a>.</p>
+</section>
+</section>
+<section id="analysis-module">
+<h2>Analysis module<a class="headerlink" href="#analysis-module" title="Permalink to this headline"></a></h2>
+<p>The QuantizeML toolit comes with an <a class="reference external" href="../api_reference/quantizeml_apis.html#analysis">analysis</a>
+submodule that provides tools to better analyze the impact of quantization on a model. Quantization
+errors and minimal accuracy drops are an expected behavior going from float to integer (8-bits).
+While no simple and generic solution can be provided to solve larger accuracy issues, the analyis
+tool can help pinpoint faulty layers or kernels that might be poorly quantized and thus harm
+accuracy. Once the culprit is found, adding regularization or training constraints can help tackle
+the issue, quantizing per-tensor or per-axis can also help.</p>
+<section id="kernel-distribution">
+<h3>Kernel distribution<a class="headerlink" href="#kernel-distribution" title="Permalink to this headline"></a></h3>
+<p>This tool leverages the <a class="reference external" href="https://www.tensorflow.org/tensorboard">Tensorboard visualization toolkit</a> to draw the kernel distributions of a given model. The
+<a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.plot_kernel_distribution">plot_kernel_distribution</a> API takes as
+inputs the model of interest and a path to save a preset Tensorboard configuration to display. The
+following command line will enable the histogram and boxplot displays:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="o">=</span><span class="sb">`</span>logdir<span class="sb">`</span>
+</pre></div>
+</div>
+<p>Since QuantizeML is based on a uniform quantization scheme centered on zero, the kernel distribution
+tool can be used to check for large outliers or oddly distributed kernels that might be poorly
+quantized.</p>
+<p>Example output for the classification layer of the <a class="reference external" href="../model_zoo_performance.html#id11">DS-CNN/KWS</a> model:</p>
+<a class="reference internal image-reference" href="../_images/kernel_distrib.png"><img alt="../_images/kernel_distrib.png" src="../_images/kernel_distrib.png" style="width: 1041.0px; height: 412.5px;" /></a>
+</section>
+<section id="quantization-error">
+<h3>Quantization error<a class="headerlink" href="#quantization-error" title="Permalink to this headline"></a></h3>
+<p>The tool offers 2 possible ways to check quantization error in a model:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>for all layers: a quantization error is computed on each layer output</p></li>
+<li><p>for a single layer: per-channel error is then reported</p></li>
+</ul>
+</div></blockquote>
+<p>This is accessible using the <a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_layer_quantization_error">measure_layer_quantization_error</a> API.
+The quantization error is then computed independently for each layer or channel accordingly. The
+cumulative error, that is the error propagated from the input to each layer, is computed with the
+<a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_cumulative_quantization_error">measure_cumulative_quantization_error</a>
+dedicated API. Both APIs will return a python dictionary containing the metrics that can be
+displayed using the <a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.print_metric_table">print_metric_table</a> function.</p>
+<p>A <cite>batch_size</cite> parameter is present in the quantization error functions and can be used to better
+refine the computed error by averaging error on more data.</p>
+</section>
+<section id="metrics">
+<h3>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline"></a></h3>
+<p>The quantization error tools will report <a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.WeightedMAPE">wMAPE</a> and <a class="reference external" href="../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.Saturation">saturation</a> metrics.</p>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE">weighted mean absolute percentage error</a> (WMAPE) measures error as:</p>
+<div class="math notranslate nohighlight">
+\[wMAPE = \frac{\sum{|x_{float} - x_{quantized}|}}{\sum{|x_{float}|}}\]</div>
+<p>The saturation metric is the percentage of saturated values for a given layer or channel. A value
+is saturated when it is equal to the minimum or maximum value allowed by a given bitwidth.</p>
+</section>
+<section id="command-line">
+<h3>Command line<a class="headerlink" href="#command-line" title="Permalink to this headline"></a></h3>
+<p>The analysis tools are accessible via command-line using the <cite>analysis</cite> action:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>-h
+
+usage:<span class="w"> </span>quantizeml<span class="w"> </span>analysis<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">{</span>kernel_distribution,quantization_error<span class="o">}</span><span class="w"> </span>...
+
+positional<span class="w"> </span>arguments:
+<span class="o">{</span>kernel_distribution,quantization_error<span class="o">}</span>
+<span class="w">    </span>kernel_distribution<span class="w"> </span>Plot<span class="w"> </span>kernel<span class="w"> </span>distribution
+<span class="w">    </span>quantization_error<span class="w">  </span>Measure<span class="w"> </span>quantization<span class="w"> </span>error
+
+options:
+-h,<span class="w"> </span>--help<span class="w">              </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The sections below use the <a class="reference external" href="../model_zoo_performance.html#id11">DS-CNN/KWS</a> model for
+illustration purposes, but this model does not exhibit quantization issues.</p>
+</div>
+<section id="kernel-distribution-from-command-line">
+<h4>Kernel distribution from command-line<a class="headerlink" href="#kernel-distribution-from-command-line" title="Permalink to this headline"></a></h4>
+<p>A model and a directory must be provided:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>kernel_distribution<span class="w"> </span>-h
+
+usage:<span class="w"> </span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>kernel_distribution<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-m<span class="w"> </span>MODEL<span class="w"> </span>-l<span class="w"> </span>LOGDIR
+
+options:
+-h,<span class="w"> </span>--help<span class="w">                 </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+-m<span class="w"> </span>MODEL,<span class="w"> </span>--model<span class="w"> </span>MODEL<span class="w">    </span>Model<span class="w"> </span>to<span class="w"> </span>analyze
+-l<span class="w"> </span>LOGDIR,<span class="w"> </span>--logdir<span class="w"> </span>LOGDIR<span class="w"> </span>Log<span class="w"> </span>directory<span class="w"> </span>to<span class="w"> </span>save<span class="w"> </span>plots
+</pre></div>
+</div>
+<p>Tensorboard called on the log directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>kernel_distribution<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws.h5<span class="w"> </span>-l<span class="w"> </span>.<span class="se">\l</span>ogs
+tensorboard<span class="w"> </span>--logdir<span class="o">=</span>.<span class="se">\l</span>ogs
+</pre></div>
+</div>
+</section>
+<section id="quantization-error-from-command-line">
+<h4>Quantization error from command-line<a class="headerlink" href="#quantization-error-from-command-line" title="Permalink to this headline"></a></h4>
+<p>All the options described in the previous section are accessible through parameters:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usage:<span class="w"> </span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>quantization_error<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-m<span class="w"> </span>MODEL<span class="w"> </span>-qm<span class="w"> </span>QUANTIZED_MODEL<span class="w"> </span><span class="o">[</span>-tl<span class="w"> </span>TARGET_LAYER<span class="o">]</span><span class="w"> </span><span class="o">[</span>-bs<span class="w"> </span>BATCH_SIZE<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="o">]</span>
+
+options:
+-h,<span class="w"> </span>--help<span class="w">                                             </span>Show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+-m<span class="w"> </span>MODEL,<span class="w"> </span>--model<span class="w"> </span>MODEL<span class="w">                                </span>Model<span class="w"> </span>to<span class="w"> </span>analyze
+-qm<span class="w"> </span>QUANTIZED_MODEL,<span class="w"> </span>--quantized_model<span class="w"> </span>QUANTIZED_MODEL<span class="w"> </span>The<span class="w"> </span>quantized<span class="w"> </span>model<span class="w"> </span>to<span class="w"> </span>analyze
+-tl<span class="w"> </span>TARGET_LAYER,<span class="w"> </span>--target_layer<span class="w"> </span>TARGET_LAYER<span class="w">          </span>Compute<span class="w"> </span>per_channel<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>a<span class="w"> </span>specific
+<span class="w">                                                       </span>layer/node.<span class="w"> </span>Defaults<span class="w"> </span>to<span class="w"> </span>None
+-bs<span class="w"> </span>BATCH_SIZE,<span class="w"> </span>--batch_size<span class="w"> </span>BATCH_SIZE<span class="w">                </span>Batch<span class="w"> </span>size<span class="w"> </span>to<span class="w"> </span>generate<span class="w"> </span>samples.<span class="w"> </span>Defaults
+<span class="w">                                                       </span>to<span class="w"> </span><span class="m">16</span>
+-c,<span class="w"> </span>--cumulative<span class="w">                                       </span>Compute<span class="w"> </span>cumulative<span class="w"> </span>quantization<span class="w"> </span>error
+<span class="w">                                                       </span>instead<span class="w"> </span>of<span class="w"> </span>isolated<span class="w"> </span>one.<span class="w"> </span>Defaults<span class="w"> </span>to
+<span class="w">                                                       </span>False
+</pre></div>
+</div>
+<p>Providing only a model and it’s quantized version will print out quantization error per-layer
+individually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>quantization_error<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws.h5<span class="w"> </span>-qm<span class="w"> </span>ds_cnn_kws_i8_w8_a8.h5
+
+Quantization<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>ds_cnn_kws:
+<span class="o">=====================================================================================</span>
+Layer/node<span class="w">                                                  </span><span class="p">|</span><span class="w"> </span>wMAPE<span class="w">  </span><span class="p">|</span><span class="w"> </span>Saturation<span class="w"> </span><span class="o">(</span>%<span class="o">)</span>
+<span class="o">=====================================================================================</span>
+conv_0<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                                    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0089<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+conv_0/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                                 </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3182<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">5</span>.3203
+dw_separable_1<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.2476<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.5219
+pw_separable_1<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3962<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_1/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4646<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">7</span>.5070
+dw_separable_2<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3265<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>.0727
+pw_separable_2<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4841<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_2/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4648<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>.5117
+dw_separable_3<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3111<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3305
+pw_separable_3<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4799<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_3/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4542<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3117
+dw_separable_4<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3495<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0422
+pw_separable_4<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4514<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_4/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0005<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_4/global_avg<span class="w"> </span><span class="o">(</span>QuantizedGlobalAveragePooling2D<span class="o">)</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3096<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.8789
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span><span class="w">                                    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4475<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+<span class="o">=====================================================================================</span>
+</pre></div>
+</div>
+<p>Using the <cite>cumulative</cite> option will display a similar report where error is cumulated top-down from
+layer to layer:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>quantization_error<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws.h5<span class="w"> </span>-qm<span class="w"> </span>ds_cnn_kws_i8_w8_a8.h5<span class="w"> </span>-c
+
+Quantization<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>ds_cnn_kws:
+<span class="o">=====================================================================================</span>
+Layer/node<span class="w">                                                  </span><span class="p">|</span><span class="w"> </span>wMAPE<span class="w">  </span><span class="p">|</span><span class="w"> </span>Saturation<span class="w"> </span><span class="o">(</span>%<span class="o">)</span>
+<span class="o">=====================================================================================</span>
+conv_0<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                                    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0090<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+conv_0/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                                 </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3168<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">5</span>.3164
+dw_separable_1<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3404<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.5344
+pw_separable_1<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.1830<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_1/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.5654<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">7</span>.8820
+dw_separable_2<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3940<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>.3109
+pw_separable_2<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.2326<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_2/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.5711<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>.7477
+dw_separable_3<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3959<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4023
+pw_separable_3<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.2628<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_3/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.5861<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3453
+dw_separable_4<span class="w"> </span><span class="o">(</span>QuantizedDepthwiseConv2D<span class="o">)</span><span class="w">                   </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4268<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0398
+pw_separable_4<span class="w"> </span><span class="o">(</span>QuantizedConv2D<span class="o">)</span><span class="w">                            </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3880<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_4/relu<span class="w"> </span><span class="o">(</span>QuantizedReLU<span class="o">)</span><span class="w">                         </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3254<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+pw_separable_4/global_avg<span class="w"> </span><span class="o">(</span>QuantizedGlobalAveragePooling2D<span class="o">)</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.3353<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">1</span>.1719
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span><span class="w">                                    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.1196<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+<span class="o">=====================================================================================</span>
+</pre></div>
+</div>
+<p>The <cite>target_layer</cite> allows to focus on a given layer and display a per-axis error on all output
+channels for this layer, for example on the classification dense layer:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quantizeml<span class="w"> </span>analysis<span class="w"> </span>quantization_error<span class="w"> </span>-m<span class="w"> </span>ds_cnn_kws.h5<span class="w"> </span>-qm<span class="w"> </span>ds_cnn_kws_i8_w8_a8.h5<span class="w"> </span>-tl<span class="w"> </span>dense_5
+
+Quantization<span class="w"> </span>error<span class="w"> </span><span class="k">for</span><span class="w"> </span>ds_cnn_kws:
+<span class="o">=====================================================</span>
+Layer/node<span class="w">                  </span><span class="p">|</span><span class="w"> </span>wMAPE<span class="w">  </span><span class="p">|</span><span class="w"> </span>Saturation<span class="w"> </span><span class="o">(</span>%<span class="o">)</span>
+<span class="o">=====================================================</span>
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:1<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4635<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:2<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4499<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:3<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4480<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:4<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4651<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:5<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4542<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:6<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4475<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:7<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4350<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:8<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4426<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:9<span class="w">  </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4437<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:10<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4459<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:11<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4461<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:12<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4396<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:13<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4381<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:14<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4366<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:15<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4435<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:16<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4382<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:17<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4445<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:18<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4333<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:19<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4354<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:20<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4416<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:21<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4511<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:22<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4446<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:23<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4416<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:24<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4782<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:25<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4456<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:26<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4458<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:27<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4513<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:28<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4531<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:29<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4514<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:30<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4450<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:31<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4469<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:32<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4399<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+dense_5<span class="w"> </span><span class="o">(</span>QuantizedDense<span class="o">)</span>:33<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.4543<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>.0000
+<span class="o">=====================================================</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since random samples are used, results in the above tables may slightly change.</p>
+</div>
 <hr class="docutils" />
 <dl class="footnote brackets">
 <dt class="label" id="fn-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
@@ -914,6 +1134,7 @@ allows to handle such models as illustrated in <a class="reference external" hre
 arithmetics.</p>
 </dd>
 </dl>
+</section>
 </section>
 </section>
 </section>
