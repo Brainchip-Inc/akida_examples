@@ -382,17 +382,19 @@ allows to handle such models as illustrated in `the dedicated advanced example
 Analysis module
 ---------------
 
-QuantizeML package comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
-submodule that provides tools to check kernel distribution or quantization error in a model. This
-allows to better analysis impact of quantization: while no simple and generic solution can be
-provided to solve accuracy issues, the analyis tool can help pinpoint faulty layers or kernels that
-might be poorly quantized and thus harm accuracy.
+The QuantizeML toolit comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
+submodule that provides tools to better analyze impact of quantization in a model. Quantization
+errors and minimal accuracy drop is an expected behavior going from float to integer (8-bits).
+While no simple and generic solution can be provided to solve larger accuracy issues, the analyis
+tool can help pinpoint faulty layers or kernels that might be poorly quantized and thus harm
+accuracy. Once culprit is found, adding regularization or training constraints can help tackle the
+issue, quantizing per-tensor or per-axis can also help.
 
 Kernel distribution
 ~~~~~~~~~~~~~~~~~~~
 
 This tool leverages `Tensorboard visualization toolkit <https://www.tensorflow.org/tensorboard>`__
-to allow a visual check of kernel distribution of a given model. The `plot_kernel_distribution
+to draw kernel distribution of a given model. The `plot_kernel_distribution
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.plot_kernel_distribution>`__ API takes
 the model of interest and a path to save a preset Tensorboard configuration to display. The
 following command line will enable the histogram and boxplot displays:
@@ -415,18 +417,18 @@ Example output for the classification layer of the `DS-CNN/KWS
 Quantization error
 ~~~~~~~~~~~~~~~~~~
 
-The tools offers 2 possible ways to check quantization error in a model:
+The tool offers 2 possible ways to check quantization error in a model:
 
     - for all layers: a quantization error is computed on each layer output
     - for a single layer: per-channel error is then reported
 
 This is accessible using the `measure_layer_quantization_error
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_layer_quantization_error>`__ API
-and quantization error is then computed independently for each layer or channel. The cumulated
-error, that is error is propagated from layer to layer, is computed with the
+and quantization error is then computed independently for each layer or channel. The cumulative
+error, that is the error propagated from the input to each layer, is computed with the
 `measure_cumulative_quantization_error
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_cumulative_quantization_error>`__
-dedicated API. Both APIs will return a python dictionnary containing the metrics and a that can be
+dedicated API. Both APIs will return a python dictionary containing the metrics that can be
 displayed using the `print_metric_table
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.print_metric_table>`__ function.
 
@@ -446,8 +448,8 @@ The `weighted mean absolute percentage error
 .. math::
     wMAPE = \frac{\sum{|x_{float} - x_{quantized}|}}{\sum{|x_{float}|}}
 
-The saturation metrics is the percentage of saturated values for the given layer or channel. A value
-is saturated when it is equal to the minimum or maximum value allowed for by a given bitwidth.
+The saturation metric is the percentage of saturated values for a given layer or channel. A value
+is saturated when it is equal to the minimum or maximum value allowed by a given bitwidth.
 
 Command line
 ~~~~~~~~~~~~
@@ -488,8 +490,7 @@ A model and a directory must be provided:
     -m MODEL, --model MODEL    Model to analyze
     -l LOGDIR, --logdir LOGDIR Log directory to save plots
 
-Tensorboard should then be called on the given directory that has been populated with the relevant
-information:
+Tensorboard called on the log directory:
 
 .. code-block:: bash
 
@@ -518,7 +519,7 @@ All the options described in the previous section are accessible through paramet
                                                            instead of isolated one. Defaults to
                                                            False
 
-Only providing a model and it's quantized version will print out quantization error per-layer
+Providing only a model and it's quantized version will print out quantization error per-layer
 individually:
 
 .. code-block:: bash
@@ -622,6 +623,8 @@ channels for this layer, for example on the classification dense layer:
     dense_5 (QuantizedDense):33 | 0.4543 | 0.0000
     =====================================================
 
+.. note::
+    Since random samples are used, results in the above tables may slightly change.
 ____
 
 .. [#fn-1] See https://en.wikipedia.org/wiki/Fixed-point_arithmetic for more details on the
