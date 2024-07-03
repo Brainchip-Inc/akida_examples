@@ -210,6 +210,15 @@ and the sequences mapped in the Software run on the CPU.
 
     model.map(device, hw_only=True)
 
+By default, the mapping uses the `MapMode.AllNps
+<../api_reference/akida_apis.html#akida.MapMode.AllNps>`__ mode that targets a higher throughput,
+lower latency, and better NP concurrent utilization but an optimal mapping depends on the system
+characteristics. The other modes `MapMode.HwPr
+<../api_reference/akida_apis.html#akida.MapMode.HwPr>`__ and `MapMode.Minimal
+<../api_reference/akida_apis.html#akida.MapMode.Minimal>`__ will respectively leverage the NP
+concurrent utilization along with partial reconfiguration (multipass) and use as few hardware
+resources as possible.
+
 Once the model has been mapped, the inference happens only on the device, and not on the host
 CPU except for passing inputs and fetching outputs.
 
