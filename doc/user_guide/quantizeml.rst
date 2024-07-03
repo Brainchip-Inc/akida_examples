@@ -626,6 +626,7 @@ channels for this layer, for example on the classification dense layer:
 
 .. note::
     Since random samples are used, results in the above tables may slightly change.
+
 ____
 
 .. [#fn-1] See https://en.wikipedia.org/wiki/Fixed-point_arithmetic for more details on the
