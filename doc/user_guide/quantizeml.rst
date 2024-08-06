@@ -61,7 +61,7 @@ targets KWS task as an example:
 .. code-block:: python
 
     from akida_models import fetch_file
-    from quantizeml.models import load_model
+    from quantizeml import load_model
     model_file = fetch_file("https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws.h5",
                             fname="ds_cnn_kws.h5")
     model = load_model(model_file)
@@ -195,7 +195,7 @@ Model loading
 The toolkit offers a
 `keras.models.load_model <https://www.tensorflow.org/api_docs/python/tf/keras/saving/load_model>`__
 wrapper that allows to load models with quantized layers:
-`quantizeml.models.load_model <../api_reference/quantizeml_apis.html#quantizeml.models.load_model>`__
+`quantizeml.load_model <../api_reference/quantizeml_apis.html#quantizeml.load_model>`__
 
 Command line interface
 ----------------------
