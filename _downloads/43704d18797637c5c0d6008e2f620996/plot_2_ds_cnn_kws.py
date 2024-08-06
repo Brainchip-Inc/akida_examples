@@ -94,7 +94,7 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 # a 4-bit version is also available from the `model zoo <../../model_zoo_performance.html#id10>`_.
 #
 
-from quantizeml.models import load_model
+from quantizeml import load_model
 
 # Load the pre-trained quantized model
 model_file = fetch_file(
