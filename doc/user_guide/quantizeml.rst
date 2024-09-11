@@ -439,15 +439,16 @@ refine the computed error by averaging error on more data.
 Metrics
 ~~~~~~~~~~~~
 
-The quantization error tools will report `wMAPE
-<../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.WeightedMAPE>`__ and `saturation
+The quantization error tools will report `SMAPE
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.SMAPE>`__ and `saturation
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.Saturation>`__ metrics.
 
-The `weighted mean absolute percentage error
-<https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE>`__ (WMAPE) measures error as:
+The `symmetric mean absolute percentage error
+<https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error>`__ (SMAPE) measures error
+as:
 
 .. math::
-    wMAPE = \frac{\sum{|x_{float} - x_{quantized}|}}{\sum{|x_{float}|}}
+    SMAPE = \frac{1}{n}\sum_{n}{\frac{|x_{float} - x_{quantized}|}{|x_{float}| + |x_{quantized}|}}
 
 The saturation metric is the percentage of saturated values for a given layer or channel. A value
 is saturated when it is equal to the minimum or maximum value allowed by a given bitwidth.
@@ -529,24 +530,24 @@ individually:
 
     Quantization error for ds_cnn_kws:
     =====================================================================================
-    Layer/node                                                  | wMAPE  | Saturation (%)
+    Layer/node                                                  | SMAPE  | Saturation (%)
     =====================================================================================
-    conv_0 (QuantizedConv2D)                                    | 0.0089 | 0.0000
-    conv_0/relu (QuantizedReLU)                                 | 0.3182 | 5.3203
-    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.2476 | 0.5219
-    pw_separable_1 (QuantizedConv2D)                            | 0.3962 | 0.0000
-    pw_separable_1/relu (QuantizedReLU)                         | 0.4646 | 7.5070
-    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.3265 | 2.0727
-    pw_separable_2 (QuantizedConv2D)                            | 0.4841 | 0.0000
-    pw_separable_2/relu (QuantizedReLU)                         | 0.4648 | 2.5117
-    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.3111 | 0.3305
-    pw_separable_3 (QuantizedConv2D)                            | 0.4799 | 0.0000
-    pw_separable_3/relu (QuantizedReLU)                         | 0.4542 | 0.3117
-    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.3495 | 0.0422
-    pw_separable_4 (QuantizedConv2D)                            | 0.4514 | 0.0000
-    pw_separable_4/relu (QuantizedReLU)                         | 0.0005 | 0.0000
-    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.3096 | 0.8789
-    dense_5 (QuantizedDense)                                    | 0.4475 | 0.0000
+    conv_0 (QuantizedConv2D)                                    | 0.0182 | 0.0000
+    conv_0/relu (QuantizedReLU)                                 | 0.0054 | 5.3266
+    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.0623 | 0.5328
+    pw_separable_1 (QuantizedConv2D)                            | 0.0138 | 0.0000
+    pw_separable_1/relu (QuantizedReLU)                         | 0.0042 | 7.5719
+    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.0277 | 2.1156
+    pw_separable_2 (QuantizedConv2D)                            | 0.0140 | 0.0000
+    pw_separable_2/relu (QuantizedReLU)                         | 0.0050 | 2.6492
+    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.0330 | 0.3859
+    pw_separable_3 (QuantizedConv2D)                            | 0.0162 | 0.0000
+    pw_separable_3/relu (QuantizedReLU)                         | 0.0062 | 0.3547
+    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.0570 | 0.0445
+    pw_separable_4 (QuantizedConv2D)                            | 0.0194 | 0.0000
+    pw_separable_4/relu (QuantizedReLU)                         | 0.0001 | 0.0000
+    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.0041 | 1.1719
+    dense_5 (QuantizedDense)                                    | 0.0078 | 0.0000
     =====================================================================================
 
 Using the `cumulative` option will display a similar report where error is cumulated top-down from
@@ -558,24 +559,24 @@ layer to layer:
 
     Quantization error for ds_cnn_kws:
     =====================================================================================
-    Layer/node                                                  | wMAPE  | Saturation (%)
+    Layer/node                                                  | SMAPE  | Saturation (%)
     =====================================================================================
-    conv_0 (QuantizedConv2D)                                    | 0.0090 | 0.0000
-    conv_0/relu (QuantizedReLU)                                 | 0.3168 | 5.3164
-    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.3404 | 0.5344
-    pw_separable_1 (QuantizedConv2D)                            | 0.1830 | 0.0000
-    pw_separable_1/relu (QuantizedReLU)                         | 0.5654 | 7.8820
-    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.3940 | 2.3109
-    pw_separable_2 (QuantizedConv2D)                            | 0.2326 | 0.0000
-    pw_separable_2/relu (QuantizedReLU)                         | 0.5711 | 2.7477
-    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.3959 | 0.4023
-    pw_separable_3 (QuantizedConv2D)                            | 0.2628 | 0.0000
-    pw_separable_3/relu (QuantizedReLU)                         | 0.5861 | 0.3453
-    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.4268 | 0.0398
-    pw_separable_4 (QuantizedConv2D)                            | 0.3880 | 0.0000
-    pw_separable_4/relu (QuantizedReLU)                         | 0.3254 | 0.0000
-    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.3353 | 1.1719
-    dense_5 (QuantizedDense)                                    | 0.1196 | 0.0000
+    conv_0 (QuantizedConv2D)                                    | 0.0180 | 0.0000
+    conv_0/relu (QuantizedReLU)                                 | 0.0106 | 5.1937
+    dw_separable_1 (QuantizedDepthwiseConv2D)                   | 0.1053 | 0.5594
+    pw_separable_1 (QuantizedConv2D)                            | 0.1862 | 0.0000
+    pw_separable_1/relu (QuantizedReLU)                         | 0.1121 | 7.7031
+    dw_separable_2 (QuantizedDepthwiseConv2D)                   | 0.2173 | 2.1727
+    pw_separable_2 (QuantizedConv2D)                            | 0.2353 | 0.0000
+    pw_separable_2/relu (QuantizedReLU)                         | 0.1344 | 2.6430
+    dw_separable_3 (QuantizedDepthwiseConv2D)                   | 0.2131 | 0.3906
+    pw_separable_3 (QuantizedConv2D)                            | 0.2515 | 0.0000
+    pw_separable_3/relu (QuantizedReLU)                         | 0.1335 | 0.3875
+    dw_separable_4 (QuantizedDepthwiseConv2D)                   | 0.2528 | 0.0695
+    pw_separable_4 (QuantizedConv2D)                            | 0.3366 | 0.0000
+    pw_separable_4/relu (QuantizedReLU)                         | 0.2310 | 0.0000
+    pw_separable_4/global_avg (QuantizedGlobalAveragePooling2D) | 0.0860 | 1.5625
+    dense_5 (QuantizedDense)                                    | 0.0962 | 0.0000
     =====================================================================================
 
 The `target_layer` allows to focus on a given layer and display a per-axis error on all output
@@ -587,41 +588,41 @@ channels for this layer, for example on the classification dense layer:
 
     Quantization error for ds_cnn_kws:
     =====================================================
-    Layer/node                  | wMAPE  | Saturation (%)
+    Layer/node                  | SMAPE  | Saturation (%)
     =====================================================
-    dense_5 (QuantizedDense):1  | 0.4635 | 0.0000
-    dense_5 (QuantizedDense):2  | 0.4499 | 0.0000
-    dense_5 (QuantizedDense):3  | 0.4480 | 0.0000
-    dense_5 (QuantizedDense):4  | 0.4651 | 0.0000
-    dense_5 (QuantizedDense):5  | 0.4542 | 0.0000
-    dense_5 (QuantizedDense):6  | 0.4475 | 0.0000
-    dense_5 (QuantizedDense):7  | 0.4350 | 0.0000
-    dense_5 (QuantizedDense):8  | 0.4426 | 0.0000
-    dense_5 (QuantizedDense):9  | 0.4437 | 0.0000
-    dense_5 (QuantizedDense):10 | 0.4459 | 0.0000
-    dense_5 (QuantizedDense):11 | 0.4461 | 0.0000
-    dense_5 (QuantizedDense):12 | 0.4396 | 0.0000
-    dense_5 (QuantizedDense):13 | 0.4381 | 0.0000
-    dense_5 (QuantizedDense):14 | 0.4366 | 0.0000
-    dense_5 (QuantizedDense):15 | 0.4435 | 0.0000
-    dense_5 (QuantizedDense):16 | 0.4382 | 0.0000
-    dense_5 (QuantizedDense):17 | 0.4445 | 0.0000
-    dense_5 (QuantizedDense):18 | 0.4333 | 0.0000
-    dense_5 (QuantizedDense):19 | 0.4354 | 0.0000
-    dense_5 (QuantizedDense):20 | 0.4416 | 0.0000
-    dense_5 (QuantizedDense):21 | 0.4511 | 0.0000
-    dense_5 (QuantizedDense):22 | 0.4446 | 0.0000
-    dense_5 (QuantizedDense):23 | 0.4416 | 0.0000
-    dense_5 (QuantizedDense):24 | 0.4782 | 0.0000
-    dense_5 (QuantizedDense):25 | 0.4456 | 0.0000
-    dense_5 (QuantizedDense):26 | 0.4458 | 0.0000
-    dense_5 (QuantizedDense):27 | 0.4513 | 0.0000
-    dense_5 (QuantizedDense):28 | 0.4531 | 0.0000
-    dense_5 (QuantizedDense):29 | 0.4514 | 0.0000
-    dense_5 (QuantizedDense):30 | 0.4450 | 0.0000
-    dense_5 (QuantizedDense):31 | 0.4469 | 0.0000
-    dense_5 (QuantizedDense):32 | 0.4399 | 0.0000
-    dense_5 (QuantizedDense):33 | 0.4543 | 0.0000
+    dense_5 (QuantizedDense):1  | 0.0011 | 0.0000
+    dense_5 (QuantizedDense):2  | 0.0003 | 0.0000
+    dense_5 (QuantizedDense):3  | 0.0002 | 0.0000
+    dense_5 (QuantizedDense):4  | 0.0032 | 0.0000
+    dense_5 (QuantizedDense):5  | 0.0190 | 0.0000
+    dense_5 (QuantizedDense):6  | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):7  | 0.0025 | 0.0000
+    dense_5 (QuantizedDense):8  | 0.0053 | 0.0000
+    dense_5 (QuantizedDense):9  | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):10 | 0.0018 | 0.0000
+    dense_5 (QuantizedDense):11 | 0.0041 | 0.0000
+    dense_5 (QuantizedDense):12 | 0.0004 | 0.0000
+    dense_5 (QuantizedDense):13 | 0.0009 | 0.0000
+    dense_5 (QuantizedDense):14 | 0.0019 | 0.0000
+    dense_5 (QuantizedDense):15 | 0.0006 | 0.0000
+    dense_5 (QuantizedDense):16 | 0.0039 | 0.0000
+    dense_5 (QuantizedDense):17 | 0.0018 | 0.0000
+    dense_5 (QuantizedDense):18 | 0.0090 | 0.0000
+    dense_5 (QuantizedDense):19 | 0.0057 | 0.0000
+    dense_5 (QuantizedDense):20 | 0.0007 | 0.0000
+    dense_5 (QuantizedDense):21 | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):22 | 0.0012 | 0.0000
+    dense_5 (QuantizedDense):23 | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):24 | 0.0039 | 0.0000
+    dense_5 (QuantizedDense):25 | 0.0627 | 0.0000
+    dense_5 (QuantizedDense):26 | 0.0030 | 0.0000
+    dense_5 (QuantizedDense):27 | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):28 | 0.0016 | 0.0000
+    dense_5 (QuantizedDense):29 | 0.0026 | 0.0000
+    dense_5 (QuantizedDense):30 | 0.0004 | 0.0000
+    dense_5 (QuantizedDense):31 | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):32 | 0.0005 | 0.0000
+    dense_5 (QuantizedDense):33 | 0.0010 | 0.0000
     =====================================================
 
 .. note::

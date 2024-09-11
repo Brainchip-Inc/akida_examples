@@ -206,6 +206,6 @@ QuantizeML API
 
     Metrics
     -------
-    .. autofunction:: quantizeml.analysis.tools.WeightedMAPE
+    .. autofunction:: quantizeml.analysis.tools.SMAPE
     .. autofunction:: quantizeml.analysis.tools.Saturation
     .. autofunction:: quantizeml.analysis.tools.print_metric_table
