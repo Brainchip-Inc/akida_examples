@@ -357,6 +357,18 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
     - <DepthwiseConv, Relu>
     - <DepthwiseConv>
 
+- `QuantizedConv2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2DTranspose>`__
+  when the pattern is:
+
+    - <ConvTranspose, Relu>
+    - <ConvTranspose>
+
+- `QuantizedDepthwise2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose>`__
+  when the pattern is:
+
+    - <DepthwiseConvTranspose, Relu>
+    - <DepthwiseConvTranspose>
+
 - `QuantizedDense1D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDense1D>`__
   when the pattern is:
 
@@ -368,8 +380,13 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 - `QuantizedAdd <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedAdd>`__
   when the pattern is:
 
+    - <Add, Relu>
     - <Add>
 
+- `QuantizedConcat <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConcat>`__
+  when the pattern is:
+
+    - <Concat>
 
 While Akida directly supports the most important models, it is not feasible to support all
 possibilities. There might occasionally be models which are nearly compatible with Akida but which

@@ -178,8 +178,11 @@ QuantizeML API
     .. autofunction:: quantizeml.onnx_support.layers.OnnxLayer
     .. autofunction:: quantizeml.onnx_support.layers.QuantizedConv2D
     .. autofunction:: quantizeml.onnx_support.layers.QuantizedDepthwise2D
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConv2DTranspose
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose
     .. autofunction:: quantizeml.onnx_support.layers.QuantizedDense1D
     .. autofunction:: quantizeml.onnx_support.layers.QuantizedAdd
+    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConcat
     .. autofunction:: quantizeml.onnx_support.layers.InputQuantizer
     .. autofunction:: quantizeml.onnx_support.layers.Dequantizer
 
