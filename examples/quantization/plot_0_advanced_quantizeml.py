@@ -145,6 +145,7 @@ print(json.dumps(config, indent=4))
 # Edit the ReLU activation configuration
 config["relu"]["output_quantizer"]['bitwidth'] = 1
 config["relu"]["output_quantizer"]['axis'] = 'per-axis'
+config["relu"]["output_quantizer"]['buffer_bitwidth'] = 32
 config["relu"]['buffer_bitwidth'] = 32
 
 # Drop other layers configurations
