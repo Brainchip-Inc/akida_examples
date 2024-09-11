@@ -354,8 +354,10 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 - `QuantizedDepthwise2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2D>`__
   when the pattern is:
 
-    - <DepthwiseConv, Relu>
-    - <DepthwiseConv>
+    - <Conv, Relu>
+    - <Conv>
+
+and groups=input_channels.
 
 - `QuantizedConv2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2DTranspose>`__
   when the pattern is:
@@ -366,8 +368,10 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 - `QuantizedDepthwise2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose>`__
   when the pattern is:
 
-    - <DepthwiseConvTranspose, Relu>
-    - <DepthwiseConvTranspose>
+    - <ConvTranspose, Relu>
+    - <ConvTranspose>
+
+and groups=input_channels.
 
 - `QuantizedDense1D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDense1D>`__
   when the pattern is:
