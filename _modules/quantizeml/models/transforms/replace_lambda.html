@@ -552,6 +552,10 @@
 <span class="sd">        str: name of the lambda operation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s1">&#39;inbound_nodes&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layer_config</span><span class="p">:</span>
+        <span class="c1"># A layer from a sequence model does not have &#39;inbound_nodes&#39;.</span>
+        <span class="c1"># So, nothing to do in this case</span>
+        <span class="k">return</span> <span class="n">name</span>
     <span class="k">for</span> <span class="n">inbound_node</span> <span class="ow">in</span> <span class="n">inbound_node_generator</span><span class="p">(</span><span class="n">layer_config</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inbound_node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">inbound_node</span> <span class="o">=</span> <span class="n">inbound_node</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
@@ -590,7 +594,9 @@
 <span class="sd">        - Lambda(relu) or Activation(&#39;relu&#39;) → ReLU,</span>
 <span class="sd">        - Lambda(transpose) → Permute,</span>
 <span class="sd">        - Lambda(reshape) → Reshape,</span>
-<span class="sd">        - Lambda(add) → Add.</span>
+<span class="sd">        - Lambda(add) → Add,</span>
+<span class="sd">        - Lambda(&#39;gelu&#39;) → Activation(&#39;gelu&#39;),</span>
+<span class="sd">        - Lambda(&#39;silu&#39;) → Activation(&#39;silu&#39;).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (keras.Model): the model of interest</span>
@@ -605,7 +611,9 @@
         <span class="s1">&#39;__operators__.add&#39;</span><span class="p">:</span> <span class="s1">&#39;Add&#39;</span><span class="p">,</span>
         <span class="s1">&#39;reshape&#39;</span><span class="p">:</span> <span class="s1">&#39;Reshape&#39;</span><span class="p">,</span>
         <span class="s1">&#39;transpose&#39;</span><span class="p">:</span> <span class="s1">&#39;Permute&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;compat.v1.transpose&#39;</span><span class="p">:</span> <span class="s1">&#39;Permute&#39;</span>
+        <span class="s1">&#39;compat.v1.transpose&#39;</span><span class="p">:</span> <span class="s1">&#39;Permute&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;nn.silu&#39;</span><span class="p">:</span> <span class="s1">&#39;Activation&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;nn.gelu&#39;</span><span class="p">:</span> <span class="s1">&#39;Activation&#39;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="c1"># Get all Activations and TFOpLambda layers present in the model</span>
@@ -633,8 +641,11 @@
             <span class="n">target</span> <span class="o">=</span> <span class="n">lambda_to_layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;function&#39;</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">target</span><span class="p">:</span>
                 <span class="c1"># Drop the &#39;function&#39; parameter and update &#39;class_name&#39;</span>
-                <span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;function&#39;</span><span class="p">)</span>
+                <span class="n">op_name</span> <span class="o">=</span> <span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;function&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;nn.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
                 <span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;class_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+                <span class="c1"># If target is &#39;Activation&#39;, put op_name in &#39;activation&#39; parameter</span>
+                <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;Activation&quot;</span><span class="p">:</span>
+                    <span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;activation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">op_name</span>
                 <span class="c1"># Update the inbound part of the config: the last element of the inbound list of</span>
                 <span class="c1"># lambda layers will contain the lambda op parameters that are used to set the</span>
                 <span class="c1"># config for the new layer.</span>

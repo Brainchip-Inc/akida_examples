@@ -536,7 +536,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">backend</span>
-<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">conv_utils</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span>
                           <span class="n">neural_layer_init</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
@@ -590,6 +589,50 @@
         <span class="n">output</span> <span class="o">=</span> <span class="n">output</span> <span class="o">+</span> <span class="n">padding_values</span>
 
     <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">deconv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span>
+                         <span class="n">output_padding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines output length of a transposed convolution given input length.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_length (int): length of input.</span>
+<span class="sd">        filter_size (int): size of the kernel.</span>
+<span class="sd">        padding (str): one of `&quot;same&quot;`, `&quot;valid&quot;`, `&quot;full&quot;`.</span>
+<span class="sd">        output_padding (int, optional): amount of padding along the output dimension. Can be set to</span>
+<span class="sd">            `None` in which case the output length is inferred. Defaults to None.</span>
+<span class="sd">        stride (int, optional): stride value. Defaults to 0.</span>
+<span class="sd">        dilation (int, optional): dilation value. Defaults to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: the output length</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">padding</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">input_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Get the dilated kernel size</span>
+    <span class="n">filter_size</span> <span class="o">=</span> <span class="n">filter_size</span> <span class="o">+</span> <span class="p">(</span><span class="n">filter_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">dilation</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Infer length if output padding is None, else compute the exact length</span>
+    <span class="k">if</span> <span class="n">output_padding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">*</span> <span class="n">stride</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">filter_size</span> <span class="o">-</span> <span class="n">stride</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">*</span> <span class="n">stride</span> <span class="o">-</span> <span class="p">(</span><span class="n">stride</span> <span class="o">+</span> <span class="n">filter_size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">input_length</span> <span class="o">*</span> <span class="n">stride</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;same&quot;</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="n">filter_size</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">padding</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+            <span class="n">pad</span> <span class="o">=</span> <span class="n">filter_size</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="p">((</span><span class="n">input_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span> <span class="o">+</span> <span class="n">filter_size</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pad</span> <span class="o">+</span> <span class="n">output_padding</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">length</span>
 
 
 <div class="viewcode-block" id="PaddedConv2D"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.PaddedConv2D">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
@@ -763,18 +806,18 @@
             <span class="n">out_pad_h</span><span class="p">,</span> <span class="n">out_pad_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_padding</span>
 
         <span class="c1"># Infer the dynamic output shape</span>
-        <span class="n">out_height</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">deconv_output_length</span><span class="p">(</span><span class="n">height</span><span class="p">,</span>
-                                                     <span class="n">kernel_h</span><span class="p">,</span>
-                                                     <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                                                     <span class="n">output_padding</span><span class="o">=</span><span class="n">out_pad_h</span><span class="p">,</span>
-                                                     <span class="n">stride</span><span class="o">=</span><span class="n">stride_h</span><span class="p">,</span>
-                                                     <span class="n">dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dilation_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">out_width</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">deconv_output_length</span><span class="p">(</span><span class="n">width</span><span class="p">,</span>
-                                                    <span class="n">kernel_w</span><span class="p">,</span>
-                                                    <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
-                                                    <span class="n">output_padding</span><span class="o">=</span><span class="n">out_pad_w</span><span class="p">,</span>
-                                                    <span class="n">stride</span><span class="o">=</span><span class="n">stride_w</span><span class="p">,</span>
-                                                    <span class="n">dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dilation_rate</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">out_height</span> <span class="o">=</span> <span class="n">deconv_output_length</span><span class="p">(</span><span class="n">height</span><span class="p">,</span>
+                                          <span class="n">kernel_h</span><span class="p">,</span>
+                                          <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+                                          <span class="n">output_padding</span><span class="o">=</span><span class="n">out_pad_h</span><span class="p">,</span>
+                                          <span class="n">stride</span><span class="o">=</span><span class="n">stride_h</span><span class="p">,</span>
+                                          <span class="n">dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dilation_rate</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">out_width</span> <span class="o">=</span> <span class="n">deconv_output_length</span><span class="p">(</span><span class="n">width</span><span class="p">,</span>
+                                         <span class="n">kernel_w</span><span class="p">,</span>
+                                         <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+                                         <span class="n">output_padding</span><span class="o">=</span><span class="n">out_pad_w</span><span class="p">,</span>
+                                         <span class="n">stride</span><span class="o">=</span><span class="n">stride_w</span><span class="p">,</span>
+                                         <span class="n">dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dilation_rate</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">out_height</span><span class="p">,</span> <span class="n">out_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span>
         <span class="n">output_shape_tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>

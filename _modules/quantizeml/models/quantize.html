@@ -552,7 +552,7 @@
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">quantization</span><span class="p">,</span>
                       <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">get_quantization_params</span><span class="p">,</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">,</span>
                       <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">,</span>
-                      <span class="n">StatefulRecurrent</span><span class="p">)</span>
+                      <span class="n">StatefulRecurrent</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..layers.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="p">,</span> <span class="n">_GLOBAL_NO_OUTPUT_QUANTIZER</span><span class="p">,</span>
                                   <span class="n">_GLOBAL_ALIGNED_INPUTS</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..onnx_support.quantization.quantize</span> <span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_onnx</span>
@@ -566,14 +566,25 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Returns the quantized version of the layer.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        layer (keras.layers.Layer or type): layer of interest</span>
+<span class="sd">        layer (keras.layers.Layer or dict): layer of interest</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.layer: quantized version of the layer if it exists, None otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">layer_class</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="n">layer_class</span> <span class="o">=</span> <span class="n">get_layer_class_from_name</span><span class="p">(</span><span class="n">layer</span><span class="p">[</span><span class="s2">&quot;class_name&quot;</span><span class="p">])</span>
+    <span class="n">qlayer_class</span> <span class="o">=</span> <span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layer_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Special case for activations: avoid quantization if activation is not within the</span>
+    <span class="c1"># allowed activations</span>
+    <span class="n">allowed_activations</span> <span class="o">=</span> <span class="n">QuantizedActivation</span><span class="o">.</span><span class="n">arg_constraints</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]()</span>
+    <span class="k">if</span> <span class="n">qlayer_class</span> <span class="o">==</span> <span class="n">QuantizedActivation</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_activations</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">qlayer_class</span>
 
 
 <span class="k">def</span> <span class="nf">is_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
@@ -678,7 +689,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Populates `out_quantizer_configs` with layer names and their OutputQuantizer. &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">layer_names</span><span class="p">:</span>
             <span class="n">current_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-            <span class="c1"># Handle special cases were the OutputQuantizer must be per-tensor:</span>
+            <span class="c1"># Handle special cases where the OutputQuantizer must be per-tensor:</span>
             <span class="c1"># - when current_layer has vector outputs,</span>
             <span class="c1"># - when next_layer is an Attention layer and the layer is Query or Key</span>
             <span class="c1">#   (first and second inputs)</span>
@@ -695,8 +706,9 @@
                             <span class="ow">and</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span><span class="o">.</span>
                             <span class="n">index</span><span class="p">(</span><span class="n">current_layer</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
             <span class="n">is_stateful_rec</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_layer</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
+            <span class="n">is_next_activation</span> <span class="o">=</span> <span class="n">get_quantized_layer</span><span class="p">(</span><span class="n">next_layer</span><span class="p">)</span> <span class="o">==</span> <span class="n">QuantizedActivation</span>
             <span class="n">per_tensor</span> <span class="o">=</span> <span class="p">(</span><span class="n">query_or_key</span> <span class="ow">or</span> <span class="n">vector_outputs</span> <span class="ow">or</span> <span class="n">is_stateful_rec</span> <span class="ow">or</span>
-                          <span class="n">qparams</span><span class="o">.</span><span class="n">per_tensor_activations</span><span class="p">)</span>
+                          <span class="n">is_next_activation</span> <span class="ow">or</span> <span class="n">qparams</span><span class="o">.</span><span class="n">per_tensor_activations</span><span class="p">)</span>
 
             <span class="c1"># If this is a new entry, set a default configuration</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out_quantizer_configs</span><span class="p">:</span>
@@ -705,6 +717,10 @@
                     <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">activation_bits</span><span class="p">,</span>
                                   <span class="n">signed</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">activation_bits</span> <span class="o">&gt;=</span> <span class="mi">8</span><span class="p">,</span>
                                   <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_layer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">):</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">activation_bits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">is_next_activation</span><span class="p">:</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">QuantizedActivation</span><span class="o">.</span><span class="n">DEFAULT_INPUT_BITWIDTH</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># StatefulRecurrent special: previous and self OutputQuantizer should be 16-bits</span>
                     <span class="k">if</span> <span class="n">is_stateful_rec</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">):</span>
@@ -712,6 +728,7 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">qparams</span><span class="o">.</span><span class="n">output_bits</span>
                     <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="n">bitwidth</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qparams</span><span class="o">.</span><span class="n">buffer_bits</span>
                 <span class="n">out_quantizer_configs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">output_quantizer</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
             <span class="c1"># If the layer OutputQuantizer configuration is already set, simply check the axis:</span>
@@ -816,7 +833,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check if qlayer exists in custom layers and returns the float version of the layer if not</span>
         <span class="n">l_class</span> <span class="o">=</span> <span class="n">get_layer_class_from_name</span><span class="p">(</span><span class="n">layer</span><span class="p">[</span><span class="s2">&quot;class_name&quot;</span><span class="p">])</span>
-        <span class="n">ql_class</span> <span class="o">=</span> <span class="n">get_quantized_layer</span><span class="p">(</span><span class="n">l_class</span><span class="p">)</span>
+        <span class="n">ql_class</span> <span class="o">=</span> <span class="n">get_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ql_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ql_class</span> <span class="o">=</span> <span class="n">l_class</span>
 

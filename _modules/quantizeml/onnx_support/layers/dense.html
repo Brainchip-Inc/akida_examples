@@ -538,8 +538,10 @@
 <span class="kn">from</span> <span class="nn">.base_layer</span> <span class="kn">import</span> <span class="n">OnnxLayer</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops</span> <span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops.activation</span> <span class="kn">import</span> <span class="n">get_activation_ops</span>
-<span class="kn">from</span> <span class="nn">.node_constraints</span> <span class="kn">import</span> <span class="n">check_supported_attributes</span>
-<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">get_tensor_shape</span>
+<span class="kn">from</span> <span class="nn">.layer_compatibility</span> <span class="kn">import</span> <span class="n">check_clip_relu_compatibility</span>
+
+<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">get_tensor_shape</span><span class="p">,</span>
+                           <span class="n">check_node_attributes</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..quantization.weights</span> <span class="kn">import</span> <span class="n">quantize_weights</span><span class="p">,</span> <span class="n">quantize_vector</span><span class="p">,</span> <span class="n">align_to</span>
 <span class="kn">from</span> <span class="nn">..quantization.outputs</span> <span class="kn">import</span> <span class="n">downscale</span>
 
@@ -547,18 +549,27 @@
 <span class="k">def</span> <span class="nf">get_qgemm</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
     <span class="n">gemm_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Gemm&#39;</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">gemm_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-    <span class="n">check_supported_attributes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="c1"># Check supported attributes</span>
+    <span class="n">check_node_attributes</span><span class="p">(</span><span class="n">gemm_node</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="s1">&#39;transA&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;transB&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
+
+    <span class="c1"># Retrieve attributes</span>
     <span class="n">flatten</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Flatten&#39;</span><span class="p">))</span>
     <span class="n">act_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Relu&#39;</span><span class="p">)</span>
-    <span class="n">qgemm</span> <span class="o">=</span> <span class="n">QuantizedDense1D</span><span class="p">(</span><span class="n">flatten</span><span class="o">=</span><span class="n">flatten</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">act_node</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">gemm_node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">clip_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Clip&#39;</span><span class="p">)</span>
+    <span class="n">qgemm</span> <span class="o">=</span> <span class="n">QuantizedDense1D</span><span class="p">(</span><span class="n">flatten</span><span class="o">=</span><span class="n">flatten</span><span class="p">,</span>
+                             <span class="n">activation</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">act_node</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">clip_node</span><span class="p">),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="n">gemm_node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
     <span class="c1"># Sets the weights to configure the operation chain</span>
     <span class="n">qgemm</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">gemm_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
     <span class="c1"># If third attribute is there and it is not empty, then there is a bias</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gemm_node</span><span class="o">.</span><span class="n">input</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">gemm_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
         <span class="n">qgemm</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">gemm_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">act_node</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">act_node</span><span class="o">.</span><span class="n">input</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">act_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
-        <span class="n">qgemm</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">act_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">clip_node</span><span class="p">:</span>
+        <span class="n">check_clip_relu_compatibility</span><span class="p">(</span><span class="n">clip_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+        <span class="n">qgemm</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">clip_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
+
     <span class="k">return</span> <span class="n">qgemm</span>
 
 

@@ -530,16 +530,44 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;hard_silu&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedActivation&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">import</span> <span class="nn">keras</span>
 
-<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span>
+<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span>
                           <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
+<span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">NonTrackVariable</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">QTensor</span>
+
+<span class="n">LUT_ENV</span> <span class="o">=</span> <span class="s2">&quot;LUT_ENABLED&quot;</span>
+
+
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">hard_silu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hard SiLU activation function, also known as Hard Swish.</span>
+
+<span class="sd">    It is defined as:</span>
+
+<span class="sd">    - `0` if `if x &lt; -3`</span>
+<span class="sd">    - `x` if `x &gt; 3`</span>
+<span class="sd">    - `x * (x + 3) / 6` if `-3 &lt;= x &lt;= 3`</span>
+
+<span class="sd">    It&#39;s a faster, piecewise linear approximation of the silu activation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x(tf.Tensor): Input tensor.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Tensor: Output tensor.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        [A Howard, 2019](https://arxiv.org/abs/1905.02244)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu6</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
 
 
 <div class="viewcode-block" id="QuantizedReLU"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU">[docs]</a><span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)</span>
@@ -614,6 +642,137 @@
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;max_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span></div>
+
+
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
+<span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">)</span>
+<span class="nd">@register_aligned_inputs</span>
+<span class="k">class</span> <span class="nc">QuantizedActivation</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized version of `keras.layers.Activation` layer applicable on ``FixedPoint`` tensor.</span>
+
+<span class="sd">    The input values are mapped through a look-up-table that simulates the activation behavior.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">        &gt;&gt;&gt; # Represent 2.5 as a FixedPoint</span>
+<span class="sd">        &gt;&gt;&gt; input = FixedPoint(5, value_bits=3, frac_bits=1)</span>
+<span class="sd">        &gt;&gt;&gt; # QuantizedActivation.call() maps `input` through the table to obtain</span>
+<span class="sd">        &gt;&gt;&gt; # an integer that represent the float value of tf.nn.gelu(2.5)</span>
+<span class="sd">        &gt;&gt;&gt; output = QuantizedActivation(activation=&quot;gelu&quot;)(input)</span>
+<span class="sd">        &gt;&gt;&gt; assert output.values == 80</span>
+<span class="sd">        &gt;&gt;&gt; # Or which is equivalent in float domain</span>
+<span class="sd">        &gt;&gt;&gt; max_error = 2 ** -(output.frac_bits + 1)</span>
+<span class="sd">        &gt;&gt;&gt; assert tf.abs(output.to_float() - tf.nn.gelu(2.5)) &lt; max_error</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        activation (callable or str): Activation function. It could be a callable,</span>
+<span class="sd">            or the name of an activation from the keras.activations namespace.</span>
+<span class="sd">        quant_config (dict, optional): the serialized quantization configuration. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;activation&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span> <span class="s2">&quot;swish&quot;</span><span class="p">,</span> <span class="s2">&quot;Custom&gt;hard_silu&quot;</span><span class="p">]}</span>
+    <span class="n">DEFAULT_INPUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">DEFAULT_LUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">14</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve quantization parameters</span>
+        <span class="k">if</span> <span class="s2">&quot;lut_bitwidth&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s2">&quot;lut_bitwidth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_LUT_BITWIDTH</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s2">&quot;lut_bitwidth&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># Use quant_config to build quantizers</span>
+        <span class="n">out_quant_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out_quant_cfg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span> <span class="o">=</span> <span class="n">OutputQuantizer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">out_quant_cfg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Create dynamic table and variable to save output frac_bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">lookup</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">MutableHashTable</span><span class="p">(</span><span class="n">key_dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                                                              <span class="n">value_dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                                                              <span class="n">default_value</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                                              <span class="n">name</span><span class="o">=</span><span class="s2">&quot;values_table&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">=</span> <span class="n">NonTrackVariable</span><span class="p">(</span><span class="s2">&quot;frac_bits&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">using_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flag to specify if the inference should be given through look-up-table approach</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if lut is enabled, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">LUT_ENV</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+    <span class="k">def</span> <span class="nf">record_values_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a set of inputs and outputs to record the look-up-table.</span>
+
+<span class="sd">        Inputs are generated in the full range based on ``value_bits``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            value_bits (int): bits to define the range of values to be generated.</span>
+<span class="sd">            frac_bits (tf.Tensor): frac_bits to convert the generated values in a FixedPoint.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tf.Tensor: the expected frac_bits representing the values contained in the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Generates the full range values between [-(2 ** value_bits), 2 ** value_bits - 1].</span>
+        <span class="n">int_max</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">value_bits</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="n">int_max</span><span class="p">,</span> <span class="n">int_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="n">frac_bits</span><span class="p">)</span>
+
+        <span class="c1"># Forward float inputs through activation</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Apply dynamic quantization to compute output integer values.</span>
+        <span class="n">range_max</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">range_max</span><span class="p">))</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="n">out_frac_bits</span><span class="p">)</span>
+
+        <span class="c1"># Insert values in table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">outputs</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="c1"># Return the static output frac_bits</span>
+        <span class="k">return</span> <span class="n">out_frac_bits</span>
+
+    <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">FixedPoint</span><span class="p">])</span>
+    <span class="nd">@rescale_outputs</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Values stored in the table can only be calculated if the input is per_tensor</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inputs</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only supports per-tensor inputs.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">init_var</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+
+        <span class="c1"># Set values in table if table is empty (low computational cost)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_values_in_table</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+            <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">out_frac_bits</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">out_frac_bits</span><span class="p">)</span>
+
+        <span class="c1"># Look-up-table has a high cost in inference.</span>
+        <span class="c1"># It is possible to increase the speed if we avoid it through a</span>
+        <span class="c1"># DeQuantization-reQuantization (DQ-Q) approach:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_lut</span><span class="p">:</span>
+            <span class="c1"># 1. Dequantize the inputs</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
+            <span class="c1"># 2. Apply activation in float domain</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c1"># 3. Requantize from static quantization approach</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Forward inputs.values into values table</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+            <span class="c1"># MutableHashTable forgets the output shape. That is why we set it explicitly.</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="c1"># Build the output FixedPoint</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outputs</span>
 </pre></div>
 
            </div>

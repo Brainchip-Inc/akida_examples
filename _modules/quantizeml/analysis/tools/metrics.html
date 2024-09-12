@@ -529,7 +529,7 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WeightedMAPE&quot;</span><span class="p">,</span> <span class="s2">&quot;Saturation&quot;</span><span class="p">,</span> <span class="s2">&quot;print_metric_table&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SMAPE&quot;</span><span class="p">,</span> <span class="s2">&quot;Saturation&quot;</span><span class="p">,</span> <span class="s2">&quot;print_metric_table&quot;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -537,41 +537,48 @@
 <span class="kn">import</span> <span class="nn">keras</span>
 
 
-<div class="viewcode-block" id="WeightedMAPE"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.WeightedMAPE">[docs]</a><span class="k">class</span> <span class="nc">WeightedMAPE</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the Weighted Mean Absolute Percentage Error (wMAPE) as</span>
-<span class="sd">    `https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE`_:</span>
+<div class="viewcode-block" id="SMAPE"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.SMAPE">[docs]</a><span class="k">class</span> <span class="nc">SMAPE</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the Symmetric Mean Absolute Percentage Error (SMAPE) as:</span>
 
-<span class="sd">    &gt;&gt;&gt; sum(abs(x - y)) / sum(abs(x))</span>
+<span class="sd">    &gt;&gt;&gt; mean(abs(x - y) / (abs(x) + abs(y)))</span>
+
+<span class="sd">    Reference: https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        epsilon (float, optional): an epsilon value. Defaults to 1e-7.</span>
+<span class="sd">        name (str, optional): name of the metric. Defaults to &quot;smape&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;wmape&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;smape&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sum_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;sum_error&#39;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s1">&#39;zeros&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gt_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;gt_error&#39;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s1">&#39;zeros&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s1">&#39;zeros&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="s1">&#39;zeros&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">update_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sum_error</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gt_error</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_true</span><span class="p">)))</span>
+        <span class="k">assert</span> <span class="n">y_true</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="c1"># Skip values that undefine the metric</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pred</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+
+        <span class="c1"># Compute smape</span>
+        <span class="n">smape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">smape</span><span class="p">)</span>
+
+        <span class="c1"># Update the metric count.</span>
+        <span class="c1"># Note here we take into account the set of values y_true = y_pred = 0,</span>
+        <span class="c1"># since the error they contribute is zero.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="o">.</span><span class="n">assign_add</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">gt_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gt_error</span>
-        <span class="n">sum_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_error</span>
-        <span class="k">if</span> <span class="n">gt_error</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">gt_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span>
-        <span class="k">return</span> <span class="n">sum_error</span> <span class="o">/</span> <span class="n">gt_error</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 
     <span class="k">def</span> <span class="nf">reset_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sum_error</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gt_error</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;epsilon&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">config</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Saturation"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.Saturation">[docs]</a><span class="k">class</span> <span class="nc">Saturation</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>

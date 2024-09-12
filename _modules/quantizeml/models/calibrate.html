@@ -543,7 +543,8 @@
 <span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span><span class="p">,</span> <span class="n">get_model_input_dtype</span>
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
-                      <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
+                      <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">,</span>
+                      <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_log2</span>
 
 
@@ -594,8 +595,7 @@
             <span class="n">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">observer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
     <span class="c1"># Build the calibration model from the config</span>
-    <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;OutputObserver&quot;</span><span class="p">:</span> <span class="n">OutputObserver</span><span class="p">}</span>
-    <span class="n">calibration_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">custom_objects</span><span class="p">)</span>
+    <span class="n">calibration_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
     <span class="c1"># Load original weights</span>
     <span class="n">variables_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">variables</span><span class="p">}</span>
@@ -603,15 +603,15 @@
     <span class="k">return</span> <span class="n">calibration_model</span><span class="p">,</span> <span class="n">end_of_blocks</span>
 
 
-<span class="k">def</span> <span class="nf">_get_next_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">,</span> <span class="n">skippable_layers</span><span class="p">,</span> <span class="n">reshape_ops</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_next_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">,</span> <span class="n">skippable_layers</span><span class="o">=</span><span class="p">(),</span> <span class="n">reshape_ops</span><span class="o">=</span><span class="p">[]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Finds the layer following a target layer.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        layer (keras.Layer): the layer of interest</span>
-<span class="sd">        supported_layers (list): layer types that will support equalization</span>
-<span class="sd">        skippable_layers (list): layer types that can be skipped</span>
-<span class="sd">        reshape_ops (list): list of reshape operation encountered as</span>
-<span class="sd">            [(input_shape,), (output_shape,)]</span>
+<span class="sd">        supported_layers (tuple): layer types that will support equalization.</span>
+<span class="sd">        skippable_layers (tuple, optional): layer types that can be skipped. Defaults to ().</span>
+<span class="sd">        reshape_ops (list, optional): list of reshape operation encountered as</span>
+<span class="sd">            [(input_shape,), (output_shape,)]. Defaults to [].</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Layer: the layer following the layer of interest if valid, None otherwise</span>
@@ -622,6 +622,9 @@
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">next_layer</span> <span class="o">=</span> <span class="n">outbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span>
 
+    <span class="c1"># StatefulProjection with downshape or upshape is not supported by CLE</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">StatefulProjection</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">next_layer</span><span class="o">.</span><span class="n">downshape</span> <span class="ow">or</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">upshape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="c1"># If the layer is supported, it is a valid candidate</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">next_layer</span>
@@ -664,7 +667,7 @@
     <span class="c1"># Define layers that will support or can be skipped when equalizing</span>
     <span class="n">supported_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2D</span><span class="p">,</span>
                         <span class="n">Dense</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">)</span>
-    <span class="n">skippable_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dropout</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">)</span>
+    <span class="n">skippable_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dropout</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">)</span>
     <span class="c1"># When quantized per-tensor, Reshaping layers can be skipped as the rescaling rate single value</span>
     <span class="c1"># will be used during equalization on all weights values</span>
     <span class="k">if</span> <span class="n">target_layer</span><span class="o">.</span><span class="n">out_quantizer</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;per-tensor&#39;</span><span class="p">:</span>

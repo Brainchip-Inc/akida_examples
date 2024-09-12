@@ -624,6 +624,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve a slice or element from the QTensor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :obj:`QTensor`: the sliced QTensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
 <div class="viewcode-block" id="QTensor.clone"><a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the QTensor</span>
 
@@ -723,6 +731,73 @@
 <span class="sd">            representing the closest PoT exponents.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">round_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">convert_ellipsis_into_slices</span><span class="p">(</span><span class="n">values_rank</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts an Ellipsis (`...`) if found in the indexing tuple into a series of slice objects</span>
+<span class="sd">    that cover the remaining dimensions of the tensor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        values_rank (int): The rank (number of dimensions) of the tensor being indexed.</span>
+<span class="sd">        idx (tuple): The indexing tuple that may contain an Ellipsis.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A new indexing tuple with the Ellipsis replaced by appropriate slices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_idx</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">element</span> <span class="o">==</span> <span class="o">...</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">values_rank</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">new_idx</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_idx</span> <span class="o">+=</span> <span class="p">(</span><span class="n">element</span><span class="p">,)</span>
+    <span class="k">return</span> <span class="n">new_idx</span>
+
+
+<span class="k">def</span> <span class="nf">slice_tensor_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">values_rank</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Slices the frac_bits or scales tensor when slicing a QTensor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        idx (tuple/slice/int/Ellipsis): The indexing tuple.</span>
+<span class="sd">        values_rank (int): The rank (number of dimensions) of the values tensor.</span>
+<span class="sd">        tensor (tf.Tensor): The frac_bits/scale tensor to slice.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tf.Tensor: the sliced frac_bits/scale tensor tensor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tensor_rank</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="c1"># Convert Ellipsis into actual slices</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="bp">Ellipsis</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">convert_ellipsis_into_slices</span><span class="p">(</span><span class="n">values_rank</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+        <span class="c1"># Case where the number of indices matches the rank of the values tensor</span>
+        <span class="k">if</span> <span class="n">values_rank</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+            <span class="n">new_fb_tuple</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="n">tensor_rank</span><span class="p">:]</span>
+            <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">new_fb_tuple</span><span class="p">]</span>
+
+        <span class="c1"># Case where the frac_bits/scales tensor has fewer dimensions than the remaining positions</span>
+        <span class="k">elif</span> <span class="n">values_rank</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">-</span> <span class="n">tensor_rank</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tensor</span>
+
+        <span class="c1"># Case where the frac_bits/scales tensor needs more dimensions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">tensor_rank</span> <span class="o">-</span> <span class="p">(</span><span class="n">values_rank</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="n">fb_ind</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="n">m</span><span class="p">:]</span>
+            <span class="n">fb_ind</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">Ellipsis</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">fb_ind</span><span class="p">]</span>
+
+    <span class="c1"># Case where the index is not a tuple (int, ellipsis, scalar)</span>
+    <span class="c1"># and values values has more dimensions than the frac_bits/scales tensor</span>
+    <span class="k">elif</span> <span class="n">values_rank</span> <span class="o">&gt;</span> <span class="n">tensor_rank</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tensor</span>
+
+    <span class="c1"># Case where the values and tensor have the same dimensions</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 </pre></div>
 
            </div>

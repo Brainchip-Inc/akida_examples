@@ -75,7 +75,7 @@ print(f'{num_images} images and their labels are loaded and preprocessed.')
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # We download ResNet50 from the `ONNX ZOO
-# <https://github.com/onnx/models/tree/main/archive/vision/classification>`_,
+# <https://github.com/onnx/models/tree/main/archive/vision/classification>`_.
 #
 
 import onnx
@@ -135,18 +135,18 @@ model_quantized = quantize(onnx_model, samples=x_test)
 
 ######################################################################
 # We can see that the model is not fully quantized, stopping at the first unrecognized
-# pattern (node ``resnetv17_stage1_activation0 (Relu)``). We know that Akida can definitely
-# handle ReLU activation functions, so we have to look more closely to understand the
-# problem. Analyzing the model, the ReLU immediately follows an ``Add`` operator. It is
+# pattern (node ``resnetv17_pool1_fwd (GlobalAveragePool)``). We know that Akida can definitely
+# handle GlobalAveragePool functions, so we have to look more closely to understand the
+# problem. Analyzing the model, the pooling immediately follows an ``Add > ReLU`` operator. It is
 # this sequence of operations which is not supported by Akida.
 #
-# .. figure:: ../../img/unsupported_activation.png
-#    :target: ../../_images/unsupported_activation.png
-#    :alt: Unsupported activation
-#    :scale: 70 %
+# .. figure:: ../../img/unsupported_gap.png
+#    :target: ../../_images/unsupported_gap.png
+#    :alt: Unsupported pooling
+#    :scale: 80 %
 #    :align: center
 #
-#    Unsupported pattern: [``Add``, ``Relu``].
+#    Unsupported pattern: [``GlobalAveragePool``].
 #
 #
 
@@ -195,8 +195,8 @@ from quantizeml.onnx_support.quantization.register_patterns import PATTERNS_MAP
 print(*PATTERNS_MAP, sep='\n')
 
 ######################################################################
-# Looking at that list, it should be apparent that a ``ReLU`` operation on its own or
-# following an ``Add`` is not considered a compatible pattern.
+# Looking at that list, it should be apparent that a ``GlobalAveragePool`` operation on its own or
+# following an ``Add>ReLU`` is not considered a compatible pattern.
 #
 # .. Note::
 #   Before the conversion the following changes are automatically done to allow the
@@ -217,10 +217,10 @@ print(*PATTERNS_MAP, sep='\n')
 # 2.2. Custom quantization patterns
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The existing patterns won't allow us to map an isolated ReLU operation. But, for example,
-# the ReLU operation can be mapped when following a Conv layer, and we can easily implement
-# a Conv layer that performs an identity operation on its inputs, just by setting the kernel
-# weights appropriately. We can implement this workaround by using custom quantization
+# The existing patterns won't allow us to map an isolated GlobalAveragePool operation. But, for
+# example, the pooling operation can be mapped when following a Conv layer, and we can easily
+# implement a Conv layer that performs an identity operation on its inputs, just by setting the
+# kernel weights appropriately. We can implement this workaround by using custom quantization
 # patterns to extend ``PATTERNS_MAP``.
 #
 # Every pattern includes an ONNX layer that stores the ONNX graph information for the matching
@@ -243,65 +243,20 @@ class IdentityQuantizedConv2D(layers.QuantizedConv2D):
         return super().__build__(input_ts, downscale)
 
 
-def relu_pattern_fn(block_nodes, graph):
-    """Convert the incompatible patterns ['Relu'] and ['Relu', 'GlobalAveragePool'] into
-    an IdentityQuantizedConv2D.
+def gap_pattern_fn(block_nodes, graph):
+    """Convert the incompatible patterns ['GlobalAveragePool'] into an IdentityQuantizedConv2D.
     """
     # Note that as 'quantization_pattern_map' is written, this function expects to receive
-    # only the isolated ('Relu') that matches in the graph.
-    block_ops = [x.op_type for x in block_nodes]
-    if block_ops == ['Relu']:
-        return IdentityQuantizedConv2D(activation=True)
-    else:
-        raise Exception(f"Unrecognized pattern: {block_ops}")
+    # only the isolated ('GlobalAveragePool') that matches in the graph.
+    return IdentityQuantizedConv2D(pool_type="gap")
 
 
 # Define a custom patterns map, as a new pattern and associated replacement function.
-relu_pattern_map = {
-    "Relu": relu_pattern_fn,
-}
-
-# Include relu_pattern_map in the quantization context
-with custom_pattern_scope(relu_pattern_map):
-    model_quantized = quantize(onnx_model, samples=x_test)
-
-
-######################################################################
-# With the isolated ReLU fixed, we managed to quantize much more of the model, but
-# we hit a new problem, node ``resnetv17_pool1_fwd (GlobalAveragePool)``. Looking back
-# at the list of compatible patterns, we can see that, like the ReLU, a GlobalAveragePooling
-# (GAP) operation cannot be handled in isolation, but is compatible when it follows
-# Conv or Conv + ReLU operations. The second of those will suit us better here,
-# that way we can combine it with our solution for the ReLU operation (because
-# the GAP here does indeed follow one of the isolated ReLU ops).
-#
-
-def activation_pattern_fn(block_nodes, graph):
-    """Convert the incompatible patterns ['Relu'] and ['Relu', 'GlobalAveragePool'] into
-    an IdentityQuantizedConv2D.
-    """
-    # Note that as 'quantization_pattern_map' is written, this function expects to receive
-    # only the sequences ('Relu') or ('Relu', 'GlobalAveragePool').
-    block_ops = [x.op_type for x in block_nodes]
-    if block_ops == ['Relu']:
-        return IdentityQuantizedConv2D(activation=True)
-    elif block_ops == ['Relu', 'GlobalAveragePool']:
-        return IdentityQuantizedConv2D(activation=True, pool_type="gap")
-    else:
-        raise Exception(f"Unrecognized pattern: {block_ops}")
-
-
-# Define quantization custom patterns map, as a set of patterns and associated replacement function.
-# activation_pattern_fn was designed to handle two similar incompatibilities present in ResNet50.
-quantization_pattern_map = {
-    ("Relu", "GlobalAveragePool"): activation_pattern_fn,
-    "Relu": activation_pattern_fn,
-}
+quantization_pattern_map = {"GlobalAvgPool": gap_pattern_fn}
 
 # Include quantization_pattern_map in the quantization context
 with custom_pattern_scope(quantization_pattern_map):
     model_quantized = quantize(onnx_model, samples=x_test)
-
 
 ######################################################################
 # The full model is now quantized successfully.
@@ -379,8 +334,7 @@ quantization_pattern_map = {
     ("Conv", "Relu", "MaxPool"): align_input_conv_with_akida,
     ("Conv", "Relu"): align_input_conv_with_akida,
     ("Conv",): align_input_conv_with_akida,
-    ("Relu", "GlobalAveragePool"): activation_pattern_fn,
-    "Relu": activation_pattern_fn,
+    ("GlobalAveragePool",): gap_pattern_fn,
 }
 with custom_pattern_scope(quantization_pattern_map):
     model_quantized = quantize(onnx_model_temp, samples=x_test)

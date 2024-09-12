@@ -848,8 +848,12 @@ configuration. Defaults to None.</p>
 <p>We only support a tuple of two inputs with the same shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <cite>True</cite>, compute the average across all inputs.
-Defaults to <cite>False</cite>.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <cite>True</cite>, compute the average across all inputs.
+Defaults to <cite>False</cite>.</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, apply an activation function after
+the addition. Defaults to <cite>False</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1426,7 +1430,7 @@ corresponding to the last axis (‘per-axis’). Defaults to ‘per-tensor’.</
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.layers.TensorRecorder">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">TensorRecorder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/recorders.html#TensorRecorder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.TensorRecorder" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">TensorRecorder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/recorders.html#TensorRecorder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.TensorRecorder" title="Permalink to this definition"></a></dt>
 <dd><p>Wrapper class to store and retrieve a tf.Tensor extracted from a graph.</p>
 <p>This is mainly used to recover FixedPoint alignment shift information.</p>
 </dd></dl>
@@ -1637,7 +1641,9 @@ corresponds to a ‘same’ padding.</p>
 <li><p>Lambda(relu) or Activation(‘relu’) → ReLU,</p></li>
 <li><p>Lambda(transpose) → Permute,</p></li>
 <li><p>Lambda(reshape) → Reshape,</p></li>
-<li><p>Lambda(add) → Add.</p></li>
+<li><p>Lambda(add) → Add,</p></li>
+<li><p>Lambda(‘gelu’) → Activation(‘gelu’),</p></li>
+<li><p>Lambda(‘silu’) → Activation(‘silu’).</p></li>
 </ul>
 </div></blockquote>
 <dl class="field-list simple">
@@ -2493,28 +2499,31 @@ scales to obtain the approximated float tensor.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.max_frac_bits" title="quantizeml.tensors.QFloat.max_frac_bits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_frac_bits</span></code></a>(value_bits, ranges, scales[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.expand" title="quantizeml.tensors.QFloat.expand"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand</span></code></a>(value_bits)</p></td>
+<td><p>Expand the QFloat to the specified bitwidth</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.max_frac_bits" title="quantizeml.tensors.QFloat.max_frac_bits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_frac_bits</span></code></a>(value_bits, ranges, scales[, ...])</p></td>
 <td><p>Evaluate the maximum fractional bit index for the quantization ranges.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.optimal_scales" title="quantizeml.tensors.QFloat.optimal_scales"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimal_scales</span></code></a>(ranges, value_bits)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.optimal_scales" title="quantizeml.tensors.QFloat.optimal_scales"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimal_scales</span></code></a>(ranges, value_bits)</p></td>
 <td><p>Evaluates the optimal QFloat scales for quantization ranges.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.promote" title="quantizeml.tensors.QFloat.promote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">promote</span></code></a>(bits)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.promote" title="quantizeml.tensors.QFloat.promote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">promote</span></code></a>(bits)</p></td>
 <td><p>Increase the number of value bits</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.quantize" title="quantizeml.tensors.QFloat.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(x, value_bits, scales[, frac_bits])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.quantize" title="quantizeml.tensors.QFloat.quantize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize</span></code></a>(x, value_bits, scales[, frac_bits])</p></td>
 <td><p>Converts a float Tensor to a QFloat</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.quantize_scales" title="quantizeml.tensors.QFloat.quantize_scales"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize_scales</span></code></a>(scales, scale_bits)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.quantize_scales" title="quantizeml.tensors.QFloat.quantize_scales"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize_scales</span></code></a>(scales, scale_bits)</p></td>
 <td><p>Quantizes the QFloat scales with the specified bitwidth.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.to_fixed_point" title="quantizeml.tensors.QFloat.to_fixed_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_fixed_point</span></code></a>([scale_bits])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.to_fixed_point" title="quantizeml.tensors.QFloat.to_fixed_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_fixed_point</span></code></a>([scale_bits])</p></td>
 <td><p>Returns a FixedPoint representation of the QFloat</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.to_float" title="quantizeml.tensors.QFloat.to_float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_float</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.to_float" title="quantizeml.tensors.QFloat.to_float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_float</span></code></a>()</p></td>
 <td><p>Returns a float representation of the QFloat</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.upscale" title="quantizeml.tensors.QFloat.upscale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upscale</span></code></a>(frac_bits[, value_bits])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.tensors.QFloat.upscale" title="quantizeml.tensors.QFloat.upscale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upscale</span></code></a>(frac_bits[, value_bits])</p></td>
 <td><p>Align a QFloat to a specified precision</p></td>
 </tr>
 </tbody>
@@ -2550,6 +2559,30 @@ scales to obtain the approximated float tensor.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="quantizeml.tensors.QFloat.expand">
+<span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_bits</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/tensors/qfloat.html#QFloat.expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.tensors.QFloat.expand" title="Permalink to this definition"></a></dt>
+<dd><p>Expand the QFloat to the specified bitwidth</p>
+<p>This returns an equivalent QFloat with a higher or equal number of
+value bits and a scalar fractional bit corresponding to the maximum of
+the initial fractional bits on all channels. The scales remains unchanged.</p>
+<p>This is mostly used to recover a per-tensor QFloat that has been
+compressed to a lower number of value bits.</p>
+<p>Note that even if the frac_bits are aligned the scales remained unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value_bits</strong> (<em>int</em>) – the target value_bits</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new QFloat with expanded
+fractional bits and the shift that was applied.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple(<a class="reference internal" href="#quantizeml.tensors.QFloat" title="quantizeml.tensors.QFloat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QFloat</span></code></a>, tf.Tensor)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2816,6 +2849,37 @@ Defaults to False.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedConv2DTranspose">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedConv2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2DTranspose" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of the upsampling layer QuantizedConv2DTranspose().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strides</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedDepthwise2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of the upsampling layer QuantizedDepthwise2DTranspose.
+Inherits from QuantizedConv2DTranspose: only different attribute is group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strides</strong> (<em>list of int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDense1D">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDense1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/dense.html#QuantizedDense1D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDense1D" title="Permalink to this definition"></a></dt>
 <dd><p>Intermediate representation of Flatten() + QGemm() + ReLU() as an exportable node.</p>
@@ -2832,18 +2896,39 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedAdd">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Permalink to this definition"></a></dt>
 <dd><p>Intermediate representation of Add() as an exportable node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedConcat">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConcat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedConcat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConcat" title="Permalink to this definition"></a></dt>
+<dd><p>Intermediate representation of Concatenate() as an exportable node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.InputQuantizer">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">InputQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/quantizers.html#InputQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.InputQuantizer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">InputQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/quantizers.html#InputQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.InputQuantizer" title="Permalink to this definition"></a></dt>
 <dd><p>Intermediate representation of QuantizeLinear(), use to quantize the input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_tp</strong> (<em>TensorProto</em>) – the input of the ONNX model.</p></li>
+<li><p><strong>perm</strong> (<em>list</em><em>, </em><em>optional</em>) – list representing the permutations of the rescale node.
+Defaults to [].</p></li>
 <li><p><strong>input_signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the input is signed. Defaults to False.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
@@ -2884,20 +2969,25 @@ whose representation can converge in an <code class="docutils literal notranslat
 <h2>Model I/O<a class="headerlink" href="#model-i-o" title="Permalink to this headline"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.load_model">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.load_model" title="Permalink to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>Loads an Onnx or Keras model. An error is raised if the provided model</dt><dd><p>extension is not supported.</p>
-</dd>
-</dl>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.load_model" title="Permalink to this definition"></a></dt>
+<dd><p>Loads an Onnx or Keras model. An error is raised if the provided model extension is not
+supported.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<em>str</em>) – path of the model to load.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> (<em>str</em>) – path of the model to load.</p></li>
+<li><p><strong>custom_layers</strong> (<em>dict</em><em>, </em><em>optional</em>) – custom layers to add to the Keras model. Defaults to None.</p></li>
+<li><p><strong>compile_model</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to compile the Keras model. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Loaded model.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>keras.models.Model or onnx.ModelProto</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if the model could not be loaded using Keras and ONNX loaders.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2919,6 +3009,9 @@ whose representation can converge in an <code class="docutils literal notranslat
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if the model to save is not a Keras or ONNX model.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2954,18 +3047,18 @@ whose representation can converge in an <code class="docutils literal notranslat
 <dt class="sig sig-object py" id="quantizeml.analysis.measure_layer_quantization_error">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">measure_layer_quantization_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/quantization_error_api.html#measure_layer_quantization_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.measure_layer_quantization_error" title="Permalink to this definition"></a></dt>
 <dd><p>Measures the layer quantization error</p>
-<p>Returns a dictionary where the keys are the name of each layer
-and the values are a dictionary composed of the set of the following metrics:</p>
+<p>Returns a dictionary where the keys are the name of each layer and the values are a dictionary
+composed of the set of the following metrics:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Weighted Mean Absolute Percentage Error (wMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.wmape()</span></code></p></li>
+<li><p>Symmetrical Mean Absolute Percentage Error (SMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.SMAPE()</span></code></p></li>
 <li><p>Saturation: Percentage of how many values in the quantized layer saturate</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">measure_layer_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;wMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;SMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -2998,11 +3091,11 @@ It allows a better metrics generalization, but consumes more resources. Defaults
 <dt class="sig sig-object py" id="quantizeml.analysis.measure_cumulative_quantization_error">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">measure_cumulative_quantization_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/quantization_error_api.html#measure_cumulative_quantization_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.measure_cumulative_quantization_error" title="Permalink to this definition"></a></dt>
 <dd><p>Measures the cumulative quantization error</p>
-<p>Returns a dictionary where the keys are the name of each layer
-and the values are a dictionary composed of the set of the following metrics:</p>
+<p>Returns a dictionary where the keys are the name of each layer and the values are a dictionary
+composed of the set of the following metrics:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Weighted Mean Absolute Percentage Error (wMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.wmape()</span></code></p></li>
+<li><p>Symmetrical Mean Absolute Percentage Error (SMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.SMAPE()</span></code></p></li>
 <li><p>Saturation: Percentage of how many values in the quantized layer saturate</p></li>
 </ul>
 </div></blockquote>
@@ -3010,7 +3103,7 @@ and the values are a dictionary composed of the set of the following metrics:</p
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">measure_cumulative_quantization_error</span><span class="p">(</span><span class="n">fmodel</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;wMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;SMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -3043,16 +3136,16 @@ It allows a better metrics generalization, but consumes more resources. Defaults
 <section id="metrics">
 <h3>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline"></a></h3>
 <dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.analysis.tools.WeightedMAPE">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.tools.</span></span><span class="sig-name descname"><span class="pre">WeightedMAPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/tools/metrics.html#WeightedMAPE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.tools.WeightedMAPE" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the Weighted Mean Absolute Percentage Error (wMAPE) as
-<a href="#id3"><span class="problematic" id="id4">`https://en.wikipedia.org/wiki/Mean_absolute_percentage_error#WMAPE`_</span></a>:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<dt class="sig sig-object py" id="quantizeml.analysis.tools.SMAPE">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.tools.</span></span><span class="sig-name descname"><span class="pre">SMAPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/tools/metrics.html#SMAPE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.tools.SMAPE" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Symmetric Mean Absolute Percentage Error (SMAPE) as:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
 </pre></div>
 </div>
+<p>Reference: <a class="reference external" href="https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error">https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>epsilon</strong> (<em>float</em><em>, </em><em>optional</em>) – an epsilon value. Defaults to 1e-7.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the metric. Defaults to “smape”.</p>
 </dd>
 </dl>
 </dd></dl>

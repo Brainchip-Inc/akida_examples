@@ -601,7 +601,11 @@
     <span class="k">return</span> <span class="n">model</span>
 
 
-<span class="k">def</span> <span class="nf">_is_better_map</span><span class="p">(</span><span class="n">model_ref</span><span class="p">,</span> <span class="n">model_cur</span><span class="p">,</span> <span class="n">consider_pass_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_is_better_map</span><span class="p">(</span><span class="n">model_ref</span><span class="p">,</span> <span class="n">model_ref_mapped</span><span class="p">,</span> <span class="n">model_cur</span><span class="p">,</span> <span class="n">model_cur_mapped</span><span class="p">,</span> <span class="n">consider_pass_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># Better if we can map now</span>
+    <span class="k">if</span> <span class="n">model_ref_mapped</span> <span class="o">!=</span> <span class="n">model_cur_mapped</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">model_cur_mapped</span>
+
     <span class="c1"># Returns if a current model has a better mapping than a reference model</span>
     <span class="n">nb_layer_mapped_ref</span> <span class="o">=</span> <span class="n">_get_layer_mapped</span><span class="p">(</span><span class="n">model_ref</span><span class="p">)</span>
     <span class="n">nb_layer_mapped_cur</span> <span class="o">=</span> <span class="n">_get_layer_mapped</span><span class="p">(</span><span class="n">model_cur</span><span class="p">)</span>
@@ -639,7 +643,11 @@
         <span class="n">model</span><span class="o">.</span><span class="n">_map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="n">hw_only</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">model_ref</span><span class="o">.</span><span class="n">_map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="n">hw_only</span><span class="p">)</span>
+    <span class="n">model_ref_mapped</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model_ref</span><span class="o">.</span><span class="n">_map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="n">hw_only</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">model_ref_mapped</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="c1"># TODO retrieved the defaults split values</span>
     <span class="n">min_split_neurons</span> <span class="o">=</span> <span class="mi">0</span>
@@ -650,22 +658,24 @@
     <span class="k">while</span> <span class="n">min_split_neurons</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">max_split_neurons</span><span class="p">:</span>
         <span class="n">cur_split_neurons</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">min_split_neurons</span> <span class="o">+</span> <span class="n">max_split_neurons</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">cur_split_neurons</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">model_cur_mapped</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">model_cur</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">layers</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[:])</span>
             <span class="n">model_cur</span> <span class="o">=</span> <span class="n">_map_splited_model</span><span class="p">(</span><span class="n">model_cur</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="n">hw_only</span><span class="p">,</span>
                                            <span class="n">neurons</span><span class="o">=</span><span class="n">cur_split_neurons</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">_is_better_map</span><span class="p">(</span><span class="n">model_ref</span><span class="p">,</span> <span class="n">model_cur</span><span class="p">,</span> <span class="n">min_pass</span><span class="p">):</span>
-                <span class="n">model_ref</span> <span class="o">=</span> <span class="n">model_cur</span>
-                <span class="n">max_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
-                <span class="n">best_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">min_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
-            <span class="k">del</span> <span class="n">model_cur</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">model_cur_mapped</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">_is_better_map</span><span class="p">(</span><span class="n">model_ref</span><span class="p">,</span> <span class="n">model_ref_mapped</span><span class="p">,</span> <span class="n">model_cur</span><span class="p">,</span> <span class="n">model_cur_mapped</span><span class="p">,</span> <span class="n">min_pass</span><span class="p">):</span>
+            <span class="n">model_ref</span> <span class="o">=</span> <span class="n">model_cur</span>
+            <span class="n">model_ref_mapped</span> <span class="o">=</span> <span class="n">model_cur_mapped</span>
+            <span class="n">max_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
+            <span class="n">best_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="n">min_split_neurons</span> <span class="o">=</span> <span class="n">cur_split_neurons</span>
+        <span class="k">del</span> <span class="n">model_cur</span>
 
     <span class="c1"># Apply mapping to model</span>
-    <span class="k">if</span> <span class="n">best_split_neurons</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">best_split_neurons</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">model_ref_mapped</span><span class="p">:</span>
         <span class="c1"># Apply mapping found</span>
         <span class="n">_map_splited_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="n">hw_only</span><span class="p">,</span> <span class="n">neurons</span><span class="o">=</span><span class="n">best_split_neurons</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

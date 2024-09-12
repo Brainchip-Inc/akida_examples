@@ -541,7 +541,7 @@
 <span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Sequential</span>
 
 <span class="kn">from</span> <span class="nn">.transforms_utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_layer_index</span><span class="p">,</span> <span class="n">inbound_node_generator</span><span class="p">,</span>
-                               <span class="n">replace_layer_name_for_connection_info</span><span class="p">)</span>
+                               <span class="n">replace_layer_name_for_connection_info</span><span class="p">,</span> <span class="n">get_layers_by_type</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
 <span class="kn">from</span> <span class="nn">...layers.quantizers</span> <span class="kn">import</span> <span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span>
 
@@ -642,11 +642,10 @@
     <span class="n">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer_name</span><span class="p">,</span> <span class="n">new_layer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
     <span class="c1"># Reconstruct model from the config</span>
-    <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;OutputQuantizer&quot;</span><span class="p">:</span> <span class="n">OutputQuantizer</span><span class="p">,</span> <span class="s2">&quot;Dequantizer&quot;</span><span class="p">:</span> <span class="n">Dequantizer</span><span class="p">}</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
-        <span class="n">new_model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">custom_objects</span><span class="p">)</span>
+        <span class="n">new_model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">new_model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">custom_objects</span><span class="p">)</span>
+        <span class="n">new_model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
     <span class="c1"># Load original weights</span>
     <span class="n">variables_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">variables</span><span class="p">}</span>
@@ -693,11 +692,13 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: the new model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">first_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_layer</span><span class="p">,</span> <span class="n">InputLayer</span><span class="p">):</span>
+    <span class="n">first_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">InputLayer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inserting a Rescaling layer in a Model without an Input layer is not&quot;</span>
                          <span class="s2">&quot; supported.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_insert_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">first_layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span></div>
+    <span class="k">for</span> <span class="n">target_layer</span> <span class="ow">in</span> <span class="n">first_layers</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">_insert_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">target_layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">model</span></div>
 </pre></div>
 
            </div>

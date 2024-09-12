@@ -543,7 +543,7 @@
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">DepthwiseConv2D</span><span class="p">,</span>
                           <span class="n">Conv2DTranspose</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers</span><span class="p">,</span> <span class="n">get_layer_index</span><span class="p">,</span> <span class="n">update_inbound</span><span class="p">,</span> <span class="n">get_layers_by_type</span>
+<span class="kn">from</span> <span class="nn">.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers</span><span class="p">,</span> <span class="n">get_layer_index</span><span class="p">,</span> <span class="n">update_inbound</span><span class="p">,</span> <span class="n">find_layers_pairs</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
 <span class="kn">from</span> <span class="nn">...layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">QuantizedConv2D</span><span class="p">,</span> <span class="n">QuantizedSeparableConv2D</span><span class="p">,</span> <span class="n">QuantizedDense</span><span class="p">,</span>
                        <span class="n">QuantizedDepthwiseConv2D</span><span class="p">,</span> <span class="n">QuantizedConv2DTranspose</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
@@ -602,30 +602,21 @@
                         <span class="n">QuantizedDepthwiseConv2DTranspose</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">)</span>
 
     <span class="c1"># Map between a layer and its following BN layer</span>
-    <span class="n">map_prev_layer_to_bn</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">map_prev_layer_to_bn</span> <span class="o">=</span> <span class="n">find_layers_pairs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
 
-    <span class="c1"># Get all BatchNormalization layers present in the model</span>
-    <span class="n">bns</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">)</span>
+    <span class="c1"># Check valid &quot;layer -&gt; BN&quot; candidates</span>
+    <span class="k">for</span> <span class="n">bn</span> <span class="ow">in</span> <span class="n">map_prev_layer_to_bn</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="c1"># Null gammas are not supported: once folded, new kernel would be zero</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">bn</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gamma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gamma</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> null gammas in the &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;BatchNormalization layer &#39;</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. Null gammas are &quot;</span>
+                               <span class="s2">&quot;not supported.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Find valid &quot;layer -&gt; BN&quot; candidates</span>
-    <span class="k">for</span> <span class="n">bn</span> <span class="ow">in</span> <span class="n">bns</span><span class="p">:</span>
-        <span class="c1"># Find a supported inbound layer</span>
-        <span class="n">inbound</span> <span class="o">=</span> <span class="n">bn</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inbound</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">):</span>
-            <span class="c1"># Null gammas are not supported: once folded, new kernel would be zero</span>
-            <span class="n">gamma</span> <span class="o">=</span> <span class="n">bn</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gamma</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gamma</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> null gammas in the &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;BatchNormalization layer &#39;</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. Null gammas are &quot;</span>
-                                   <span class="s2">&quot;not supported.&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Check BN axis parameter</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The BatchNormalization must be applied on the last &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;axis. &#39;</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; layer has axis=</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-            <span class="n">map_prev_layer_to_bn</span><span class="p">[</span><span class="n">inbound</span><span class="p">]</span> <span class="o">=</span> <span class="n">bn</span>
-
+        <span class="c1"># Check BN axis parameter</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The BatchNormalization must be applied on the last &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;axis. &#39;</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; layer has axis=</span><span class="si">{</span><span class="n">bn</span><span class="o">.</span><span class="n">axis</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">map_prev_layer_to_bn</span>
 
 

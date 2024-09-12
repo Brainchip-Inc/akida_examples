@@ -536,7 +536,8 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sanitize&#39;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="p">(</span><span class="n">align_rescaling</span><span class="p">,</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batchnorms</span><span class="p">,</span> <span class="n">remove_zeropadding2d</span><span class="p">,</span>
-               <span class="n">invert_relu_maxpool</span><span class="p">,</span> <span class="n">replace_lambda</span><span class="p">,</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">,</span> <span class="n">remove_reshape</span><span class="p">)</span>
+               <span class="n">invert_relu_maxpool</span><span class="p">,</span> <span class="n">replace_lambda</span><span class="p">,</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">,</span> <span class="n">remove_reshape</span><span class="p">,</span>
+               <span class="n">fold_activations_in_add</span><span class="p">,</span> <span class="n">split_layers_with_relu</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="sanitize"><a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.models.transforms.sanitize">[docs]</a><span class="k">def</span> <span class="nf">sanitize</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
@@ -555,6 +556,10 @@
     <span class="c1"># Replace lambda layers</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">replace_lambda</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
+    <span class="c1"># Splits layers with &#39;relu&#39; activation into two separate layers</span>
+    <span class="c1"># one without activation and one with a separate &#39;relu&#39; activation layer.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">split_layers_with_relu</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
     <span class="c1"># Replace Conv2D layers that behave as DepthwiseConv2D to the latest.</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
@@ -570,6 +575,9 @@
     <span class="c1"># Invert BN &lt;-&gt; Pooling layers and fold BN into their preceding layers</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">fold_batchnorms</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Fold ReLUs with no max_value that comes after an Add layer</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fold_activations_in_add</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
     <span class="c1"># Remove unsupported ZeroPadding2D layers and replace them with &#39;same&#39; padding convolution when</span>
     <span class="c1"># possible</span>

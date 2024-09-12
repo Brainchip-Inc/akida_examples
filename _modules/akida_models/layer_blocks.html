@@ -537,7 +537,7 @@
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2D</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span>
                           <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">LayerNormalization</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span>
                           <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Conv3D</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span>
+<span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span><span class="p">,</span> <span class="n">gelu</span>
 <span class="kn">from</span> <span class="nn">keras.initializers</span> <span class="kn">import</span> <span class="n">TruncatedNormal</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -781,7 +781,7 @@
 <span class="sd">        keras.layers: the activation layer class</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">act</span> <span class="o">==</span> <span class="s1">&#39;GeLU&#39;</span><span class="p">:</span>
-        <span class="n">act_funct</span> <span class="o">=</span> <span class="n">GELU</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">act_funct</span> <span class="o">=</span> <span class="n">gelu</span>
     <span class="k">elif</span> <span class="s1">&#39;ReLU&#39;</span> <span class="ow">in</span> <span class="n">act</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">act</span> <span class="o">==</span> <span class="s1">&#39;ReLU&#39;</span><span class="p">:</span>
             <span class="n">max_value</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1128,7 +1128,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;activation&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;activation&#39;</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keyword argument &#39;activation&#39; in conv3d_block must be None.&quot;</span><span class="p">)</span>
-
+    <span class="c1"># If it&#39;s a temporal Conv3d with a same padding, convert it to a one sided-left padding,</span>
+    <span class="c1"># by adding a ZeroPadding3D layer and setting the Conv3D padding to &quot;valid&quot;</span>
+    <span class="k">if</span> <span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;padding&#39;</span><span class="p">,</span> <span class="s1">&#39;valid&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;same&#39;</span><span class="p">:</span>
+        <span class="n">padding_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ZeroPadding3D</span><span class="p">(</span>
+            <span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">padding_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;padding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;valid&#39;</span>
     <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">Conv3D</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
@@ -1172,6 +1178,8 @@
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">t_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                         <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                         <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convt_full_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># This is a DepthwiseConv3D (groups=filters)</span>
@@ -1181,6 +1189,7 @@
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">t_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                         <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">groups</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convt_dw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1199,6 +1208,7 @@
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                         <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_full_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># This is a DepthwiseConv3D (groups=filters)</span>
@@ -1219,39 +1229,6 @@
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_pw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
-
-
-<span class="k">class</span> <span class="nc">GELU</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian Error Linear Unit.</span>
-
-<span class="sd">    A smoother version of ReLU generally used</span>
-<span class="sd">    in the BERT or BERT architecture based models.</span>
-<span class="sd">    Original paper: https://arxiv.org/abs/1606.08415</span>
-
-<span class="sd">    Input shape:</span>
-<span class="sd">        Arbitrary. Use the keyword argument `input_shape`</span>
-<span class="sd">        (tuple of integers, does not include the samples axis)</span>
-<span class="sd">        when using this layer as the first layer in a model.</span>
-
-<span class="sd">    Output shape:</span>
-<span class="sd">        Same shape as the input.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">approximate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">approximate</span> <span class="o">=</span> <span class="n">approximate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">supports_masking</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">approximate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approximate</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;approximate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">approximate</span><span class="p">}</span>
-        <span class="n">base_config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">base_config</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">input_shape</span>
 </pre></div>
 
            </div>

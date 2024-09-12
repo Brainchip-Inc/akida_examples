@@ -531,7 +531,9 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">.qtensor</span> <span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">saturate</span><span class="p">,</span> <span class="n">round_through</span><span class="p">,</span> <span class="n">floor_through</span><span class="p">,</span> <span class="n">pow2</span><span class="p">,</span> <span class="n">ceil_log2</span>
+<span class="kn">from</span> <span class="nn">.qtensor</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QTensor</span><span class="p">,</span> <span class="n">saturate</span><span class="p">,</span> <span class="n">round_through</span><span class="p">,</span> <span class="n">floor_through</span><span class="p">,</span> <span class="n">pow2</span><span class="p">,</span>
+    <span class="n">ceil_log2</span><span class="p">,</span> <span class="n">slice_tensor_by_index</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..debugging</span> <span class="kn">import</span> <span class="n">assert_equal</span><span class="p">,</span> <span class="n">assert_none_equal</span><span class="p">,</span> <span class="n">assert_less</span><span class="p">,</span> <span class="n">assert_less_equal</span>
 
 
@@ -954,6 +956,36 @@
             <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">d_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unsupported operand type(s) for /: &#39;FixedPoint&#39; and &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Retrieve a slice or element from the FixedPoint tensor.</span>
+
+<span class="sd">        This function allows for slicing or indexing the FixedPoint tensor in a similar way</span>
+<span class="sd">        to a standard TensorFlow tensor. It handles the slicing of both the values</span>
+<span class="sd">        and the frac_bits of the FixedPoint tensor, ensuring that the tensor</span>
+<span class="sd">        representation remains consistent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx (int, slice, or tuple): The index or slice to retrieve. It can be an integer,</span>
+<span class="sd">                a slice, or a tuple of integers/slices. The tuple can</span>
+<span class="sd">                also include the Ellipsis (`...`) to denote a slice</span>
+<span class="sd">                over remaining dimensions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            FixedPoint: A new FixedPoint instance containing the sliced values and corresponding</span>
+<span class="sd">                frac_bits.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sliced_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">sliced_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">sliced_frac_bits</span> <span class="o">=</span> <span class="n">slice_tensor_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">values_rank</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">sliced_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">sliced_frac_bits</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">power</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>

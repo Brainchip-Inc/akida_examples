@@ -535,7 +535,6 @@
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAveragePooling2D</span>
-<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">conv_utils</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span>
                           <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
@@ -555,11 +554,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;channels_last&quot;</span><span class="p">:</span>
             <span class="n">ksize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
             <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+            <span class="n">data_format</span> <span class="o">=</span> <span class="s2">&quot;NHWC&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ksize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool_size</span>
             <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span>
+            <span class="n">data_format</span> <span class="o">=</span> <span class="s2">&quot;NCHW&quot;</span>
 
-        <span class="n">data_format</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">convert_data_format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="n">padding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">max_pool</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">ksize</span><span class="o">=</span><span class="n">ksize</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
                                  <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">)</span>
