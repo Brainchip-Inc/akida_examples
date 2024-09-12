@@ -248,11 +248,7 @@ def gap_pattern_fn(block_nodes, graph):
     """
     # Note that as 'quantization_pattern_map' is written, this function expects to receive
     # only the isolated ('GlobalAveragePool') that matches in the graph.
-    block_ops = [x.op_type for x in block_nodes]
-    if block_ops == ['GlobalAveragePool']:
-        return IdentityQuantizedConv2D(pool_type="gap")
-    else:
-        raise Exception(f"Unrecognized pattern: {block_ops}")
+    return IdentityQuantizedConv2D(pool_type="gap")
 
 
 # Define a custom patterns map, as a new pattern and associated replacement function.
