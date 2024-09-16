@@ -94,6 +94,9 @@ html_css_files = [
     'custom.css',
 ]
 
+# add Leadlander tag for activity tracking
+html_js_files = ['leadlander_tag.js']
+
 # -- Exported variables -----------------------------------------------------
 import pkg_resources
 
