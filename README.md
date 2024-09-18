@@ -7,8 +7,8 @@ Documentation is based on [Sphinx](https://www.sphinx-doc.org/en/master/) and
 can be generated locally from the repository top.
 
 ## Requirements:
-* Python version: python >= 3.8
-* TensorFlow version >= 2.10
+* Python version: python >= 3.9
+* TensorFlow version ~= 2.15
 * Sphinx version 2.1 or above
 
 ## Build steps
@@ -65,7 +65,7 @@ sequenceDiagram
     participant 2.8.1
     participant 2.9.0
     participant next
-    Note right of 2.8.1: Today
+    Note right of 2.9.0: Today
 rect rgb(171, 170, 166)
     [...]-->>2.2.5: TensorFlow 2.8
     2.2.5->>+2.8.1: TensorFlow 2.10
