@@ -13,7 +13,7 @@ platform:
   arch: amd64
 
 defs:
-  image: &image bender:5000/doc_build_tf2.12_torch2.0.1:akida-gpu_tf212_torch201_v2
+  image: &image bender:5000/doc_build:2305ecf
 
 steps:
 - name: report host name
@@ -24,7 +24,6 @@ steps:
 - name: flake8
   image: *image
   commands:
-  - pip install flake8==4.0.1
   - flake8 --ignore E402,E501 examples/
   # refer to https://flake8.pycqa.org/en/2.6.0/warnings.html for error codes
   # E402: module level import not at top of file
@@ -46,7 +45,7 @@ platform:
   arch: amd64
 
 defs:
-  image: &image bender:5000/doc_build_tf2.12_torch2.0.1:akida-gpu_tf212_torch201_v2
+  image: &image bender:5000/doc_build:2305ecf
 
 steps:
 - name: report host name
@@ -73,7 +72,6 @@ steps:
   image: *image
   privileged: true
   commands:
-  - apt-get install -y libasound2-dev
   - pip install -r requirements.txt
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
   volumes:
@@ -116,7 +114,7 @@ depends_on:
 ---
 
 # This pipeline runs examples using the latest internal RC versions of
-# akida/cnn2snn/akida_models, available on bender
+# akida/cnn2snn/akida_models, available on bender2
 kind: pipeline
 name: run-examples-latest-versions
 
@@ -129,7 +127,7 @@ platform:
   arch: amd64
 
 defs:
-  image: &image bender:5000/doc_build_tf2.12_torch2.0.1:akida-gpu_tf212_torch201_v2
+  image: &image bender:5000/doc_build:2305ecf
 
 steps:
 - name: report host name
@@ -146,7 +144,6 @@ steps:
   image: *image
   privileged: true
   commands:
-  - apt-get install -y libasound2-dev
   - pip install -r requirements.txt
   - pip install --index-url http://bender2.brainchipinc.local:81/ --trusted-host bender2.brainchipinc.local --pre -U cnn2snn akida_models
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
@@ -161,54 +158,3 @@ volumes:
 
 node:
   hw: gpu-nsoc_v2
-
----
-kind: pipeline
-name: build-doc-tf2.10
-
-
-trigger:
-  cron:
-    - nightly
-
-platform:
-  os: linux
-  arch: amd64
-
-defs:
-  image: &image bender:5000/doc_build_tf2.10_torch2.0.1:akida-gpu_tf210_torch201_v2
-
-steps:
-- name: report host name
-  image: *image
-  commands:
-  - printenv DRONE_STAGE_MACHINE
-
-- name: check GPU support
-  image: *image
-  commands:
-  - sh ./ci/test_gpu.sh
-
-- name: build
-  image: *image
-  privileged: true
-  commands:
-  - apt-get install -y libasound2-dev
-  # explicit install to resolve Tensorflow dependencies
-  - pip install protobuf==3.19.6 tensorflow-datasets==4.9.0 tensorflow-metadata==1.13.0
-  - pip install -r requirements.txt
-  - sphinx-build -D plot_gallery=1 -b html ./doc ./build
-  volumes:
-    - name: akida_chip
-      path: /dev/akida0
-
-volumes:
-- name: akida_chip
-  host:
-    path: /dev/akida0
-
-node:
-  hw: gpu-nsoc_v2
-
-depends_on:
-  - check-style

@@ -1,13 +1,11 @@
-ARG TF_VERSION=2.10.0-gpu
+ARG TF_VERSION=2.15.0-gpu
 FROM tensorflow/tensorflow:$TF_VERSION
 MAINTAINER KT <ktsiknos@brainchip.com>
 
-RUN apt-get update && apt-get install libgl1-mesa-glx -y
-RUN python -m pip install --upgrade pip
-RUN pip install torch==2.0.1 \
-                torchvision \
-                --index-url https://download.pytorch.org/whl/cu118
-RUN pip install sphinx~=4.2.0 \
+RUN apt-get update && apt-get install libgl1-mesa-glx libasound2-dev -y
+RUN python -m pip install --upgrade pip && \
+    pip install torch==2.0.1 torchvision --index-url https://download.pytorch.org/whl/cu118
+RUN pip install sphinx \
                 sphinx_rtd_theme \
                 sphinx-gallery \
                 sphinx_design \
@@ -20,9 +18,13 @@ RUN pip install sphinx~=4.2.0 \
                 mtcnn \
                 imgaug \
                 trimesh \
+                librosa \
+                soundata \
+                'tensorboardX<2.6.1' \
                 optimum[exporters] \
-                'onnx>=1.12, <1.14' \
-                onnxruntime==1.15.0
+                onnx~=1.13.0 \
+                onnxruntime==1.15.0 \
+                flake8==4.0.1
 
 ENV TF_FORCE_GPU_ALLOW_GROWTH=true
 
