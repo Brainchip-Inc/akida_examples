@@ -7,8 +7,8 @@ Supported configurations
 * **Operating systems:**
     * Windows 10, Windows 11
     * Any Linux variant compatible with `manylinux 2.28 <https://github.com/pypa/manylinux>`_ (Ubuntu 20.04, Ubuntu 22.04, ...)
-* **Python versions:** 3.8 to 3.11
-* **TensorFlow versions:** 2.10, 2.11 and 2.12
+* **Python versions:** 3.9 to 3.11
+* **TensorFlow versions:** 2.15
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
@@ -44,7 +44,7 @@ be setup with Python's pip package manager:
 
     .. code-block:: bash
 
-      conda create --name akida_env python=3.8
+      conda create --name akida_env python=3.11
       conda activate akida_env
 
 Running examples
