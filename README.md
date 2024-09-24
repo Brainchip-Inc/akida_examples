@@ -11,6 +11,15 @@ can be generated locally from the repository top.
 * TensorFlow version ~= 2.15
 * Sphinx version 2.1 or above
 
+## Docker image
+A docker image with all dependencies to build and execute the examples is provided in the ci/
+directory. This image is built and optionally pushed to a registry with:
+~~~~
+tag=$(sha1sum dockerfile | cut -c1-7)
+docker build --rm -t bender:5000/doc_build:$tag -f dockerfile .
+docker push bender:5000/doc_build:$tag
+~~~~
+
 ## Build steps
 * *Optional*: create a virtual environment using
 [Virtualenv](https://virtualenv.pypa.io/en/latest/) or
