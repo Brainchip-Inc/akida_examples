@@ -16,7 +16,7 @@ for a specific target hardware device. We try to catch as many incompatibilities
 possible at the quantization step. However, some constraints depend on the specific
 target device, and can only be caught at the conversion step. To illustrate, we will
 simply walk through the process of preparing `ResNet50
-<https://github.com/onnx/models/tree/main/archive/vision/classification/resnet#model>`__ for
+<https://github.com/onnx/models/tree/main/validated/vision/classification/resnet#model>`__ for
 acceleration on Akida - we'll run into several incompatibilities at different points
 in that process, and see how to resolve them.
 
@@ -75,7 +75,7 @@ print(f'{num_images} images and their labels are loaded and preprocessed.')
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # We download ResNet50 from the `ONNX ZOO
-# <https://github.com/onnx/models/tree/main/archive/vision/classification>`_.
+# <https://github.com/onnx/models/tree/main/validated/vision/classification>`_.
 #
 
 import onnx

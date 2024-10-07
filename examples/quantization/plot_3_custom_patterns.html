@@ -621,7 +621,7 @@ to retrain.</p>
 for a specific target hardware device. We try to catch as many incompatibilities as
 possible at the quantization step. However, some constraints depend on the specific
 target device, and can only be caught at the conversion step. To illustrate, we will
-simply walk through the process of preparing <a class="reference external" href="https://github.com/onnx/models/tree/main/archive/vision/classification/resnet#model">ResNet50</a> for
+simply walk through the process of preparing <a class="reference external" href="https://github.com/onnx/models/tree/main/validated/vision/classification/resnet#model">ResNet50</a> for
 acceleration on Akida - we’ll run into several incompatibilities at different points
 in that process, and see how to resolve them.</p>
 <p>This example assumes a moderate level of experience with deep learning, and good familiarity
@@ -674,7 +674,7 @@ these images.</p>
 </section>
 <section id="download-the-model">
 <h3>1.2 Download the model<a class="headerlink" href="#download-the-model" title="Link to this heading"></a></h3>
-<p>We download ResNet50 from the <a class="reference external" href="https://github.com/onnx/models/tree/main/archive/vision/classification">ONNX ZOO</a>.</p>
+<p>We download ResNet50 from the <a class="reference external" href="https://github.com/onnx/models/tree/main/validated/vision/classification">ONNX ZOO</a>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">onnx</span>
 <span class="kn">import</span> <span class="nn">onnx.hub</span>
 <span class="kn">from</span> <span class="nn">onnxruntime</span> <span class="kn">import</span> <span class="n">InferenceSession</span>
@@ -783,30 +783,30 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7f6bfba7d3a0&gt;, &lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7f6bfba7d3a0&gt;, &lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7f6bfba7d3a0&gt;, &lt;function get_qconv at 0x7f6bfba5f560&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7f6bfba7d8a0&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7f6bfba7d940&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7f6bfba7d940&gt;])
-QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7f6bfba7dc60&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7f6bfba7c720&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7f6bfba7c720&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7f6bfba7c720&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f6bfba5e700&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7f6bfba5e700&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f6bfba5e700&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7f6bfba5e700&gt;])
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7fe8962953a0&gt;, &lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7fe8962953a0&gt;, &lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7fe8962953a0&gt;, &lt;function get_qconv at 0x7fe89626f560&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7fe8962958a0&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7fe896295940&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7fe896295940&gt;])
+QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7fe896295c60&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7fe896294720&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7fe896294720&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7fe896294720&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7fe89626e700&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7fe89626e700&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7fe89626e700&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7fe89626e700&gt;])
 </pre></div>
 </div>
 <p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">GlobalAveragePool</span></code> operation on its own or
@@ -1022,7 +1022,7 @@ the input image prior to sending instead.</p>
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 8.496 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 8.780 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>
