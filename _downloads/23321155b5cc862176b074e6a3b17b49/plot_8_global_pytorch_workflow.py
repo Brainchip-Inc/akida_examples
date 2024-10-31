@@ -250,8 +250,11 @@ from quantizeml.models import quantize
 # Read the exported ONNX model
 model_onnx = onnx.load_model("mnist_cnn.onnx")
 
+# Extract a batch of train samples for calibration
+calib_samples = next(iter(trainloader))[0].numpy()
+
 # Quantize
-model_quantized = quantize(model_onnx, num_samples=128)
+model_quantized = quantize(model_onnx, samples=calib_samples)
 print(onnx.helper.printable_graph(model_quantized.graph))
 
 ######################################################################

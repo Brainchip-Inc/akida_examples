@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
@@ -5,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.onnx_support.layers.base_layer &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
@@ -15,17 +17,13 @@
 
   
     <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-        <script src="../../../../_static/leadlander_tag.js?v=d65c0df8"></script>
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../../../../_static/leadlander_tag.js?v=d65c0df8"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -43,9 +41,6 @@
             
               <img src="../../../../_static/MetaTF_logo.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                Akida, 2nd Generation
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -248,8 +243,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapmode">MapMode</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#id5">Mapping</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.MapMode"><code class="docutils literal notranslate"><span class="pre">MapMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.MapConstraints"><code class="docutils literal notranslate"><span class="pre">MapConstraints</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#tools">Tools</a><ul>
@@ -621,6 +617,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
 
 <span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ValueInfoProto</span>
 <span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">make_function</span><span class="p">,</span> <span class="n">make_node</span><span class="p">,</span> <span class="n">make_opsetid</span><span class="p">,</span> <span class="n">make_tensor_value_info</span><span class="p">,</span>
@@ -632,6 +629,39 @@
 
 <span class="n">DOMAIN</span> <span class="o">=</span> <span class="s2">&quot;com.brainchip&quot;</span>
 <span class="n">VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># List of quantized layers that requires a power of two scale</span>
+<span class="n">_GLOBAL_REQUIRES_FP_INPUTS</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># List of quantized layers that should always output in 8bit</span>
+<span class="n">_GLOBAL_REQUIRES_DOWNSCALE</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="k">def</span> <span class="nf">register_node_format</span><span class="p">(</span><span class="n">requires_downscale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">requires_fp_inputs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to register the node format requirements such as whether it requires</span>
+<span class="sd">    downscaling or fixed-point inputs.</span>
+
+<span class="sd">    _GLOBAL_REQUIRES_FP_INPUTS and _GLOBAL_REQUIRES_DOWNSCALE are populated</span>
+<span class="sd">    with the quantized node type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        requires_downscale (bool, optional): determines if the node class requires downscaling.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        requires_fp_inputs (bool, optional): determines if the node class requires fixed-point</span>
+<span class="sd">            inputs. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Callable: a decorator that registers the decorated class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only register class objects with &#39;register_node_format&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">requires_downscale</span><span class="p">:</span>
+            <span class="n">_GLOBAL_REQUIRES_DOWNSCALE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">requires_fp_inputs</span><span class="p">:</span>
+            <span class="n">_GLOBAL_REQUIRES_FP_INPUTS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span>
+    <span class="k">return</span> <span class="n">decorator</span>
 
 
 <div class="viewcode-block" id="OnnxLayer">
@@ -704,9 +734,10 @@
     <span class="k">def</span> <span class="nf">_load_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="c1"># Convert each value in an AttributeProto</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">to_field</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-            <span class="n">attrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="c1"># Convert each non None value in an AttributeProto</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">to_field</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="n">attrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">attrs</span>
 
     <span class="nd">@staticmethod</span>
@@ -796,7 +827,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            qlayers (list of OnnxLayer): the input layers. Input scales and zero points</span>
 <span class="sd">                will be deduced from these.</span>
-<span class="sd">            out_tensor_range (tuple of np.ndarray): the min-max ranges computed by calibration.</span>
+<span class="sd">            out_tensor_range (TensorData): the ranges computed by calibration.</span>
 <span class="sd">            force_fp (bool, optional): whether to force output scale as a power-of-two.</span>
 <span class="sd">                Defaults to False.</span>
 
@@ -811,7 +842,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            qlayers (list of OnnxLayer): the input layers. Input scales and zero points</span>
 <span class="sd">                will be deduced from these.</span>
-<span class="sd">            out_tensor_range (tuple of np.ndarray): the min-max ranges computed by calibration.</span>
+<span class="sd">            out_tensor_range (TensorData): the ranges computed by calibration.</span>
 <span class="sd">            force_fp (bool, optional): whether to force output scale as a power-of-two.</span>
 <span class="sd">                Defaults to False.</span>
 <span class="sd">            downscale (bool, optional): whether to apply downscale operation,</span>

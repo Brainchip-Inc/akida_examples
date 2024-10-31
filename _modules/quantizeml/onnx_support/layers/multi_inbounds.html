@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
@@ -5,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.onnx_support.layers.multi_inbounds &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
@@ -15,17 +17,13 @@
 
   
     <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
-        <script src="../../../../_static/leadlander_tag.js?v=d65c0df8"></script>
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+      <script src="../../../../_static/leadlander_tag.js?v=d65c0df8"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -43,9 +41,6 @@
             
               <img src="../../../../_static/MetaTF_logo.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                Akida, 2nd Generation
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -248,8 +243,9 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapmode">MapMode</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#id5">Mapping</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.MapMode"><code class="docutils literal notranslate"><span class="pre">MapMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.MapConstraints"><code class="docutils literal notranslate"><span class="pre">MapConstraints</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#tools">Tools</a><ul>
@@ -623,7 +619,7 @@
 <span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">TensorProto</span> <span class="k">as</span> <span class="n">TP</span>
 <span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="n">make_node</span>
 
-<span class="kn">from</span> <span class="nn">.base_layer</span> <span class="kn">import</span> <span class="n">OnnxLayer</span>
+<span class="kn">from</span> <span class="nn">.base_layer</span> <span class="kn">import</span> <span class="n">OnnxLayer</span><span class="p">,</span> <span class="n">register_node_format</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops</span> <span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span><span class="p">,</span> <span class="n">get_input_shift_ops</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops.activation</span> <span class="kn">import</span> <span class="n">get_activation_ops</span>
 <span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_tensor_shape</span><span class="p">,</span> <span class="n">get_node</span>
@@ -656,6 +652,7 @@
 
 <div class="viewcode-block" id="QuantizedAdd">
 <a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedAdd">[docs]</a>
+<span class="nd">@register_node_format</span><span class="p">(</span><span class="n">requires_fp_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">QuantizedAdd</span><span class="p">(</span><span class="n">OnnxLayer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of Add() as an exportable node.</span>
 
