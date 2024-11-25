@@ -19,13 +19,20 @@ for edge learning documentation, parameters fine tuning and steps details.
 # 1. Dataset preparation
 # ~~~~~~~~~~~~~~~~~~~~~~
 
-from akida import FullyConnected
-
+import os
 import tensorflow_datasets as tfds
 
+from akida import FullyConnected
+from akida_models import fetch_file
+
 # Retrieve TensorFlow `coil100 <https://www.tensorflow.org/datasets/catalog/coil100>`__
-# dataset
-ds, ds_info = tfds.load('coil100:2.*.*', split='train', with_info=True)
+# dataset (explicit download because file location changed and TFDS is not up to date).
+fname = fetch_file(fname='coil-100.zip', cache_subdir='datasets/coil-100', extract=True,
+                   origin="https://data.brainchip.com/dataset-mirror/coil-100/coil-100.zip")
+fdir = os.path.dirname(fname)
+dl_and_prepare = {'download_config': tfds.download.DownloadConfig(manual_dir=fdir)}
+ds, ds_info = tfds.load('coil100:2.*.*', split='train', with_info=True, data_dir=fdir,
+                        download_and_prepare_kwargs=dl_and_prepare)
 print(ds_info.description)
 
 ##############################################################################
