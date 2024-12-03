@@ -23,7 +23,7 @@ targets KWS task as an example:
     from akida_models import ds_cnn_kws_pretrained
     from cnn2snn import convert
 
-    # Load a pretrained 8/4/4 quantized model
+    # Load a pretrained 8/8/8 quantized model
     quantized_model = ds_cnn_kws_pretrained()
     model_akida = convert(quantized_model)
 
