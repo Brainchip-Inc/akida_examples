@@ -57,6 +57,10 @@ Akida models API
     .. autofunction:: akida_models.macs.get_flops
     .. autofunction:: akida_models.macs.display_macs
 
+    Sparsity
+    ========
+    .. autofunction:: akida_models.sparsity.display_sparsity
+
     Model I/O
     =========
     .. autofunction:: akida_models.model_io.load_model

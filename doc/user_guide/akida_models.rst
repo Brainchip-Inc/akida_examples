@@ -207,6 +207,24 @@ Akida model files).
 
    akida_models summary -m akidanet_imagenet_224_alpha_0.5.h5
 
+Command-line interface to display sparsity
+------------------------------------------
+
+CLI comes with a ``sparsity`` action that allows to display a model sparsity (supports Keras, ONNX
+and Akida model files).
+
+.. code-block:: bash
+
+   akida_models sparsity -m akidanet_imagenet_224_alpha_0.5.h5 -v
+
+The ``-v`` option (or ``--verbose``) will display all layers sparsity and the average across all
+layers. The ``--layer_names`` option allows to display sparsity for target layers.
+
+.. code-block:: bash
+
+   akida_models sparsity -m akidanet_imagenet_224_alpha_0.5.h5 -v \
+                          --layer_names conv_0/relu,conv_1/relu
+
 Layer Blocks
 ------------
 
