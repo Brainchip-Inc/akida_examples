@@ -47,15 +47,15 @@ model using the CLI makes use of the
 
 **Examples**
 
-Convert the DS-CNN/KWS 8/4/4 quantized model:
+Convert the DS-CNN/KWS 8/8/8 quantized model:
 
 .. code-block:: bash
 
-    wget https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w4_a4.h5
+    wget https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w8_a8.h5
 
-    cnn2snn convert -m ds_cnn_kws_i8_w4_a4.h5
+    cnn2snn convert -m ds_cnn_kws_i8_w8_a8.h5
 
-An Akida ``.fbz`` model named ``ds_cnn_kws_i8_w4_a4.fbz`` is then saved. This model can be loaded
+An Akida ``.fbz`` model named ``ds_cnn_kws_i8_w8_a8.fbz`` is then saved. This model can be loaded
 back into an `akida.Model <../api_reference/akida_apis.html#akida.Model>`__ and run on Akida runtime.
 
 Deprecated CLI actions
