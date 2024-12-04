@@ -182,9 +182,9 @@ or ``--akida`` option allows to convert to Akida then evaluate the model.
 
 .. code-block:: bash
 
-   kws_train eval -m ds_cnn_kws_i8_w4_a4.h5
+   kws_train eval -m ds_cnn_kws_i8_w8_a8.h5
 
-   kws_train eval -m ds_cnn_kws_i8_w4_a4.h5 -ak
+   kws_train eval -m ds_cnn_kws_i8_w8_a8.h5 -ak
 
 
 Command-line interface to evaluate model MACS
