@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -627,6 +632,7 @@
 <span class="kn">from</span> <span class="nn">.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span><span class="p">,</span> <span class="n">get_layers</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
 <span class="kn">from</span> <span class="nn">...layers.convolution</span> <span class="kn">import</span> <span class="n">PaddedConv2D</span>
+<span class="kn">from</span> <span class="nn">...layers</span> <span class="kn">import</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span>
 
 
 <span class="k">def</span> <span class="nf">_find_rescaling_fold_target</span><span class="p">(</span><span class="n">rescaling</span><span class="p">):</span>
@@ -640,7 +646,7 @@
 <span class="sd">        otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Define layers that can accept Rescaling alignment</span>
-    <span class="n">supported_dst_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">]</span>
+    <span class="n">supported_dst_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">]</span>
 
     <span class="n">scale_per_axis</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
@@ -711,33 +717,44 @@
 <span class="sd">        dst_layer (keras.layers.Layer): the layer where Rescaling is folded</span>
 <span class="sd">        had_bias (bool): whether the original layer had a bias or not</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
     <span class="n">base_weights</span> <span class="o">=</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
     <span class="n">new_w</span> <span class="o">=</span> <span class="n">base_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">filters</span> <span class="o">=</span> <span class="n">new_w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
     <span class="n">scale</span> <span class="o">=</span> <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">scale</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># If scale is not a scalar, align it</span>
+    <span class="n">vector_scale</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">vector_scale</span><span class="p">:</span>
         <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">filters</span><span class="p">):</span>
-            <span class="c1"># To compensate, adjust the weights of the next layer</span>
-            <span class="n">new_w</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">):</span>
             <span class="c1"># Also rescale the padding value</span>
             <span class="n">padding_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dst_layer</span><span class="o">.</span><span class="n">_padding_value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
             <span class="n">dst_layer</span><span class="o">.</span><span class="n">_padding_value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">padding_value</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">)):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">new_w</span> <span class="o">*=</span> <span class="n">scale</span>
+
     <span class="n">new_weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_w</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">use_bias</span><span class="p">:</span>
         <span class="c1"># Build zero initialized biases if the original layer didn&#39;t have any</span>
         <span class="n">new_biases</span> <span class="o">=</span> <span class="n">base_weights</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">had_bias</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">filters</span><span class="p">):</span>
-            <span class="c1"># Rescale biases filter by filter to enable broadcast if offsets are per channel</span>
-            <span class="n">w_i</span> <span class="o">=</span> <span class="n">base_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
-            <span class="n">new_biases</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w_i</span> <span class="o">*</span> <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">vector_offset</span> <span class="o">=</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span>
+                         <span class="nb">len</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vector_offset</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">BufferTempConv</span><span class="p">):</span>
+            <span class="c1"># Reshape the offset</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">dst_layer</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dst_layer</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">):</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">new_biases</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">base_weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">offset</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">new_w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+
         <span class="n">new_weights</span> <span class="o">+=</span> <span class="p">[</span><span class="n">new_biases</span><span class="p">]</span>
         <span class="n">rescaling_layer</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+
     <span class="n">dst_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">new_weights</span><span class="p">)</span>
 
 

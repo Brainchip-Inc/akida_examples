@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -636,8 +641,7 @@
 
     <span class="c1"># Check supported attributes</span>
     <span class="n">weights</span> <span class="o">=</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">conv_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
-    <span class="n">valid_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;auto_pad&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NOTSET&#39;</span><span class="p">],</span> <span class="s1">&#39;dilations&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)],</span>
-                  <span class="s2">&quot;pads&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]}</span>
+    <span class="n">valid_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;auto_pad&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NOTSET&#39;</span><span class="p">],</span> <span class="s1">&#39;dilations&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]}</span>
     <span class="n">check_node_attributes</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="n">valid_attr</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;output_padding&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span>
             <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;output_shape&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
@@ -648,15 +652,18 @@
     <span class="c1"># Retrieve attributes</span>
     <span class="n">strides</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">group</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">pads</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;pads&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
     <span class="n">activation</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">act_node</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">clip_node</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">qconv</span> <span class="o">=</span> <span class="n">QuantizedConv2DTranspose</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                                         <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                                          <span class="n">name</span><span class="o">=</span><span class="n">conv_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                          <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># need to check supported attributes</span>
         <span class="n">check_conv_depthwise_compatibility</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
         <span class="n">qconv</span> <span class="o">=</span> <span class="n">QuantizedDepthwise2DTranspose</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                                              <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                                               <span class="n">name</span><span class="o">=</span><span class="n">conv_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                               <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
     <span class="c1"># Sets the weights to configure the operation chain</span>
@@ -684,10 +691,12 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                 <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
                  <span class="n">activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;QuantizedConv2DTranspose&quot;</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                         <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
         <span class="c1"># Save properties need to serialize operation name</span>
@@ -758,7 +767,8 @@
 
         <span class="c1"># Transpose convolution</span>
         <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;ConvTranspose&quot;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">t_names</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Yi&quot;</span><span class="p">]))</span>
-        <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">))</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">),</span>
+                                   <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">)])</span>
 
         <span class="c1"># Activation (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;ReLU&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
@@ -791,11 +801,13 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                 <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
                  <span class="n">activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                  <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                         <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_name</span> <span class="o">=</span> <span class="s2">&quot;QuantizedDepthwise2DTranspose&quot;</span>
 
@@ -821,8 +833,9 @@
 
         <span class="c1"># Transpose convolution</span>
         <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;ConvTranspose&quot;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">t_names</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Yi&quot;</span><span class="p">]))</span>
-        <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">))</span>
-        <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INT</span><span class="p">))</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">),</span>
+                                    <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INT</span><span class="p">),</span>
+                                    <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">)])</span>
 
         <span class="c1"># Activation (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;ReLU&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>

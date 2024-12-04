@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -615,6 +620,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QuantizationParams&quot;</span><span class="p">,</span> <span class="s2">&quot;get_quantization_params&quot;</span><span class="p">,</span> <span class="s2">&quot;quantization&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 
 
@@ -633,18 +639,24 @@
 <span class="sd">        output_bits (int, optional): outputs quantization bitwidth. Defaults to 8.</span>
 <span class="sd">        input_weight_bits (int, optional): weights quantization bitwidth for the first layer.</span>
 <span class="sd">            Defaults to 8.</span>
+<span class="sd">        input_dtype (np.dtype or str, optional): expected model input format. If given as a string,</span>
+<span class="sd">            should follow numpy string type requirements. Defaults to &#39;uint8&#39;.</span>
 <span class="sd">        buffer_bits (int, optional): maximal buffer bitwidth allowed in operations.</span>
 <span class="sd">            Defaults to 32.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                 <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+                 <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_activation_bits</span> <span class="o">=</span> <span class="n">activation_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_per_tensor_activations</span> <span class="o">=</span> <span class="n">per_tensor_activations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_bits</span> <span class="o">=</span> <span class="n">weight_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_bits</span> <span class="o">=</span> <span class="n">output_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_weight_bits</span> <span class="o">=</span> <span class="n">input_weight_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_bits</span> <span class="o">=</span> <span class="n">buffer_bits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">input_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span><span class="si">}</span><span class="s2"> input dtype: &quot;</span>
+                             <span class="s2">&quot;it should be a integer subdtype.&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">activation_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -667,6 +679,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_weight_bits</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">buffer_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_bits</span>
 
@@ -678,6 +694,7 @@
             <span class="sa">f</span><span class="s2">&quot;weight_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;output_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;input_weight_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;input_dtype=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;buffer_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
 
@@ -688,6 +705,7 @@
             <span class="sa">f</span><span class="s2">&quot;Weight bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;Output bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;Input weight bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Input dtype: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;Buffer bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span></div>
 

@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -862,8 +867,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        tf.Tensor: the sliced frac_bits/scale tensor tensor.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">tensor_rank</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+    <span class="n">assert_equal</span><span class="p">(</span><span class="n">tensor_rank</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="c1"># Convert Ellipsis into actual slices</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="bp">Ellipsis</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">):</span>
@@ -871,8 +876,8 @@
 
         <span class="c1"># Case where the number of indices matches the rank of the values tensor</span>
         <span class="k">if</span> <span class="n">values_rank</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
-            <span class="n">new_fb_tuple</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="n">tensor_rank</span><span class="p">:]</span>
-            <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">new_fb_tuple</span><span class="p">]</span>
+            <span class="c1"># frac_bits/scale have maximum 1 dimension so the slicing is done on the last dimension.</span>
+            <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
 
         <span class="c1"># Case where the frac_bits/scales tensor has fewer dimensions than the remaining positions</span>
         <span class="k">elif</span> <span class="n">values_rank</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">-</span> <span class="n">tensor_rank</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>

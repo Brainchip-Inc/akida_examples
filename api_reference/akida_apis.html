@@ -142,6 +142,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -358,6 +359,10 @@
 <li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -2304,7 +2309,7 @@ The normalization is performed in this way:</p>
 <p>DepthwiseConv2DTranspose</p>
 <p>BufferTempConv</p>
 <p>DepthwiseBufferTempConv</p>
-<p>StatefulRecurrent</p>
+<p>StatefulRecurrentLegacy</p>
 <p>VitEncoderBlock</p>
 <p>Dense1D</p>
 </div></blockquote>
@@ -3214,16 +3219,19 @@ This mode provides the potential for higher-performances</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapConstraints.device" title="akida.MapConstraints.device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device</span></code></a></p></td>
 <td><p>Return the device used.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.MapConstraints.hwpr_loopitself" title="akida.MapConstraints.hwpr_loopitself"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hwpr_loopitself</span></code></a></p></td>
+<td><p>The HWPR NP loopitself feature.</p></td>
+</tr>
 </tbody>
 </table>
 <p><strong>Methods:</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapConstraints.next_layer" title="akida.MapConstraints.next_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">next_layer</span></code></a>(self, layer_name)</p></td>
-<td><p></p></td>
+<td><p>Callback on the layer mapping.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.MapConstraints.select_nps" title="akida.MapConstraints.select_nps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_nps</span></code></a>(self, source_nps, num_nps, type)</p></td>
-<td><p></p></td>
+<td><p>Selection from a predefined list of NPs.</p></td>
 </tr>
 </tbody>
 </table>
@@ -3301,15 +3309,43 @@ This mode provides the potential for higher-performances</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.MapConstraints.hwpr_loopitself">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hwpr_loopitself</span></span><a class="headerlink" href="#akida.MapConstraints.hwpr_loopitself" title="Link to this definition"></a></dt>
+<dd><p>The HWPR NP loopitself feature.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="akida.MapConstraints.next_layer">
 <span class="sig-name descname"><span class="pre">next_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#akida.MapConstraints" title="akida.core.MapConstraints"><span class="pre">akida.core.MapConstraints</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#akida.MapConstraints.next_layer" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Callback on the layer mapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>layer_name</strong> (<em>str</em>) – the layer name</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="akida.MapConstraints.select_nps">
 <span class="sig-name descname"><span class="pre">select_nps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#akida.MapConstraints" title="akida.core.MapConstraints"><span class="pre">akida.core.MapConstraints</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_nps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#akida.NP.Ident" title="akida.core.NP.Ident"><span class="pre">akida.core.NP.Ident</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_nps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#akida.NP.Type" title="akida.core.NP.Type"><span class="pre">akida.core.NP.Type</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#akida.NP.Ident" title="akida.core.NP.Ident"><span class="pre">akida.core.NP.Ident</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#akida.MapConstraints.select_nps" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Selection from a predefined list of NPs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_nps</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code>) – the predefined list of NPs</p></li>
+<li><p><strong>num_nps</strong> (<em>int</em>) – the number of NPs needed</p></li>
+<li><p><strong>type</strong> (<a class="reference internal" href="#akida.NP.Type" title="akida.NP.Type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">akida.NP.Type</span></code></a>) – the type of NPs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the selected list of NPs</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

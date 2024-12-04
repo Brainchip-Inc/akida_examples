@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -631,7 +636,7 @@
 
 <div class="viewcode-block" id="check_model_compatibility">
 <a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">[docs]</a>
-<span class="k">def</span> <span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that a float Keras or ONNX model is Akida compatible.</span>
 
 <span class="sd">    The process stops on the first incompatibility encountered with an exception. The</span>
@@ -644,6 +649,8 @@
 <span class="sd">        model (:obj:`tf.keras.Model` or :obj:`onnx.ModelProto`): the model to check.</span>
 <span class="sd">        device (:obj:`akida.HwDevice`, optional): the device to map on. If a device is provided,</span>
 <span class="sd">            there will be a check that the model can fully run on such device. Defaults to None.</span>
+<span class="sd">        input_dtype (np.dtype or str, optional): expected model input format.</span>
+<span class="sd">            If given as a string, should follow numpy string type requirements. Defaults to &#39;uint8&#39;.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: if model type is incompatbile with Akida version context.</span>
@@ -664,9 +671,9 @@
     <span class="k">if</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
         <span class="c1"># 4 bits weights and activation per tensor</span>
         <span class="n">q_param</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">(</span><span class="n">activation_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">weight_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                                     <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                     <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="n">input_dtype</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">q_param</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">()</span>
+        <span class="n">q_param</span> <span class="o">=</span> <span class="n">QuantizationParams</span><span class="p">(</span><span class="n">input_dtype</span><span class="o">=</span><span class="n">input_dtype</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>

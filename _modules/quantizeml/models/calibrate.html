@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -622,12 +627,13 @@
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span>
                           <span class="n">Reshape</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">)</span>
 
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">generate_keras_random_samples</span>
 <span class="kn">from</span> <span class="nn">.transforms.insert_layer</span> <span class="kn">import</span> <span class="n">insert_in_config</span>
 <span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span><span class="p">,</span> <span class="n">get_model_input_dtype</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
 <span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
                       <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">,</span>
-                      <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">)</span>
+                      <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">update_batch_size</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_log2</span>
 
 
@@ -838,50 +844,6 @@
     <span class="n">next_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">next_weights</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_warmup_calib</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">end_of_blocks</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to calibrate the buffer TENN models with warmpup period.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        calibration_model (keras.Model): the calibration model.</span>
-<span class="sd">        warmup_samples (tf.Dataset, np.array or generator, optional): warmup samples.</span>
-<span class="sd">        end_of_blocks (dict): dict mapping end of block layer names to the name of their</span>
-<span class="sd">            OutputObserver.</span>
-<span class="sd">        batch_size (int): calibration batch size.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Fill the fifos.</span>
-    <span class="n">calibration_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">warmup_samples</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
-    <span class="c1"># reset the range_max</span>
-    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">end_of_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">range_max</span> <span class="o">=</span> <span class="n">calibration_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span><span class="o">.</span><span class="n">range_max</span>
-        <span class="n">range_max</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">range_max</span><span class="p">))</span>
-
-
-<span class="k">def</span> <span class="nf">_split_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">buffer_layers</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to split the samples into warmup and calibration samples for the TENN models</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        samples (np.array): samples.</span>
-<span class="sd">        buffer_layers (list: keras.Layers): the model (Depthwise)BufferTempConv layers</span>
-<span class="sd">        batch_size (int): calibration batch_size.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        np.array, np.array, int: warmup samples, effective calibration samples and warmup</span>
-<span class="sd">        steps.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Extract warmup_factor. The number of samples required to fill all model fifos.</span>
-    <span class="n">warmup_factor</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">buf_layer</span> <span class="ow">in</span> <span class="n">buffer_layers</span><span class="p">:</span>
-        <span class="n">warmup_factor</span> <span class="o">+=</span> <span class="n">buf_layer</span><span class="o">.</span><span class="n">kernel_size</span>
-    <span class="k">if</span> <span class="n">warmup_factor</span> <span class="o">*</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of samples must be greater than </span><span class="si">{</span><span class="n">warmup_factor</span><span class="si">}</span><span class="s2"> * batch_size.&quot;</span><span class="p">)</span>
-    <span class="c1"># Extract warmup samples</span>
-    <span class="n">warmup_samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[:</span><span class="n">warmup_factor</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">]</span>
-    <span class="c1"># Extract calibration samples</span>
-    <span class="n">calib_samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">warmup_factor</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">:]</span>
-    <span class="k">return</span> <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">calib_samples</span><span class="p">,</span> <span class="n">warmup_factor</span>
-
-
 <div class="viewcode-block" id="calibrate">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.calibrate">[docs]</a>
 <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -913,26 +875,17 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_required</span><span class="p">(</span><span class="n">qmodel</span><span class="p">):</span>
         <span class="k">return</span>
 
-    <span class="c1"># Disable sumbsampling in StatefulRecurrent layers before building the calibration model</span>
-    <span class="n">rec_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">rec_layers</span><span class="p">:</span>
-        <span class="n">ly</span><span class="o">.</span><span class="n">subsample_ratio</span> <span class="o">=</span> <span class="kc">None</span>
-
     <span class="c1"># Build a calibration model which is a float model with OutputObservers at locations where the</span>
     <span class="c1"># quantized model has OutputQuantizers.</span>
     <span class="n">calibration_model</span><span class="p">,</span> <span class="n">end_of_blocks</span> <span class="o">=</span> <span class="n">_get_calibration_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Generate random samples</span>
-        <span class="n">samples_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="n">samples_type</span> <span class="o">=</span> <span class="n">get_model_input_dtype</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">as_numpy_dtype</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">generate_keras_random_samples</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
 
-        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
-        <span class="n">iinfo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">samples_type</span><span class="p">)</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">iinfo</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">iinfo</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">samples_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">samples_type</span><span class="p">)</span>
-
-    <span class="c1"># Extract number of (Depthwise)BufferTempConv layers</span>
+    <span class="c1"># Extract number of (Depthwise)BufferTempConv and StatefulRecurrent layers</span>
     <span class="n">buf_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
+    <span class="n">rec_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">buf_layers</span> <span class="ow">or</span> <span class="n">rec_layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;TENN models calibration is only possible with np.array samples.&quot;</span>
@@ -970,6 +923,7 @@
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">rec_layers</span><span class="p">:</span>
+            <span class="n">calibration_model</span> <span class="o">=</span> <span class="n">update_batch_size</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="c1"># Ensure graph execution</span>
             <span class="n">model_func</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">)</span>
             <span class="n">in_shape</span> <span class="o">=</span> <span class="n">calibration_model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -982,18 +936,8 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">in_step</span><span class="p">):</span>
                 <span class="n">model_func</span><span class="p">(</span><span class="n">samples</span><span class="p">[:,</span> <span class="n">i</span> <span class="o">*</span> <span class="n">in_shape</span><span class="p">:(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">in_shape</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Set default calib samples and number of steps</span>
-            <span class="n">calib_samples</span> <span class="o">=</span> <span class="n">samples</span>
-            <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span>
-            <span class="c1"># If the model is a buffer TENN, it normally requires a warmup period on the first epoch</span>
-            <span class="c1"># in order to calibrate it. For that purpose batch_size is mandatory.</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf_layers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">batch_size</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">calib_samples</span><span class="p">,</span> <span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">_split_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">buf_layers</span><span class="p">,</span>
-                                                                             <span class="n">batch_size</span><span class="p">)</span>
-                <span class="n">_warmup_calib</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="n">warmup_samples</span><span class="p">,</span> <span class="n">end_of_blocks</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-                <span class="n">calibration_steps</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">-</span> <span class="n">warmup_steps</span>
             <span class="n">calibration_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-                <span class="n">x</span><span class="o">=</span><span class="n">calib_samples</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">calibration_steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
 
     <span class="c1"># Update quantized model OutputQuantizers range_max using OutputObservers calibrated values</span>
     <span class="k">for</span> <span class="n">eob</span><span class="p">,</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">end_of_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>

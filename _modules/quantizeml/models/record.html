@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -618,11 +623,10 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;record_quantization_variables&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
-<span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="n">recording</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">,</span> <span class="n">reset_states</span>
+<span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="n">recording</span>
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">generate_keras_random_samples</span>
 
 
 <div class="viewcode-block" id="record_quantization_variables">
@@ -636,39 +640,13 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (keras.Model): model for which objects need to be recorded.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_gen_dummy_sample</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
-            <span class="n">sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">shape</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">sample</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
-                                 <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
-
-    <span class="n">recurrent_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">)</span>
-
     <span class="k">with</span> <span class="n">recording</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">recurrent_layers</span><span class="p">):</span>
-            <span class="c1"># Reset model (states and counter) to ensure a proprer recording</span>
-            <span class="n">reset_states</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-            <span class="c1"># Build a tf.function to run in graph mode</span>
-            <span class="n">model_func</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-            <span class="c1"># The number of samples that will allow proper recording is equal to the lowest</span>
-            <span class="c1"># common multiple among the subsampling ratios found in the model.</span>
-            <span class="n">sub_sample_ratios</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">recurrent_layers</span><span class="p">:</span>
-                <span class="n">sub_sample_ratios</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">subsample_ratio</span><span class="p">)</span>
-            <span class="n">num_samples</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">lcm</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">sub_sample_ratios</span><span class="p">)</span>
-            <span class="c1"># For recurrent models, inputs are expected to be int16 so random samples are generated</span>
-            <span class="c1"># accordingly</span>
-            <span class="n">sample</span> <span class="o">=</span> <span class="n">_gen_dummy_sample</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
-            <span class="c1"># Custom loop to ensure counter and subsampling ratio condition are met</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
-                <span class="n">model_func</span><span class="p">(</span><span class="n">sample</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
-            <span class="c1"># Reset model again</span>
-            <span class="n">reset_states</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Create sample and pass it through the model to calibrate variables</span>
-            <span class="n">sample</span> <span class="o">=</span> <span class="n">_gen_dummy_sample</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-            <span class="n">model</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
+        <span class="c1"># Build a tf.function to run in graph mode</span>
+        <span class="n">model_func</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="c1"># Create sample and pass it through the model to calibrate variables</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">generate_keras_random_samples</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">model_func</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
 
 </pre></div>
 

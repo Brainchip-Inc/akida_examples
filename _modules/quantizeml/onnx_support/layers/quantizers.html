@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -615,9 +620,11 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InputQuantizer&quot;</span><span class="p">,</span> <span class="s2">&quot;Dequantizer&quot;</span><span class="p">,</span> <span class="s2">&quot;get_input_quantizer&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
 
-<span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="n">make_node</span>
+<span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="n">make_node</span><span class="p">,</span> <span class="n">make_tensor_value_info</span><span class="p">,</span> <span class="n">np_dtype_to_tensor_dtype</span>
 <span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">AttributeProto</span> <span class="k">as</span> <span class="n">AP</span>
+<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ValueInfoProto</span>
 <span class="kn">from</span> <span class="nn">onnxruntime.quantization.calibrate</span> <span class="kn">import</span> <span class="n">TensorData</span>
 
 <span class="kn">from</span> <span class="nn">.base_layer</span> <span class="kn">import</span> <span class="n">OnnxLayer</span>
@@ -625,7 +632,8 @@
 <span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">value_info_to_tensor_shape</span><span class="p">,</span> <span class="n">array_to_tp</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span>
                            <span class="n">get_variable</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">has_field</span><span class="p">,</span> <span class="n">to_field</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">..quantization.input_scale</span> <span class="kn">import</span> <span class="n">input_zp_scale</span><span class="p">,</span> <span class="n">needs_zp</span>
+<span class="kn">from</span> <span class="nn">..quantization.input_scale</span> <span class="kn">import</span> <span class="n">input_zp_scale</span>
+<span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="n">get_quantization_params</span>
 
 
 <span class="k">def</span> <span class="nf">get_input_quantizer</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
@@ -637,10 +645,10 @@
         <span class="n">perm</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">transpose_node</span><span class="p">,</span> <span class="s2">&quot;perm&quot;</span><span class="p">)</span>
 
     <span class="n">input_ts</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">input_unsigned</span> <span class="o">=</span> <span class="n">needs_zp</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">input_signed</span> <span class="o">=</span> <span class="n">get_quantization_params</span><span class="p">()</span><span class="o">.</span><span class="n">input_dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span>
     <span class="n">input_quantizer</span> <span class="o">=</span> <span class="n">InputQuantizer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;quantize&quot;</span><span class="p">,</span>
                                      <span class="n">input_tp</span><span class="o">=</span><span class="n">input_ts</span><span class="p">,</span>
-                                     <span class="n">input_signed</span><span class="o">=</span><span class="ow">not</span> <span class="n">input_unsigned</span><span class="p">,</span>
+                                     <span class="n">input_signed</span><span class="o">=</span><span class="n">input_signed</span><span class="p">,</span>
                                      <span class="n">perm</span><span class="o">=</span><span class="n">perm</span><span class="p">)</span>
 
     <span class="c1"># Sets rescaling weights</span>
@@ -775,7 +783,7 @@
 <div class="viewcode-block" id="Dequantizer">
 <a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.Dequantizer">[docs]</a>
 <span class="k">class</span> <span class="nc">Dequantizer</span><span class="p">(</span><span class="n">OnnxLayer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of DequantizeLinear(), use to dequantize the input.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of DequantizeLinear(), use to dequantize the inputs.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
@@ -784,34 +792,81 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;Dequantizer&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">input_ts</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">input_ts</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_ts</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">input_ts</span><span class="p">]</span>
 
-        <span class="c1"># Compute output shape</span>
-        <span class="n">output_ts</span> <span class="o">=</span> <span class="n">TENSOR_SHAPE</span><span class="p">(</span><span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span>
+        <span class="c1"># Compute output shapes</span>
+        <span class="n">output_ts</span> <span class="o">=</span> <span class="p">[</span><span class="n">TENSOR_SHAPE</span><span class="p">(</span><span class="n">ts</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">input_ts</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">output_ts</span>
 
-    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qinput</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">op_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;num_inputs&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">op_name</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;num_inputs&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">op_name</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs_vi</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ValueInfoProto</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs_vi</span><span class="p">)</span>
+
+        <span class="c1"># Serialize the number of inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;num_inputs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_vi</span><span class="p">)</span>
+
+        <span class="c1"># Replace empty name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+        <span class="c1"># Convert ValueInfoProto into TensorShape for each input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input</span> <span class="o">=</span> <span class="n">inputs_vi</span>
+        <span class="n">input_ts</span> <span class="o">=</span> <span class="p">[</span><span class="n">value_info_to_tensor_shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs_vi</span><span class="p">]</span>
+
+        <span class="n">output_ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__build__</span><span class="p">(</span><span class="o">*</span><span class="n">input_ts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_tensor_value_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vi</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/dequantize&quot;</span><span class="p">,</span>
+                                               <span class="n">elem_type</span><span class="o">=</span><span class="n">np_dtype_to_tensor_dtype</span><span class="p">(</span><span class="n">out_ts</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                                               <span class="n">shape</span><span class="o">=</span><span class="n">out_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">vi</span><span class="p">,</span> <span class="n">out_ts</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs_vi</span><span class="p">,</span> <span class="n">output_ts</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qlayers</span><span class="p">):</span>
         <span class="c1"># To keep homogenity with the other layers, this function is called &#39;quantize&#39;</span>
-        <span class="c1"># even though it does the opposite (dequantize): apply scale in the input integers.</span>
+        <span class="c1"># even though it does the opposite (dequantize): apply scale in the inputs integers.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Build the layer if required</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">qinput</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+            <span class="n">input_ts</span> <span class="o">=</span> <span class="p">[</span><span class="n">qly</span><span class="o">.</span><span class="n">output</span> <span class="k">for</span> <span class="n">qly</span> <span class="ow">in</span> <span class="n">qlayers</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">*</span><span class="n">input_ts</span><span class="p">)</span>
 
         <span class="c1"># Scale to set in weights is the reciprocal of ONNX calibrated one.</span>
-        <span class="n">i_scale</span> <span class="o">=</span> <span class="n">qinput</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">i_scales</span> <span class="o">=</span> <span class="p">[</span><span class="n">qlayer</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">qlayer</span> <span class="ow">in</span> <span class="n">qlayers</span><span class="p">]</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">i_scale</span> <span class="ow">in</span> <span class="n">i_scales</span><span class="p">]</span>
 
         <span class="c1"># Return ONNX node and weights</span>
-        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">:</span> <span class="n">scale</span><span class="p">}</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-        <span class="n">onnx_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">scale</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">scale</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scales</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Remove suffix when number of inputs/outputs is one</span>
+            <span class="n">weights</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale_1&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Inputs should be ordered as follows : X1, S1, X2, S2...</span>
+        <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">ts</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input</span><span class="p">]</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">input_names</span><span class="p">,</span> <span class="n">weights</span><span class="p">)),</span> <span class="p">())</span>
+
+        <span class="n">onnx_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_node</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">output_names</span><span class="p">)</span>
         <span class="n">onnx_weights</span> <span class="o">=</span> <span class="n">array_to_tp</span><span class="p">(</span><span class="o">**</span><span class="n">weights</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">onnx_node</span><span class="p">,</span> <span class="n">onnx_weights</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_subgraph</span><span class="p">(</span><span class="n">op_type</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;DequantizeLinear&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">])]</span></div>
+        <span class="c1"># When there is only one output, the op_type is called Dequantizer</span>
+        <span class="n">node_params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">op_type</span> <span class="o">!=</span> <span class="s1">&#39;Dequantizer&#39;</span><span class="p">:</span>
+            <span class="n">num_inputs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">op_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Dequantizer&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_inputs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">node_params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;X</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;scale_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="s2">&quot;outputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Y</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node_params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">],</span> <span class="s2">&quot;outputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]})</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;DequantizeLinear&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">nparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">nparams</span> <span class="ow">in</span> <span class="n">node_params</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">nodes</span></div>
 
 </pre></div>
 

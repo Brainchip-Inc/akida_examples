@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -706,6 +711,15 @@
         <span class="p">)</span></div>
 
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute and return the number of fractional bits for this OutputQuantizer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           tf.Tensor: an integer tensor of fractional bits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="p">))</span>
+
 <div class="viewcode-block" id="OutputQuantizer.call">
 <a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer.call">[docs]</a>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
@@ -752,8 +766,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># Rescale to center around range_max and compress to a lower bitwidth</span>
-        <span class="n">frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="p">))</span>
-        <span class="n">inputs</span><span class="p">,</span> <span class="n">shift_value</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">)</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">shift_value</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">)</span>
         <span class="c1"># update shift values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift_value</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">inputs</span></div>

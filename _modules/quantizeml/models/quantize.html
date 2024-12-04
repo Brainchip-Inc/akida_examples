@@ -138,6 +138,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-for-model-evaluation">Command-line interface for model evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-evaluate-model-macs">Command-line interface to evaluate model MACS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-summary">Command-line interface to display summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#command-line-interface-to-display-sparsity">Command-line interface to display sparsity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#id1">Layer Blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../user_guide/akida_models.html#handling-akida-1-0-and-akida-2-0-specificities">Handling Akida 1.0 and Akida 2.0 specificities</a></li>
 </ul>
@@ -354,6 +355,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#macs">MACS</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.get_flops"><code class="docutils literal notranslate"><span class="pre">get_flops()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.macs.display_macs"><code class="docutils literal notranslate"><span class="pre">display_macs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.sparsity.display_sparsity"><code class="docutils literal notranslate"><span class="pre">display_sparsity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#model-i-o">Model I/O</a><ul>
@@ -905,6 +910,7 @@
                                        <span class="n">per_tensor_activations</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">per_tensor_activations</span><span class="p">,</span>
                                        <span class="n">weight_bits</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">input_weight_bits</span><span class="p">,</span>
                                        <span class="n">output_bits</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">output_bits</span><span class="p">,</span>
+                                       <span class="n">input_dtype</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">,</span>
                                        <span class="n">buffer_bits</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">buffer_bits</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_quantize_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantize_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -920,6 +926,18 @@
 
         <span class="c1"># Initialize quantized layer from the float config</span>
         <span class="n">qlayer</span> <span class="o">=</span> <span class="n">layer</span>
+
+        <span class="c1"># Overwrite input dtype in InputLayer to the context one,</span>
+        <span class="c1"># if the input_dtype is not integer</span>
+        <span class="k">if</span> <span class="n">ql_class</span> <span class="o">==</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">:</span>
+            <span class="n">current_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">qlayer</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;dtype&#39;</span><span class="p">])</span>
+            <span class="n">input_dtype</span> <span class="o">=</span> <span class="n">get_quantization_params</span><span class="p">()</span><span class="o">.</span><span class="n">input_dtype</span>
+            <span class="k">if</span> <span class="n">current_dtype</span> <span class="o">!=</span> <span class="n">input_dtype</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">current_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The provided model expects </span><span class="si">{</span><span class="n">current_dtype</span><span class="si">}</span><span class="s2"> input but &quot;</span>
+                              <span class="sa">f</span><span class="s2">&quot;QuantizationParams.input_dtype is </span><span class="si">{</span><span class="n">input_dtype</span><span class="si">}</span><span class="s2"> which &quot;</span>
+                              <span class="s2">&quot;is different. Keeping original signature.&quot;</span><span class="p">)</span>
+                <span class="n">input_dtype</span> <span class="o">=</span> <span class="n">current_dtype</span>
+            <span class="n">qlayer</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_dtype</span><span class="p">)</span>
 
         <span class="c1"># Instantiate quantized layer from configuration if there is one</span>
         <span class="k">if</span> <span class="n">quantize_config</span><span class="p">:</span>
