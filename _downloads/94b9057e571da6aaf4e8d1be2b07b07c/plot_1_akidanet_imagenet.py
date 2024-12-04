@@ -243,7 +243,8 @@ def update_bars_chart(rects, vals, true_label):
 fig, imgobj, ax1, rects = prepare_plots()
 
 # Get a random image
-img = np.random.randint(num_images)
+rng = np.random.default_rng()
+img = rng.integers(0, num_images)
 
 # Predict image class
 outputs_akida = model_akida.predict(np.expand_dims(x_test[img], axis=0)).squeeze()

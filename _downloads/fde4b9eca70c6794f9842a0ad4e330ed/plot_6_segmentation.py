@@ -37,7 +37,8 @@ steps = x_val.shape[0] // 32
 # Visualize some data
 import matplotlib.pyplot as plt
 
-id = np.random.randint(0, x_val.shape[0])
+rng = np.random.default_rng()
+id = rng.integers(0, x_val.shape[0] - 2)
 
 fig, axs = plt.subplots(3, 3, constrained_layout=True)
 for col in range(3):

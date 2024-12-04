@@ -133,8 +133,9 @@ assert abs(mae_keras - mae_akida) < 0.5
 import matplotlib.pyplot as plt
 
 # Estimate age on a random single image and display Keras and Akida outputs
-id = np.random.randint(0, len(y_test) + 1)
-age_keras = model_keras.predict(x_test[id:id + 1])
+rng = np.random.default_rng()
+id = rng.integers(0, len(y_test))
+age_keras = model_keras.predict(x_test[np.newaxis, id])
 
 plt.imshow(x_test_akida[id], interpolation='bicubic')
 plt.xticks([]), plt.yticks([])
