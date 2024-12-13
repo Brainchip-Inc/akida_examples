@@ -160,7 +160,8 @@ Most of the time, ``Device`` objects are real hardware devices, but virtual devi
 created to allow the mapping of a ``Model`` on a host that is not connected to a hardware device.
 
 It is possible to build a virtual device for known hardware devices, by calling functions
-`AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__ and
+`AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__,
+`AKD1500() <../api_reference/akida_apis.html#akida.AKD1500>`__ and
 `TwoNodesIP() <../api_reference/akida_apis.html#akida.TwoNodesIP>`__.
 
 Model mapping

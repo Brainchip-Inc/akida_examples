@@ -130,6 +130,7 @@ Akida runtime API
         :members:
     .. autofunction:: akida.devices
     .. autofunction:: akida.AKD1000
+    .. autofunction:: akida.AKD1500
     .. autofunction:: akida.TwoNodesIP
 
     HwVersion
