@@ -643,10 +643,13 @@
 <span class="sd">            should follow numpy string type requirements. Defaults to &#39;uint8&#39;.</span>
 <span class="sd">        buffer_bits (int, optional): maximal buffer bitwidth allowed in operations.</span>
 <span class="sd">            Defaults to 32.</span>
+<span class="sd">        last_output_bits (int, optional): when provided, sets the bitwidth of the model output. the</span>
+<span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">per_tensor_activations</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                 <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+                 <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_weight_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                 <span class="n">last_output_bits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_activation_bits</span> <span class="o">=</span> <span class="n">activation_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_per_tensor_activations</span> <span class="o">=</span> <span class="n">per_tensor_activations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_bits</span> <span class="o">=</span> <span class="n">weight_bits</span>
@@ -654,6 +657,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_weight_bits</span> <span class="o">=</span> <span class="n">input_weight_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_bits</span> <span class="o">=</span> <span class="n">buffer_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">input_dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_output_bits</span> <span class="o">=</span> <span class="n">last_output_bits</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_dtype</span><span class="si">}</span><span class="s2"> input dtype: &quot;</span>
                              <span class="s2">&quot;it should be a integer subdtype.&quot;</span><span class="p">)</span>
@@ -686,6 +690,10 @@
     <span class="k">def</span> <span class="nf">buffer_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_bits</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_output_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_output_bits</span>
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;QuantizationParams(&quot;</span>
@@ -695,7 +703,8 @@
             <span class="sa">f</span><span class="s2">&quot;output_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;input_weight_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;input_dtype=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;buffer_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;buffer_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;last_output_bits=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_output_bits</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -706,7 +715,8 @@
             <span class="sa">f</span><span class="s2">&quot;Output bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;Input weight bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_weight_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;Input dtype: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;Buffer bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Buffer bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_bits</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;last_output_bits: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_output_bits</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span></div>
 
 
