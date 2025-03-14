@@ -25,8 +25,7 @@ between 1.0 and 2.0.
 #
 # Providing your model architecture is 2.0 compatible (`next section
 # <plot_1_upgrading_to_2.0.html#models-architecture-differences>`__ lists differences), upgrading to
-# 2.0 is limited to moving from a `cnn2snn.quantize
-# <../../api_reference/cnn2snn_apis.html#cnn2snn.quantize>`__ call to a `quantizeml.models.quantize
+# 2.0 is limited to moving from a `cnn2snn.quantize` call to a `quantizeml.models.quantize
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ call. The code snippets
 # below show the two different calls.
 #
@@ -84,9 +83,7 @@ akida_model_2_0.summary()
 #
 # In Akida 1.0, a Keras `SeparableConv2D
 # <https://www.tensorflow.org/api_docs/python/tf/keras/layers/SeparableConv2D>`__ used to be
-# quantized as a `QuantizedSeparableConv2D
-# <../../api_reference/cnn2snn_apis.html#cnn2snn.QuantizedSeparableConv2D>`__ and converted to an
-# Akida `SeparableConvolutional
+# quantized as a `QuantizedSeparableConv2D` and converted to an Akida `SeparableConvolutional
 # <../../api_reference/akida_apis.html#akida.SeparableConvolutional>`__ layer. These 3 layers each
 # perform a "fused" operation where the depthwise and pointwise operations are grouped together in a
 # single layer.
