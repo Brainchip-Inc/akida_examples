@@ -15,26 +15,23 @@ Akida runtime API
         :members:
         :inherited-members:
 
-    Layer
-    =====
+    Akida layers
+    ============
 
-    Layer
-    -----
+    Layer API
+    ---------
     .. autoclass:: Layer
         :members:
-
-    Mapping
-    -------
     .. autoclass:: akida.Layer.Mapping
         :members:
 
-    Akida layers
-    ============
+    Common layer
+    ------------
     .. autoclass:: InputData
         :members:
 
     Akida V1 layers
-    ===============
+    ---------------
     .. autoclass:: InputConvolutional
         :members:
     .. autoclass:: FullyConnected
@@ -45,7 +42,7 @@ Akida runtime API
         :members:
 
     Akida V2 layers
-    ===============
+    ---------------
     .. autoclass:: InputConv2D
         :members:
     .. autoclass:: Stem
