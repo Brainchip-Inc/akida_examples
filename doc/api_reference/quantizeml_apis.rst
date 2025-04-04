@@ -17,18 +17,6 @@ QuantizeML API
     -----------
     .. autoclass:: quantizeml.layers.QuantizedReLU
 
-    Attention
-    ---------
-    .. autoclass:: quantizeml.layers.Attention
-    .. autoclass:: quantizeml.layers.QuantizedAttention
-    .. autofunction:: quantizeml.layers.string_to_softmax
-
-    Normalization
-    -------------
-    .. autoclass:: quantizeml.layers.QuantizedBatchNormalization
-    .. autoclass:: quantizeml.layers.LayerMadNormalization
-    .. autoclass:: quantizeml.layers.QuantizedLayerNormalization
-
     Convolution
     -----------
     .. autoclass:: quantizeml.layers.PaddedConv2D
@@ -59,21 +47,6 @@ QuantizeML API
     -------
     .. autoclass:: quantizeml.layers.QuantizedMaxPool2D
     .. autoclass:: quantizeml.layers.QuantizedGlobalAveragePooling2D
-
-    Shiftmax
-    --------
-    .. autoclass:: quantizeml.layers.Shiftmax
-    .. autoclass:: quantizeml.layers.QuantizedShiftmax
-    .. autofunction:: quantizeml.layers.shiftmax
-
-    Transformers
-    ------------
-    .. autoclass:: quantizeml.layers.ClassToken
-    .. autoclass:: quantizeml.layers.QuantizedClassToken
-    .. autoclass:: quantizeml.layers.AddPositionEmbs
-    .. autoclass:: quantizeml.layers.QuantizedAddPositionEmbs
-    .. autoclass:: quantizeml.layers.ExtractToken
-    .. autoclass:: quantizeml.layers.QuantizedExtractToken
 
     Rescaling
     ---------

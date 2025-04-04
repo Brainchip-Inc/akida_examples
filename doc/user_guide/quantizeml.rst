@@ -6,9 +6,8 @@ Overview
 --------
 
 QuantizeML package provides base layers and quantization tools for deep-learning models. It allows
-the quantization of CNN and Vision Transformer models using low-bitwidth weights and outputs. Once
-quantized with the provided tools, CNN2SNN toolkit will be able to convert the model and execute it
-with Akida runtime.
+the quantization of CNN models using low-bitwidth weights and outputs. Once quantized with the
+provided tools, CNN2SNN toolkit will be able to convert the model and execute it with Akida runtime.
 
 The FixedPoint representation
 -----------------------------
@@ -151,7 +150,7 @@ Direct quantization of a standard Keras model (also called Post Training Quantiz
 generally introduces a drop in performance. This drop is usually small for 8-bit or even 4-bit
 quantization of simple models, but it can be very significant for low quantization bitwidth and
 complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
-or `transformers <../api_reference/akida_models_apis.html#transformers>`_ architectures).
+architecture).
 
 If the quantized model offers acceptable performance, it can be directly converted into an Akida
 model (see the `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
@@ -299,30 +298,13 @@ layers for most part and custom QuantizeML layers for some of them:
     - `SeparableConv2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedSeparableConv2D>`__
     - `Dense <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDense>`__
 
-- Transformers
-    - `Attention <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAttention>`__
-      (custom QuantizeML layer)
-    - `ClassToken <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedClassToken>`__
-      (custom QuantizeML layer)
-    - `AddPositionEmbs <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAddPositionEmbs>`__
-      (custom QuantizeML layer)
-    - `ExtractToken <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedExtractToken>`__
-      (custom QuantizeML layer)
-
 - Skip connections
     - `Add <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedAdd>`__
     - `Concatenate <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedConcatenate>`__
 
-- Normalization
-    - `BatchNormalization <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedBatchNormalization>`__
-    - `LayerMadNormalization <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedLayerNormalization>`__
-      (custom QuantizeML layer)
-
 - Activations
     - `ReLU <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU>`__
       (both unbounded and with a max value)
-    - `Shiftmax <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedShiftmax>`__
-      (custom QuantizeML layer)
 
 - Pooling
     - `MaxPool2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedMaxPool2D>`__

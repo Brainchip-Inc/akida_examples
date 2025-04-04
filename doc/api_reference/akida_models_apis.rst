@@ -14,12 +14,6 @@ Akida models API
     .. autofunction:: akida_models.layer_blocks.separable_conv_block
     .. autofunction:: akida_models.layer_blocks.dense_block
 
-    Transformers blocks
-    -------------------
-    .. autofunction:: akida_models.layer_blocks.mlp_block
-    .. autofunction:: akida_models.layer_blocks.multi_head_attention
-    .. autofunction:: akida_models.layer_blocks.transformer_block
-
     Transposed blocks
     -----------------
     .. autofunction:: akida_models.layer_blocks.conv_transpose_block
@@ -49,7 +43,6 @@ Akida models API
     ======================
 
     .. autoclass:: akida_models.distiller.Distiller
-    .. autoclass:: akida_models.distiller.DeitDistiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
     MACS
@@ -230,28 +223,3 @@ Akida models API
     ---------
     .. autofunction:: akida_models.akida_unet_portrait128
     .. autofunction:: akida_models.akida_unet_portrait128_pretrained
-
-    Transformers
-    ------------
-
-    ViT
-    ~~~
-    .. autofunction:: akida_models.vit_imagenet
-    .. autofunction:: akida_models.vit_ti16
-    .. autofunction:: akida_models.bc_vit_ti16
-    .. autofunction:: akida_models.bc_vit_ti16_imagenet_pretrained
-    .. autofunction:: akida_models.vit_s16
-    .. autofunction:: akida_models.vit_s32
-    .. autofunction:: akida_models.vit_b16
-    .. autofunction:: akida_models.vit_b32
-    .. autofunction:: akida_models.vit_l16
-    .. autofunction:: akida_models.vit_l32
-
-    DeiT
-    ~~~~
-    .. autofunction:: akida_models.deit_imagenet
-    .. autofunction:: akida_models.deit_ti16
-    .. autofunction:: akida_models.bc_deit_ti16
-    .. autofunction:: akida_models.bc_deit_dist_ti16_imagenet_pretrained
-    .. autofunction:: akida_models.deit_s16
-    .. autofunction:: akida_models.deit_b16

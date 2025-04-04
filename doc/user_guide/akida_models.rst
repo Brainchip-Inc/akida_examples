@@ -6,7 +6,7 @@ Overview
 --------
 
 Brainchip Akida Models package is a model zoo that offers a set of pre-built akida compatible
-models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training scripts.
+models (e.g MobileNet, AkidaNet), pretrained weights for those models and training scripts.
 See the `model zoo API reference <../api_reference/akida_models_apis.html#model-zoo>`_ for a
 complete list of the available models. The performance of all models from the zoo are reported for
 both Akida 1.0 and Akida 2.0 in the `model zoo performance page <../model_zoo_performance.html>`__.
@@ -86,11 +86,6 @@ Current available models for creation are:
  * centernet
  * gxnor_mnist
  * akida_unet_portrait128
- * vit_ti16
- * bc_vit_ti16
- * deit_ti16
- * bc_deit_ti16
- * vit_urbansound
 
 Command-line interface for model training
 -----------------------------------------
@@ -286,8 +281,6 @@ The layer block functions provided are:
 * `separable_conv_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.separable_conv_block>`__
 * `dense_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__
 * `mlp_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.mlp_block>`__
-* `multi_head_attention <../api_reference/akida_models_apis.html#akida_models.layer_blocks.multi_head_attention>`__
-* `transformer_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.transformer_block>`__
 * `conv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_transpose_block>`__
 * `sepconv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
 * `yolo_head_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.yolo_head_block>`__

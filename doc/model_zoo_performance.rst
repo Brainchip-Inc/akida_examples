@@ -2,7 +2,7 @@ Model zoo performance
 =====================
 
 | The Brainchip `akida_models <https://pypi.org/project/akida-models>`__ package offers a set of pre-built
-  akida compatible models (e.g MobileNet, AkidaNet, ViT), pretrained weights for those models and training
+  akida compatible models (e.g MobileNet, AkidaNet), pretrained weights for those models and training
   scripts. Please refer to the `model zoo API reference <./api_reference/akida_models_apis.html#model-zoo>`__
   for a complete list of the available models.
 
@@ -486,27 +486,6 @@ CNNs
 | GXNOR            | 28         | MNIST              | 1.6M    | 4            | 98.81%   | |gx2_dl|         |
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 
-Transformers
-++++++++++++
-
-.. |vit_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/vit/bc_vit_ti16_224_i8_w8_a8.h5
-
-.. |deitd_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/deit/bc_deit_dist_ti16_224_i8_w8_a8.h5
-
-+--------------+------------+----------+---------+--------------+-----------------+------------+
-| Architecture | Resolution | Dataset  | #Params | Quantization | Accuracy        | Download   |
-+==============+============+==========+=========+==============+=================+============+
-| ViT          | 224        | ImageNet | 5.8M    | 8            | 73.79% [#fn-2]_ | |vit_dl|   |
-+--------------+------------+----------+---------+--------------+-----------------+------------+
-| DeiT-dist    | 224        | ImageNet | 6.0M    | 8            | 74.34% [#fn-2]_ | |deitd_dl| |
-+--------------+------------+----------+---------+--------------+-----------------+------------+
-
-.. [#fn-2] PTQ accuracy boosted with 1 epoch of QAT.
-
 Object detection
 """"""""""""""""
 
@@ -627,23 +606,6 @@ Keyword spotting
 |              |                       |         |              |                |            |
 |              |                       |         | 4 + edge     | 90.61%         | |kws4e_dl| |
 +--------------+-----------------------+---------+--------------+----------------+------------+
-
-
-Classification
-""""""""""""""
-
-.. |audio_vit_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/audio_vit/bc_vit_urbansound_i8_w8_a8.h5
-
-+---------------+------------+--------------+---------+--------------+-----------------+----------------+
-| Architecture  | Resolution | Dataset      | #Params | Quantization | Accuracy        | Download       |
-+===============+============+==============+=========+==============+=================+================+
-| ViT (1 block) | 224        | Urbansound8k | 539.9K  | 8            | 97.73% [#fn-6]_ | |audio_vit_dl| |
-+---------------+------------+--------------+---------+--------------+-----------------+----------------+
-
-.. [#fn-6] PTQ accuracy boosted with 5 epochs QAT.
-
 
 |pointcloud_icon_ref| Point cloud
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

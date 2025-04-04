@@ -98,21 +98,13 @@ Akida 2.0 layers
 
 - `InputData <../api_reference/akida_apis.html#akida.InputData>`__
 - `InputConv2D <../api_reference/akida_apis.html#akida.InputConv2D>`__
-- `Stem <../api_reference/akida_apis.html#akida.Stem>`__
 - `Conv2D <../api_reference/akida_apis.html#akida.Conv2D>`__
 - `Conv2DTranspose <../api_reference/akida_apis.html#akida.Conv2DTranspose>`__
 - `Dense1D <../api_reference/akida_apis.html#akida.Dense1D>`__
-- `Dense2D <../api_reference/akida_apis.html#akida.Dense2D>`__
 - `DepthwiseConv2D <../api_reference/akida_apis.html#akida.DepthwiseConv2D>`__
 - `DepthwiseConv2DTranspose <../api_reference/akida_apis.html#akida.DepthwiseConv2DTranspose>`__
-- `Attention <../api_reference/akida_apis.html#akida.Attention>`__
-- `VitEncoderBlock <../api_reference/akida_apis.html#akida.VitEncoderBlock>`__
 - `Add <../api_reference/akida_apis.html#akida.Add>`__
 - `Concatenate <../api_reference/akida_apis.html#akida.Concatenate>`__
-- `ExtractToken <../api_reference/akida_apis.html#akida.ExtractToken>`__
-- `BatchNormalization <../api_reference/akida_apis.html#akida.BatchNormalization>`__
-- `MadNorm <../api_reference/akida_apis.html#akida.MadNorm>`__
-- `Shiftmax <../api_reference/akida_apis.html#akida.Shiftmax>`__
 - `Dequantizer <../api_reference/akida_apis.html#akida.Dequantizer>`__
 
 Model Hardware Mapping

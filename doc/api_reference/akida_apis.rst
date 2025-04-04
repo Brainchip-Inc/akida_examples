@@ -45,35 +45,19 @@ Akida runtime API
     ---------------
     .. autoclass:: InputConv2D
         :members:
-    .. autoclass:: Stem
-        :members:
     .. autoclass:: Conv2D
         :members:
     .. autoclass:: Conv2DTranspose
         :members:
     .. autoclass:: Dense1D
         :members:
-    .. autoclass:: Dense2D
-        :members:
     .. autoclass:: DepthwiseConv2D
         :members:
     .. autoclass:: DepthwiseConv2DTranspose
         :members:
-    .. autoclass:: Attention
-        :members:
-    .. autoclass:: VitEncoderBlock
-        :members:
     .. autoclass:: Add
         :members:
     .. autoclass:: Concatenate
-        :members:
-    .. autoclass:: ExtractToken
-        :members:
-    .. autoclass:: BatchNormalization
-        :members:
-    .. autoclass:: MadNorm
-        :members:
-    .. autoclass:: Shiftmax
         :members:
     .. autoclass:: Dequantizer
         :members:
