@@ -439,6 +439,11 @@ displayed using the `print_metric_table
 A `batch_size` parameter is present in the quantization error functions and can be used to better
 refine the computed error by averaging error on more data.
 
+It is also possible to compute weight quantization error (model or layer wise) using the
+`measure_weight_quantization_error
+<../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_weight_quantization_error>`__
+helper.
+
 Metrics
 ~~~~~~~~~~~~
 

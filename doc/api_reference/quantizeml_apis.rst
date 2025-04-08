@@ -168,6 +168,7 @@ QuantizeML API
     ------------------
     .. autofunction:: quantizeml.analysis.measure_layer_quantization_error
     .. autofunction:: quantizeml.analysis.measure_cumulative_quantization_error
+    .. autofunction:: quantizeml.analysis.measure_weight_quantization_error
 
     Metrics
     -------
