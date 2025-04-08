@@ -69,6 +69,10 @@ Akida runtime API
     ---------
     .. autoclass:: LayerType
 
+    ActivationType
+    --------------
+    .. autoclass:: ActivationType
+
     Padding
     -------
     .. autoclass:: Padding
@@ -153,6 +157,8 @@ Akida runtime API
     .. autoclass:: akida.NP.Info
         :members:
     .. autoclass:: akida.NP.Ident
+        :members:
+    .. autoclass:: akida.NP.NpSpace
         :members:
     .. autoclass:: akida.NP.Type
     .. autoclass:: akida.NP.Mapping
