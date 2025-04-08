@@ -88,20 +88,9 @@ QuantizeML API
     Models
     ======
 
-    Transforms
-    ----------
-    .. autofunction:: quantizeml.models.transforms.align_rescaling
-    .. autofunction:: quantizeml.models.transforms.invert_batchnorm_pooling
-    .. autofunction:: quantizeml.models.transforms.fold_batchnorms
-    .. autofunction:: quantizeml.models.transforms.insert_layer
-    .. autofunction:: quantizeml.models.transforms.insert_rescaling
-    .. autofunction:: quantizeml.models.transforms.invert_relu_maxpool
-    .. autofunction:: quantizeml.models.transforms.remove_zeropadding2d
-    .. autofunction:: quantizeml.models.transforms.replace_lambda
-    .. autofunction:: quantizeml.models.transforms.sanitize
-
     Quantization
     ------------
+    .. autofunction:: quantizeml.models.transforms.sanitize
     .. autofunction:: quantizeml.models.quantize
     .. autofunction:: quantizeml.models.dump_config
     .. autofunction:: quantizeml.models.record_quantization_variables
