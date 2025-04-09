@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -559,6 +561,8 @@
 <span class="kn">from</span> <span class="nn">quantizeml.onnx_support.quantization.transforms</span> <span class="kn">import</span> <span class="n">sanitize</span>
 <span class="kn">from</span> <span class="nn">quantizeml.onnx_support.graph_tools</span> <span class="kn">import</span> <span class="n">value_info_to_tensor_shape</span>
 <span class="kn">from</span> <span class="nn">quantizeml.random</span> <span class="kn">import</span> <span class="n">generate_np_random_samples</span>
+<span class="kn">from</span> <span class="nn">quantizeml.models.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
+<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span>
 
 
 <div class="viewcode-block" id="display_sparsity">
@@ -689,18 +693,24 @@
 
     <span class="n">new_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sparsity&quot;</span><span class="p">)</span>
 
-    <span class="n">all_outputs</span> <span class="o">=</span> <span class="n">new_model</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
-
-    <span class="c1"># If there is only one tensor in `target_layers`, wrap `all_outputs` in a list</span>
-    <span class="c1"># to ensure `all_outputs` is always a list</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">all_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_outputs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">)):</span>
+        <span class="n">all_outputs</span> <span class="o">=</span> <span class="n">new_model</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">new_model</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
+                <span class="n">all_outputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">all_outputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">output</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">all_outputs</span> <span class="o">=</span> <span class="n">new_model</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="c1"># If there is only one tensor in `target_layers`, wrap `all_outputs` in a list</span>
+        <span class="c1"># to ensure `all_outputs` is always a list</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">all_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_outputs</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">out</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">target_layers</span><span class="p">,</span> <span class="n">all_outputs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
             <span class="n">results</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">out</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># out is a FixedPoint or QTensor</span>
             <span class="n">results</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
     <span class="k">return</span> <span class="n">results</span>
 
 

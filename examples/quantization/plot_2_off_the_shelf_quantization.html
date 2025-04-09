@@ -171,6 +171,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -206,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -253,7 +255,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -424,6 +425,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -1929,13 +1931,168 @@ about quantization parameters.</p>
 Quantized model accuracy: 10/10.
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Once the model is quantized, the <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">convert</a>
-function must be used to retrieve a model in Akida format ready for inference. Please
-refer to the <a class="reference external" href="../general/plot_8_global_pytorch_workflow.html">PyTorch to Akida workflow</a> for further details.</p>
+</section>
+<section id="convert-to-akida">
+<h2>5. Convert to Akida<a class="headerlink" href="#convert-to-akida" title="Link to this heading"></a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+
+<span class="c1"># Convert the model</span>
+<span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 11.793 seconds)</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>                 Model Summary
+________________________________________________
+Input shape    Output shape  Sequences  Layers
+================================================
+[224, 224, 3]  [1, 1, 1001]  1          64
+________________________________________________
+
+________________________________________________________________________________________________________
+Layer (type)                                                         Output shape    Kernel shape
+
+============= SW//mobilenet_v2/conv_stem/first_conv/convolution/Conv-dequantizer (Software) ============
+
+/mobilenet_v2/conv_stem/first_conv/convolution/Conv (InputConv2D)    [112, 112, 32]  (3, 3, 3, 32)
+________________________________________________________________________________________________________
+/mobilenet_v2/conv_stem/conv_3x3/convolution/Conv (DepthwiseConv2D)  [112, 112, 32]  (3, 3, 32, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/conv_stem/reduce_1x1/convolution/Conv (Conv2D)         [112, 112, 16]  (1, 1, 32, 16)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.0/expand_1x1/convolution/Conv (Conv2D)           [112, 112, 96]  (1, 1, 16, 96)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.0/conv_3x3/convolution/Conv (DepthwiseConv2D)    [56, 56, 96]    (3, 3, 96, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.0/reduce_1x1/convolution/Conv (Conv2D)           [56, 56, 24]    (1, 1, 96, 24)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.1/expand_1x1/convolution/Conv (Conv2D)           [56, 56, 144]   (1, 1, 24, 144)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.1/conv_3x3/convolution/Conv (DepthwiseConv2D)    [56, 56, 144]   (3, 3, 144, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.1/reduce_1x1/convolution/Conv (Conv2D)           [56, 56, 24]    (1, 1, 144, 24)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.1/Add (Add)                                      [56, 56, 24]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.2/expand_1x1/convolution/Conv (Conv2D)           [56, 56, 144]   (1, 1, 24, 144)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.2/conv_3x3/convolution/Conv (DepthwiseConv2D)    [28, 28, 144]   (3, 3, 144, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.2/reduce_1x1/convolution/Conv (Conv2D)           [28, 28, 32]    (1, 1, 144, 32)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.3/expand_1x1/convolution/Conv (Conv2D)           [28, 28, 192]   (1, 1, 32, 192)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.3/conv_3x3/convolution/Conv (DepthwiseConv2D)    [28, 28, 192]   (3, 3, 192, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.3/reduce_1x1/convolution/Conv (Conv2D)           [28, 28, 32]    (1, 1, 192, 32)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.3/Add (Add)                                      [28, 28, 32]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.4/expand_1x1/convolution/Conv (Conv2D)           [28, 28, 192]   (1, 1, 32, 192)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.4/conv_3x3/convolution/Conv (DepthwiseConv2D)    [28, 28, 192]   (3, 3, 192, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.4/reduce_1x1/convolution/Conv (Conv2D)           [28, 28, 32]    (1, 1, 192, 32)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.4/Add (Add)                                      [28, 28, 32]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.5/expand_1x1/convolution/Conv (Conv2D)           [28, 28, 192]   (1, 1, 32, 192)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.5/conv_3x3/convolution/Conv (DepthwiseConv2D)    [14, 14, 192]   (3, 3, 192, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.5/reduce_1x1/convolution/Conv (Conv2D)           [14, 14, 64]    (1, 1, 192, 64)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.6/expand_1x1/convolution/Conv (Conv2D)           [14, 14, 384]   (1, 1, 64, 384)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.6/conv_3x3/convolution/Conv (DepthwiseConv2D)    [14, 14, 384]   (3, 3, 384, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.6/reduce_1x1/convolution/Conv (Conv2D)           [14, 14, 64]    (1, 1, 384, 64)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.6/Add (Add)                                      [14, 14, 64]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.7/expand_1x1/convolution/Conv (Conv2D)           [14, 14, 384]   (1, 1, 64, 384)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.7/conv_3x3/convolution/Conv (DepthwiseConv2D)    [14, 14, 384]   (3, 3, 384, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.7/reduce_1x1/convolution/Conv (Conv2D)           [14, 14, 64]    (1, 1, 384, 64)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.7/Add (Add)                                      [14, 14, 64]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.8/expand_1x1/convolution/Conv (Conv2D)           [14, 14, 384]   (1, 1, 64, 384)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.8/conv_3x3/convolution/Conv (DepthwiseConv2D)    [14, 14, 384]   (3, 3, 384, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.8/reduce_1x1/convolution/Conv (Conv2D)           [14, 14, 64]    (1, 1, 384, 64)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.8/Add (Add)                                      [14, 14, 64]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.9/expand_1x1/convolution/Conv (Conv2D)           [14, 14, 384]   (1, 1, 64, 384)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.9/conv_3x3/convolution/Conv (DepthwiseConv2D)    [14, 14, 384]   (3, 3, 384, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.9/reduce_1x1/convolution/Conv (Conv2D)           [14, 14, 96]    (1, 1, 384, 96)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.10/expand_1x1/convolution/Conv (Conv2D)          [14, 14, 576]   (1, 1, 96, 576)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.10/conv_3x3/convolution/Conv (DepthwiseConv2D)   [14, 14, 576]   (3, 3, 576, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.10/reduce_1x1/convolution/Conv (Conv2D)          [14, 14, 96]    (1, 1, 576, 96)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.10/Add (Add)                                     [14, 14, 96]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.11/expand_1x1/convolution/Conv (Conv2D)          [14, 14, 576]   (1, 1, 96, 576)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.11/conv_3x3/convolution/Conv (DepthwiseConv2D)   [14, 14, 576]   (3, 3, 576, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.11/reduce_1x1/convolution/Conv (Conv2D)          [14, 14, 96]    (1, 1, 576, 96)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.11/Add (Add)                                     [14, 14, 96]    N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.12/expand_1x1/convolution/Conv (Conv2D)          [14, 14, 576]   (1, 1, 96, 576)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.12/conv_3x3/convolution/Conv (DepthwiseConv2D)   [7, 7, 576]     (3, 3, 576, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.12/reduce_1x1/convolution/Conv (Conv2D)          [7, 7, 160]     (1, 1, 576, 160)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.13/expand_1x1/convolution/Conv (Conv2D)          [7, 7, 960]     (1, 1, 160, 960)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.13/conv_3x3/convolution/Conv (DepthwiseConv2D)   [7, 7, 960]     (3, 3, 960, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.13/reduce_1x1/convolution/Conv (Conv2D)          [7, 7, 160]     (1, 1, 960, 160)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.13/Add (Add)                                     [7, 7, 160]     N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.14/expand_1x1/convolution/Conv (Conv2D)          [7, 7, 960]     (1, 1, 160, 960)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.14/conv_3x3/convolution/Conv (DepthwiseConv2D)   [7, 7, 960]     (3, 3, 960, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.14/reduce_1x1/convolution/Conv (Conv2D)          [7, 7, 160]     (1, 1, 960, 160)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.14/Add (Add)                                     [7, 7, 160]     N/A
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.15/expand_1x1/convolution/Conv (Conv2D)          [7, 7, 960]     (1, 1, 160, 960)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.15/conv_3x3/convolution/Conv (DepthwiseConv2D)   [7, 7, 960]     (3, 3, 960, 1)
+________________________________________________________________________________________________________
+/mobilenet_v2/layer.15/reduce_1x1/convolution/Conv (Conv2D)          [7, 7, 320]     (1, 1, 960, 320)
+________________________________________________________________________________________________________
+/mobilenet_v2/conv_1x1/convolution/Conv (Conv2D)                     [1, 1, 1280]    (1, 1, 320, 1280)
+________________________________________________________________________________________________________
+/classifier/Gemm (Dense1D)                                           [1, 1, 1001]    (1280, 1001)
+________________________________________________________________________________________________________
+dequantizer (Dequantizer)                                            [1, 1, 1001]    N/A
+________________________________________________________________________________________________________
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Evaluate Akida performance using raw data</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_test_raw</span><span class="p">)</span>
+<span class="n">preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Akida model accuracy: </span><span class="si">{</span><span class="nb">int</span><span class="p">((</span><span class="n">preds</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida model accuracy: 10/10.
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 12.289 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-2-off-the-shelf-quantization-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/14135bb429c6b69940b3b3da0b5c2156/plot_2_off_the_shelf_quantization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_2_off_the_shelf_quantization.ipynb</span></code></a></p>

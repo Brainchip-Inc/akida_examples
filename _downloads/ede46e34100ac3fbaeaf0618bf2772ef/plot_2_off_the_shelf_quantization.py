@@ -195,7 +195,18 @@ correctly_classified = evaluate_onnx_model(model_quantized)
 print(f'Quantized model accuracy: {correctly_classified_floating}/{num_images}.')
 
 ######################################################################
-# .. Note:: Once the model is quantized, the `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__
-#    function must be used to retrieve a model in Akida format ready for inference. Please
-#    refer to the `PyTorch to Akida workflow <../general/plot_8_global_pytorch_workflow.html>`__ for further details.
-#
+# 5. Convert to Akida
+# ~~~~~~~~~~~~~~~~~~~
+
+from cnn2snn import convert
+
+# Convert the model
+model_akida = convert(model_quantized)
+model_akida.summary()
+
+######################################################################
+
+# Evaluate Akida performance using raw data
+out = model_akida.forward(x_test_raw)
+preds = np.squeeze(np.argmax(out, -1))
+print(f'Akida model accuracy: {int((preds == labels_test).sum())}/{num_images}.')

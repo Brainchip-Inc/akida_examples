@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -543,7 +545,7 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OnnxLayer&quot;</span><span class="p">,</span> <span class="s2">&quot;DOMAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;VERSION&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OnnxLayer&quot;</span><span class="p">,</span> <span class="s2">&quot;BRN_OPSET&quot;</span><span class="p">,</span> <span class="s2">&quot;ONNX_OPSET&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
@@ -554,12 +556,13 @@
 <span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">make_function</span><span class="p">,</span> <span class="n">make_node</span><span class="p">,</span> <span class="n">make_opsetid</span><span class="p">,</span> <span class="n">make_tensor_value_info</span><span class="p">,</span>
                          <span class="n">np_dtype_to_tensor_dtype</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">onnx.defs</span> <span class="kn">import</span> <span class="n">onnx_opset_version</span>
+<span class="kn">from</span> <span class="nn">onnxscript.values</span> <span class="kn">import</span> <span class="n">Opset</span>
 
 <span class="kn">from</span> <span class="nn">.register</span> <span class="kn">import</span> <span class="n">register_new_subgraph</span><span class="p">,</span> <span class="n">infer_function_parameters</span>
 <span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">to_field</span><span class="p">,</span> <span class="n">value_info_to_tensor_shape</span><span class="p">,</span> <span class="n">array_to_tp</span>
 
-<span class="n">DOMAIN</span> <span class="o">=</span> <span class="s2">&quot;com.brainchip&quot;</span>
-<span class="n">VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">BRN_OPSET</span> <span class="o">=</span> <span class="n">Opset</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="s2">&quot;com.brainchip&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ONNX_OPSET</span> <span class="o">=</span> <span class="n">Opset</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">onnx_opset_version</span><span class="p">())</span>
 
 <span class="c1"># List of quantized layers that requires a power of two scale</span>
 <span class="n">_GLOBAL_REQUIRES_FP_INPUTS</span> <span class="o">=</span> <span class="p">[]</span>
@@ -638,12 +641,9 @@
             <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;MaxPool&quot;</span>
         <span class="k">elif</span> <span class="n">pool_type</span> <span class="o">==</span> <span class="s2">&quot;gap&quot;</span><span class="p">:</span>
             <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;GlobalAvgPool&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">]:</span>
-            <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;ReLU&quot;</span>
-            <span class="c1"># We assume unbounded activation when max_value = 0</span>
-            <span class="n">max_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">max_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;Clipped&quot;</span>
+        <span class="n">activation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">activation</span><span class="p">:</span>
+            <span class="n">op_name</span> <span class="o">+=</span> <span class="p">{</span><span class="s2">&quot;Relu&quot;</span><span class="p">:</span> <span class="s2">&quot;ReLU&quot;</span><span class="p">,</span> <span class="s2">&quot;Clip&quot;</span><span class="p">:</span> <span class="s2">&quot;ReLUClipped&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="s2">&quot;LUT&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]:</span>
             <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;Scaled&quot;</span>
         <span class="k">return</span> <span class="n">op_name</span>
@@ -698,7 +698,8 @@
 <span class="sd">            name (str): the weight to modify</span>
 <span class="sd">            value (np.ndarray): the new value</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Expected </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> is a numpy array.&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_name</span><span class="si">}</span><span class="s2">) does not recognize &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
                              <span class="sa">f</span><span class="s2">&quot;Availables: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -752,13 +753,12 @@
         <span class="k">if</span> <span class="s2">&quot;zero_point&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;zero_point&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">scale_zp_shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__quantize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qlayers</span><span class="p">,</span> <span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__quantize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qlayers</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build weights and compute the output scale</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            qlayers (list of OnnxLayer): the input layers. Input scales and zero points</span>
 <span class="sd">                will be deduced from these.</span>
-<span class="sd">            out_tensor_range (TensorData): the ranges computed by calibration.</span>
 <span class="sd">            force_fp (bool, optional): whether to force output scale as a power-of-two.</span>
 <span class="sd">                Defaults to False.</span>
 
@@ -767,13 +767,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Child must implement this function&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qlayers</span><span class="p">,</span> <span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qlayers</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Quantize the float weights given a set of input scales and zero points.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            qlayers (list of OnnxLayer): the input layers. Input scales and zero points</span>
 <span class="sd">                will be deduced from these.</span>
-<span class="sd">            out_tensor_range (TensorData): the ranges computed by calibration.</span>
 <span class="sd">            force_fp (bool, optional): whether to force output scale as a power-of-two.</span>
 <span class="sd">                Defaults to False.</span>
 <span class="sd">            downscale (bool, optional): whether to apply downscale operation,</span>
@@ -787,9 +786,7 @@
             <span class="n">input_ts</span> <span class="o">=</span> <span class="p">[</span><span class="n">qly</span><span class="o">.</span><span class="n">output</span> <span class="k">for</span> <span class="n">qly</span> <span class="ow">in</span> <span class="n">qlayers</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">*</span><span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="n">downscale</span><span class="p">)</span>
         <span class="c1"># Quantize weights</span>
-        <span class="n">qweights</span><span class="p">,</span> <span class="n">output_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__quantize__</span><span class="p">(</span><span class="o">*</span><span class="n">qlayers</span><span class="p">,</span>
-                                                   <span class="n">out_tensor_range</span><span class="o">=</span><span class="n">out_tensor_range</span><span class="p">,</span>
-                                                   <span class="n">force_fp</span><span class="o">=</span><span class="n">force_fp</span><span class="p">)</span>
+        <span class="n">qweights</span><span class="p">,</span> <span class="n">output_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__quantize__</span><span class="p">(</span><span class="o">*</span><span class="n">qlayers</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="n">force_fp</span><span class="p">)</span>
         <span class="c1"># Save output scale to be recovered for next qlayer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="n">output_scale</span><span class="p">)</span>
         <span class="c1"># Return ONNX node and weights</span>
@@ -815,17 +812,17 @@
         <span class="c1"># to make it available, unless previously registered already</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
         <span class="n">inputs_fn</span><span class="p">,</span> <span class="n">outputs_fn</span><span class="p">,</span> <span class="n">attributes_fn</span> <span class="o">=</span> <span class="n">infer_function_parameters</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
-        <span class="n">func</span> <span class="o">=</span> <span class="n">make_function</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">DOMAIN</span><span class="p">,</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">make_function</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">BRN_OPSET</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span>
                              <span class="n">fname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span>
                              <span class="n">inputs</span><span class="o">=</span><span class="n">inputs_fn</span><span class="p">,</span>
                              <span class="n">outputs</span><span class="o">=</span><span class="n">outputs_fn</span><span class="p">,</span>
                              <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>
-                             <span class="n">opset_imports</span><span class="o">=</span><span class="p">[</span><span class="n">make_opsetid</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">onnx_opset_version</span><span class="p">())],</span>
+                             <span class="n">opset_imports</span><span class="o">=</span><span class="p">[</span><span class="n">make_opsetid</span><span class="p">(</span><span class="n">ONNX_OPSET</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">ONNX_OPSET</span><span class="o">.</span><span class="n">version</span><span class="p">)],</span>
                              <span class="n">attributes</span><span class="o">=</span><span class="n">attributes_fn</span><span class="p">)</span>
         <span class="n">register_new_subgraph</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
 
         <span class="c1"># Return the node with corresponding attributes</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">make_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">DOMAIN</span><span class="p">)</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">make_node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">BRN_OPSET</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
         <span class="n">consume_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">attr</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span> <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">attribute</span><span class="p">]</span>
         <span class="n">node</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">consume_attrs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">node</span></div>

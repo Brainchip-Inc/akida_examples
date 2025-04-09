@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -527,7 +529,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for akida.layers.depthwise_conv2d_transpose</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">)</span>
+<span></span><span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">ActivationType</span>
 
 
 <div class="viewcode-block" id="DepthwiseConv2DTranspose">
@@ -561,8 +563,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        kernel_size (int): Integer representing the spatial dimensions of the depthwise kernel.</span>
-<span class="sd">        activation (bool, optional): enable or disable activation function.</span>
-<span class="sd">            Defaults to True.</span>
+<span class="sd">        activation (:obj:`ActivationType`, optional): activation type.</span>
+<span class="sd">            Defaults to `ActivationType.ReLU`.</span>
 <span class="sd">        output_bits (int, optional): output bitwidth. Defaults to 8.</span>
 <span class="sd">        buffer_bits (int, optional): buffer bitwidth. Defaults to 28.</span>
 <span class="sd">        post_op_buffer_bits (int, optional): internal bitwidth for post operations. Defaults to 32.</span>
@@ -572,7 +574,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">kernel_size</span><span class="p">,</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">activation</span><span class="o">=</span><span class="n">ActivationType</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span>
                  <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                  <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
                  <span class="n">post_op_buffer_bits</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>

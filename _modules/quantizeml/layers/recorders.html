@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -638,7 +640,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                     <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
                                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
-                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+                                    <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">,</span>
+                                    <span class="n">aggregation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableAggregation</span><span class="o">.</span><span class="n">MEAN</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">reset_var</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Reset internal var.&quot;&quot;&quot;</span>
@@ -694,12 +698,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                     <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
                                     <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
-                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+                                    <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">,</span>
+                                    <span class="n">aggregation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableAggregation</span><span class="o">.</span><span class="n">MEAN</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">init_value</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                           <span class="n">validate_shape</span><span class="o">=</span><span class="n">validate_shape</span><span class="p">,</span>
                                           <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s2">&quot;/frac_bits&quot;</span><span class="p">,</span>
-                                          <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">)</span>
+                                          <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">,</span>
+                                          <span class="n">aggregation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableAggregation</span><span class="o">.</span><span class="n">MEAN</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_value_bits</span> <span class="o">=</span> <span class="n">init_value</span><span class="o">.</span><span class="n">value_bits</span>
 

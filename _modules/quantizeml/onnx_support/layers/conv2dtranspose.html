@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -547,59 +549,62 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">AttributeProto</span> <span class="k">as</span> <span class="n">AP</span><span class="p">,</span> <span class="n">TensorProto</span> <span class="k">as</span> <span class="n">TP</span>
+<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">AttributeProto</span> <span class="k">as</span> <span class="n">AP</span><span class="p">,</span> <span class="n">TensorProto</span> <span class="k">as</span> <span class="n">TP</span><span class="p">,</span> <span class="n">NodeProto</span>
 <span class="kn">from</span> <span class="nn">onnx.helper</span> <span class="kn">import</span> <span class="n">make_node</span>
 
 <span class="kn">from</span> <span class="nn">.base_layer</span> <span class="kn">import</span> <span class="n">OnnxLayer</span><span class="p">,</span> <span class="n">register_node_format</span>
 <span class="kn">from</span> <span class="nn">.subgraph_ops</span> <span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span>
-<span class="kn">from</span> <span class="nn">.subgraph_ops.activation</span> <span class="kn">import</span> <span class="n">get_activation_ops</span>
+<span class="kn">from</span> <span class="nn">.subgraph_ops.activation</span> <span class="kn">import</span> <span class="n">get_activation_ops</span><span class="p">,</span> <span class="n">get_lut_ops</span>
 <span class="kn">from</span> <span class="nn">.compute_shapes</span> <span class="kn">import</span> <span class="n">compute_onnx_conv_output</span>
-<span class="kn">from</span> <span class="nn">.layer_compatibility</span> <span class="kn">import</span> <span class="n">check_clip_relu_compatibility</span><span class="p">,</span> <span class="n">check_conv_depthwise_compatibility</span>
-<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">to_field</span><span class="p">,</span>
-                           <span class="n">check_node_attributes</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..quantization.weights</span> <span class="kn">import</span> <span class="n">quantize_weights</span><span class="p">,</span> <span class="n">quantize_vector</span><span class="p">,</span> <span class="n">align_to</span>
-<span class="kn">from</span> <span class="nn">..quantization.outputs</span> <span class="kn">import</span> <span class="n">downscale</span>
+<span class="kn">from</span> <span class="nn">.layer_compatibility</span> <span class="kn">import</span> <span class="n">check_conv_depthwise_compatibility</span>
+<span class="kn">from</span> <span class="nn">.set_weights</span> <span class="kn">import</span> <span class="n">set_weights_on_qnode</span><span class="p">,</span> <span class="n">set_max_value_on_qnode</span><span class="p">,</span> <span class="n">set_range_max_on_qnode</span>
+<span class="kn">from</span> <span class="nn">..graph_tools</span> <span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_activation</span><span class="p">,</span> <span class="n">to_field</span><span class="p">,</span> <span class="n">check_node_attributes</span>
+<span class="kn">from</span> <span class="nn">..quantization.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">quantize_to_qfloat</span><span class="p">,</span> <span class="n">aligned_quantize</span><span class="p">,</span> <span class="n">downscale</span><span class="p">,</span>
+                                 <span class="n">align_to</span><span class="p">,</span> <span class="n">compute_lut_values</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">get_qconv_transpose</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_qconv_transpose</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
     <span class="n">conv_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">conv_node</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s1">&#39;ConvTranspose&#39;</span>
 
     <span class="c1"># Check supported attributes</span>
-    <span class="n">weights</span> <span class="o">=</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">conv_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
-    <span class="n">valid_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;auto_pad&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NOTSET&#39;</span><span class="p">],</span> <span class="s1">&#39;dilations&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]}</span>
+    <span class="n">valid_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;auto_pad&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;NOTSET&#39;</span><span class="p">],</span> <span class="s1">&#39;dilations&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]}</span>
     <span class="n">check_node_attributes</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="n">valid_attr</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;output_padding&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span>
             <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;output_shape&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported attributes output_padding or output_shape&quot;</span><span class="p">)</span>
-    <span class="n">act_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Relu&#39;</span><span class="p">)</span>
-    <span class="n">clip_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;Clip&#39;</span><span class="p">)</span>
+    <span class="n">act_node</span> <span class="o">=</span> <span class="n">get_activation</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">NodeProto</span><span class="p">()</span>
 
     <span class="c1"># Retrieve attributes</span>
     <span class="n">strides</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">group</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">pads</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;pads&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-    <span class="n">activation</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">act_node</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">clip_node</span><span class="p">)</span>
+    <span class="n">activation</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">act_node</span><span class="p">,</span> <span class="s1">&#39;main_op_type&#39;</span><span class="p">,</span> <span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">act_node</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">qconv</span> <span class="o">=</span> <span class="n">QuantizedConv2DTranspose</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
                                          <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                                          <span class="n">name</span><span class="o">=</span><span class="n">conv_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                                         <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
+                                         <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+                                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># need to check supported attributes</span>
         <span class="n">check_conv_depthwise_compatibility</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
         <span class="n">qconv</span> <span class="o">=</span> <span class="n">QuantizedDepthwise2DTranspose</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
                                               <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
                                               <span class="n">name</span><span class="o">=</span><span class="n">conv_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                                              <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
+                                              <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+                                              <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
     <span class="c1"># Sets the weights to configure the operation chain</span>
-    <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
-    <span class="c1"># If third attribute is there and it is not empty, then there is a bias</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_node</span><span class="o">.</span><span class="n">input</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">conv_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">conv_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">clip_node</span><span class="p">:</span>
-        <span class="n">check_clip_relu_compatibility</span><span class="p">(</span><span class="n">clip_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">clip_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
+    <span class="n">set_weights_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">conv_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;Clip&quot;</span><span class="p">:</span>
+        <span class="n">set_max_value_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">act_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+
+    <span class="c1"># Set calibration ranges</span>
+    <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="k">if</span> <span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;activation&quot;</span><span class="p">:</span>
+        <span class="n">act_range_max</span> <span class="o">=</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">act_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">act_range_max</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;act_range_max&quot;</span><span class="p">,</span> <span class="n">reduce</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">qconv</span>
 
 
@@ -611,18 +616,17 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        strides (list of int, optional): the convolutional strides. Defaults to [1, 1].</span>
-<span class="sd">        activation (bool, optional): whether to apply relu operation. Defaults to False.</span>
+<span class="sd">        activation (str, optional): activation type to be applied. Defaults to &quot;&quot;.</span>
+<span class="sd">        alpha (float, optional): negative slope coefficient used by some activation</span>
+<span class="sd">            (e.g. LeakyRelu). Defaults to 0.01.</span>
 <span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-                 <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;QuantizedConv2DTranspose&quot;</span><span class="p">,</span>
                          <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
                          <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
         <span class="c1"># Save properties need to serialize operation name</span>
@@ -633,6 +637,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;kernel&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;bias&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;act_range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">input_ts</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span>
@@ -644,7 +650,7 @@
         <span class="n">output_ts</span> <span class="o">=</span> <span class="n">TENSOR_SHAPE</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">output_ts</span>
 
-    <span class="k">def</span> <span class="nf">__quantize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qinput</span><span class="p">,</span> <span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__quantize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qinput</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">i_scale</span> <span class="o">=</span> <span class="n">qinput</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
 
         <span class="c1"># Perform cross-layer equalization, i.e.: rescale weights with input scale.</span>
@@ -652,11 +658,9 @@
         <span class="k">assert</span> <span class="n">i_scale</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="mi">1</span>
         <span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;kernel&quot;</span><span class="p">]</span>
         <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span> <span class="o">/</span> <span class="n">align_to</span><span class="p">(</span><span class="n">i_scale</span><span class="p">,</span> <span class="n">kernel</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="c1"># Quantize and set weights. The quantize weights function assumes the weight</span>
-        <span class="c1"># ordering is (FCHW) like convolution but ConvTranspose weights are (C,F,kH,kW)</span>
-        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">qweights</span><span class="p">,</span> <span class="n">i_scale</span> <span class="o">=</span> <span class="n">quantize_weights</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
-        <span class="n">qweights</span> <span class="o">=</span> <span class="n">qweights</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="c1"># Quantize and set weights over filters (axis=1).</span>
+        <span class="n">qweights</span><span class="p">,</span> <span class="n">i_scale</span> <span class="o">=</span> <span class="n">quantize_to_qfloat</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">qweights</span> <span class="o">=</span> <span class="n">qweights</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
 
         <span class="c1"># Prepare tensors list with unique names</span>
         <span class="n">conv_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -665,20 +669,33 @@
         <span class="n">bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;bias&quot;</span><span class="p">]</span>
         <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;Wi&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qweights</span>
         <span class="k">if</span> <span class="s2">&quot;Biased&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
-            <span class="n">qbias</span> <span class="o">=</span> <span class="n">quantize_vector</span><span class="p">(</span><span class="n">bias</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">)</span>
+            <span class="n">qbias</span> <span class="o">=</span> <span class="n">aligned_quantize</span><span class="p">(</span><span class="n">bias</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">)</span>
             <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qbias</span>
-
-        <span class="c1"># Reshape i_scale to match with channel axis</span>
-        <span class="n">i_scale</span> <span class="o">=</span> <span class="n">align_to</span><span class="p">(</span><span class="n">i_scale</span><span class="p">,</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
 
         <span class="c1"># Quantize max value when there is an activation</span>
         <span class="k">if</span> <span class="s2">&quot;Clipped&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
-            <span class="n">qmax_value</span> <span class="o">=</span> <span class="n">quantize_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;max_value&quot;</span><span class="p">],</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;max_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">qmax_value</span>
+            <span class="n">qmax_value</span> <span class="o">=</span> <span class="n">aligned_quantize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;max_value&quot;</span><span class="p">],</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;max_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">align_to</span><span class="p">(</span><span class="n">qmax_value</span><span class="p">,</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+        <span class="c1"># Quantize an activation via LUT</span>
+        <span class="k">if</span> <span class="s2">&quot;LUT&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
+            <span class="c1"># LUT require a scalar power-of-two as input scale.</span>
+            <span class="c1"># That is why we develop an intermediate downscale</span>
+            <span class="n">range_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;act_range_max&quot;</span><span class="p">]</span>
+            <span class="n">scale</span><span class="p">,</span> <span class="n">s_out</span><span class="p">,</span> <span class="n">i_scale</span> <span class="o">=</span> <span class="n">downscale</span><span class="p">(</span><span class="n">range_max</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+            <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;M_act&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">),</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
+                                 <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;S_act&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">s_out</span><span class="p">,</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">)})</span>
+            <span class="c1"># Compute lut values</span>
+            <span class="n">lut_values</span><span class="p">,</span> <span class="n">i_scale</span> <span class="o">=</span> <span class="n">compute_lut_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">],</span>
+                                                     <span class="n">i_scale</span><span class="p">,</span>
+                                                     <span class="n">alpha</span><span class="o">=</span><span class="n">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">))</span>
+            <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;LUT&quot;</span><span class="p">:</span> <span class="n">lut_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)})</span>
 
         <span class="c1"># Now consider calibrated output range</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">s_out</span><span class="p">,</span> <span class="n">ocalib_scale</span> <span class="o">=</span> <span class="n">downscale</span><span class="p">(</span><span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="n">force_fp</span><span class="p">)</span>
-        <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="n">scale</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">),</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;S_out&quot;</span><span class="p">:</span> <span class="n">s_out</span><span class="p">})</span>
+        <span class="n">range_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;range_max&quot;</span><span class="p">]</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">s_out</span><span class="p">,</span> <span class="n">ocalib_scale</span> <span class="o">=</span> <span class="n">downscale</span><span class="p">(</span><span class="n">range_max</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="n">force_fp</span><span class="p">)</span>
+        <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">),</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
+                             <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;S_out&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">s_out</span><span class="p">,</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">)})</span>
 
         <span class="c1"># Return quantized weights and output scale</span>
         <span class="k">return</span> <span class="n">weights_dict</span><span class="p">,</span> <span class="n">ocalib_scale</span>
@@ -696,6 +713,15 @@
         <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">),</span>
                                    <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">)])</span>
 
+        <span class="c1"># LUT (optional)</span>
+        <span class="k">if</span> <span class="s2">&quot;LUT&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+            <span class="c1"># Intermedial downscale</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Ys&quot;</span><span class="p">,</span> <span class="n">scale_name</span><span class="o">=</span><span class="s2">&quot;ActScale&quot;</span><span class="p">,</span>
+                                       <span class="n">shift_name</span><span class="o">=</span><span class="s2">&quot;ActShift&quot;</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+            <span class="c1"># Main operation</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_lut_ops</span><span class="p">(</span><span class="s2">&quot;Ys&quot;</span><span class="p">,</span> <span class="s2">&quot;Yi&quot;</span><span class="p">)</span>
+
         <span class="c1"># Activation (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;ReLU&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
             <span class="c1"># Replace previous output as relu input</span>
@@ -703,9 +729,7 @@
             <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_activation_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;ReLUClipped&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">)</span>
 
         <span class="c1"># Scale out (with saturation) in float domain</span>
-        <span class="n">shift_nodes</span><span class="p">,</span> <span class="n">shift_t_names</span> <span class="o">=</span> <span class="n">cast_tensors_to</span><span class="p">([</span><span class="s2">&quot;Scale&quot;</span><span class="p">,</span> <span class="s2">&quot;Shift&quot;</span><span class="p">])</span>
-        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">shift_nodes</span>
-        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;Yscaled&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">shift_t_names</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;Yscaled&quot;</span><span class="p">)</span>
         <span class="c1"># Cast output to expect type</span>
         <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;Cast&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Yscaled&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">],</span> <span class="n">to</span><span class="o">=</span><span class="n">TP</span><span class="o">.</span><span class="n">INT8</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">nodes</span></div>
@@ -721,20 +745,14 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        strides (list of int, optional): the convolutional strides. Defaults to [1, 1].</span>
-<span class="sd">        activation (bool, optional): whether to apply relu operation. Defaults to False.</span>
+<span class="sd">        activation (str, optional): activation type to be applied. Defaults to &quot;&quot;.</span>
+<span class="sd">        alpha (float, optional): negative slope coefficient used by some activation</span>
+<span class="sd">            (e.g. LeakyRelu). Defaults to 0.01.</span>
 <span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-                 <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                 <span class="n">activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                 <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
-                         <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
-                         <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span>
-                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span> <span class="n">pads</span><span class="o">=</span><span class="n">pads</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_name</span> <span class="o">=</span> <span class="s2">&quot;QuantizedDepthwise2DTranspose&quot;</span>
 
     <span class="k">def</span> <span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -763,6 +781,15 @@
                                     <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INT</span><span class="p">),</span>
                                     <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">)])</span>
 
+        <span class="c1"># LUT (optional)</span>
+        <span class="k">if</span> <span class="s2">&quot;LUT&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+            <span class="c1"># Intermedial downscale</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Ys&quot;</span><span class="p">,</span> <span class="n">scale_name</span><span class="o">=</span><span class="s2">&quot;ActScale&quot;</span><span class="p">,</span>
+                                       <span class="n">shift_name</span><span class="o">=</span><span class="s2">&quot;ActShift&quot;</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+            <span class="c1"># Main operation</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_lut_ops</span><span class="p">(</span><span class="s2">&quot;Ys&quot;</span><span class="p">,</span> <span class="s2">&quot;Yi&quot;</span><span class="p">)</span>
+
         <span class="c1"># Activation (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;ReLU&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
             <span class="c1"># Replace previous output as relu input</span>
@@ -770,9 +797,7 @@
             <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_activation_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;ReLUClipped&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">)</span>
 
         <span class="c1"># Scale out (with saturation) in float domain</span>
-        <span class="n">shift_nodes</span><span class="p">,</span> <span class="n">shift_t_names</span> <span class="o">=</span> <span class="n">cast_tensors_to</span><span class="p">([</span><span class="s2">&quot;Scale&quot;</span><span class="p">,</span> <span class="s2">&quot;Shift&quot;</span><span class="p">])</span>
-        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">shift_nodes</span>
-        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;Yscaled&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">shift_t_names</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;Yscaled&quot;</span><span class="p">)</span>
         <span class="c1"># Cast output to expect type</span>
         <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;Cast&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Yscaled&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">],</span> <span class="n">to</span><span class="o">=</span><span class="n">TP</span><span class="o">.</span><span class="n">INT8</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">nodes</span></div>

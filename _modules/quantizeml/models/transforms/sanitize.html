@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -550,9 +552,71 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sanitize&#39;</span><span class="p">]</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="p">(</span><span class="n">align_rescaling</span><span class="p">,</span> <span class="n">invert_batchnorm_pooling</span><span class="p">,</span> <span class="n">fold_batchnorms</span><span class="p">,</span> <span class="n">remove_zeropadding2d</span><span class="p">,</span>
-               <span class="n">invert_relu_maxpool</span><span class="p">,</span> <span class="n">replace_lambda</span><span class="p">,</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">,</span> <span class="n">remove_reshape</span><span class="p">,</span>
-               <span class="n">fold_activations_in_add</span><span class="p">,</span> <span class="n">split_layers_with_relu</span><span class="p">,</span> <span class="n">split_concat_layers</span><span class="p">,</span>
-               <span class="n">convert_even_to_odd_kernel</span><span class="p">)</span>
+               <span class="n">invert_activation_maxpool</span><span class="p">,</span> <span class="n">replace_lambda</span><span class="p">,</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">,</span> <span class="n">remove_reshape</span><span class="p">,</span>
+               <span class="n">fold_activations_in_add</span><span class="p">,</span> <span class="n">split_layers_with_activations</span><span class="p">,</span> <span class="n">split_concat_layers</span><span class="p">,</span>
+               <span class="n">convert_even_to_odd_kernel</span><span class="p">,</span> <span class="n">replace_activations</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sanitize_base</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Perform standard sanitizing steps.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the input model</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: the sanitized model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Splits layers with activation into two separate layers</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">split_layers_with_activations</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Replace lambda layers</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">replace_lambda</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Replace custom activations</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">replace_activations</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Replace Conv2D layers that behave as DepthwiseConv2D to the latest.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Multiple Reshape/Flatten removal transformation</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">remove_reshape</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Align Rescaling (if needed)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">align_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Invert ReLU &lt;-&gt; MaxPool layers so that MaxPool comes first</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">invert_activation_maxpool</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Invert BN &lt;-&gt; Pooling layers and fold BN into their preceding layers</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fold_batchnorms</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Fold ReLUs with no max_value that comes after an Add layer</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fold_activations_in_add</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Remove unsupported ZeroPadding2D layers and replace them with &#39;same&#39; padding convolution when</span>
+    <span class="c1"># possible</span>
+    <span class="k">return</span> <span class="n">remove_zeropadding2d</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sanitize_for_hardware</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Perform sanitizing steps targetting hardware compatiblity.</span>
+
+<span class="sd">    Akida hardware comes with some limitations that can be avoided by smart transformations on the</span>
+<span class="sd">    model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (keras.Model): the input model</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        keras.Model: the sanitized model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Split Concatenate layers with more than two inputs into multiple Concatenate layers</span>
+    <span class="c1"># with exactly two inputs when possible</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">split_concat_layers</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Convert even kernels to odd for Conv2D et DepthwiseConv2D when possible</span>
+    <span class="k">return</span> <span class="n">convert_even_to_odd_kernel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="sanitize">
@@ -569,44 +633,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: the sanitized model</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Replace lambda layers</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">replace_lambda</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Splits layers with &#39;relu&#39; activation into two separate layers</span>
-    <span class="c1"># one without activation and one with a separate &#39;relu&#39; activation layer.</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">split_layers_with_relu</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Replace Conv2D layers that behave as DepthwiseConv2D to the latest.</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">convert_conv_to_dw_conv</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Multiple Reshape/Flatten removal transformation</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">remove_reshape</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Align Rescaling (if needed)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">align_rescaling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Invert ReLU &lt;-&gt; MaxPool layers so that MaxPool comes first</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">invert_relu_maxpool</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Invert BN &lt;-&gt; Pooling layers and fold BN into their preceding layers</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">invert_batchnorm_pooling</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">fold_batchnorms</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Fold ReLUs with no max_value that comes after an Add layer</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">fold_activations_in_add</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Remove unsupported ZeroPadding2D layers and replace them with &#39;same&#39; padding convolution when</span>
-    <span class="c1"># possible</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">remove_zeropadding2d</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Split Concatenate layers with more than two inputs into multiple Concatenate layers</span>
-    <span class="c1"># with exactly two inputs when possible</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">split_concat_layers</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-    <span class="c1"># Convert even kernels to odd for Conv2D et DepthwiseConv2D when possible</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">convert_even_to_odd_kernel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">model</span></div>
+    <span class="k">return</span> <span class="n">sanitize_for_hardware</span><span class="p">(</span><span class="n">sanitize_base</span><span class="p">(</span><span class="n">model</span><span class="p">))</span></div>
 
 </pre></div>
 

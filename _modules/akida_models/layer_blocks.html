@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -553,7 +555,10 @@
                           <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Conv3D</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">keras.activations</span> <span class="kn">import</span> <span class="n">swish</span><span class="p">,</span> <span class="n">gelu</span>
 <span class="kn">from</span> <span class="nn">keras.initializers</span> <span class="kn">import</span> <span class="n">TruncatedNormal</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">register_keras_serializable</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">jacobi</span>
 
 <span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Attention</span><span class="p">,</span> <span class="n">LayerMadNormalization</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
                                <span class="n">ExtractToken</span><span class="p">)</span>
@@ -1137,12 +1142,105 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
+<span class="k">def</span> <span class="nf">get_ortho_polynomials</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generate the set of Jacobi orthogonal polynomials with shape (degrees + 1, length)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        length (int): The length of the discretized temporal kernel,</span>
+<span class="sd">            assuming the range [0, 1] for the polynomials.</span>
+<span class="sd">        degrees (int): The maximum polynomial degree. Note that degrees + 1 polynomials</span>
+<span class="sd">            will be generated (counting the constant).</span>
+<span class="sd">        alpha (float): The alpha Jacobi parameter.</span>
+<span class="sd">        beta (float): The beta Jacobi parameter.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: shaped (degrees + 1, length)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">jacobi</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span><span class="o">.</span><span class="n">coeffs</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">degrees</span> <span class="o">-</span> <span class="n">degree</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">degree</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">degrees</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">steps</span> <span class="o">**</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">degrees</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span>
+    <span class="n">polynomials_integrated</span> <span class="o">=</span> <span class="n">coeffs</span> <span class="o">@</span> <span class="n">X</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">polynomials_integrated</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">length</span>
+    <span class="k">return</span> <span class="n">transform</span>
+
+
+<span class="nd">@register_keras_serializable</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">PleiadesLayer</span><span class="p">(</span><span class="n">Conv3D</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A 3D convolutional layer utilizing orthogonal polynomials for kernel transformation.</span>
+
+<span class="sd">    Inherits from `Conv3D` and modifies its kernel transformation before applying convolution.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filters (int): Number of output filters.</span>
+<span class="sd">        kernel_size (tuple): Size of the convolution kernel.</span>
+<span class="sd">        degrees (int): Degree of the orthogonal polynomials.</span>
+<span class="sd">        alpha (float): Alpha parameter for the orthogonal polynomials.</span>
+<span class="sd">        beta (float): Beta parameter for the orthogonal polynomials.</span>
+<span class="sd">        **kwargs: Additional arguments passed to `Conv3D`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">degrees</span> <span class="o">=</span> <span class="n">degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+            <span class="c1"># Generate the transformation matrix</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">get_ortho_polynomials</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="c1"># Normalize transform based on input dimensions</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                    <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                   <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span> <span class="o">/</span> <span class="n">scale</span>
+            <span class="n">new_kernel_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">degrees</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">new_kernel_shape</span><span class="p">,</span>
+                                          <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+                                          <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;kernel&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="c1"># Apply polynomial transformation to kernel</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[[</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># Perform convolution with transformed kernel</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># The &#39;_jit_compiled_convolution_op&#39; is a specialized operation that efficiently</span>
+            <span class="c1"># handles grouped convolutions, addressing limitations in some TensorFlow versions</span>
+            <span class="c1"># where grouped convolutions are not directly supported.</span>
+            <span class="n">conv_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jit_compiled_convolution_op</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conv_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convolution_op</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_bias</span><span class="p">:</span>
+            <span class="n">conv_output</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">conv_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conv_output</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;degrees&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span>
+            <span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+
 <span class="k">def</span> <span class="nf">conv3d_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
                  <span class="n">filters</span><span class="p">,</span>
                  <span class="n">kernel_size</span><span class="p">,</span>
                  <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU3.75&#39;</span><span class="p">,</span>
                  <span class="n">reg_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">normalize_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">use_pleiades</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">degrees</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a Conv3D layer with optional layers: batch normalization and activation.</span>
 
@@ -1156,6 +1254,16 @@
 <span class="sd">            &#39;ReLU3.75&#39;.</span>
 <span class="sd">        reg_factor (float, optional): the L1-regularization factor of the ActivityRegularization</span>
 <span class="sd">            layers that are added after the ReLU layers if reg_factor is not None.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        normalize_reg (bool, optional): if True, normalize the L1-regularization factor.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        use_pleiades (bool, optional): if True, the first conv3d of the TemporalBlock</span>
+<span class="sd">            is a PleiadesLayer. Defaults to False.</span>
+<span class="sd">        degrees (int, optional): The maximum polynomial degree of the Jacobi matrix. It needs to be</span>
+<span class="sd">            set if use_pleiades is True. Defaults to None.</span>
+<span class="sd">        alpha (int, optional): The alpha Jacobi parameter. It needs to be set if</span>
+<span class="sd">            use_pleiades is True. Defaults to None.</span>
+<span class="sd">        beta (int, optional): The beta Jacobi parameter. It needs to be set if use_pleiades is True.</span>
 <span class="sd">            Defaults to None.</span>
 <span class="sd">        **kwargs: arguments passed to the keras.Conv3D layer, such as strides, use_bias, etc.</span>
 
@@ -1171,7 +1279,11 @@
             <span class="n">padding</span><span class="o">=</span><span class="p">((</span><span class="n">kernel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">padding_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;padding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;valid&#39;</span>
-    <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">Conv3D</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_pleiades</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">degrees</span> <span class="ow">and</span> <span class="n">alpha</span> <span class="ow">and</span> <span class="n">beta</span>
+        <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">PleiadesLayer</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">conv_layer</span> <span class="o">=</span> <span class="n">Conv3D</span><span class="p">(</span><span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">add_batchnorm</span><span class="p">:</span>
@@ -1180,12 +1292,15 @@
     <span class="k">if</span> <span class="n">relu_activation</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">act_to_layer</span><span class="p">(</span><span class="n">relu_activation</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">conv_layer</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/relu&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">reg_factor</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize_reg</span><span class="p">:</span>
+                <span class="n">reg_factor</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ActivityRegularization</span><span class="p">(</span><span class="n">l1</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
 
 
-<span class="k">def</span> <span class="nf">spatiotemporal_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">med_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">t_kernel_size</span><span class="p">,</span> <span class="n">t_stride</span><span class="p">,</span>
-                         <span class="n">t_depthwise</span><span class="p">,</span> <span class="n">s_depthwise</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">reg_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">spatiotemporal_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">med_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">t_kernel_size</span><span class="p">,</span>
+                         <span class="n">t_depthwise</span><span class="p">,</span> <span class="n">s_depthwise</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">reg_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize_reg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">use_pleiades</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Add a spatiotemporal block to the inputs.</span>
 
 <span class="sd">    The spatio-temporal block consists of a temporal convolution (potentially separable) followed by</span>
@@ -1200,12 +1315,21 @@
 <span class="sd">        med_channels (int): middle channels (channels after the temporal conv layer)</span>
 <span class="sd">        out_channels (int): output channels (channels after the spatial conv layer)</span>
 <span class="sd">        t_kernel_size (int): the temporal kernel size</span>
-<span class="sd">        t_stride (int): the temporal kernel stride</span>
 <span class="sd">        t_depthwise (bool): whether the temporal layer is dw_separable</span>
 <span class="sd">        s_depthwise (bool): whether the spatial layer is dw_separable</span>
 <span class="sd">        index (int): index of the block</span>
 <span class="sd">        reg_factor (float, optional): the L1-regularization factor of the ActivityRegularization</span>
 <span class="sd">            layers that are added after the ReLU layers if reg_factor is not None.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        normalize_reg (bool, optional): if True, normalize the L1-regularization factor.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        use_pleiades (bool, optional): if True, the first conv3d of the TemporalBlock</span>
+<span class="sd">            is a PleiadesLayer. Defaults to False.</span>
+<span class="sd">        degrees (int, optional): The maximum polynomial degree of the Jacobi matrix. It needs to be</span>
+<span class="sd">            set if use_pleiades is True. Defaults to None.</span>
+<span class="sd">        alpha (int, optional): The alpha Jacobi parameter. It needs to be set if</span>
+<span class="sd">            use_pleiades is True. Defaults to None.</span>
+<span class="sd">        beta (int, optional): The beta Jacobi parameter. It needs to be set if use_pleiades is True.</span>
 <span class="sd">            Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
@@ -1217,11 +1341,16 @@
                          <span class="p">(</span><span class="n">t_kernel_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
-                         <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">t_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                         <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convt_full_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">,</span>
+                         <span class="n">use_pleiades</span><span class="o">=</span><span class="n">use_pleiades</span><span class="p">,</span>
+                         <span class="n">degrees</span><span class="o">=</span><span class="n">degrees</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                         <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># This is a DepthwiseConv3D (groups=filters)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span>
@@ -1229,19 +1358,25 @@
                          <span class="p">(</span><span class="n">t_kernel_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
-                         <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">t_stride</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                         <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">groups</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convt_dw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">,</span>
+                         <span class="n">use_pleiades</span><span class="o">=</span><span class="n">use_pleiades</span><span class="p">,</span>
+                         <span class="n">degrees</span><span class="o">=</span><span class="n">degrees</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                         <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                          <span class="n">med_channels</span><span class="p">,</span>
                          <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convt_pw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">s_depthwise</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
@@ -1253,7 +1388,8 @@
                          <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_full_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># This is a DepthwiseConv3D (groups=filters)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
@@ -1266,14 +1402,16 @@
                          <span class="n">groups</span><span class="o">=</span><span class="n">med_channels</span><span class="p">,</span>
                          <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_dw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                          <span class="n">out_channels</span><span class="p">,</span>
                          <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                          <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                          <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convs_pw_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
+                         <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">,</span>
+                         <span class="n">normalize_reg</span><span class="o">=</span><span class="n">normalize_reg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
 </pre></div>
 

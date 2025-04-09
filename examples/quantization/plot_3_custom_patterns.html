@@ -171,6 +171,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -206,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -253,7 +255,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -424,6 +425,7 @@
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Advanced ONNX models quantization</a><ul>
@@ -663,8 +665,10 @@ which may be helpful in preparing those.</p>
 <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
-/usr/local/lib/python3.11/dist-packages/quantizeml/onnx_support/quantization/quantize.py:243: UserWarning: The following nodes were not quantized because their pattern was not found in the scope: [&#39;resnetv17_pool1_fwd (GlobalAveragePool)&#39;, &#39;flatten_473 (Flatten)&#39;, &#39;resnetv17_dense0_fwd (Gemm)&#39;].
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
+
+Calibrating with 10/10.0 samples
+/usr/local/lib/python3.11/dist-packages/quantizeml/onnx_support/quantization/quantize.py:255: UserWarning: The following nodes were not quantized because their pattern was not found in the scope: [&#39;resnetv17_pool1_fwd (GlobalAveragePool)&#39;, &#39;flatten_473 (Flatten)&#39;, &#39;resnetv17_dense0_fwd (Gemm)&#39;].
   warnings.warn(&quot;The following nodes were not quantized because their pattern &quot;
 </pre></div>
 </div>
@@ -712,30 +716,34 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7feede295b20&gt;, &lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;MaxPool&#39;), f=[&lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7feede295b20&gt;, &lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7feede295b20&gt;, &lt;function get_qconv at 0x7feede27bd80&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7feede296020&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7feede2960c0&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7feede2960c0&gt;])
-QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7feede2963e0&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7feede294e00&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7feede294e00&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7feede294e00&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7feede27ade0&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7feede27ade0&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7feede27ade0&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7feede27ade0&gt;])
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7f7755d41120&gt;, &lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;activation&#39;), f=[&lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7f7755d41120&gt;, &lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;), f=[&lt;function get_qdepthwise at 0x7f7755d41120&gt;, &lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7f7755d41120&gt;, &lt;function get_qconv at 0x7f7755d400e0&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7f7755d41260&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7f7755d418a0&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7f7755d418a0&gt;])
+QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7f7755d41940&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7f7755d40720&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7f7755d40720&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;activation&#39;), f=[&lt;function get_qconv_transpose at 0x7f7755d40720&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7f7755d40720&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f7755edede0&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7f7755edede0&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f7755edede0&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7f7755edede0&gt;])
 </pre></div>
 </div>
 <p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">GlobalAveragePool</span></code> operation on its own or
@@ -773,6 +781,7 @@ and the pattern-matched sequence of nodes extracted from it.</p>
 in the quantization context through the <code class="docutils literal notranslate"><span class="pre">custom_pattern_scope</span></code> function.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quantizeml.onnx_support</span> <span class="kn">import</span> <span class="n">layers</span>
 <span class="kn">from</span> <span class="nn">quantizeml.onnx_support.quantization</span> <span class="kn">import</span> <span class="n">custom_pattern_scope</span>
+<span class="kn">from</span> <span class="nn">quantizeml.onnx_support.layers.set_weights</span> <span class="kn">import</span> <span class="n">set_range_max_on_qnode</span>
 
 
 <span class="k">class</span> <span class="nc">IdentityQuantizedConv2D</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">QuantizedConv2D</span><span class="p">):</span>
@@ -783,12 +792,14 @@ in the quantization context through the <code class="docutils literal notranslat
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__build__</span><span class="p">(</span><span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">gap_pattern_fn</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">gap_pattern_fn</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the incompatible patterns [&#39;GlobalAveragePool&#39;] into an IdentityQuantizedConv2D.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Note that as &#39;quantization_pattern_map&#39; is written, this function expects to receive</span>
     <span class="c1"># only the isolated (&#39;GlobalAveragePool&#39;) that matches in the graph.</span>
-    <span class="k">return</span> <span class="n">IdentityQuantizedConv2D</span><span class="p">(</span><span class="n">pool_type</span><span class="o">=</span><span class="s2">&quot;gap&quot;</span><span class="p">)</span>
+    <span class="n">qconv</span> <span class="o">=</span> <span class="n">IdentityQuantizedConv2D</span><span class="p">(</span><span class="n">pool_type</span><span class="o">=</span><span class="s2">&quot;gap&quot;</span><span class="p">)</span>
+    <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">block_nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">qconv</span>
 
 
 <span class="c1"># Define a custom patterns map, as a new pattern and associated replacement function.</span>
@@ -799,7 +810,9 @@ in the quantization context through the <code class="docutils literal notranslat
     <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
+
+Calibrating with 10/10.0 samples
 </pre></div>
 </div>
 <p>The full model is now quantized successfully.
@@ -864,11 +877,11 @@ the problem layer:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">quantizeml.onnx_support</span> <span class="kn">import</span> <span class="n">graph_tools</span>
 
 
-<span class="k">def</span> <span class="nf">align_input_conv_with_akida</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">align_input_conv_with_akida</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pattern function that handles convolutions incompatible with Akida</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Recover initial ONNXLayer from block nodes and graph</span>
-    <span class="n">qconv</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qconv</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="n">qconv</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qconv</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">)</span>
 
     <span class="c1"># Force the pads in first convolution to Akida compatible values</span>
     <span class="k">if</span> <span class="n">qconv</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;resnetv17_conv0_fwd&#39;</span><span class="p">:</span>
@@ -876,6 +889,7 @@ the problem layer:</p>
         <span class="c1"># Note: pads in convolution include spatial dimension</span>
         <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
         <span class="n">graph_tools</span><span class="o">.</span><span class="n">replace_field</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="s2">&quot;pool_pads&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">block_nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
     <span class="k">return</span> <span class="n">qconv</span>
 
 
@@ -884,7 +898,7 @@ the problem layer:</p>
 
 <span class="c1"># Quantize model with custom patterns</span>
 <span class="n">quantization_pattern_map</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">,</span> <span class="s2">&quot;MaxPool&quot;</span><span class="p">):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
+    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;MaxPool&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
     <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
     <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
     <span class="p">(</span><span class="s2">&quot;GlobalAveragePool&quot;</span><span class="p">,):</span> <span class="n">gap_pattern_fn</span><span class="p">,</span>
@@ -897,7 +911,9 @@ the problem layer:</p>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
+
+Calibrating with 10/10.0 samples
 Setting Akida pads in first convolution...
 Quantized model accuracy: 10/10.
 </pre></div>
@@ -951,7 +967,7 @@ the input image prior to sending instead.</p>
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 11.568 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (4 minutes 28.585 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>

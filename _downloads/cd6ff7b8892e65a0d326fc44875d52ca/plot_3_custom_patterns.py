@@ -233,6 +233,7 @@ print(*PATTERNS_MAP, sep='\n')
 
 from quantizeml.onnx_support import layers
 from quantizeml.onnx_support.quantization import custom_pattern_scope
+from quantizeml.onnx_support.layers.set_weights import set_range_max_on_qnode
 
 
 class IdentityQuantizedConv2D(layers.QuantizedConv2D):
@@ -243,12 +244,14 @@ class IdentityQuantizedConv2D(layers.QuantizedConv2D):
         return super().__build__(input_ts, downscale)
 
 
-def gap_pattern_fn(block_nodes, graph):
+def gap_pattern_fn(block_nodes, graph, tensor_ranges):
     """Convert the incompatible patterns ['GlobalAveragePool'] into an IdentityQuantizedConv2D.
     """
     # Note that as 'quantization_pattern_map' is written, this function expects to receive
     # only the isolated ('GlobalAveragePool') that matches in the graph.
-    return IdentityQuantizedConv2D(pool_type="gap")
+    qconv = IdentityQuantizedConv2D(pool_type="gap")
+    set_range_max_on_qnode(qconv, tensor_ranges[block_nodes[-1].output[0]])
+    return qconv
 
 
 # Define a custom patterns map, as a new pattern and associated replacement function.
@@ -311,11 +314,11 @@ except Exception as e:
 from quantizeml.onnx_support import graph_tools
 
 
-def align_input_conv_with_akida(block_nodes, graph):
+def align_input_conv_with_akida(block_nodes, graph, tensor_ranges):
     """Pattern function that handles convolutions incompatible with Akida
     """
     # Recover initial ONNXLayer from block nodes and graph
-    qconv = layers.get_qconv(block_nodes, graph)
+    qconv = layers.get_qconv(block_nodes, graph, tensor_ranges)
 
     # Force the pads in first convolution to Akida compatible values
     if qconv.name == 'resnetv17_conv0_fwd':
@@ -323,6 +326,7 @@ def align_input_conv_with_akida(block_nodes, graph):
         # Note: pads in convolution include spatial dimension
         qconv.set_weight("pads", np.array([0, 0, 2, 2, 0, 0, 3, 3]))
         graph_tools.replace_field(qconv, "pool_pads", [0, 0, 1, 1])
+        set_range_max_on_qnode(qconv, tensor_ranges[block_nodes[-1].output[0]])
     return qconv
 
 
@@ -331,7 +335,7 @@ onnx_model_temp = onnx.shape_inference.infer_shapes(onnx_model)
 
 # Quantize model with custom patterns
 quantization_pattern_map = {
-    ("Conv", "Relu", "MaxPool"): align_input_conv_with_akida,
+    ("Conv", "MaxPool", "Relu"): align_input_conv_with_akida,
     ("Conv", "Relu"): align_input_conv_with_akida,
     ("Conv",): align_input_conv_with_akida,
     ("GlobalAveragePool",): gap_pattern_fn,

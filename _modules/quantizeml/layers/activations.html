@@ -168,6 +168,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -203,6 +204,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -250,7 +252,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
@@ -421,6 +422,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -544,7 +546,7 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;hard_silu&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedActivation&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Activation&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedActivation&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -552,7 +554,8 @@
 <span class="kn">import</span> <span class="nn">keras</span>
 
 <span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span>
-                          <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
+                          <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">check_arg_constraints</span><span class="p">,</span>
+                          <span class="n">QuantizedLayer</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
 <span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">NonTrackVariable</span>
 <span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">QTensor</span>
@@ -561,27 +564,45 @@
 
 
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">hard_silu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hard SiLU activation function, also known as Hard Swish.</span>
-
-<span class="sd">    It is defined as:</span>
-
-<span class="sd">    - `0` if `if x &lt; -3`</span>
-<span class="sd">    - `x` if `x &gt; 3`</span>
-<span class="sd">    - `x * (x + 3) / 6` if `-3 &lt;= x &lt;= 3`</span>
-
-<span class="sd">    It&#39;s a faster, piecewise linear approximation of the silu activation.</span>
+<span class="k">class</span> <span class="nc">Activation</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies an activation function to an output, like `tf.keras.layers.Activation`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x(tf.Tensor): Input tensor.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        tf.Tensor: Output tensor.</span>
-
-<span class="sd">    Reference:</span>
-<span class="sd">        [A Howard, 2019](https://arxiv.org/abs/1905.02244)</span>
+<span class="sd">        activation (str or callable): Activation function, such as `tf.nn.relu`, or string name of</span>
+<span class="sd">            built-in activation function, such as &quot;relu&quot;.</span>
+<span class="sd">        alpha (float, optional): Negative slope coefficient used by some activation</span>
+<span class="sd">            (e.g. LeakyReLU). Defaults to 0.2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu6</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;activation&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span> <span class="s2">&quot;swish&quot;</span><span class="p">,</span> <span class="s2">&quot;hard_silu&quot;</span><span class="p">,</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">]}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Update serialized Keras name</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+            <span class="n">activation</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">get_registered_name</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">check_arg_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;hard_silu&quot;</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu6</span><span class="p">(</span><span class="n">inputs</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">leaky_relu</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">activation_fn</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">activation_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">config</span>
 
 
 <div class="viewcode-block" id="QuantizedReLU">
@@ -662,9 +683,9 @@
 
 
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">)</span>
+<span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">Activation</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
-<span class="k">class</span> <span class="nc">QuantizedActivation</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">QuantizedActivation</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">Activation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized version of `keras.layers.Activation` layer applicable on ``FixedPoint`` tensor.</span>
 
 <span class="sd">    The input values are mapped through a look-up-table that simulates the activation behavior.</span>
@@ -685,7 +706,6 @@
 <span class="sd">            or the name of an activation from the keras.activations namespace.</span>
 <span class="sd">        quant_config (dict, optional): the serialized quantization configuration. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;activation&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span> <span class="s2">&quot;swish&quot;</span><span class="p">,</span> <span class="s2">&quot;Custom&gt;hard_silu&quot;</span><span class="p">]}</span>
     <span class="n">DEFAULT_INPUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">11</span>
     <span class="n">DEFAULT_LUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">14</span>
 
@@ -704,12 +724,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">out_quantizer</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># Create dynamic table and variable to save output frac_bits</span>
+        <span class="c1"># Create dynamic table and variable to save output scales</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">lookup</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">MutableHashTable</span><span class="p">(</span><span class="n">key_dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
                                                               <span class="n">value_dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
                                                               <span class="n">default_value</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                                                               <span class="n">name</span><span class="o">=</span><span class="s2">&quot;values_table&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">=</span> <span class="n">NonTrackVariable</span><span class="p">(</span><span class="s2">&quot;frac_bits&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">NonTrackVariable</span><span class="p">(</span><span class="s2">&quot;scales&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">using_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -741,18 +761,18 @@
 
         <span class="c1"># Forward float inputs through activation</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="c1"># Apply dynamic quantization to compute output integer values.</span>
         <span class="n">range_max</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
-        <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">range_max</span><span class="p">))</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="n">out_frac_bits</span><span class="p">)</span>
+        <span class="n">out_scales</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">QFloat</span><span class="o">.</span><span class="n">optimal_scales</span><span class="p">(</span><span class="n">range_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">))</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">QFloat</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">out_scales</span><span class="p">)</span>
 
         <span class="c1"># Insert values in table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">outputs</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
         <span class="c1"># Return the static output frac_bits</span>
-        <span class="k">return</span> <span class="n">out_frac_bits</span>
+        <span class="k">return</span> <span class="n">out_scales</span>
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">FixedPoint</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
@@ -761,13 +781,12 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">inputs</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only supports per-tensor inputs.&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">init_var</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">init_var</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">(()))</span>
 
         <span class="c1"># Set values in table if table is empty (low computational cost)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_values_in_table</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
-            <span class="n">out_frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">out_frac_bits</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">out_frac_bits</span><span class="p">)</span>
+            <span class="n">out_scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_values_in_table</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">out_scales</span><span class="p">)</span>
 
         <span class="c1"># Look-up-table has a high cost in inference.</span>
         <span class="c1"># It is possible to increase the speed if we avoid it through a</span>
@@ -776,9 +795,9 @@
             <span class="c1"># 1. Dequantize the inputs</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
             <span class="c1"># 2. Apply activation in float domain</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="c1"># 3. Requantize from static quantization approach</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">QFloat</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Forward inputs.values into values table</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
@@ -787,8 +806,8 @@
             <span class="c1"># MutableHashTable forgets the output shape. That is why we set it explicitly.</span>
             <span class="n">values</span><span class="o">.</span><span class="n">set_shape</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-            <span class="c1"># Build the output FixedPoint</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+            <span class="c1"># Build the output</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">QFloat</span><span class="p">(</span><span class="n">FixedPoint</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scales</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span>
 </pre></div>
 

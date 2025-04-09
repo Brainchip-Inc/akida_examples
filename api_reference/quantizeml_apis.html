@@ -172,6 +172,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#layer-parameters">Layer parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#layertype">LayerType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_apis.html#activationtype">ActivationType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#padding">Padding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#pooltype">PoolType</a></li>
 </ul>
@@ -207,6 +208,7 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Info"><code class="docutils literal notranslate"><span class="pre">Info</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Ident"><code class="docutils literal notranslate"><span class="pre">Ident</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.NpSpace"><code class="docutils literal notranslate"><span class="pre">NpSpace</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a></li>
 </ul>
@@ -254,7 +256,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#models">Models</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#transforms">Transforms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quantization">Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id1">Calibration</a></li>
@@ -425,6 +426,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#data-preparation">2. Data preparation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
@@ -1173,198 +1175,8 @@ the call and which does not require to be serialized within the layer.</p>
 </section>
 <section id="models">
 <h2>Models<a class="headerlink" href="#models" title="Link to this heading"></a></h2>
-<section id="transforms">
-<h3>Transforms<a class="headerlink" href="#transforms" title="Link to this heading"></a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.align_rescaling">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">align_rescaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/align_rescaling.html#align_rescaling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.align_rescaling" title="Link to this definition"></a></dt>
-<dd><p>Aligns the Rescaling layer of the model to make it quantization ready.</p>
-<p>This folds the offset into the bias of next layer.</p>
-<p>The resulting Rescaling is therefore compatible with a quantization to a
-QuantizedRescaling.</p>
-<p>If the source model does not contain a Rescaling or if its Rescaling is already
-aligned, then the original model is returned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – the source Keras model</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the original model or a new model with Rescaling layer aligned</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.invert_batchnorm_pooling">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">invert_batchnorm_pooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/invert_batchnorm_pooling.html#invert_batchnorm_pooling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.invert_batchnorm_pooling" title="Link to this definition"></a></dt>
-<dd><p>Inverts pooling and BatchNormalization layers in a model to have BN layer before pooling.</p>
-<p>Returns a new model where pooling and batch normalization layers are inverted. From a Keras
-model where pooling layers precede batch normalization layers, this function places the BN
-layers before pooling layers. This is the first step before folding BN layers into processing
-layers.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Inversion of layers is equivalent only if the gammas of BN layers are positive. The
-function raises an error if not.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – a model</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the updated model</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – if a candidate BatchNormalization layer has gamma values that are not strictly
-    positive.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.fold_batchnorms">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">fold_batchnorms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/fold_batchnorms.html#fold_batchnorms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.fold_batchnorms" title="Link to this definition"></a></dt>
-<dd><p>Returns a new model where BatchNormalization layers are folded into previous layers.</p>
-<p>From a Keras model where BN layers follow processing layers, this function removes the BN layers
-and updates the preceding layers weights and bias accordingly. The new model is strictly
-equivalent to the previous one.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – a model</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the original model or a model with BN folded</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.insert_layer">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">insert_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_layer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/insert_layer.html#insert_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.insert_layer" title="Link to this definition"></a></dt>
-<dd><p>Inserts the given layer in the model after the layer with the name target_layer_name.</p>
-<p>Note that new_layer type is restricted to (OutputQuantizer, Dequantizer).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>keras.Model</em>) – the model to update</p></li>
-<li><p><strong>target_layer_name</strong> (<em>str</em>) – name of the layer after which to insert a layer</p></li>
-<li><p><strong>new_layer</strong> (<em>keras.layers.Layer</em>) – layer to insert</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – when target_layer_name is not found in model or new_layer is not in
-    (OutputQuantizer, Dequantizer)</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the new model</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.insert_rescaling">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">insert_rescaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/insert_layer.html#insert_rescaling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.insert_rescaling" title="Link to this definition"></a></dt>
-<dd><p>Inserts a Rescaling as first layer of the Model (after the Input)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>keras.Model</em>) – the model to update</p></li>
-<li><p><strong>scale</strong> (<em>float</em>) – the Rescaling scale</p></li>
-<li><p><strong>offset</strong> (<em>float</em>) – the Rescaling offset</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – when the Model does not have an Input layer.</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the new model</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.invert_relu_maxpool">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">invert_relu_maxpool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/relu_maxpool.html#invert_relu_maxpool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.invert_relu_maxpool" title="Link to this definition"></a></dt>
-<dd><p>Inverts ReLU and MaxPool2D layers in a model to have MaxPool2D before ReLU.</p>
-<p>This transformation produces a strictly equivalent model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – a model</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>keras.Model: the original model or the updated model</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.remove_zeropadding2d">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">remove_zeropadding2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/remove_zeropadding2d.html#remove_zeropadding2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.remove_zeropadding2d" title="Link to this definition"></a></dt>
-<dd><p>Removes ZeroPadding2D layers from a model.</p>
-<p>ZeroPadding2D layers will not be supported by quantization so this transform adds support so
-that when the ZeroPadding2D layers are immediately followed by a convolution layer with ‘valid’
-padding, they are removed and the following convolution is updated with a ‘same’ padding
-instead. This can however only happen when the padding specified in ZeroPadding2D actually
-corresponds to a ‘same’ padding.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – the model to update</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the original model or a new model with ZeroPadding2D removed</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.models.transforms.replace_lambda">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">replace_lambda</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/replace_lambda.html#replace_lambda"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.replace_lambda" title="Link to this definition"></a></dt>
-<dd><p>Replaces lambda layers from a model with their equivalent Keras layer.</p>
-<p>This transform handles the following replacements:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Lambda(relu) or Activation(‘relu’) → ReLU,</p></li>
-<li><p>Lambda(transpose) → Permute,</p></li>
-<li><p>Lambda(reshape) → Reshape,</p></li>
-<li><p>Lambda(add) → Add,</p></li>
-<li><p>Lambda(‘gelu’) → Activation(‘gelu’),</p></li>
-<li><p>Lambda(‘silu’) → Activation(‘silu’).</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – the model of interest</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the original model or a new one with lambda replaced.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>keras.Model</p>
-</dd>
-</dl>
-</dd></dl>
-
+<section id="quantization">
+<h3>Quantization<a class="headerlink" href="#quantization" title="Link to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.models.transforms.sanitize">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.models.transforms.</span></span><span class="sig-name descname"><span class="pre">sanitize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/transforms/sanitize.html#sanitize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.transforms.sanitize" title="Link to this definition"></a></dt>
@@ -1384,9 +1196,6 @@ model quantization ready.</p>
 </dl>
 </dd></dl>
 
-</section>
-<section id="quantization">
-<h3>Quantization<a class="headerlink" href="#quantization" title="Link to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.models.quantize">
 <span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">quantize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationParams(activation_bits=8,</span> <span class="pre">per_tensor_activations=False,</span> <span class="pre">weight_bits=8,</span> <span class="pre">output_bits=8,</span> <span class="pre">input_weight_bits=8,</span> <span class="pre">input_dtype=uint8,</span> <span class="pre">buffer_bits=32,</span> <span class="pre">last_output_bits=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize_until</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/quantize.html#quantize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.quantize" title="Link to this definition"></a></dt>
@@ -2448,7 +2257,7 @@ infered by <code class="docutils literal notranslate"><span class="pre">onnx.hel
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedConv2D">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2d.html#QuantizedConv2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2D" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2d.html#QuantizedConv2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2D" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of QLinearConv() + MaxPool() + ReLU() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2464,7 +2273,9 @@ Ignore it when pool_type != “max”. Defaults to [0, 0, 0, 0].</p></li>
 <li><p><strong>input_conv</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether it is extended the set of operations of
 the basic QuantizedConv2D, allowing to modify the padding value per input channel.
 Defaults to False.</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – negative slope coefficient used by some activation
+(e.g. LeakyRelu). Defaults to 0.01.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2473,13 +2284,15 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwise2D">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/depthwise2d.html#QuantizedDepthwise2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2D" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/depthwise2d.html#QuantizedDepthwise2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2D" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of Conv() + MaxPool() + ReLU() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>strides</strong> (<em>list</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – negative slope coefficient used by some activation
+(e.g. LeakyRelu). Defaults to 0.01.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2488,13 +2301,15 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedConv2DTranspose">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedConv2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2DTranspose" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedConv2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedConv2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedConv2DTranspose" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of the upsampling layer QuantizedConv2DTranspose().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>strides</strong> (<em>list</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – negative slope coefficient used by some activation
+(e.g. LeakyRelu). Defaults to 0.01.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2503,14 +2318,16 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedDepthwise2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2DTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/conv2dtranspose.html#QuantizedDepthwise2DTranspose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of the upsampling layer QuantizedDepthwise2DTranspose.</p>
 <p>Inherits from QuantizedConv2DTranspose: only different attribute is group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>strides</strong> (<em>list</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – the convolutional strides. Defaults to [1, 1].</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – negative slope coefficient used by some activation
+(e.g. LeakyRelu). Defaults to 0.01.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2519,13 +2336,13 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDense1D">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDense1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/dense.html#QuantizedDense1D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDense1D" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDense1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/dense.html#QuantizedDense1D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDense1D" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of Flatten() + QGemm() + ReLU() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>flatten</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to flatten the inputs. Defaults to False.</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2534,12 +2351,12 @@ Defaults to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedAdd">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of Add() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply relu operation. Defaults to False.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
 </ul>
 </dd>
@@ -2768,6 +2585,42 @@ It allows a better metrics generalization, but consumes more resources. Defaults
 <li><p>Layers/Nodes that do not produce quantization errors will not be taken into account
 (e.g. QuantizedReshape).</p></li>
 </ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.analysis.measure_weight_quantization_error">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.analysis.</span></span><span class="sig-name descname"><span class="pre">measure_weight_quantization_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/analysis/quantization_error_api.html#measure_weight_quantization_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.analysis.measure_weight_quantization_error" title="Link to this definition"></a></dt>
+<dd><p>Measures the weight quantization error</p>
+<p>Returns a dictionary where the keys are the name of each layer and the values are a dictionary
+composed of the set of the following metrics:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Symmetrical Mean Absolute Percentage Error (SMAPE): <code class="xref py py-func docutils literal notranslate"><span class="pre">tools.metrics.SMAPE()</span></code></p></li>
+<li><p>Saturation: Percentage of how many values in the quantized layer saturate</p></li>
+</ul>
+</div></blockquote>
+<p>Each metric measures the quantization error from the input to the layer.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">measure_weight_quantization_error</span><span class="p">(</span><span class="n">qmodel</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="s2">&quot;SMAPE&quot;</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">[</span><span class="n">a_layer_name</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>qmodel</strong> (<em>tf.keras.Model</em>) – a quantized model.</p></li>
+<li><p><strong>target_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – error computation is performed only in the target layer/node,
+expanding the analysis to each output channel. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the quantization error for each weight.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
