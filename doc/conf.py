@@ -1,7 +1,9 @@
+from datetime import datetime
+
 # -- Project information -----------------------------------------------------
 
 project = 'Akida Examples'
-copyright = '2022, BrainChip Holdings Ltd. All Rights Reserved'
+copyright = f'{datetime.now().year}, BrainChip Holdings Ltd. All Rights Reserved'
 author = 'Brainchip'
 version = 'Akida, 2nd Generation'
 
