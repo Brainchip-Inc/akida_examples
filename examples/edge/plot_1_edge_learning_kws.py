@@ -157,11 +157,13 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # The pre-processed utility methods to generate these MFCC data are available in
 # the ``akida_models`` package.
 
-from akida import FullyConnected, evaluate_sparsity, Model
+from akida import FullyConnected, Model
 
 import pickle
 
 from akida_models import fetch_file
+from akida_models.sparsity import _compute_sparsity_ak
+
 
 # Fetch pre-processed data for 32 keywords
 fname = fetch_file(
@@ -271,10 +273,10 @@ model_ak.add(layer_fc)
 # Compute sparsity information for the model using 10% of the training data
 # which is enough for a good estimate
 num_samples = ceil(0.1 * x_train.shape[0])
-sparsities = evaluate_sparsity(model_ak, x_train[:num_samples])
+sparsities = _compute_sparsity_ak(model_ak, samples=x_train[:num_samples])
 
 # Retrieve the number of output spikes from the feature extractor output
-output_density = 1 - sparsities[model_ak.get_layer('separable_4')]
+output_density = 1 - sparsities['separable_4']
 avg_spikes = model_ak.get_layer('separable_4').output_dims[-1] * output_density
 print(f"Average number of spikes: {avg_spikes}")
 
