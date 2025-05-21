@@ -9,7 +9,6 @@ TENNs modules
     .. autoclass:: tenns_modules.SpatialBlock
     .. autoclass:: tenns_modules.TemporalBlock
     .. autoclass:: tenns_modules.SpatioTemporalBlock
-    .. autoclass:: tenns_modules.PleiadesLayer
 
     Export
     ======
