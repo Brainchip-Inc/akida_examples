@@ -249,9 +249,8 @@ full_model.output
 # The metric used to evaluate YOLO is the mean average precision (mAP) which is
 # the percentage of correct prediction and is given for an intersection over
 # union (IoU) ratio. Scores in this example are given for the standard IoU of
-# 0.5, 0.75 and the mean across IoU thresholds ranging from 0.5 to 0.95, meaning
-# that a detection is considered valid if the intersection over union ratio with
-# its ground truth equivalent is above 0.5 for mAP 50 or above 0.75 for mAP 75.
+# 0.5, meaning that a detection is considered valid if the intersection over union
+# ratio with its ground truth equivalent is above 0.5 (mAP 50).
 #
 #  .. Note:: A call to `evaluate_map <../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map>`_
 #            will preprocess the images, make the call to ``Model.predict`` and
@@ -288,8 +287,6 @@ end = timer()
 for label, average_precision in average_precisions.items():
     print(labels[label], '{:.4f}'.format(average_precision))
 print('mAP 50: {:.4f}'.format(map_dict[0.5]))
-print('mAP 75: {:.4f}'.format(map_dict[0.75]))
-print('mAP: {:.4f}'.format(mAP))
 print(f'Keras inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
@@ -339,8 +336,6 @@ end = timer()
 for label, average_precision in average_precisions_ak.items():
     print(labels[label], '{:.4f}'.format(average_precision))
 print('mAP 50: {:.4f}'.format(map_ak_dict[0.5]))
-print('mAP 75: {:.4f}'.format(map_ak_dict[0.75]))
-print('mAP: {:.4f}'.format(mAP_ak))
 print(f'Akida inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
