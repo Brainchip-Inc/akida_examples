@@ -71,7 +71,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'collapse_navigation': False,
-    'style_nav_header_background': '#989898'
+    'style_nav_header_background': '#000000'
 }
 
 # Hide undesired components
