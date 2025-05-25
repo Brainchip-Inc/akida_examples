@@ -13,7 +13,7 @@ Supported configurations
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
     Please refer to `this link
-    <https://support.microsoft.com/help/2977003/the-latest-supported-visual-c-downloads>`__
+    <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist>`__
     for installation.
 
 Quick installation
