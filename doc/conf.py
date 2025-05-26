@@ -15,7 +15,7 @@ version = 'Akida, 2nd Generation'
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon',
     'sphinx_gallery.gen_gallery', 'autodocsumm', 'sphinx.ext.viewcode',
-    'sphinx_design'
+    'sphinx_design', 'sphinxcontrib.video'
 ]
 
 # The suffix(es) of source filenames.
@@ -41,7 +41,7 @@ sphinx_gallery_conf = {
     'subsection_order':
         ExplicitOrder([
             '../examples/general', '../examples/quantization', '../examples/edge',
-            '../examples/cnn2snn'
+            '../examples/spatiotemporal'
         ]),
     'within_subsection_order':
         FileNameSortKey,
