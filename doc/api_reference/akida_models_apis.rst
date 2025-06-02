@@ -23,6 +23,11 @@ Akida models API
     ---------------
     .. autofunction:: akida_models.layer_blocks.yolo_head_block
 
+    Spatiotemporal blocks
+    ---------------------
+    .. autofunction:: akida_models.layer_blocks.conv3d_block
+    .. autofunction:: akida_models.layer_blocks.spatiotemporal_block
+
     Helpers
     =======
 
@@ -52,7 +57,7 @@ Akida models API
 
     Sparsity
     ========
-    .. autofunction:: akida_models.sparsity.display_sparsity
+    .. autofunction:: akida_models.sparsity.compute_sparsity
 
     Model I/O
     =========
@@ -223,3 +228,16 @@ Akida models API
     ---------
     .. autofunction:: akida_models.akida_unet_portrait128
     .. autofunction:: akida_models.akida_unet_portrait128_pretrained
+
+    Spatiotemporal TENNs
+    --------------------
+    .. autofunction:: akida_models.tenn_spatiotemporal_dvs128
+    .. autofunction:: akida_models.tenn_spatiotemporal_dvs128_pretrained
+    .. autofunction:: akida_models.tenn_spatiotemporal_eye
+    .. autofunction:: akida_models.tenn_spatiotemporal_eye_pretrained
+    .. autofunction:: akida_models.tenn_spatiotemporal_jester
+    .. autofunction:: akida_models.tenn_spatiotemporal_jester_pretrained
+
+    Conversion
+    ~~~~~~~~~~
+    .. autofunction:: akida_models.tenn_spatiotemporal.convert_to_buffer

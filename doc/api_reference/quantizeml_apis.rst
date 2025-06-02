@@ -33,6 +33,14 @@ QuantizeML API
     ---------------------
     .. autoclass:: quantizeml.layers.QuantizedSeparableConv2D
 
+    Temporal convolution
+    --------------------
+    .. autoclass:: quantizeml.layers.BufferTempConv
+    .. autoclass:: quantizeml.layers.QuantizedBufferTempConv
+    .. autoclass:: quantizeml.layers.DepthwiseBufferTempConv
+    .. autoclass:: quantizeml.layers.QuantizedDepthwiseBufferTempConv
+    .. autofunction:: quantizeml.layers.reset_buffers
+
     Dense
     -----
     .. autoclass:: quantizeml.layers.QuantizedDense
@@ -137,16 +145,21 @@ QuantizeML API
 
     Layers
     ------
-    .. autofunction:: quantizeml.onnx_support.layers.OnnxLayer
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConv2D
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDepthwise2D
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConv2DTranspose
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedDense1D
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedAdd
-    .. autofunction:: quantizeml.onnx_support.layers.QuantizedConcat
-    .. autofunction:: quantizeml.onnx_support.layers.InputQuantizer
-    .. autofunction:: quantizeml.onnx_support.layers.Dequantizer
+    .. autoclass:: quantizeml.onnx_support.layers.OnnxLayer
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedConv2D
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwise2D
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedConv2DTranspose
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedBufferTempConv
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv
+    .. autoclass:: quantizeml.onnx_support.layers.VariableRegistry
+        :members:
+    .. autofunction:: quantizeml.onnx_support.layers.buffertempconv.reset_buffers
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedDense1D
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedAdd
+    .. autoclass:: quantizeml.onnx_support.layers.QuantizedConcat
+    .. autoclass:: quantizeml.onnx_support.layers.InputQuantizer
+    .. autoclass:: quantizeml.onnx_support.layers.Dequantizer
 
     Custom patterns
     ---------------

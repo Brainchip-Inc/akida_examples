@@ -24,6 +24,7 @@ Akida runtime API
         :members:
     .. autoclass:: akida.Layer.Mapping
         :members:
+        :no-index:
 
     Common layer
     ------------
@@ -54,6 +55,10 @@ Akida runtime API
     .. autoclass:: DepthwiseConv2D
         :members:
     .. autoclass:: DepthwiseConv2DTranspose
+        :members:
+    .. autoclass:: BufferTempConv
+        :members:
+    .. autoclass:: DepthwiseBufferTempConv
         :members:
     .. autoclass:: Add
         :members:
@@ -113,16 +118,18 @@ Akida runtime API
     ------
     .. autoclass:: Device
         :members:
-    .. autofunction:: akida.devices
-    .. autofunction:: akida.AKD1000
-    .. autofunction:: akida.AKD1500
-    .. autofunction:: akida.TwoNodesIP
+    .. autofunction:: devices
+    .. autofunction:: AKD1000
+    .. autofunction:: AKD1500
+    .. autofunction:: TwoNodesIPv1
+    .. autofunction:: TwoNodesIPv2
+    .. autofunction:: SixNodesIPv2
+    .. autofunction:: create_device
 
     HwVersion
     ---------
     .. autoclass:: HwVersion
         :members:
-
 
     HWDevice
     ========
@@ -161,7 +168,9 @@ Akida runtime API
     .. autoclass:: akida.NP.NpSpace
         :members:
     .. autoclass:: akida.NP.Type
-    .. autoclass:: akida.NP.Mapping
+    .. autoclass:: akida.NP.MemoryInfo
+        :members:
+    .. autoclass:: akida.NP.Component
         :members:
 
     Mapping
@@ -170,10 +179,3 @@ Akida runtime API
         :members:
     .. autoclass:: akida.MapConstraints
         :members:
-
-    Tools
-    =====
-
-    Sparsity
-    --------
-    .. autofunction:: akida.evaluate_sparsity
