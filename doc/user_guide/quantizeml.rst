@@ -295,6 +295,10 @@ layers for most part and custom QuantizeML layers for some of them:
     - `DepthwiseConv2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDepthwiseConv2D>`__
     - `DepthwiseConv2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDepthwiseConv2DTranspose>`__
       (custom QuantizeML layer)
+    - `BufferTempConv <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedBufferTempConv>`__
+      (custom QuantizeML layer)
+    - `DepthwiseBufferTempConv <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDepthwiseBufferTempConv>`__
+      (custom QuantizeML layer)
     - `SeparableConv2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedSeparableConv2D>`__
     - `Dense <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedDense>`__
 
@@ -327,10 +331,10 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 - `QuantizedConv2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2D>`__
   when the pattern is:
 
-    - <Conv, Relu, GlobalAveragePool>
-    - <Conv, Relu, MaxPool>
+    - <Conv, Relu/Clip, GlobalAveragePool>
+    - <Conv, MaxPool, Relu/Clip>
     - <Conv, GlobalAveragePool>
-    - <Conv, Relu>
+    - <Conv, Relu/Clip>
     - <Conv>
 
 - `QuantizedDepthwise2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2D>`__
@@ -344,23 +348,35 @@ and groups=input_channels.
 - `QuantizedConv2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2DTranspose>`__
   when the pattern is:
 
-    - <ConvTranspose, Relu>
+    - <ConvTranspose, Relu/Clip>
     - <ConvTranspose>
 
 - `QuantizedDepthwise2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose>`__
   when the pattern is:
 
-    - <ConvTranspose, Relu>
+    - <ConvTranspose, Relu/Clip>
     - <ConvTranspose>
 
 and groups=input_channels.
 
+- `QuantizedBufferTempConv <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedBufferTempConv>`__
+  when the pattern is:
+
+    - <BufferTempConv, Relu>
+    - <BufferTempConv>
+
+- `QuantizedDepthwiseBufferTempConv <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv>`__
+  when the pattern is:
+
+    - <DepthwiseBufferTempConv, Relu>
+    - <DepthwiseBufferTempConv>
+
 - `QuantizedDense1D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDense1D>`__
   when the pattern is:
 
-    - <Flatten, Gemm, Relu>
+    - <Flatten, Gemm, Relu/Clip>
     - <Flatten, Gemm>
-    - <Gemm, Relu>
+    - <Gemm, Relu/Clip>
     - <Gemm>
 
 - `QuantizedAdd <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedAdd>`__

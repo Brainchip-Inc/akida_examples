@@ -103,6 +103,8 @@ Akida 2.0 layers
 - `Dense1D <../api_reference/akida_apis.html#akida.Dense1D>`__
 - `DepthwiseConv2D <../api_reference/akida_apis.html#akida.DepthwiseConv2D>`__
 - `DepthwiseConv2DTranspose <../api_reference/akida_apis.html#akida.DepthwiseConv2DTranspose>`__
+- `BufferTempConv <../api_reference/akida_apis.html#akida.BufferTempConv>`__
+- `DepthwiseBufferTempConv <../api_reference/akida_apis.html#akida.DepthwiseBufferTempConv>`__
 - `Add <../api_reference/akida_apis.html#akida.Add>`__
 - `Concatenate <../api_reference/akida_apis.html#akida.Concatenate>`__
 - `Dequantizer <../api_reference/akida_apis.html#akida.Dequantizer>`__

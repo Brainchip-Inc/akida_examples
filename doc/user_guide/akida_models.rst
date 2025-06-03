@@ -86,6 +86,9 @@ Current available models for creation are:
  * centernet
  * gxnor_mnist
  * akida_unet_portrait128
+ * tenn_spatiotemporal_dvs128
+ * tenn_spatiotemporal_eye
+ * tenn_spatiotemporal_jester
 
 Command-line interface for model training
 -----------------------------------------
@@ -168,6 +171,9 @@ Current training pipelines available are:
 * portrait128_train
 * centernet_train
 * urbansound_train
+* tenn_dvs128_train
+* tenn_eye_train
+* tenn_jester_train
 
 Command-line interface for model evaluation
 -------------------------------------------
@@ -284,6 +290,7 @@ The layer block functions provided are:
 * `conv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_transpose_block>`__
 * `sepconv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
 * `yolo_head_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.yolo_head_block>`__
+* `spatiotemporal_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.spatiotemporal_block>`__
 
 Most of the parameters for these blocks are identical to those passed to the
 corresponding inner processing layers, such as strides and bias. The detailed API is given in the
