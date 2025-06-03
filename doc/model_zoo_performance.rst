@@ -393,9 +393,6 @@ Classification
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i4_w4_a4.h5
 
-CNNs
-++++
-
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 | Architecture     | Resolution | Dataset            | #Params | Quantization | Accuracy | Download         |
 +==================+============+====================+=========+==============+==========+==================+
