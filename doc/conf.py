@@ -86,7 +86,7 @@ autodoc_default_options = {
 }
 
 # silence warning raised by autodocsumm
-suppress_warnings = ['app.add_directive']
+suppress_warnings = ['app.add_directive', 'config.cache']
 
 # this folder is copied to the documentation's HTML output
 html_static_path = ['_static']
