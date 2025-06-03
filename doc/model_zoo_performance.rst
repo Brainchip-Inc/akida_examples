@@ -28,6 +28,9 @@ Model zoo performance
 .. |pointcloud_icon_ref| image:: ./img/pointcloud_icon.png
    :scale: 5 %
 
+.. |tenns_icon_ref| image:: ./img/tenns_icon.png
+   :scale: 12 %
+
 Akida 1.0 models
 ----------------
 
@@ -601,5 +604,42 @@ Classification
 |              | 3D Point Cloud     |         |              |                 |           |
 |              |                    |         | 4            | 81.56%          | |p++4_dl| |
 +--------------+--------------------+---------+--------------+-----------------+-----------+
+
+|tenns_icon_ref| TENNs
+~~~~~~~~~~~~~~~~~~~~~~
+
+Gesture recognition
+"""""""""""""""""""
+
+.. |tenns_dvs_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/tenn_spatiotemporal/tenn_spatiotemporal_dvs128_buffer_i8_w8_a8.h5
+
+.. |tenns_jester_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/tenn_spatiotemporal/tenn_spatiotemporal_jester_buffer_i8_w8_a8.h5
+
++--------------------+---------+--------------+----------+-------------------+
+| Dataset            | #Params | Quantization | Accuracy | Download          |
++====================+=========+==============+==========+===================+
+| DVS128             | 165K    | 8            | 97.12%   | |tenns_dvs_dl|    |
++--------------------+---------+--------------+----------+-------------------+
+| Jester             | 1.3M    | 8            | 95.07%   | |tenns_jester_dl| |
++--------------------+---------+--------------+----------+-------------------+
+
+Eye tracking
+""""""""""""
+
+.. |tenns_eye_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/tenn_spatiotemporal/tenn_spatiotemporal_eye_buffer_i8_w8_a8.h5
+
++--------------------+---------+--------------+---------------------+----------------+
+| Dataset            | #Params | Quantization | Accuracy            | Download       |
++====================+=========+==============+=====================+================+
+| Eye tracking       | 219K    | 8            | p10: 96.66%         | |tenns_eye_dl| |
+| CVPR 2024          |         |              |                     |                |
+|                    |         |              | mean_distance: 2.93 |                |
++--------------------+---------+--------------+---------------------+----------------+
 
 .. [#fn-1] PTQ accuracy boosted with 5 epochs QAT.
