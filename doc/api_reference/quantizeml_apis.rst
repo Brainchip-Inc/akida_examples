@@ -152,8 +152,6 @@ QuantizeML API
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedBufferTempConv
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv
-    .. autoclass:: quantizeml.onnx_support.layers.VariableRegistry
-        :members:
     .. autofunction:: quantizeml.onnx_support.layers.buffertempconv.reset_buffers
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDense1D
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedAdd
