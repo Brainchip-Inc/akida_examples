@@ -156,7 +156,11 @@ created to allow the mapping of a ``Model`` on a host that is not connected to a
 It is possible to build a virtual device for known hardware devices, by calling functions
 `AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__,
 `AKD1500() <../api_reference/akida_apis.html#akida.AKD1500>`__ and
-`TwoNodesIP() <../api_reference/akida_apis.html#akida.TwoNodesIP>`__.
+`TwoNodesIPv1() <../api_reference/akida_apis.html#akida.TwoNodesIPv1>`__ for 1.0 or
+`TwoNodesIPv2() <../api_reference/akida_apis.html#akida.TwoNodesIPv2>`__, and
+`SixNodesIPv2() <../api_reference/akida_apis.html#akida.SixNodesIPv2>`__, for 2.0. Alternatively,
+a custom virtual device can be created using `create_device
+<../api_reference/akida_apis.html#akida.create_device>`__.
 
 Model mapping
 ^^^^^^^^^^^^^
