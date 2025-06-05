@@ -50,11 +50,6 @@ Akida models API
     .. autoclass:: akida_models.distiller.Distiller
     .. autofunction:: akida_models.distiller.KLDistillationLoss
 
-    MACS
-    ====
-    .. autofunction:: akida_models.macs.get_flops
-    .. autofunction:: akida_models.macs.display_macs
-
     Sparsity
     ========
     .. autofunction:: akida_models.sparsity.compute_sparsity
