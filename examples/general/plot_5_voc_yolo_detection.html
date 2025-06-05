@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YOLO/PASCAL-VOC detection tutorial &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -467,6 +467,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -609,9 +624,9 @@ and parsing of the tfrecord file.</p>
 offers several methods to prepare data for processing, see
 <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.load_image">load_image</a>,
 <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.preprocess_image">preprocess_image</a>.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">fetch_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
 
 <span class="c1"># Download TFrecords test set from Brainchip data server</span>
 <span class="n">data_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
@@ -622,7 +637,7 @@ offers several methods to prepare data for processing, see
 
 
 <span class="c1"># Helper function to load and parse the Tfrecord file.</span>
-<span class="k">def</span> <span class="nf">load_tf_dataset</span><span class="p">(</span><span class="n">tf_record_file_path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_tf_dataset</span><span class="p">(</span><span class="n">tf_record_file_path</span><span class="p">):</span>
     <span class="n">tfrecord_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf_record_file_path</span><span class="p">]</span>
 
     <span class="c1"># Feature description for parsing the TFRecord</span>
@@ -632,10 +647,10 @@ offers several methods to prepare data for processing, see
         <span class="s1">&#39;objects/label&#39;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">VarLenFeature</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_count_tfrecord_examples</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_tfrecord_examples</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">as_numpy_iterator</span><span class="p">()))</span>
 
-    <span class="k">def</span> <span class="nf">_parse_tfrecord_fn</span><span class="p">(</span><span class="n">example_proto</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_tfrecord_fn</span><span class="p">(</span><span class="n">example_proto</span><span class="p">):</span>
         <span class="n">example</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">parse_single_example</span><span class="p">(</span><span class="n">example_proto</span><span class="p">,</span> <span class="n">feature_description</span><span class="p">)</span>
 
         <span class="c1"># Decode the image from bytes</span>
@@ -683,14 +698,12 @@ offers several methods to prepare data for processing, see
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/voc/test_20_classes.tfrecord.
 
       0/8399422 [..............................] - ETA: 0s
- 196608/8399422 [..............................] - ETA: 2s
- 974848/8399422 [==&gt;...........................] - ETA: 0s
-1957888/8399422 [=====&gt;........................] - ETA: 0s
-3031040/8399422 [=========&gt;....................] - ETA: 0s
-4153344/8399422 [=============&gt;................] - ETA: 0s
-5365760/8399422 [==================&gt;...........] - ETA: 0s
-6569984/8399422 [======================&gt;.......] - ETA: 0s
-7888896/8399422 [===========================&gt;..] - ETA: 0s
+ 139264/8399422 [..............................] - ETA: 3s
+1114112/8399422 [==&gt;...........................] - ETA: 0s
+3440640/8399422 [===========&gt;..................] - ETA: 0s
+5742592/8399422 [===================&gt;..........] - ETA: 0s
+7028736/8399422 [========================&gt;.....] - ETA: 0s
+8339456/8399422 [============================&gt;.] - ETA: 0s
 8399422/8399422 [==============================] - 0s 0us/step
 Download complete.
 Loaded VOC2007 sample test data: 100 images.
@@ -702,7 +715,7 @@ Loaded VOC2007 sample test data: 100 images.
 <p>The following code is given as an example. In a real use case
 scenario, anchors are computed on the training dataset.</p>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models.detection.generate_anchors</span> <span class="kn">import</span> <span class="n">generate_anchors</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.detection.generate_anchors</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_anchors</span>
 
 <span class="n">num_anchors</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">grid_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
@@ -710,7 +723,7 @@ scenario, anchors are computed on the training dataset.</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Average IOU for 5 anchors: 0.70
-Anchors:  [[1.12454, 1.84751], [2.04413, 2.9031], [3.17208, 3.53496], [4.74323, 5.20806], [5.36684, 6.01534]]
+Anchors:  [[1.12454, 1.84751], [1.99609, 2.82636], [3.18975, 3.60041], [4.55423, 5.25667], [5.48737, 5.82352]]
 </pre></div>
 </div>
 </section>
@@ -722,7 +735,7 @@ and 3 separable convolutional layers at the top for bounding box and class
 estimation followed by a final separable convolutional which is the detection
 layer. Note that for efficiency, the alpha parameter in AkidaNet (network
 width or number of filter in each layer) is set to 0.5.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">yolo_base</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">yolo_base</span>
 
 <span class="c1"># Create a yolo model for 20 classes with 5 anchors and grid size of 7</span>
 <span class="n">classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
@@ -925,8 +938,8 @@ each group one channel provides either a coordinate, a global confidence score
 or a class confidence score. This process is done automatically in the
 <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output">decode_output</a>
 function.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Reshape</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reshape</span>
 
 <span class="c1"># Define a reshape output to be added to the YOLO model</span>
 <span class="n">output</span> <span class="o">=</span> <span class="n">Reshape</span><span class="p">((</span><span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">classes</span><span class="p">),</span>
@@ -977,9 +990,9 @@ use <a class="reference external" href="../../api_reference/akida_models_apis.ht
 before computing precision for all classes.</p>
 </div>
 </div></blockquote>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">yolo_voc_pretrained</span>
-<span class="kn">from</span> <span class="nn">akida_models.detection.map_evaluation</span> <span class="kn">import</span> <span class="n">MapEvaluation</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">timeit</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">timer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">yolo_voc_pretrained</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.detection.map_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MapEvaluation</span>
 
 <span class="c1"># Load the pretrained model along with anchors</span>
 <span class="n">model_keras</span><span class="p">,</span> <span class="n">anchors</span> <span class="o">=</span> <span class="n">yolo_voc_pretrained</span><span class="p">()</span>
@@ -989,25 +1002,25 @@ before computing precision for all classes.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/coco/coco_anchors.pkl.
 
   0/126 [..............................] - ETA: 0s
-126/126 [==============================] - 0s 1us/step
+126/126 [==============================] - 0s 2us/step
 Download complete.
 Downloading data from https://data.brainchip.com/models/AkidaV2/yolo/yolo_akidanet_voc_i8_w8_a8.h5.
 
        0/14926320 [..............................] - ETA: 0s
-  196608/14926320 [..............................] - ETA: 4s
- 1105920/14926320 [=&gt;............................] - ETA: 1s
- 2260992/14926320 [===&gt;..........................] - ETA: 0s
- 3481600/14926320 [=====&gt;........................] - ETA: 0s
- 4669440/14926320 [========&gt;.....................] - ETA: 0s
- 5767168/14926320 [==========&gt;...................] - ETA: 0s
- 6864896/14926320 [============&gt;.................] - ETA: 0s
- 8052736/14926320 [===============&gt;..............] - ETA: 0s
- 9216000/14926320 [=================&gt;............] - ETA: 0s
-10289152/14926320 [===================&gt;..........] - ETA: 0s
-11411456/14926320 [=====================&gt;........] - ETA: 0s
-12640256/14926320 [========================&gt;.....] - ETA: 0s
-13729792/14926320 [==========================&gt;...] - ETA: 0s
-14925824/14926320 [============================&gt;.] - ETA: 0s
+  212992/14926320 [..............................] - ETA: 4s
+  991232/14926320 [&gt;.............................] - ETA: 1s
+ 2048000/14926320 [===&gt;..........................] - ETA: 0s
+ 3129344/14926320 [=====&gt;........................] - ETA: 0s
+ 4300800/14926320 [=======&gt;......................] - ETA: 0s
+ 5464064/14926320 [=========&gt;....................] - ETA: 0s
+ 6553600/14926320 [============&gt;.................] - ETA: 0s
+ 7692288/14926320 [==============&gt;...............] - ETA: 0s
+ 8814592/14926320 [================&gt;.............] - ETA: 0s
+ 9945088/14926320 [==================&gt;...........] - ETA: 0s
+10649600/14926320 [====================&gt;.........] - ETA: 0s
+11763712/14926320 [======================&gt;.......] - ETA: 0s
+12722176/14926320 [========================&gt;.....] - ETA: 0s
+13869056/14926320 [==========================&gt;...] - ETA: 0s
 14926320/14926320 [==============================] - 1s 0us/step
 Download complete.
 Model: &quot;model_1&quot;
@@ -1193,68 +1206,69 @@ _________________________________________________________________
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/130 [00:00&lt;?, ?it/s]
 Getting predictions:   0%|          | 0/130 [00:00&lt;?, ?it/s]
 Getting predictions:   1%|          | 1/130 [00:11&lt;25:28, 11.85s/it]
-Getting predictions:   2%|▏         | 3/130 [00:11&lt;06:37,  3.13s/it]
+Getting predictions:   2%|▏         | 3/130 [00:12&lt;06:37,  3.13s/it]
 Getting predictions:   4%|▍         | 5/130 [00:12&lt;03:14,  1.56s/it]
 Getting predictions:   5%|▌         | 7/130 [00:12&lt;01:55,  1.07it/s]
 Getting predictions:   7%|▋         | 9/130 [00:12&lt;01:14,  1.63it/s]
 Getting predictions:   8%|▊         | 11/130 [00:12&lt;00:50,  2.36it/s]
-Getting predictions:  10%|█         | 13/130 [00:12&lt;00:35,  3.25it/s]
-Getting predictions:  12%|█▏        | 15/130 [00:12&lt;00:26,  4.34it/s]
+Getting predictions:  10%|█         | 13/130 [00:12&lt;00:36,  3.25it/s]
+Getting predictions:  12%|█▏        | 15/130 [00:12&lt;00:26,  4.33it/s]
 Getting predictions:  13%|█▎        | 17/130 [00:13&lt;00:20,  5.50it/s]
-Getting predictions:  15%|█▍        | 19/130 [00:13&lt;00:16,  6.79it/s]
-Getting predictions:  16%|█▌        | 21/130 [00:13&lt;00:13,  8.10it/s]
-Getting predictions:  18%|█▊        | 23/130 [00:13&lt;00:12,  8.27it/s]
-Getting predictions:  19%|█▉        | 25/130 [00:13&lt;00:11,  8.98it/s]
-Getting predictions:  21%|██        | 27/130 [00:13&lt;00:10, 10.10it/s]
-Getting predictions:  22%|██▏       | 29/130 [00:14&lt;00:09, 10.92it/s]
-Getting predictions:  24%|██▍       | 31/130 [00:14&lt;00:08, 11.63it/s]
-Getting predictions:  25%|██▌       | 33/130 [00:14&lt;00:07, 12.31it/s]
-Getting predictions:  27%|██▋       | 35/130 [00:14&lt;00:07, 12.67it/s]
-Getting predictions:  28%|██▊       | 37/130 [00:14&lt;00:07, 12.87it/s]
-Getting predictions:  30%|███       | 39/130 [00:14&lt;00:06, 13.15it/s]
-Getting predictions:  32%|███▏      | 41/130 [00:14&lt;00:06, 13.48it/s]
-Getting predictions:  33%|███▎      | 43/130 [00:15&lt;00:06, 13.15it/s]
-Getting predictions:  35%|███▍      | 45/130 [00:15&lt;00:06, 13.36it/s]
-Getting predictions:  36%|███▌      | 47/130 [00:15&lt;00:06, 13.48it/s]
-Getting predictions:  38%|███▊      | 49/130 [00:15&lt;00:05, 13.65it/s]
-Getting predictions:  39%|███▉      | 51/130 [00:15&lt;00:06, 12.93it/s]
-Getting predictions:  41%|████      | 53/130 [00:15&lt;00:06, 12.61it/s]
-Getting predictions:  42%|████▏     | 55/130 [00:16&lt;00:05, 12.83it/s]
-Getting predictions:  44%|████▍     | 57/130 [00:16&lt;00:05, 13.17it/s]
-Getting predictions:  45%|████▌     | 59/130 [00:16&lt;00:05, 13.40it/s]
-Getting predictions:  47%|████▋     | 61/130 [00:16&lt;00:05, 13.32it/s]
+Getting predictions:  15%|█▍        | 19/130 [00:13&lt;00:16,  6.77it/s]
+Getting predictions:  16%|█▌        | 21/130 [00:13&lt;00:13,  8.09it/s]
+Getting predictions:  18%|█▊        | 23/130 [00:13&lt;00:12,  8.31it/s]
+Getting predictions:  19%|█▉        | 25/130 [00:13&lt;00:11,  9.05it/s]
+Getting predictions:  21%|██        | 27/130 [00:13&lt;00:10, 10.17it/s]
+Getting predictions:  22%|██▏       | 29/130 [00:14&lt;00:09, 10.98it/s]
+Getting predictions:  24%|██▍       | 31/130 [00:14&lt;00:08, 11.66it/s]
+Getting predictions:  25%|██▌       | 33/130 [00:14&lt;00:07, 12.34it/s]
+Getting predictions:  27%|██▋       | 35/130 [00:14&lt;00:07, 12.73it/s]
+Getting predictions:  28%|██▊       | 37/130 [00:14&lt;00:07, 12.92it/s]
+Getting predictions:  30%|███       | 39/130 [00:14&lt;00:06, 13.18it/s]
+Getting predictions:  32%|███▏      | 41/130 [00:14&lt;00:06, 13.52it/s]
+Getting predictions:  33%|███▎      | 43/130 [00:15&lt;00:06, 13.13it/s]
+Getting predictions:  35%|███▍      | 45/130 [00:15&lt;00:06, 13.27it/s]
+Getting predictions:  36%|███▌      | 47/130 [00:15&lt;00:06, 13.39it/s]
+Getting predictions:  38%|███▊      | 49/130 [00:15&lt;00:05, 13.57it/s]
+Getting predictions:  39%|███▉      | 51/130 [00:15&lt;00:06, 12.90it/s]
+Getting predictions:  41%|████      | 53/130 [00:15&lt;00:06, 12.59it/s]
+Getting predictions:  42%|████▏     | 55/130 [00:16&lt;00:05, 12.75it/s]
+Getting predictions:  44%|████▍     | 57/130 [00:16&lt;00:05, 13.09it/s]
+Getting predictions:  45%|████▌     | 59/130 [00:16&lt;00:05, 13.36it/s]
+Getting predictions:  47%|████▋     | 61/130 [00:16&lt;00:05, 13.34it/s]
 Getting predictions:  48%|████▊     | 63/130 [00:16&lt;00:04, 13.46it/s]
-Getting predictions:  50%|█████     | 65/130 [00:16&lt;00:05, 12.65it/s]
-Getting predictions:  52%|█████▏    | 67/130 [00:16&lt;00:05, 12.00it/s]
-Getting predictions:  53%|█████▎    | 69/130 [00:17&lt;00:05, 12.15it/s]
-Getting predictions:  55%|█████▍    | 71/130 [00:17&lt;00:05, 11.59it/s]
-Getting predictions:  56%|█████▌    | 73/130 [00:17&lt;00:04, 12.25it/s]
-Getting predictions:  58%|█████▊    | 75/130 [00:17&lt;00:05, 10.65it/s]
-Getting predictions:  59%|█████▉    | 77/130 [00:17&lt;00:05, 10.40it/s]
-Getting predictions:  61%|██████    | 79/130 [00:18&lt;00:04, 11.18it/s]
-Getting predictions:  62%|██████▏   | 81/130 [00:18&lt;00:04, 11.61it/s]
-Getting predictions:  64%|██████▍   | 83/130 [00:18&lt;00:03, 12.20it/s]
-Getting predictions:  65%|██████▌   | 85/130 [00:18&lt;00:03, 11.51it/s]
-Getting predictions:  67%|██████▋   | 87/130 [00:18&lt;00:03, 12.10it/s]
-Getting predictions:  68%|██████▊   | 89/130 [00:18&lt;00:03, 12.57it/s]
-Getting predictions:  70%|███████   | 91/130 [00:18&lt;00:03, 12.87it/s]
+Getting predictions:  50%|█████     | 65/130 [00:16&lt;00:05, 12.60it/s]
+Getting predictions:  52%|█████▏    | 67/130 [00:16&lt;00:05, 12.06it/s]
+Getting predictions:  53%|█████▎    | 69/130 [00:17&lt;00:05, 12.16it/s]
+Getting predictions:  55%|█████▍    | 71/130 [00:17&lt;00:05, 11.60it/s]
+Getting predictions:  56%|█████▌    | 73/130 [00:17&lt;00:04, 12.26it/s]
+Getting predictions:  58%|█████▊    | 75/130 [00:17&lt;00:05, 10.54it/s]
+Getting predictions:  59%|█████▉    | 77/130 [00:17&lt;00:05, 10.33it/s]
+Getting predictions:  61%|██████    | 79/130 [00:18&lt;00:04, 11.12it/s]
+Getting predictions:  62%|██████▏   | 81/130 [00:18&lt;00:04, 11.59it/s]
+Getting predictions:  64%|██████▍   | 83/130 [00:18&lt;00:03, 12.14it/s]
+Getting predictions:  65%|██████▌   | 85/130 [00:18&lt;00:03, 11.52it/s]
+Getting predictions:  67%|██████▋   | 87/130 [00:18&lt;00:03, 12.07it/s]
+Getting predictions:  68%|██████▊   | 89/130 [00:18&lt;00:03, 12.49it/s]
+Getting predictions:  70%|███████   | 91/130 [00:18&lt;00:03, 12.85it/s]
 Getting predictions:  72%|███████▏  | 93/130 [00:19&lt;00:02, 13.20it/s]
-Getting predictions:  73%|███████▎  | 95/130 [00:19&lt;00:02, 13.19it/s]
-Getting predictions:  75%|███████▍  | 97/130 [00:19&lt;00:02, 13.30it/s]
-Getting predictions:  76%|███████▌  | 99/130 [00:19&lt;00:02, 11.48it/s]
-Computing overlaps:  77%|███████▋  | 100/130 [00:19&lt;00:02, 11.48it/s]
-Computing overlaps:  78%|███████▊  | 101/130 [00:20&lt;00:04,  7.22it/s]
-Computing overlaps:  88%|████████▊ | 115/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.50:  92%|█████████▏| 120/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.55:  93%|█████████▎| 121/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.60:  94%|█████████▍| 122/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.65:  95%|█████████▍| 123/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.70:  95%|█████████▌| 124/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.75:  96%|█████████▌| 125/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.80:  97%|█████████▋| 126/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.85:  98%|█████████▊| 127/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.90:  98%|█████████▊| 128/130 [00:20&lt;00:00, 23.95it/s]
-Computing average precisions th = 0.95:  99%|█████████▉| 129/130 [00:20&lt;00:00, 23.95it/s]
+Getting predictions:  73%|███████▎  | 95/130 [00:19&lt;00:02, 13.15it/s]
+Getting predictions:  75%|███████▍  | 97/130 [00:19&lt;00:02, 13.28it/s]
+Getting predictions:  76%|███████▌  | 99/130 [00:19&lt;00:02, 11.44it/s]
+Computing overlaps:  77%|███████▋  | 100/130 [00:19&lt;00:02, 11.44it/s]
+Computing overlaps:  78%|███████▊  | 101/130 [00:20&lt;00:04,  7.23it/s]
+Computing overlaps:  88%|████████▊ | 114/130 [00:20&lt;00:00, 23.54it/s]
+Computing average precisions th = 0.50:  92%|█████████▏| 120/130 [00:20&lt;00:00, 23.54it/s]
+Computing average precisions th = 0.55:  93%|█████████▎| 121/130 [00:20&lt;00:00, 23.54it/s]
+Computing average precisions th = 0.60:  94%|█████████▍| 122/130 [00:20&lt;00:00, 23.54it/s]
+Computing average precisions th = 0.65:  95%|█████████▍| 123/130 [00:20&lt;00:00, 23.54it/s]
+Computing average precisions th = 0.65:  95%|█████████▌| 124/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.70:  95%|█████████▌| 124/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.75:  96%|█████████▌| 125/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.80:  97%|█████████▋| 126/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.85:  98%|█████████▊| 127/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.90:  98%|█████████▊| 128/130 [00:20&lt;00:00, 35.62it/s]
+Computing average precisions th = 0.95:  99%|█████████▉| 129/130 [00:20&lt;00:00, 35.62it/s]
 
 aeroplane 0.7733
 bicycle 0.5278
@@ -1277,7 +1291,7 @@ sofa 0.5850
 train 0.6136
 tvmonitor 0.5860
 mAP 50: 0.8783
-Keras inference on 100 images took 20.46 s.
+Keras inference on 100 images took 20.49 s.
 </pre></div>
 </div>
 </section>
@@ -1293,7 +1307,7 @@ for each box must be removed before Akida conversion.</p>
 </div>
 <p>When converting to an Akida model, we just need to pass the Keras model
 to <a class="reference external" href="../../api_reference/cnn2snn_apis.html#convert">cnn2snn.convert</a>.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
 <span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">compatible_model</span><span class="p">)</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
@@ -1405,119 +1419,119 @@ __________________________________________________________________________
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/130 [00:00&lt;?, ?it/s]
 Getting predictions:   0%|          | 0/130 [00:00&lt;?, ?it/s]
-Getting predictions:   1%|          | 1/130 [00:00&lt;00:17,  7.36it/s]
-Getting predictions:   2%|▏         | 2/130 [00:00&lt;00:16,  7.61it/s]
-Getting predictions:   2%|▏         | 3/130 [00:00&lt;00:16,  7.78it/s]
-Getting predictions:   3%|▎         | 4/130 [00:00&lt;00:15,  7.89it/s]
-Getting predictions:   4%|▍         | 5/130 [00:00&lt;00:15,  8.00it/s]
-Getting predictions:   5%|▍         | 6/130 [00:00&lt;00:15,  8.00it/s]
-Getting predictions:   5%|▌         | 7/130 [00:00&lt;00:16,  7.35it/s]
-Getting predictions:   6%|▌         | 8/130 [00:01&lt;00:16,  7.36it/s]
-Getting predictions:   7%|▋         | 9/130 [00:01&lt;00:15,  7.58it/s]
-Getting predictions:   8%|▊         | 10/130 [00:01&lt;00:15,  7.69it/s]
-Getting predictions:   8%|▊         | 11/130 [00:01&lt;00:15,  7.80it/s]
-Getting predictions:   9%|▉         | 12/130 [00:01&lt;00:15,  7.84it/s]
-Getting predictions:  10%|█         | 13/130 [00:01&lt;00:14,  7.86it/s]
-Getting predictions:  11%|█         | 14/130 [00:01&lt;00:14,  7.98it/s]
-Getting predictions:  12%|█▏        | 15/130 [00:01&lt;00:14,  8.03it/s]
-Getting predictions:  12%|█▏        | 16/130 [00:02&lt;00:14,  7.93it/s]
-Getting predictions:  13%|█▎        | 17/130 [00:02&lt;00:14,  8.01it/s]
-Getting predictions:  14%|█▍        | 18/130 [00:02&lt;00:13,  8.04it/s]
-Getting predictions:  15%|█▍        | 19/130 [00:02&lt;00:13,  8.03it/s]
-Getting predictions:  15%|█▌        | 20/130 [00:02&lt;00:13,  8.06it/s]
-Getting predictions:  16%|█▌        | 21/130 [00:02&lt;00:13,  8.16it/s]
-Getting predictions:  17%|█▋        | 22/130 [00:02&lt;00:13,  7.72it/s]
-Getting predictions:  18%|█▊        | 23/130 [00:02&lt;00:15,  6.89it/s]
-Getting predictions:  18%|█▊        | 24/130 [00:03&lt;00:15,  7.03it/s]
-Getting predictions:  19%|█▉        | 25/130 [00:03&lt;00:15,  6.91it/s]
-Getting predictions:  20%|██        | 26/130 [00:03&lt;00:14,  7.21it/s]
+Getting predictions:   1%|          | 1/130 [00:00&lt;00:17,  7.32it/s]
+Getting predictions:   2%|▏         | 2/130 [00:00&lt;00:16,  7.62it/s]
+Getting predictions:   2%|▏         | 3/130 [00:00&lt;00:16,  7.77it/s]
+Getting predictions:   3%|▎         | 4/130 [00:00&lt;00:16,  7.86it/s]
+Getting predictions:   4%|▍         | 5/130 [00:00&lt;00:15,  7.96it/s]
+Getting predictions:   5%|▍         | 6/130 [00:00&lt;00:15,  7.95it/s]
+Getting predictions:   5%|▌         | 7/130 [00:00&lt;00:16,  7.29it/s]
+Getting predictions:   6%|▌         | 8/130 [00:01&lt;00:16,  7.29it/s]
+Getting predictions:   7%|▋         | 9/130 [00:01&lt;00:16,  7.52it/s]
+Getting predictions:   8%|▊         | 10/130 [00:01&lt;00:15,  7.62it/s]
+Getting predictions:   8%|▊         | 11/130 [00:01&lt;00:15,  7.74it/s]
+Getting predictions:   9%|▉         | 12/130 [00:01&lt;00:15,  7.77it/s]
+Getting predictions:  10%|█         | 13/130 [00:01&lt;00:14,  7.82it/s]
+Getting predictions:  11%|█         | 14/130 [00:01&lt;00:14,  7.91it/s]
+Getting predictions:  12%|█▏        | 15/130 [00:01&lt;00:14,  7.98it/s]
+Getting predictions:  12%|█▏        | 16/130 [00:02&lt;00:14,  7.91it/s]
+Getting predictions:  13%|█▎        | 17/130 [00:02&lt;00:14,  8.00it/s]
+Getting predictions:  14%|█▍        | 18/130 [00:02&lt;00:13,  8.06it/s]
+Getting predictions:  15%|█▍        | 19/130 [00:02&lt;00:13,  8.06it/s]
+Getting predictions:  15%|█▌        | 20/130 [00:02&lt;00:13,  8.10it/s]
+Getting predictions:  16%|█▌        | 21/130 [00:02&lt;00:13,  8.19it/s]
+Getting predictions:  17%|█▋        | 22/130 [00:02&lt;00:13,  7.74it/s]
+Getting predictions:  18%|█▊        | 23/130 [00:03&lt;00:15,  6.89it/s]
+Getting predictions:  18%|█▊        | 24/130 [00:03&lt;00:15,  7.02it/s]
+Getting predictions:  19%|█▉        | 25/130 [00:03&lt;00:15,  6.89it/s]
+Getting predictions:  20%|██        | 26/130 [00:03&lt;00:14,  7.20it/s]
 Getting predictions:  21%|██        | 27/130 [00:03&lt;00:13,  7.46it/s]
 Getting predictions:  22%|██▏       | 28/130 [00:03&lt;00:13,  7.59it/s]
-Getting predictions:  22%|██▏       | 29/130 [00:03&lt;00:13,  7.74it/s]
+Getting predictions:  22%|██▏       | 29/130 [00:03&lt;00:13,  7.72it/s]
 Getting predictions:  23%|██▎       | 30/130 [00:03&lt;00:12,  7.82it/s]
 Getting predictions:  24%|██▍       | 31/130 [00:04&lt;00:12,  7.78it/s]
-Getting predictions:  25%|██▍       | 32/130 [00:04&lt;00:12,  7.90it/s]
-Getting predictions:  25%|██▌       | 33/130 [00:04&lt;00:12,  8.00it/s]
-Getting predictions:  26%|██▌       | 34/130 [00:04&lt;00:12,  7.98it/s]
-Getting predictions:  27%|██▋       | 35/130 [00:04&lt;00:11,  7.94it/s]
-Getting predictions:  28%|██▊       | 36/130 [00:04&lt;00:11,  7.86it/s]
+Getting predictions:  25%|██▍       | 32/130 [00:04&lt;00:12,  7.93it/s]
+Getting predictions:  25%|██▌       | 33/130 [00:04&lt;00:12,  8.01it/s]
+Getting predictions:  26%|██▌       | 34/130 [00:04&lt;00:11,  8.02it/s]
+Getting predictions:  27%|██▋       | 35/130 [00:04&lt;00:11,  7.97it/s]
+Getting predictions:  28%|██▊       | 36/130 [00:04&lt;00:11,  7.87it/s]
 Getting predictions:  28%|██▊       | 37/130 [00:04&lt;00:11,  7.89it/s]
 Getting predictions:  29%|██▉       | 38/130 [00:04&lt;00:11,  7.89it/s]
-Getting predictions:  30%|███       | 39/130 [00:05&lt;00:11,  7.87it/s]
-Getting predictions:  31%|███       | 40/130 [00:05&lt;00:11,  7.92it/s]
-Getting predictions:  32%|███▏      | 41/130 [00:05&lt;00:11,  8.05it/s]
-Getting predictions:  32%|███▏      | 42/130 [00:05&lt;00:11,  7.82it/s]
-Getting predictions:  33%|███▎      | 43/130 [00:05&lt;00:11,  7.79it/s]
-Getting predictions:  34%|███▍      | 44/130 [00:05&lt;00:10,  7.85it/s]
-Getting predictions:  35%|███▍      | 45/130 [00:05&lt;00:10,  7.87it/s]
-Getting predictions:  35%|███▌      | 46/130 [00:05&lt;00:10,  8.05it/s]
-Getting predictions:  36%|███▌      | 47/130 [00:06&lt;00:10,  7.92it/s]
-Getting predictions:  37%|███▋      | 48/130 [00:06&lt;00:10,  7.98it/s]
-Getting predictions:  38%|███▊      | 49/130 [00:06&lt;00:10,  8.00it/s]
+Getting predictions:  30%|███       | 39/130 [00:05&lt;00:11,  7.85it/s]
+Getting predictions:  31%|███       | 40/130 [00:05&lt;00:11,  7.90it/s]
+Getting predictions:  32%|███▏      | 41/130 [00:05&lt;00:11,  8.04it/s]
+Getting predictions:  32%|███▏      | 42/130 [00:05&lt;00:11,  7.80it/s]
+Getting predictions:  33%|███▎      | 43/130 [00:05&lt;00:11,  7.77it/s]
+Getting predictions:  34%|███▍      | 44/130 [00:05&lt;00:10,  7.82it/s]
+Getting predictions:  35%|███▍      | 45/130 [00:05&lt;00:10,  7.82it/s]
+Getting predictions:  35%|███▌      | 46/130 [00:05&lt;00:10,  8.03it/s]
+Getting predictions:  36%|███▌      | 47/130 [00:06&lt;00:10,  7.90it/s]
+Getting predictions:  37%|███▋      | 48/130 [00:06&lt;00:10,  7.96it/s]
+Getting predictions:  38%|███▊      | 49/130 [00:06&lt;00:10,  7.98it/s]
 Getting predictions:  38%|███▊      | 50/130 [00:06&lt;00:10,  7.98it/s]
-Getting predictions:  39%|███▉      | 51/130 [00:06&lt;00:10,  7.55it/s]
-Getting predictions:  40%|████      | 52/130 [00:06&lt;00:10,  7.69it/s]
-Getting predictions:  41%|████      | 53/130 [00:06&lt;00:10,  7.42it/s]
-Getting predictions:  42%|████▏     | 54/130 [00:06&lt;00:09,  7.69it/s]
-Getting predictions:  42%|████▏     | 55/130 [00:07&lt;00:09,  7.59it/s]
+Getting predictions:  39%|███▉      | 51/130 [00:06&lt;00:10,  7.50it/s]
+Getting predictions:  40%|████      | 52/130 [00:06&lt;00:10,  7.66it/s]
+Getting predictions:  41%|████      | 53/130 [00:06&lt;00:10,  7.39it/s]
+Getting predictions:  42%|████▏     | 54/130 [00:06&lt;00:09,  7.66it/s]
+Getting predictions:  42%|████▏     | 55/130 [00:07&lt;00:09,  7.58it/s]
 Getting predictions:  43%|████▎     | 56/130 [00:07&lt;00:09,  7.69it/s]
-Getting predictions:  44%|████▍     | 57/130 [00:07&lt;00:09,  7.74it/s]
-Getting predictions:  45%|████▍     | 58/130 [00:07&lt;00:09,  7.84it/s]
-Getting predictions:  45%|████▌     | 59/130 [00:07&lt;00:09,  7.88it/s]
+Getting predictions:  44%|████▍     | 57/130 [00:07&lt;00:09,  7.73it/s]
+Getting predictions:  45%|████▍     | 58/130 [00:07&lt;00:09,  7.83it/s]
+Getting predictions:  45%|████▌     | 59/130 [00:07&lt;00:09,  7.86it/s]
 Getting predictions:  46%|████▌     | 60/130 [00:07&lt;00:08,  7.94it/s]
-Getting predictions:  47%|████▋     | 61/130 [00:07&lt;00:08,  7.78it/s]
-Getting predictions:  48%|████▊     | 62/130 [00:07&lt;00:08,  7.75it/s]
-Getting predictions:  48%|████▊     | 63/130 [00:08&lt;00:08,  7.85it/s]
+Getting predictions:  47%|████▋     | 61/130 [00:07&lt;00:08,  7.74it/s]
+Getting predictions:  48%|████▊     | 62/130 [00:08&lt;00:08,  7.72it/s]
+Getting predictions:  48%|████▊     | 63/130 [00:08&lt;00:08,  7.84it/s]
 Getting predictions:  49%|████▉     | 64/130 [00:08&lt;00:08,  7.73it/s]
-Getting predictions:  50%|█████     | 65/130 [00:08&lt;00:08,  7.38it/s]
+Getting predictions:  50%|█████     | 65/130 [00:08&lt;00:08,  7.39it/s]
 Getting predictions:  51%|█████     | 66/130 [00:08&lt;00:08,  7.14it/s]
 Getting predictions:  52%|█████▏    | 67/130 [00:08&lt;00:08,  7.18it/s]
-Getting predictions:  52%|█████▏    | 68/130 [00:08&lt;00:08,  7.23it/s]
-Getting predictions:  53%|█████▎    | 69/130 [00:08&lt;00:08,  7.32it/s]
-Getting predictions:  54%|█████▍    | 70/130 [00:09&lt;00:08,  7.19it/s]
+Getting predictions:  52%|█████▏    | 68/130 [00:08&lt;00:08,  7.22it/s]
+Getting predictions:  53%|█████▎    | 69/130 [00:08&lt;00:08,  7.34it/s]
+Getting predictions:  54%|█████▍    | 70/130 [00:09&lt;00:08,  7.22it/s]
 Getting predictions:  55%|█████▍    | 71/130 [00:09&lt;00:08,  7.07it/s]
-Getting predictions:  55%|█████▌    | 72/130 [00:09&lt;00:07,  7.29it/s]
-Getting predictions:  56%|█████▌    | 73/130 [00:09&lt;00:07,  7.51it/s]
-Getting predictions:  57%|█████▋    | 74/130 [00:09&lt;00:07,  7.48it/s]
-Getting predictions:  58%|█████▊    | 75/130 [00:09&lt;00:08,  6.29it/s]
-Getting predictions:  58%|█████▊    | 76/130 [00:09&lt;00:08,  6.58it/s]
+Getting predictions:  55%|█████▌    | 72/130 [00:09&lt;00:07,  7.31it/s]
+Getting predictions:  56%|█████▌    | 73/130 [00:09&lt;00:07,  7.50it/s]
+Getting predictions:  57%|█████▋    | 74/130 [00:09&lt;00:07,  7.49it/s]
+Getting predictions:  58%|█████▊    | 75/130 [00:09&lt;00:08,  6.26it/s]
+Getting predictions:  58%|█████▊    | 76/130 [00:09&lt;00:08,  6.57it/s]
 Getting predictions:  59%|█████▉    | 77/130 [00:10&lt;00:08,  6.38it/s]
-Getting predictions:  60%|██████    | 78/130 [00:10&lt;00:07,  6.75it/s]
-Getting predictions:  61%|██████    | 79/130 [00:10&lt;00:07,  7.08it/s]
-Getting predictions:  62%|██████▏   | 80/130 [00:10&lt;00:06,  7.21it/s]
-Getting predictions:  62%|██████▏   | 81/130 [00:10&lt;00:06,  7.37it/s]
-Getting predictions:  63%|██████▎   | 82/130 [00:10&lt;00:06,  7.62it/s]
+Getting predictions:  60%|██████    | 78/130 [00:10&lt;00:07,  6.76it/s]
+Getting predictions:  61%|██████    | 79/130 [00:10&lt;00:07,  7.10it/s]
+Getting predictions:  62%|██████▏   | 80/130 [00:10&lt;00:06,  7.23it/s]
+Getting predictions:  62%|██████▏   | 81/130 [00:10&lt;00:06,  7.39it/s]
+Getting predictions:  63%|██████▎   | 82/130 [00:10&lt;00:06,  7.63it/s]
 Getting predictions:  64%|██████▍   | 83/130 [00:10&lt;00:06,  7.65it/s]
-Getting predictions:  65%|██████▍   | 84/130 [00:11&lt;00:06,  7.43it/s]
-Getting predictions:  65%|██████▌   | 85/130 [00:11&lt;00:06,  7.20it/s]
-Getting predictions:  66%|██████▌   | 86/130 [00:11&lt;00:05,  7.42it/s]
-Getting predictions:  67%|██████▋   | 87/130 [00:11&lt;00:05,  7.56it/s]
-Getting predictions:  68%|██████▊   | 88/130 [00:11&lt;00:05,  7.74it/s]
-Getting predictions:  68%|██████▊   | 89/130 [00:11&lt;00:05,  7.75it/s]
-Getting predictions:  69%|██████▉   | 90/130 [00:11&lt;00:05,  7.80it/s]
+Getting predictions:  65%|██████▍   | 84/130 [00:11&lt;00:06,  7.41it/s]
+Getting predictions:  65%|██████▌   | 85/130 [00:11&lt;00:06,  7.16it/s]
+Getting predictions:  66%|██████▌   | 86/130 [00:11&lt;00:05,  7.39it/s]
+Getting predictions:  67%|██████▋   | 87/130 [00:11&lt;00:05,  7.53it/s]
+Getting predictions:  68%|██████▊   | 88/130 [00:11&lt;00:05,  7.71it/s]
+Getting predictions:  68%|██████▊   | 89/130 [00:11&lt;00:05,  7.74it/s]
+Getting predictions:  69%|██████▉   | 90/130 [00:11&lt;00:05,  7.78it/s]
 Getting predictions:  70%|███████   | 91/130 [00:11&lt;00:04,  7.87it/s]
-Getting predictions:  71%|███████   | 92/130 [00:12&lt;00:04,  7.88it/s]
-Getting predictions:  72%|███████▏  | 93/130 [00:12&lt;00:04,  7.92it/s]
-Getting predictions:  72%|███████▏  | 94/130 [00:12&lt;00:04,  8.03it/s]
+Getting predictions:  71%|███████   | 92/130 [00:12&lt;00:04,  7.87it/s]
+Getting predictions:  72%|███████▏  | 93/130 [00:12&lt;00:04,  7.89it/s]
+Getting predictions:  72%|███████▏  | 94/130 [00:12&lt;00:04,  8.04it/s]
 Getting predictions:  73%|███████▎  | 95/130 [00:12&lt;00:04,  7.77it/s]
 Getting predictions:  74%|███████▍  | 96/130 [00:12&lt;00:04,  7.81it/s]
-Getting predictions:  75%|███████▍  | 97/130 [00:12&lt;00:04,  7.90it/s]
-Getting predictions:  75%|███████▌  | 98/130 [00:12&lt;00:04,  7.74it/s]
-Getting predictions:  76%|███████▌  | 99/130 [00:13&lt;00:04,  6.69it/s]
-Getting predictions:  77%|███████▋  | 100/130 [00:13&lt;00:04,  7.09it/s]
-Computing overlaps:  77%|███████▋  | 100/130 [00:13&lt;00:04,  7.09it/s]
-Computing overlaps:  87%|████████▋ | 113/130 [00:13&lt;00:00, 35.21it/s]
-Computing average precisions th = 0.50:  92%|█████████▏| 120/130 [00:13&lt;00:00, 35.21it/s]
-Computing average precisions th = 0.55:  93%|█████████▎| 121/130 [00:13&lt;00:00, 35.21it/s]
-Computing average precisions th = 0.60:  94%|█████████▍| 122/130 [00:13&lt;00:00, 35.21it/s]
-Computing average precisions th = 0.65:  95%|█████████▍| 123/130 [00:13&lt;00:00, 35.21it/s]
-Computing average precisions th = 0.65:  95%|█████████▌| 124/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.70:  95%|█████████▌| 124/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.75:  96%|█████████▌| 125/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.80:  97%|█████████▋| 126/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.85:  98%|█████████▊| 127/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.90:  98%|█████████▊| 128/130 [00:13&lt;00:00, 53.33it/s]
-Computing average precisions th = 0.95:  99%|█████████▉| 129/130 [00:13&lt;00:00, 53.33it/s]
+Getting predictions:  75%|███████▍  | 97/130 [00:12&lt;00:04,  7.89it/s]
+Getting predictions:  75%|███████▌  | 98/130 [00:12&lt;00:04,  7.68it/s]
+Getting predictions:  76%|███████▌  | 99/130 [00:13&lt;00:04,  6.66it/s]
+Getting predictions:  77%|███████▋  | 100/130 [00:13&lt;00:04,  7.04it/s]
+Computing overlaps:  77%|███████▋  | 100/130 [00:13&lt;00:04,  7.04it/s]
+Computing overlaps:  86%|████████▌ | 112/130 [00:13&lt;00:00, 33.10it/s]
+Computing average precisions th = 0.50:  92%|█████████▏| 120/130 [00:13&lt;00:00, 33.10it/s]
+Computing average precisions th = 0.55:  93%|█████████▎| 121/130 [00:13&lt;00:00, 33.10it/s]
+Computing average precisions th = 0.55:  94%|█████████▍| 122/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.60:  94%|█████████▍| 122/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.65:  95%|█████████▍| 123/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.70:  95%|█████████▌| 124/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.75:  96%|█████████▌| 125/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.80:  97%|█████████▋| 126/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.85:  98%|█████████▊| 127/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.90:  98%|█████████▊| 128/130 [00:13&lt;00:00, 49.17it/s]
+Computing average precisions th = 0.95:  99%|█████████▉| 129/130 [00:13&lt;00:00, 49.17it/s]
 
 aeroplane 0.7733
 bicycle 0.5278
@@ -1540,17 +1554,17 @@ sofa 0.5850
 train 0.6136
 tvmonitor 0.5860
 mAP 50: 0.8783
-Akida inference on 100 images took 13.41 s.
+Akida inference on 100 images took 13.44 s.
 </pre></div>
 </div>
 </section>
 <section id="show-predictions-for-a-random-image">
 <h3>6.2 Show predictions for a random image<a class="headerlink" href="#show-predictions-for-a-random-image" title="Link to this heading"></a></h3>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">patches</span>
 
-<span class="kn">from</span> <span class="nn">akida_models.detection.processing</span> <span class="kn">import</span> <span class="n">preprocess_image</span><span class="p">,</span> <span class="n">decode_output</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.detection.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocess_image</span><span class="p">,</span> <span class="n">decode_output</span>
 
 <span class="c1"># Shuffle the data to take a random test image</span>
 <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">val_dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="n">len_val_dataset</span><span class="p">)</span>
@@ -1607,7 +1621,7 @@ Akida inference on 100 images took 13.41 s.
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_plot_5_voc_yolo_detection_001.png" srcset="../../_images/sphx_glr_plot_5_voc_yolo_detection_001.png" alt="plot 5 voc yolo detection" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 7.249 seconds)</p>
+<img src="../../_images/sphx_glr_plot_5_voc_yolo_detection_001.png" srcset="../../_images/sphx_glr_plot_5_voc_yolo_detection_001.png" alt="plot 5 voc yolo detection" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 7.217 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-5-voc-yolo-detection-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/3b533646d733864cad4180378c9f4d7e/plot_5_voc_yolo_detection.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_5_voc_yolo_detection.ipynb</span></code></a></p>

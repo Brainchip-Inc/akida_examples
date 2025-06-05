@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>akida_models.sparsity &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -559,28 +574,28 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;compute_sparsity&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span>
 
-<span class="kn">import</span> <span class="nn">akida</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">akida</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 
-<span class="kn">from</span> <span class="nn">akida.core</span> <span class="kn">import</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Model</span> <span class="k">as</span> <span class="n">ak_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Model</span> <span class="k">as</span> <span class="n">ak_model</span>
 
-<span class="kn">import</span> <span class="nn">onnxruntime</span>
-<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
-<span class="kn">from</span> <span class="nn">quantizeml.onnx_support.quantization.quantize</span> <span class="kn">import</span> <span class="n">ONNXModel</span>
-<span class="kn">from</span> <span class="nn">quantizeml.onnx_support.quantization.transforms</span> <span class="kn">import</span> <span class="n">sanitize</span>
-<span class="kn">from</span> <span class="nn">quantizeml.onnx_support.graph_tools</span> <span class="kn">import</span> <span class="n">value_info_to_tensor_shape</span>
-<span class="kn">from</span> <span class="nn">quantizeml.random</span> <span class="kn">import</span> <span class="n">generate_np_random_samples</span>
-<span class="kn">from</span> <span class="nn">quantizeml.models.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_layers_by_type</span>
-<span class="kn">from</span> <span class="nn">quantizeml.layers</span> <span class="kn">import</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">onnxruntime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelProto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.quantization.quantize</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.quantization.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">value_info_to_tensor_shape</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_np_random_samples</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_layers_by_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span>
 
 
 <div class="viewcode-block" id="compute_sparsity">
 <a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.sparsity.compute_sparsity">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_sparsity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_sparsity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sparsity of a model across selected layers and samples.</span>
 
@@ -669,7 +684,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_compute_sparsity_tf</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_sparsity_tf</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sparsity of selected layers in a TensorFlow model.</span>
 
 <span class="sd">    This function calculates the sparsity (proportion of zero-valued elements)</span>
@@ -733,7 +748,7 @@
     <span class="k">return</span> <span class="n">results</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_sparsity_ak</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_sparsity_ak</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">layer_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sparsity of selected layers in an Akida model.</span>
 
 <span class="sd">    This function calculates the sparsity (proportion of zero-valued elements)</span>
@@ -753,7 +768,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A dictionary where keys are layer names and values are the computed sparsity values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_search_layers_to_build_submodel</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_search_layers_to_build_submodel</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
         <span class="n">queue</span><span class="p">,</span> <span class="n">visited</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="p">],</span> <span class="p">[]</span>
         <span class="n">in_degree</span><span class="p">,</span> <span class="n">dependents</span><span class="p">,</span> <span class="n">queue_sort</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">),</span> <span class="n">deque</span><span class="p">()</span>
         <span class="c1"># Search all the inbounds up to the input</span>
@@ -806,7 +821,7 @@
     <span class="k">return</span> <span class="n">results</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_sparsity_onnx</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">node_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_sparsity_onnx</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">node_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sparsity of selected nodes in an ONNX model.</span>
 
 <span class="sd">    This function calculates the sparsity (proportion of zero-valued elements)</span>

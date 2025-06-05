@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Age estimation (regression) example &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -467,6 +467,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -562,7 +577,7 @@ It includes age, gender, ethnicity annotations. This dataset is useful for
 various tasks like age estimation, face detection, and more.</p>
 <p>Load the dataset from Brainchip data server using the <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.utk_face.preprocessing.load_data">load_data</a>
 helper (decode JPEG images and load the associated labels).</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models.utk_face.preprocessing</span> <span class="kn">import</span> <span class="n">load_data</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.utk_face.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_data</span>
 
 <span class="c1"># Load the dataset</span>
 <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">()</span>
@@ -571,44 +586,39 @@ helper (decode JPEG images and load the associated labels).</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/utk_face/UTKFace_preprocessed.tar.gz.
 
        0/48742400 [..............................] - ETA: 0s
-  204800/48742400 [..............................] - ETA: 13s
-  909312/48742400 [..............................] - ETA: 5s 
- 1810432/48742400 [&gt;.............................] - ETA: 4s
- 2695168/48742400 [&gt;.............................] - ETA: 3s
- 3497984/48742400 [=&gt;............................] - ETA: 3s
- 4407296/48742400 [=&gt;............................] - ETA: 3s
- 5562368/48742400 [==&gt;...........................] - ETA: 2s
- 6725632/48742400 [===&gt;..........................] - ETA: 2s
- 7634944/48742400 [===&gt;..........................] - ETA: 2s
- 8740864/48742400 [====&gt;.........................] - ETA: 2s
- 9945088/48742400 [=====&gt;........................] - ETA: 2s
-10936320/48742400 [=====&gt;........................] - ETA: 2s
-12189696/48742400 [======&gt;.......................] - ETA: 2s
-13574144/48742400 [=======&gt;......................] - ETA: 1s
-14934016/48742400 [========&gt;.....................] - ETA: 1s
-16162816/48742400 [========&gt;.....................] - ETA: 1s
-17563648/48742400 [=========&gt;....................] - ETA: 1s
-18907136/48742400 [==========&gt;...................] - ETA: 1s
-20193280/48742400 [===========&gt;..................] - ETA: 1s
-21544960/48742400 [============&gt;.................] - ETA: 1s
-22880256/48742400 [=============&gt;................] - ETA: 1s
-24207360/48742400 [=============&gt;................] - ETA: 1s
-25608192/48742400 [==============&gt;...............] - ETA: 1s
-27131904/48742400 [===============&gt;..............] - ETA: 0s
-28475392/48742400 [================&gt;.............] - ETA: 0s
-29761536/48742400 [=================&gt;............] - ETA: 0s
-31154176/48742400 [==================&gt;...........] - ETA: 0s
-32776192/48742400 [===================&gt;..........] - ETA: 0s
-33947648/48742400 [===================&gt;..........] - ETA: 0s
-35340288/48742400 [====================&gt;.........] - ETA: 0s
-36913152/48742400 [=====================&gt;........] - ETA: 0s
-38076416/48742400 [======================&gt;.......] - ETA: 0s
-39616512/48742400 [=======================&gt;......] - ETA: 0s
-40935424/48742400 [========================&gt;.....] - ETA: 0s
-42385408/48742400 [=========================&gt;....] - ETA: 0s
-43180032/48742400 [=========================&gt;....] - ETA: 0s
-44064768/48742400 [==========================&gt;...] - ETA: 0s
-47030272/48742400 [===========================&gt;..] - ETA: 0s
+  180224/48742400 [..............................] - ETA: 13s
+  851968/48742400 [..............................] - ETA: 5s 
+ 2277376/48742400 [&gt;.............................] - ETA: 3s
+ 3670016/48742400 [=&gt;............................] - ETA: 2s
+ 5103616/48742400 [==&gt;...........................] - ETA: 2s
+ 6594560/48742400 [===&gt;..........................] - ETA: 1s
+ 8134656/48742400 [====&gt;.........................] - ETA: 1s
+ 9756672/48742400 [=====&gt;........................] - ETA: 1s
+11468800/48742400 [======&gt;.......................] - ETA: 1s
+12255232/48742400 [======&gt;.......................] - ETA: 1s
+15343616/48742400 [========&gt;.....................] - ETA: 1s
+17793024/48742400 [=========&gt;....................] - ETA: 1s
+19120128/48742400 [==========&gt;...................] - ETA: 1s
+20480000/48742400 [===========&gt;..................] - ETA: 1s
+21782528/48742400 [============&gt;.................] - ETA: 0s
+23306240/48742400 [=============&gt;................] - ETA: 0s
+24567808/48742400 [==============&gt;...............] - ETA: 0s
+26140672/48742400 [===============&gt;..............] - ETA: 0s
+27451392/48742400 [===============&gt;..............] - ETA: 0s
+28991488/48742400 [================&gt;.............] - ETA: 0s
+30400512/48742400 [=================&gt;............] - ETA: 0s
+31891456/48742400 [==================&gt;...........] - ETA: 0s
+33218560/48742400 [===================&gt;..........] - ETA: 0s
+34725888/48742400 [====================&gt;.........] - ETA: 0s
+36052992/48742400 [=====================&gt;........] - ETA: 0s
+37642240/48742400 [======================&gt;.......] - ETA: 0s
+38887424/48742400 [======================&gt;.......] - ETA: 0s
+40419328/48742400 [=======================&gt;......] - ETA: 0s
+41787392/48742400 [========================&gt;.....] - ETA: 0s
+43130880/48742400 [=========================&gt;....] - ETA: 0s
+44654592/48742400 [==========================&gt;...] - ETA: 0s
+45834240/48742400 [===========================&gt;..] - ETA: 0s
+47423488/48742400 [============================&gt;.] - ETA: 0s
 48742400/48742400 [==============================] - 2s 0us/step
 Download complete.
 </pre></div>
@@ -631,8 +641,8 @@ corresponding to the estimated age.</p>
 average of absolute differences between the target values and the predictions.
 The MAE is a linear score, i.e. all the individual differences are equally
 weighted in the average.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">fetch_file</span>
-<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span>
 
 <span class="c1"># Retrieve the model file from the BrainChip data server</span>
 <span class="n">model_file</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="s2">&quot;vgg_utk_face.h5&quot;</span><span class="p">,</span>
@@ -741,7 +751,7 @@ _________________________________________________________________
 <h2>3. Load a pre-trained quantized Keras model<a class="headerlink" href="#load-a-pre-trained-quantized-keras-model" title="Link to this heading"></a></h2>
 <p>The above native Keras model is quantized and fine-tuned (QAT). All weights and activations are
 quantized to 8-bit.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">vgg_utk_face_pretrained</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">vgg_utk_face_pretrained</span>
 
 <span class="c1"># Load the pre-trained quantized model</span>
 <span class="n">model_quantized_keras</span> <span class="o">=</span> <span class="n">vgg_utk_face_pretrained</span><span class="p">()</span>
@@ -751,7 +761,7 @@ quantized to 8-bit.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/models/AkidaV2/vgg/vgg_utk_face_i8_w8_a8.h5.
 
      0/553904 [..............................] - ETA: 0s
-237568/553904 [===========&gt;..................] - ETA: 0s
+122880/553904 [=====&gt;........................] - ETA: 0s
 553904/553904 [==============================] - 0s 0us/step
 Download complete.
 Model: &quot;vgg_utk_face&quot;
@@ -839,7 +849,7 @@ _________________________________________________________________
 <h2>4. Conversion to Akida<a class="headerlink" href="#conversion-to-akida" title="Link to this heading"></a></h2>
 <p>The quantized Keras model is now converted into an Akida model. After conversion, we evaluate the
 performance on the UTKFace dataset.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
 <span class="c1"># Convert the model</span>
 <span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized_keras</span><span class="p">)</span>
@@ -876,7 +886,7 @@ dequantizer (Dequantizer)  [1, 1, 1]     N/A
 _________________________________________________________
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="c1"># Check Akida model performance</span>
 <span class="n">y_akida</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test_akida</span><span class="p">)</span>
@@ -898,7 +908,7 @@ _________________________________________________________
 <p>Select a random image from the test set for age estimation.
 Print the Keras model’s age prediction using the <code class="docutils literal notranslate"><span class="pre">model_keras.predict()</span></code> function.
 Print the Akida model’s estimated age and the actual age associated with the image.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="c1"># Estimate age on a random single image and display Keras and Akida outputs</span>
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
@@ -915,13 +925,13 @@ Print the Akida model’s estimated age and the actual age associated with the i
 </pre></div>
 </div>
 <img src="../../_images/sphx_glr_plot_3_regression_001.png" srcset="../../_images/sphx_glr_plot_3_regression_001.png" alt="plot 3 regression" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1/1 [==============================] - ETA: 0s
-1/1 [==============================] - 0s 122ms/step
-Keras estimated age: 42.6
-Akida estimated age: 43.2
-Actual age: 20
+1/1 [==============================] - 0s 120ms/step
+Keras estimated age: 26.1
+Akida estimated age: 26.2
+Actual age: 18
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 29.875 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 29.563 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-3-regression-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d87b44e10396fd4f663d961778616b57/plot_3_regression.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_regression.ipynb</span></code></a></p>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.layers.activations &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -560,23 +575,23 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Activation&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedReLU&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedActivation&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
 
-<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span>
                           <span class="n">tensor_inputs</span><span class="p">,</span> <span class="n">apply_buffer_bitwidth</span><span class="p">,</span> <span class="n">check_arg_constraints</span><span class="p">,</span>
                           <span class="n">QuantizedLayer</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
-<span class="kn">from</span> <span class="nn">.recorders</span> <span class="kn">import</span> <span class="n">NonTrackVariable</span>
-<span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">QTensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.quantizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.recorders</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonTrackVariable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">QTensor</span>
 
 <span class="n">LUT_ENV</span> <span class="o">=</span> <span class="s2">&quot;LUT_ENABLED&quot;</span>
 
 
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">Activation</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Activation</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies an activation function to an output, like `tf.keras.layers.Activation`.</span>
 
 <span class="sd">    Args:</span>
@@ -587,7 +602,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;activation&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span> <span class="s2">&quot;swish&quot;</span><span class="p">,</span> <span class="s2">&quot;hard_silu&quot;</span><span class="p">,</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">]}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">activation</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -601,7 +616,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">check_arg_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;hard_silu&quot;</span><span class="p">:</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu6</span><span class="p">(</span><span class="n">inputs</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">:</span>
@@ -611,7 +626,7 @@
             <span class="n">y</span> <span class="o">=</span> <span class="n">activation_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">y</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span>
@@ -621,7 +636,7 @@
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU">[docs]</a>
 <span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">)</span>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedReLU</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantizedReLU</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized version of the ReLU activation layer applicable on FixedPoint tensor.</span>
 
 <span class="sd">    Args:</span>
@@ -633,7 +648,7 @@
         <span class="s1">&#39;threshold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
     <span class="n">ignored_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;negative_slope&#39;</span><span class="p">,</span> <span class="s1">&#39;threshold&#39;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Use quant_config to build quantizers</span>
@@ -655,7 +670,7 @@
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">QTensor</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;ReLU activation function.</span>
 
 <span class="sd">        In other terms:</span>
@@ -687,7 +702,7 @@
         <span class="c1"># Clip the inputs</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">max_value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;max_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_value</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span></div>
@@ -697,7 +712,7 @@
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
 <span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">Activation</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
-<span class="k">class</span> <span class="nc">QuantizedActivation</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">Activation</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantizedActivation</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">Activation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized version of `keras.layers.Activation` layer applicable on ``FixedPoint`` tensor.</span>
 
 <span class="sd">    The input values are mapped through a look-up-table that simulates the activation behavior.</span>
@@ -721,7 +736,7 @@
     <span class="n">DEFAULT_INPUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">11</span>
     <span class="n">DEFAULT_LUT_BITWIDTH</span> <span class="o">=</span> <span class="mi">14</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="n">quant_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Retrieve quantization parameters</span>
@@ -744,7 +759,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">NonTrackVariable</span><span class="p">(</span><span class="s2">&quot;scales&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">using_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">using_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Flag to specify if the inference should be given through look-up-table approach</span>
 
 <span class="sd">        Returns:</span>
@@ -754,7 +769,7 @@
         <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
 
     <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
-    <span class="k">def</span> <span class="nf">record_values_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_values_in_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a set of inputs and outputs to record the look-up-table.</span>
 
 <span class="sd">        Inputs are generated in the full range based on ``value_bits``.</span>
@@ -788,7 +803,7 @@
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">FixedPoint</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># Values stored in the table can only be calculated if the input is per_tensor</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">inputs</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only supports per-tensor inputs.&quot;</span><span class="p">)</span>

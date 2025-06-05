@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>akida_models.modelnet40.preprocessing &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -562,17 +577,17 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_modelnet_from_file&quot;</span><span class="p">,</span> <span class="s2">&quot;get_modelnet&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">trimesh</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">trimesh</span>
 
-<span class="kn">from</span> <span class="nn">.pointnet_utils</span> <span class="kn">import</span> <span class="n">pointnet_preproc</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">fetch_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.pointnet_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">pointnet_preproc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
 
 
-<span class="k">def</span> <span class="nf">_parse_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">num_points</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse the dataset.</span>
 
 <span class="sd">    Args:</span>
@@ -627,7 +642,7 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_data_transformation</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_transformation</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Data transformation function.</span>
 
 <span class="sd">    Args:</span>
@@ -646,7 +661,7 @@
 
 <div class="viewcode-block" id="get_modelnet_from_file">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.modelnet40.preprocessing.get_modelnet_from_file">[docs]</a>
-<span class="k">def</span> <span class="nf">get_modelnet_from_file</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;ModelNet40.zip&quot;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_modelnet_from_file</span><span class="p">(</span><span class="n">num_points</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;ModelNet40.zip&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Load the ModelNet data from file.</span>
 
 <span class="sd">    First parse through the ModelNet data folders. Each mesh is loaded and</span>
@@ -710,7 +725,7 @@
 
 <div class="viewcode-block" id="get_modelnet">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.modelnet40.preprocessing.get_modelnet">[docs]</a>
-<span class="k">def</span> <span class="nf">get_modelnet</span><span class="p">(</span><span class="n">train_points</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_modelnet</span><span class="p">(</span><span class="n">train_points</span><span class="p">,</span>
                  <span class="n">train_labels</span><span class="p">,</span>
                  <span class="n">test_points</span><span class="p">,</span>
                  <span class="n">test_labels</span><span class="p">,</span>

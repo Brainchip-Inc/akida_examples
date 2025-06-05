@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>cnn2snn.converter &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -559,24 +574,24 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="sd">&quot;&quot;&quot;Conversion of a Keras/CNN2SNN model into an Akida model&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
-<span class="kn">from</span> <span class="nn">.model_generator</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">cnn2snn_generate_model</span>
-<span class="kn">from</span> <span class="nn">.quantizeml</span> <span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">qml_generate_model</span>
-<span class="kn">from</span> <span class="nn">.quantizeml.vit_encoder_block</span> <span class="kn">import</span> <span class="n">fold_vitencoderblock</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelProto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">cnn2snn_generate_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.quantizeml</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_model</span> <span class="k">as</span> <span class="n">qml_generate_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.quantizeml.vit_encoder_block</span><span class="w"> </span><span class="kn">import</span> <span class="n">fold_vitencoderblock</span>
 
-<span class="kn">import</span> <span class="nn">akida</span>
-<span class="kn">from</span> <span class="nn">.akida_versions</span> <span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
-<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">fix_v1_activation_variables</span><span class="p">,</span> <span class="n">prepare_to_convert</span>
-<span class="kn">from</span> <span class="nn">.compatibility_checks</span> <span class="kn">import</span> <span class="n">check_sequential_compatibility</span>
-<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_qml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">akida</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.akida_versions</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">fix_v1_activation_variables</span><span class="p">,</span> <span class="n">prepare_to_convert</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.compatibility_checks</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_sequential_compatibility</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_qml</span>
 
 
 <div class="viewcode-block" id="check_model_compatibility">
 <a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">[docs]</a>
-<span class="k">def</span> <span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_model_compatibility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that a float Keras or ONNX model is Akida compatible.</span>
 
 <span class="sd">    The process stops on the first incompatibility encountered with an exception. The</span>
@@ -639,7 +654,7 @@
 
 <div class="viewcode-block" id="convert">
 <a class="viewcode-back" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">[docs]</a>
-<span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras or ONNX quantized model to an Akida one.</span>
 
 <span class="sd">    This method is compatible with model quantized with :func:`cnn2snn.quantize`</span>
@@ -700,7 +715,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_convert_quantizeml</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_quantizeml</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras or ONNX quantized model with quantizeml to an Akida one.</span>
 
 <span class="sd">    After quantizing a Keras model with :func:`quantizeml.quantize`, it can be</span>
@@ -720,7 +735,7 @@
     <span class="k">return</span> <span class="n">ak_model</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_cnn2snn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_cnn2snn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Keras quantized model to an Akida one.</span>
 
 <span class="sd">    After quantizing a Keras model with :func:`cnn2snn.quantize`, it can be</span>
@@ -801,7 +816,7 @@
     <span class="k">return</span> <span class="n">ak_model</span>
 
 
-<span class="k">def</span> <span class="nf">_get_rescaling_layer_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_rescaling_layer_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the new input scaling retrieved from the Keras</span>
 <span class="sd">    `Rescaling` layer.</span>
 
@@ -833,7 +848,7 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">_post_conversion_checks</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_post_conversion_checks</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Perform post-conversion checks on an akida model.</span>
 
 <span class="sd">    The model is not necessarily changed and can be the original one.</span>

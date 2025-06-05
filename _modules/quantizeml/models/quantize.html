@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.models.quantize &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -560,32 +575,32 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;quantize&quot;</span><span class="p">,</span> <span class="s2">&quot;dump_config&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">keras</span>
-<span class="kn">from</span> <span class="nn">onnx</span> <span class="kn">import</span> <span class="n">ModelProto</span>
-<span class="kn">from</span> <span class="nn">keras.saving</span> <span class="kn">import</span> <span class="n">get_registered_object</span><span class="p">,</span> <span class="n">serialize_keras_object</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelProto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.saving</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_registered_object</span><span class="p">,</span> <span class="n">serialize_keras_object</span>
 
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">apply_weights_to_model</span>
-<span class="kn">from</span> <span class="nn">.transforms</span> <span class="kn">import</span> <span class="n">sanitize</span>
-<span class="kn">from</span> <span class="nn">.transforms.insert_layer</span> <span class="kn">import</span> <span class="n">insert_in_config</span>
-<span class="kn">from</span> <span class="nn">.transforms.transforms_utils</span> <span class="kn">import</span> <span class="n">get_inbound_layers_config</span><span class="p">,</span> <span class="n">get_layer_index</span>
-<span class="kn">from</span> <span class="nn">.calibrate</span> <span class="kn">import</span> <span class="n">calibrate</span>
-<span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">quantization</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_weights_to_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.insert_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">insert_in_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_inbound_layers_config</span><span class="p">,</span> <span class="n">get_layer_index</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.calibrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">calibrate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">quantization</span><span class="p">,</span>
                       <span class="n">QuantizationParams</span><span class="p">,</span> <span class="n">get_quantization_params</span><span class="p">,</span> <span class="n">Attention</span><span class="p">,</span>
                       <span class="n">Activation</span><span class="p">,</span> <span class="n">QuantizedActivation</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..layers.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="p">,</span> <span class="n">_GLOBAL_NO_OUTPUT_QUANTIZER</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layers.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="p">,</span> <span class="n">_GLOBAL_NO_OUTPUT_QUANTIZER</span><span class="p">,</span>
                                   <span class="n">_GLOBAL_ALIGNED_INPUTS</span><span class="p">,</span> <span class="n">_GLOBAL_QUANTIZABLE_WEIGHTS</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..onnx_support.quantization.quantize</span> <span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_onnx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..onnx_support.quantization.quantize</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">quantize_onnx</span>
 
 
 <span class="c1"># List of Quantizer layer&#39;s that do not have a float layer representation</span>
 <span class="n">NO_FLOAT_CUSTOM_QLAYERS</span> <span class="o">=</span> <span class="p">[</span><span class="n">Dequantizer</span><span class="p">,</span> <span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">WeightQuantizer</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">get_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Returns the quantized version of the layer.</span>
 
 <span class="sd">    Args:</span>
@@ -606,7 +621,7 @@
     <span class="k">return</span> <span class="n">qlayer_class</span>
 
 
-<span class="k">def</span> <span class="nf">is_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Returns True when the layer is a quantized layer.</span>
 
 <span class="sd">    Args:</span>
@@ -620,7 +635,7 @@
     <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">in</span> <span class="n">_GLOBAL_LAYER_TO_QLAYER</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">get_layer_class_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_layer_class_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Returns the class object of a registered keras layer.</span>
 
 <span class="sd">    Args:</span>
@@ -636,7 +651,7 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Impossible to recognize layer with configuration </span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_handle_not_quantizable_layers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">skip_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_handle_not_quantizable_layers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">skip_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Includes a number of dequantizers such that the model is compatible.</span>
 
 <span class="sd">    Args:</span>
@@ -684,7 +699,7 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">_prepare_output_quantizers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_output_quantizers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Parse the model and prepare OutputQuantizer configurations for layers requiring them.</span>
 
 <span class="sd">    To ensure that an OutputQuantizer will be added to the latest possible layer in a &#39;block&#39;, the</span>
@@ -703,7 +718,7 @@
     <span class="c1"># Get quantization parameters</span>
     <span class="n">qparams</span> <span class="o">=</span> <span class="n">get_quantization_params</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">set_output_quantizer</span><span class="p">(</span><span class="n">layer_names</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_output_quantizer</span><span class="p">(</span><span class="n">layer_names</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Populates `out_quantizer_configs` with layer names and their OutputQuantizer. &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">layer_names</span><span class="p">:</span>
             <span class="n">current_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -754,14 +769,14 @@
                 <span class="n">axis</span> <span class="o">=</span> <span class="s2">&quot;per-tensor&quot;</span> <span class="k">if</span> <span class="n">per_tensor</span> <span class="k">else</span> <span class="s2">&quot;per-axis&quot;</span>
                 <span class="n">out_quantizer_configs</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;output_quantizer&quot;</span><span class="p">][</span><span class="s2">&quot;axis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis</span>
 
-    <span class="k">def</span> <span class="nf">cannot_have_output_quantizer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cannot_have_output_quantizer</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns True when the layer cannot have an OutputQuantizer. &quot;&quot;&quot;</span>
         <span class="n">qlayer</span> <span class="o">=</span> <span class="n">get_quantized_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">)</span>
                 <span class="ow">or</span> <span class="n">qlayer</span> <span class="ow">is</span> <span class="kc">None</span>
                 <span class="ow">or</span> <span class="n">qlayer</span> <span class="ow">in</span> <span class="n">_GLOBAL_NO_OUTPUT_QUANTIZER</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_preceding_layer_names</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_preceding_layer_names</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieve inbounds layers names where an OutputQuantizer can be set. &quot;&quot;&quot;</span>
         <span class="n">previous_layers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">inbounds</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
@@ -791,7 +806,7 @@
     <span class="k">return</span> <span class="n">out_quantizer_configs</span>
 
 
-<span class="k">def</span> <span class="nf">_apply_last_output_bits</span><span class="p">(</span><span class="n">qmodel_config</span><span class="p">,</span> <span class="n">qparams</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_last_output_bits</span><span class="p">(</span><span class="n">qmodel_config</span><span class="p">,</span> <span class="n">qparams</span><span class="p">):</span>
     <span class="n">output_layer_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">qmodel_config</span><span class="p">[</span><span class="s1">&#39;output_layers&#39;</span><span class="p">]]</span>
     <span class="k">for</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="n">output_layer_names</span><span class="p">:</span>
         <span class="n">layer_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">qmodel_config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">layer_name</span><span class="p">)</span>
@@ -805,7 +820,7 @@
         <span class="n">layer_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;quant_config&#39;</span><span class="p">][</span><span class="s1">&#39;output_quantizer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_quantizer_params</span>
 
 
-<span class="k">def</span> <span class="nf">quantize_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quantize_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">quantize_until</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizes a Keras model using the provided configuration or parameters.</span>
 
@@ -861,7 +876,7 @@
                                        <span class="n">input_dtype</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">,</span>
                                        <span class="n">buffer_bits</span><span class="o">=</span><span class="n">qparams</span><span class="o">.</span><span class="n">buffer_bits</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_quantize_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantize_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_quantize_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">quantize_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get quantize config from float layer:</span>
 <span class="sd">            - first, we get its quantized version,</span>
 <span class="sd">            - then, we return the quantized layer with config updated</span>
@@ -978,7 +993,7 @@
 
 <div class="viewcode-block" id="quantize">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.quantize">[docs]</a>
-<span class="k">def</span> <span class="nf">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">QuantizationParams</span><span class="p">(),</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
              <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">quantize_until</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizes a Keras or ONNX model using the provided configuration or parameters.</span>
 
@@ -1048,7 +1063,7 @@
 
 <div class="viewcode-block" id="dump_config">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.dump_config">[docs]</a>
-<span class="k">def</span> <span class="nf">dump_config</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dump_config</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dump the quantization configuration of a quantized model, exporting the configuration for</span>
 <span class="sd">    each quantized layer.</span>
 

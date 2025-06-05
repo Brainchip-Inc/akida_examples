@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tips to set Akida edge learning parameters &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -28,7 +28,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Model zoo performance" href="../../model_zoo_performance.html" />
+    <link rel="next" title="Gesture recognition with spatiotemporal models" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html" />
     <link rel="prev" title="Akida edge learning for keyword spotting" href="plot_1_edge_learning_kws.html" /> 
 </head>
 
@@ -467,6 +467,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -593,11 +608,11 @@ the trainable layer that will be added later.</p>
 <p>After loading the KWS dataset, we create the pre-trained Keras model and
 convert it to an Akida model. We then remove the last layer to get the
 feature extractor.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">FullyConnected</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">FullyConnected</span>
 
-<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">fetch_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
 
 <span class="c1"># Fetch pre-processed data for 32 keywords</span>
 <span class="n">fname</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
@@ -612,8 +627,8 @@ feature extractor.</p>
 <p class="admonition-title">Note</p>
 <p>Edge learning is only supported for Akida 1.0 models for now.</p>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">set_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
-<span class="kn">from</span> <span class="nn">akida_models</span> <span class="kn">import</span> <span class="n">ds_cnn_kws_pretrained</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">set_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ds_cnn_kws_pretrained</span>
 
 <span class="c1"># Instantiate a quantized model with pretrained quantized weights</span>
 <span class="k">with</span> <span class="n">set_akida_version</span><span class="p">(</span><span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">):</span>
@@ -681,7 +696,7 @@ give good results.</p>
 <p>For a deeper analysis of the output spikes from the feature extractor, one
 could look at the distribution of the number of spikes, either for all samples
 or for samples of each class separately. This analysis is not shown here.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="c1"># Forward samples to get the number of output spikes</span>
 <span class="c1"># Here, 10% of the training set is sufficient for a good estimation</span>
@@ -736,10 +751,10 @@ gives hints to have a first estimation of the number of neurons per class.
 Visualizing the number of neurons that have learned as a function of the
 number of neurons per class provides a similar analysis.</p>
 <p>In this tutorial, we only present this analysis for one class (word ‘six’).</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">akida</span> <span class="kn">import</span> <span class="n">AkidaUnsupervised</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida</span><span class="w"> </span><span class="kn">import</span> <span class="n">AkidaUnsupervised</span>
 
 
-<span class="k">def</span> <span class="nf">compute_losses</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_losses</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
                    <span class="n">samples</span><span class="p">,</span>
                    <span class="n">neurons_per_class</span><span class="p">,</span>
                    <span class="n">num_weights</span><span class="p">,</span>
@@ -767,7 +782,7 @@ number of neurons per class provides a similar analysis.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">spikes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">create_one_fc_model</span><span class="p">(</span><span class="n">units</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_one_fc_model</span><span class="p">(</span><span class="n">units</span><span class="p">):</span>
         <span class="n">model_fc</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
         <span class="n">model_fc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">InputData</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span>
@@ -817,7 +832,7 @@ number of neurons per class provides a similar analysis.</p>
                                              <span class="n">neurons_per_class</span><span class="p">,</span> <span class="n">num_weights</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">neurons_per_class</span><span class="p">),</span> <span class="n">losses</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of neurons per class&quot;</span><span class="p">)</span>
@@ -890,7 +905,7 @@ cannot be generalized for all use cases.</p>
 </tr>
 </tbody>
 </table>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 6.601 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 6.606 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-edge-plot-2-edge-learning-parameters-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d6655e19c07c58606700b5b5eff26ff9/plot_2_edge_learning_parameters.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_2_edge_learning_parameters.ipynb</span></code></a></p>
@@ -911,7 +926,7 @@ cannot be generalized for all use cases.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="plot_1_edge_learning_kws.html" class="btn btn-neutral float-left" title="Akida edge learning for keyword spotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../model_zoo_performance.html" class="btn btn-neutral float-right" title="Model zoo performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html" class="btn btn-neutral float-right" title="Gesture recognition with spatiotemporal models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

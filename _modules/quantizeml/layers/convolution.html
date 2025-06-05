@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.layers.convolution &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -560,19 +575,19 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PaddedConv2D&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedConv2D&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedConv2DTranspose&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
 
-<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">backend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">backend</span>
 
-<span class="kn">from</span> <span class="nn">.layers_base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">rescale_outputs</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span>
                           <span class="n">neural_layer_init</span><span class="p">,</span> <span class="n">register_aligned_inputs</span><span class="p">,</span> <span class="n">QuantizedLayer</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.quantizers</span> <span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span>
-<span class="kn">from</span> <span class="nn">..tensors</span> <span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">FixedPoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.quantizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AlignedWeightQuantizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">FixedPoint</span>
 
 
-<span class="k">def</span> <span class="nf">apply_padding</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding_values</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_padding</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding_values</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply &quot;SAME&quot; padding to the inputs</span>
 
 <span class="sd">    Args:</span>
@@ -620,7 +635,7 @@
     <span class="k">return</span> <span class="n">output</span>
 
 
-<span class="k">def</span> <span class="nf">deconv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">deconv_output_length</span><span class="p">(</span><span class="n">input_length</span><span class="p">,</span> <span class="n">filter_size</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span>
                          <span class="n">output_padding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines output length of a transposed convolution given input length.</span>
 
@@ -667,7 +682,7 @@
 <div class="viewcode-block" id="PaddedConv2D">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.PaddedConv2D">[docs]</a>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">PaddedConv2D</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PaddedConv2D</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A convolutional layer that can use custom padding values.</span>
 
 <span class="sd">    Note that when padding values are provided, padding &#39;SAME&#39; will be applied with the provided</span>
@@ -679,7 +694,7 @@
 <span class="sd">            or per-channel otherwise. If None, zero-padding is used. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">padding_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -692,13 +707,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_padding_value</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="c1"># Ensure variables are build with the appropriate name, this is required for usage with</span>
         <span class="c1"># Model.from_config that happens in sanitize</span>
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># We need a custom padding for specifics padding values</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_padding_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Raise an error if the padding values have not the expected number of values</span>
@@ -719,7 +734,7 @@
             <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;padding_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_padding_value</span>
         <span class="k">return</span> <span class="n">config</span></div>
@@ -731,7 +746,7 @@
 <span class="nd">@register_quantize_target</span><span class="p">([</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">],</span> <span class="n">has_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedConv2D</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantizedConv2D</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A convolutional layer that operates on quantized inputs and weights.</span>
 
 <span class="sd">    Note that when padding values are provided, padding &#39;SAME&#39; will be applied with the provided</span>
@@ -744,7 +759,7 @@
 <span class="sd">            or per-channel otherwise. If None, zero-padding is used. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@neural_layer_init</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Limit buffer bitwidth to 27</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
@@ -765,7 +780,7 @@
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">QTensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># Quantize the weights</span>
         <span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_quantizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">)</span>
 
@@ -811,7 +826,7 @@
 
         <span class="k">return</span> <span class="n">outputs</span>
 
-    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;padding_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_value</span>
@@ -824,21 +839,21 @@
 <span class="nd">@register_quantize_target</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">has_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@register_aligned_inputs</span>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">QuantizedConv2DTranspose</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantizedConv2DTranspose</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">Conv2DTranspose</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A transposed convolutional layer that operates on quantized inputs and weights.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        quant_config (dict, optional): the serialized quantization configuration. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@neural_layer_init</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">quant_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Limit buffer bitwidth to 27</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
 
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">FixedPoint</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># Quantize the weights</span>
         <span class="c1"># Conv2DTranspose weight shape is (h, w, filters, channels) which cannot be quantized</span>
         <span class="c1"># &#39;per-axis&#39; as it is: the last dimension is not the output last dimension (i.e filters)</span>

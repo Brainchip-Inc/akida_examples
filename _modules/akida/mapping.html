@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>akida.mapping &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -541,15 +556,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for akida.mapping</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">akida</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">akida</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 
-<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">LayerType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">LayerType</span>
 
 
 <div class="viewcode-block" id="MapMode">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.MapMode">[docs]</a>
-<span class="k">class</span> <span class="nc">MapMode</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MapMode</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Mapping mode</span>
 
 <span class="sd">    Define the strategy for the hardware mapping.</span>
@@ -564,22 +579,22 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_layer_mapped</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_layer_mapped</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span> <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_model_pass</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_model_pass</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="n">nb_pass</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">:</span>
         <span class="n">nb_pass</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="o">.</span><span class="n">passes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">nb_pass</span>
 
 
-<span class="k">def</span> <span class="nf">_get_model_seq</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_model_seq</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_model_nps</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_model_nps</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="n">hrc_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerType</span><span class="o">.</span><span class="n">InputConvolutional</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputConv2D</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">Stem</span><span class="p">]</span>
 
     <span class="n">nb_nps</span> <span class="o">=</span> <span class="mi">0</span>
@@ -593,7 +608,7 @@
     <span class="k">return</span> <span class="n">nb_nps</span>
 
 
-<span class="k">def</span> <span class="nf">_map_criteria_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_criteria_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="c1"># Obtain the mapping criteria</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layer_mapped</span><span class="o">=</span><span class="n">_get_layer_mapped</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
                 <span class="n">seq_number</span><span class="o">=</span><span class="n">_get_model_seq</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
@@ -601,7 +616,7 @@
                 <span class="n">np_used</span><span class="o">=</span><span class="n">_get_model_nps</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_is_better_map</span><span class="p">(</span><span class="n">map_criteria_ref</span><span class="p">,</span> <span class="n">map_criteria_cur</span><span class="p">,</span> <span class="n">consider_pass_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_better_map</span><span class="p">(</span><span class="n">map_criteria_ref</span><span class="p">,</span> <span class="n">map_criteria_cur</span><span class="p">,</span> <span class="n">consider_pass_nb</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="c1"># Better if we can map now</span>
     <span class="k">if</span> <span class="n">map_criteria_ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># ref model does not map</span>
@@ -638,7 +653,7 @@
     <span class="k">return</span> <span class="n">nb_nps_ref</span> <span class="o">&lt;=</span> <span class="n">nb_nps_cur</span>
 
 
-<span class="k">def</span> <span class="nf">_map_search</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="p">,</span> <span class="n">min_pass</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_search</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">hw_only</span><span class="p">,</span> <span class="n">min_pass</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
     <span class="c1"># Needs constraints to move the max filter number</span>
     <span class="k">if</span> <span class="n">constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">constraints</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">MapConstraints</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>

@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyTorch to Akida workflow &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -467,6 +467,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -616,16 +631,16 @@ it simpler to use separate virtual environments for the PyTorch-dependent sectio
 <h2>1. Create and train<a class="headerlink" href="#create-and-train" title="Link to this heading"></a></h2>
 <section id="load-and-normalize-mnist-dataset">
 <h3>1.1. Load and normalize MNIST dataset<a class="headerlink" href="#load-and-normalize-mnist-dataset" title="Link to this heading"></a></h3>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
-<span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">transforms</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
 
 
-<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_dataloader</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
                                     <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)])</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;datasets/mnist&#39;</span><span class="p">,</span>
@@ -643,7 +658,7 @@ it simpler to use separate virtual environments for the PyTorch-dependent sectio
 <span class="n">testloader</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
     <span class="c1"># Unnormalize</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">img</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span>
     <span class="n">npimg</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
@@ -663,15 +678,15 @@ Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyt
 Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz to datasets/mnist/MNIST/raw/train-images-idx3-ubyte.gz
 
   0%|          | 0/9912422 [00:00&lt;?, ?it/s]
-  1%|          | 98304/9912422 [00:00&lt;00:18, 517668.64it/s]
-  3%|▎         | 327680/9912422 [00:00&lt;00:07, 1277726.57it/s]
-  5%|▍         | 491520/9912422 [00:00&lt;00:06, 1401934.38it/s]
-  9%|▉         | 884736/9912422 [00:00&lt;00:03, 2270111.11it/s]
- 18%|█▊        | 1802240/9912422 [00:00&lt;00:01, 4473051.00it/s]
- 38%|███▊      | 3768320/9912422 [00:00&lt;00:00, 9259966.59it/s]
- 55%|█████▍    | 5439488/9912422 [00:00&lt;00:00, 8174604.66it/s]
- 87%|████████▋ | 8585216/9912422 [00:01&lt;00:00, 13191560.87it/s]
-100%|██████████| 9912422/9912422 [00:01&lt;00:00, 7188758.66it/s]
+  1%|          | 98304/9912422 [00:00&lt;00:18, 522877.14it/s]
+  3%|▎         | 327680/9912422 [00:00&lt;00:07, 1284008.33it/s]
+  7%|▋         | 655360/9912422 [00:00&lt;00:04, 2041975.30it/s]
+ 11%|█         | 1048576/9912422 [00:00&lt;00:03, 2697484.77it/s]
+ 21%|██        | 2064384/9912422 [00:00&lt;00:01, 5114827.87it/s]
+ 42%|████▏     | 4128768/9912422 [00:00&lt;00:00, 10062162.17it/s]
+ 66%|██████▋   | 6586368/9912422 [00:00&lt;00:00, 14569516.24it/s]
+ 88%|████████▊ | 8716288/9912422 [00:00&lt;00:00, 16607290.05it/s]
+100%|██████████| 9912422/9912422 [00:00&lt;00:00, 10540822.07it/s]
 Extracting datasets/mnist/MNIST/raw/train-images-idx3-ubyte.gz to datasets/mnist/MNIST/raw
 
 Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
@@ -682,7 +697,7 @@ Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyt
 Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz to datasets/mnist/MNIST/raw/train-labels-idx1-ubyte.gz
 
   0%|          | 0/28881 [00:00&lt;?, ?it/s]
-100%|██████████| 28881/28881 [00:00&lt;00:00, 313273.59it/s]
+100%|██████████| 28881/28881 [00:00&lt;00:00, 312408.30it/s]
 Extracting datasets/mnist/MNIST/raw/train-labels-idx1-ubyte.gz to datasets/mnist/MNIST/raw
 
 Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
@@ -693,10 +708,11 @@ Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte
 Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz to datasets/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz
 
   0%|          | 0/1648877 [00:00&lt;?, ?it/s]
-  6%|▌         | 98304/1648877 [00:00&lt;00:02, 524649.58it/s]
- 22%|██▏       | 360448/1648877 [00:00&lt;00:01, 1023941.12it/s]
- 48%|████▊     | 786432/1648877 [00:00&lt;00:00, 2007370.45it/s]
-100%|██████████| 1648877/1648877 [00:00&lt;00:00, 2853641.46it/s]
+  6%|▌         | 98304/1648877 [00:00&lt;00:02, 523025.05it/s]
+ 20%|█▉        | 327680/1648877 [00:00&lt;00:01, 1285448.24it/s]
+ 36%|███▌      | 589824/1648877 [00:00&lt;00:00, 1790133.23it/s]
+ 58%|█████▊    | 950272/1648877 [00:00&lt;00:00, 2416859.40it/s]
+100%|██████████| 1648877/1648877 [00:00&lt;00:00, 2887398.62it/s]
 Extracting datasets/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz to datasets/mnist/MNIST/raw
 
 Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
@@ -707,7 +723,7 @@ Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte
 Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz to datasets/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz
 
   0%|          | 0/4542 [00:00&lt;?, ?it/s]
-100%|██████████| 4542/4542 [00:00&lt;00:00, 7037506.01it/s]
+100%|██████████| 4542/4542 [00:00&lt;00:00, 7282312.22it/s]
 Extracting datasets/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz to datasets/mnist/MNIST/raw
 </pre></div>
 </div>
@@ -717,22 +733,22 @@ Extracting datasets/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz to datasets/mnist/
 </pre></div>
 </div>
 <img src="../../_images/sphx_glr_plot_7_global_pytorch_workflow_001.png" srcset="../../_images/sphx_glr_plot_7_global_pytorch_workflow_001.png" alt="plot 7 global pytorch workflow" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Labels:
- tensor([[5, 2, 3, 2, 0, 7, 6, 9],
-        [6, 8, 8, 4, 3, 5, 2, 6],
-        [2, 4, 3, 3, 0, 9, 3, 6],
-        [8, 1, 3, 1, 4, 3, 2, 3],
-        [1, 5, 9, 8, 2, 7, 8, 5],
-        [2, 4, 7, 6, 0, 0, 5, 8],
-        [4, 5, 1, 2, 7, 8, 8, 4],
-        [0, 0, 8, 0, 5, 7, 4, 8],
-        [7, 6, 8, 9, 8, 4, 3, 1],
-        [8, 9, 9, 3, 1, 5, 2, 7],
-        [2, 9, 2, 7, 0, 1, 5, 5],
-        [4, 3, 2, 3, 5, 6, 4, 2],
-        [8, 5, 2, 4, 7, 7, 5, 6],
-        [8, 0, 2, 3, 2, 4, 1, 6],
-        [2, 2, 2, 8, 5, 2, 0, 5],
-        [3, 3, 4, 3, 9, 9, 4, 7]])
+ tensor([[8, 1, 0, 5, 9, 1, 6, 7],
+        [1, 6, 3, 9, 1, 7, 3, 2],
+        [5, 1, 9, 9, 2, 0, 4, 1],
+        [9, 2, 5, 2, 4, 1, 4, 1],
+        [3, 2, 8, 0, 0, 8, 8, 2],
+        [7, 7, 8, 1, 2, 2, 2, 0],
+        [2, 9, 8, 6, 0, 8, 4, 9],
+        [3, 0, 7, 0, 5, 1, 1, 1],
+        [4, 9, 8, 8, 5, 7, 7, 2],
+        [0, 4, 2, 8, 7, 8, 2, 8],
+        [0, 2, 5, 7, 5, 6, 8, 6],
+        [3, 2, 9, 2, 0, 6, 7, 0],
+        [4, 9, 4, 6, 9, 3, 9, 7],
+        [2, 2, 4, 2, 4, 7, 9, 3],
+        [9, 8, 0, 8, 8, 8, 2, 3],
+        [4, 8, 0, 5, 5, 3, 7, 6]])
 </pre></div>
 </div>
 </section>
@@ -801,24 +817,24 @@ module to define a standard CNN.</p>
             <span class="n">running_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[1,   100] loss: 0.073
-[1,   200] loss: 0.026
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[1,   100] loss: 0.075
+[1,   200] loss: 0.027
 [1,   300] loss: 0.020
-[1,   400] loss: 0.016
-[2,   100] loss: 0.013
-[2,   200] loss: 0.011
-[2,   300] loss: 0.010
+[1,   400] loss: 0.017
+[2,   100] loss: 0.014
+[2,   200] loss: 0.013
+[2,   300] loss: 0.011
 [2,   400] loss: 0.009
 [3,   100] loss: 0.008
 [3,   200] loss: 0.007
-[3,   300] loss: 0.006
-[3,   400] loss: 0.006
+[3,   300] loss: 0.007
+[3,   400] loss: 0.007
 [4,   100] loss: 0.006
 [4,   200] loss: 0.006
 [4,   300] loss: 0.005
 [4,   400] loss: 0.005
-[5,   100] loss: 0.004
-[5,   200] loss: 0.005
+[5,   100] loss: 0.005
+[5,   200] loss: 0.004
 [5,   300] loss: 0.004
 [5,   400] loss: 0.004
 [6,   100] loss: 0.004
@@ -828,7 +844,7 @@ module to define a standard CNN.</p>
 [7,   100] loss: 0.003
 [7,   200] loss: 0.003
 [7,   300] loss: 0.003
-[7,   400] loss: 0.004
+[7,   400] loss: 0.003
 [8,   100] loss: 0.003
 [8,   200] loss: 0.003
 [8,   300] loss: 0.003
@@ -838,9 +854,9 @@ module to define a standard CNN.</p>
 [9,   300] loss: 0.003
 [9,   400] loss: 0.003
 [10,   100] loss: 0.003
-[10,   200] loss: 0.003
+[10,   200] loss: 0.002
 [10,   300] loss: 0.002
-[10,   400] loss: 0.003
+[10,   400] loss: 0.002
 </pre></div>
 </div>
 </section>
@@ -914,8 +930,8 @@ can be used to generate a quantized model ready for conversion to Akida.</p>
 <p>For this simple model, using random samples for calibration is sufficient, as
 shown in the following steps.</p>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">onnx</span>
-<span class="kn">from</span> <span class="nn">quantizeml.models</span> <span class="kn">import</span> <span class="n">quantize</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize</span>
 
 <span class="c1"># Read the exported ONNX model</span>
 <span class="n">model_onnx</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;mnist_cnn.onnx&quot;</span><span class="p">)</span>
@@ -974,7 +990,7 @@ graph torch_jit (
 <p>The quantized model can now be converted to the native Akida format.
 The <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">convert()</a>
 function returns a model in Akida format ready for inference.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cnn2snn</span> <span class="kn">import</span> <span class="n">convert</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
 <span class="n">model_akida</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
 <span class="n">model_akida</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
@@ -1031,7 +1047,7 @@ the evaluation in Akida models. Specifically:</p>
 <span class="k">assert</span> <span class="n">accuracy</span> <span class="o">&gt;</span> <span class="mf">0.96</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after conversion: 0.9891999959945679
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after conversion: 0.9886999726295471
 </pre></div>
 </div>
 </section>
@@ -1053,7 +1069,7 @@ dataset, to visualize the output of the model.</p>
 Prediction Label: 7
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 45.167 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 44.127 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-7-global-pytorch-workflow-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/b7204f136a6f9dfacd9f81807175d5b8/plot_7_global_pytorch_workflow.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_7_global_pytorch_workflow.ipynb</span></code></a></p>

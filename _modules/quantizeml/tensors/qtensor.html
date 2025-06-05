@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.tensors.qtensor &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -557,42 +572,42 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
 
-<span class="kn">from</span> <span class="nn">..debugging</span> <span class="kn">import</span> <span class="n">assert_equal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..debugging</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_equal</span>
 
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">round_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">round_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">rounded</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">upstream</span>
     <span class="k">return</span> <span class="n">rounded</span><span class="p">,</span> <span class="n">grad</span>
 
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">floor_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">floor_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">floored</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">upstream</span>
     <span class="k">return</span> <span class="n">floored</span><span class="p">,</span> <span class="n">grad</span>
 
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">ceil_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ceil_through</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">ceiled</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">upstream</span>
     <span class="k">return</span> <span class="n">ceiled</span><span class="p">,</span> <span class="n">grad</span>
 
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">custom_gradient</span>
-<span class="k">def</span> <span class="nf">saturate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">saturate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Saturate x values on [-2^n, 2^n - 1]</span>
 
 <span class="sd">    This function is a wrapper around tf.clip_by_values that exhibits a</span>
@@ -611,7 +626,7 @@
     <span class="n">int_max</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
     <span class="n">saturated</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">int_max</span><span class="p">,</span> <span class="n">int_max</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;saturate&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
         <span class="c1"># The gradient of x is 1 everywhere</span>
         <span class="n">dx</span> <span class="o">=</span> <span class="n">upstream</span>
         <span class="c1"># The gradient of n is zero (constant)</span>
@@ -623,13 +638,13 @@
 
 <div class="viewcode-block" id="QTensor">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor">[docs]</a>
-<span class="k">class</span> <span class="nc">QTensor</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">ExtensionType</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QTensor</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">ExtensionType</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract class to exchange quantized tensors between layers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">shape</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorShape</span>  <span class="c1"># Required to convert to a KerasTensor</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the QTensor name</span>
 
 <span class="sd">        Returns:</span>
@@ -638,7 +653,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns if QTensor is quantized per-tensor</span>
 
 <span class="sd">        Returns:</span>
@@ -648,7 +663,7 @@
 
 <div class="viewcode-block" id="QTensor.to_float">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.to_float">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a float representation of the QTensor</span>
 
 <span class="sd">        Returns:</span>
@@ -657,7 +672,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve a slice or element from the QTensor</span>
 
 <span class="sd">        Returns:</span>
@@ -667,7 +682,7 @@
 
 <div class="viewcode-block" id="QTensor.clone">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.clone">[docs]</a>
-    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the QTensor</span>
 
 <span class="sd">        Returns:</span>
@@ -676,25 +691,25 @@
         <span class="k">return</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">class_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="n">x_float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">x_float</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">int_max</span><span class="p">(</span><span class="n">value_bits</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">int_max</span><span class="p">(</span><span class="n">value_bits</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">value_bits</span> <span class="o">-</span> <span class="mi">1</span>
 
 <div class="viewcode-block" id="QTensor.assert_per_tensor">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.tensors.QTensor.assert_per_tensor">[docs]</a>
-    <span class="k">def</span> <span class="nf">assert_per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assert_per_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Asserts that a QTensor is quantized per-tensor&quot;&quot;&quot;</span>
         <span class="n">assert_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_tensor</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not per-tensor.&quot;</span><span class="p">)</span></div>
 </div>
 
 
 
-<span class="k">def</span> <span class="nf">pow2</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pow2</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the power of two of an integer</span>
 
 <span class="sd">    Args:</span>
@@ -706,7 +721,7 @@
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">ceil_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ceil_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
 
 <span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
@@ -728,7 +743,7 @@
     <span class="k">return</span> <span class="n">ceil_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
 
 
-<span class="k">def</span> <span class="nf">floor_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">floor_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
 
 <span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
@@ -749,7 +764,7 @@
     <span class="k">return</span> <span class="n">floor_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
 
 
-<span class="k">def</span> <span class="nf">round_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">round_log2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the closest power of two exponent of a float tensor.</span>
 
 <span class="sd">    This evaluates for each element of the input tensor the integer exponent leading</span>
@@ -773,7 +788,7 @@
     <span class="k">return</span> <span class="n">round_through</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)))</span>
 
 
-<span class="k">def</span> <span class="nf">convert_ellipsis_into_slices</span><span class="p">(</span><span class="n">values_rank</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_ellipsis_into_slices</span><span class="p">(</span><span class="n">values_rank</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts an Ellipsis (`...`) if found in the indexing tuple into a series of slice objects</span>
 <span class="sd">    that cover the remaining dimensions of the tensor.</span>
@@ -795,7 +810,7 @@
     <span class="k">return</span> <span class="n">new_idx</span>
 
 
-<span class="k">def</span> <span class="nf">slice_tensor_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">values_rank</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">slice_tensor_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">values_rank</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Slices the frac_bits or scales tensor when slicing a QTensor.</span>
 

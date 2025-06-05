@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>quantizeml.analysis.kernel_distribution &mdash; Akida Examples  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -464,6 +464,21 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html">Gesture recognition with spatiotemporal models</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#introduction-why-spatiotemporal-models">1. Introduction: why spatiotemporal models?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#spatiotemporal-blocks-the-core-concept">2. Spatiotemporal blocks: the core concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#building-the-model-from-blocks-to-network">3. Building the model: from blocks to network</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#gesture-classification-in-videos">4. Gesture classification in videos</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../examples/spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_zoo_performance.html">Model zoo performance</a><ul>
@@ -559,21 +574,21 @@
 <span class="c1"># ******************************************************************************</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;plot_kernel_distribution&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<span class="kn">import</span> <span class="nn">onnx</span>
-<span class="kn">from</span> <span class="nn">tensorboardX</span> <span class="kn">import</span> <span class="n">SummaryWriter</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">DepthwiseConv2D</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorboardX</span><span class="w"> </span><span class="kn">import</span> <span class="n">SummaryWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">DepthwiseConv2D</span>
 
-<span class="kn">from</span> <span class="nn">..models</span> <span class="kn">import</span> <span class="n">record_quantization_variables</span>
-<span class="kn">from</span> <span class="nn">..layers.layers_base</span> <span class="kn">import</span> <span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">WeightQuantizer</span>
-<span class="kn">from</span> <span class="nn">..models.transforms</span> <span class="kn">import</span> <span class="n">sanitize</span> <span class="k">as</span> <span class="n">keras_sanitize</span>
-<span class="kn">from</span> <span class="nn">..onnx_support.quantization</span> <span class="kn">import</span> <span class="n">ONNXModel</span>
-<span class="kn">from</span> <span class="nn">..onnx_support.quantization.transforms</span> <span class="kn">import</span> <span class="n">sanitize</span> <span class="k">as</span> <span class="n">onnx_sanitize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..models</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_quantization_variables</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layers.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizedLayer</span><span class="p">,</span> <span class="n">WeightQuantizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..models.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize</span> <span class="k">as</span> <span class="n">keras_sanitize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..onnx_support.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..onnx_support.quantization.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize</span> <span class="k">as</span> <span class="n">onnx_sanitize</span>
 
 
-<span class="k">def</span> <span class="nf">_plot_kernel_distribution_on_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_kernel_distribution_on_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
     <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">kernel</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kernel</span><span class="p">):</span>
         <span class="n">writer</span><span class="o">.</span><span class="n">add_histogram</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;histograms/</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
@@ -594,8 +609,8 @@
     <span class="n">writer</span><span class="o">.</span><span class="n">add_figure</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;boxplots/</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_plot_onnx_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">_get_kernel_name</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_onnx_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_kernel_name</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
         <span class="n">skip_qnodes</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;QuantizedAdd&quot;</span><span class="p">,</span> <span class="s2">&quot;InputQuantizer&quot;</span><span class="p">,</span> <span class="s2">&quot;Dequantizer&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="s2">&quot;com.brainchip&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">sn</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span> <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">skip_qnodes</span><span class="p">):</span>
             <span class="c1"># kernel in InputQuantizedConv is moved to position 2</span>
@@ -615,7 +630,7 @@
                 <span class="n">_plot_kernel_distribution_on_writer</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;node_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_plot_keras_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_plot_keras_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">keras_sanitize</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">record_quantization_variables</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">logdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;model&quot;</span><span class="p">)</span>
@@ -648,7 +663,7 @@
 
 <div class="viewcode-block" id="plot_kernel_distribution">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.analysis.plot_kernel_distribution">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_kernel_distribution</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">logdir</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the kernel distribution of each layer/node in the model.</span>
 
 <span class="sd">    Distributions are plotted in two ways: histogram and boxplot</span>
