@@ -162,7 +162,7 @@ from akida import FullyConnected, Model
 import pickle
 
 from akida_models import fetch_file
-from akida_models.sparsity import _compute_sparsity_ak
+from akida_models.sparsity import compute_sparsity
 
 
 # Fetch pre-processed data for 32 keywords
@@ -273,7 +273,7 @@ model_ak.add(layer_fc)
 # Compute sparsity information for the model using 10% of the training data
 # which is enough for a good estimate
 num_samples = ceil(0.1 * x_train.shape[0])
-sparsities = _compute_sparsity_ak(model_ak, samples=x_train[:num_samples])
+sparsities = compute_sparsity(model_ak, samples=x_train[:num_samples])
 
 # Retrieve the number of output spikes from the feature extractor output
 output_density = 1 - sparsities['separable_4']
