@@ -111,6 +111,9 @@ qparams = QuantizationParams(input_weight_bits=16, weight_bits=4, activation_bit
 
 # Quantize the model
 quantized_model = quantize(model, qparams=qparams)
+
+######################################################################
+
 quantized_model.summary()
 
 ######################################################################
@@ -162,6 +165,8 @@ print(json.dumps(config, indent=4))
 # ``qparams``.
 
 new_quantized_model = quantize(model, q_config=config, qparams=qparams)
+
+######################################################################
 
 # Dump the new configuration
 new_config = dump_config(new_quantized_model)

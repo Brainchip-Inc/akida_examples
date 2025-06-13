@@ -33,6 +33,9 @@ fdir = os.path.dirname(fname)
 dl_and_prepare = {'download_config': tfds.download.DownloadConfig(manual_dir=fdir)}
 ds, ds_info = tfds.load('coil100:2.*.*', split='train', with_info=True, data_dir=fdir,
                         download_and_prepare_kwargs=dl_and_prepare)
+
+##############################################################################
+
 print(ds_info.description)
 
 ##############################################################################

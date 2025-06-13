@@ -138,6 +138,9 @@ from quantizeml.models import quantize, QuantizationParams
 
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits=8)
 model_quantized = quantize(model_keras, qparams=qparams)
+
+######################################################################
+
 model_quantized.summary()
 
 ######################################################################

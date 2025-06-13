@@ -62,6 +62,9 @@ qparams = quantizeml.models.QuantizationParams(input_weight_bits=8, weight_bits=
                                                activation_bits=4)
 quantized_model_2_0 = quantizeml.models.quantize(model, qparams=qparams)
 akida_model_2_0 = cnn2snn.convert(quantized_model_2_0)
+
+######################################################################
+
 akida_model_2_0.summary()
 
 
