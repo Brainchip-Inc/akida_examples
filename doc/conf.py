@@ -129,6 +129,21 @@ ultimate_replacements = {
     "{PIP_FREEZE}": pip_freeze
 }
 
+# -- Link checks -----------------------------------------------------
+# Ignore relative links and some specific links that prevent web scrapping (403 Client Error:
+# Forbidden for url)
+linkcheck_ignore = [
+    "./.*", "../.*",
+    "https://machinelearningmastery.com/object-recognition-with-deep-learning/",
+    "https://www.sciencedirect.com/science/article/pii/S0893608018300108"
+]
+
+# Ignore some anchors on github pages because checklink cannot resolve them
+linkcheck_anchors_ignore = ["model", "confusion-matrix", "how-does-this-model-work"]
+
+# Timeout for link checking in seconds
+linkcheck_timeout = 20
+
 
 def setup(app):
     app.add_config_value('ultimate_replacements', {}, True)

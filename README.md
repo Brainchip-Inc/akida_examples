@@ -61,6 +61,15 @@ To align examples with python formatting rules:
 autopep8 --ignore E402,E501 --in-place --recursive examples/
 ```
 
+## Link check
+
+Leveraging sphinx built-in link checker. Note that links to internal components must be explicitely
+relative and will be ignored by the tool (it cannot check relative links).
+
+```
+sphinx-build -D plot_gallery=0 -b html ./doc ./build -b linkcheck
+```
+
 ## Supported versions history
 Versions are akida/cnn2snn packages ones. Please refer to https://github.com/Brainchip-Inc/akida_examples/releases for more details.
 
