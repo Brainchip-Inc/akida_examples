@@ -54,8 +54,9 @@ A tutorial on designing efficient models for streaming video tasks.
 #
 #    Spatiotemporal convolutions example
 #
-# This factorized approach reduces compute requirements. In fact, this design proved effective in very
-# different domains: it was applied to gesture videos as well as event-based eye tracking (see tutorial).
+# This factorized approach reduces compute requirements. In fact, this design proved effective in
+# very different domains: it was applied to gesture videos as well as event-based eye tracking
+# (see tutorial).
 
 ######################################################################
 # 2.1. Making it efficient using depthwise separable convolutions
@@ -70,10 +71,10 @@ A tutorial on designing efficient models for streaming video tasks.
 # layer (see figure above), the same is done for the spatial convolution.
 #
 # .. Note::
-#   The design of these spatiotemporal blocks is similar to R(2+1)D blocks, except we place the temporal
-#   layer first. Doing this preserves the temporal richness of the raw input — a critical decision that
-#   avoids "smearing" out important movement cues. Moreover, notice that our temporal layers do not have
-#   a stride (compared to R(2+1)D layers).
+#   The design of these spatiotemporal blocks is similar to R(2+1)D blocks, except we place the
+#   temporal layer first. Doing this preserves the temporal richness of the raw input — a critical
+#   decision that avoids "smearing" out important movement cues. Moreover, notice that our temporal
+#   layers do not have a stride (compared to R(2+1)D layers).
 #
 # .. figure:: ../../img/comparing_3D_conv_block_designs.png
 #    :target: ../../_images/comparing_3D_conv_block_designs.png
@@ -81,12 +82,13 @@ A tutorial on designing efficient models for streaming video tasks.
 #    :scale: 60 %
 #    :align: center
 #
-#    Kernel dimensions and strides for various types of 3D convolutions. Dotted lines show depthwise convolutions.
-#    Full lines show full convolutions. Orange outlines are for spatial 3D convs and purple ones for temporal
-#    convolutions.
+#    Kernel dimensions and strides for various types of 3D convolutions. Dotted lines show depthwise
+#    convolutions. Full lines show full convolutions. Orange outlines are for spatial 3D convs and
+#    purple ones for temporal convolutions.
 #
 # A spatiotemporal block can be easily built using the predefined spatiotemporal
-# blocks from Akida models available through the `akida_models.layer_blocks.spatiotemporal_block <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.spatiotemporal_block>`__
+# blocks from Akida models available through the `akida_models.layer_blocks.spatiotemporal_block
+# <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.spatiotemporal_block>`__
 # API.
 
 ######################################################################
@@ -124,14 +126,16 @@ model.summary()
 # 4. Gesture classification in videos
 # -----------------------------------
 #
-# In this tutorial, we use the `Jester dataset <https://www.qualcomm.com/developer/software/jester-dataset>`__,
+# In this tutorial, we use the `Jester dataset
+# <https://www.qualcomm.com/developer/software/jester-dataset>`__,
 # a gesture recognition dataset specifically designed to include movements targeted at human/machine
 # interactions. To do well on the task, information needs to be aggregated across time to accurately
 # separate complex gestures such as clockwise or counterclowise hand turning.
 #
 # The data is available to download in the form of zip files from the
 # `qualcomm website <https://www.qualcomm.com/developer/software/jester-dataset>`__ along with
-# `download instructions <https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm-ai-research-jester-download-instructions-v2.pdf>`__.
+# `download instructions
+# <https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm-ai-research-jester-download-instructions-v2.pdf>`__.
 
 ######################################################################
 # 4.1 Dataset description
@@ -143,7 +147,8 @@ model.summary()
 # including a "no gesture" and a "other movements" classes.
 #
 # It is a rich and varied dataset with over 1300 different actors performing the gestures.
-# The dataset has determined splits for training, validation and testing with the ratio of 80%/10%/10%.
+# The dataset has determined splits for training, validation and testing with the ratio of
+# 80%/10%/10%.
 
 ######################################################################
 # 4.2 Data preprocessing
@@ -191,19 +196,19 @@ print(f"classes available are : {class_names}")
 # ------------------------------------
 #
 # The model is trained using standard techniques: Adam optimizer, cosine LR scheduler and
-# Categorical Cross-Entropy. We modify the categorical crossentropy slightly to make it "temporal": the target class
-# (y-label) is replicated at each time point, thus forcing the model to correctly classify
-# each video frame.
+# Categorical Cross-Entropy. We modify the categorical crossentropy slightly to make it "temporal":
+# the target class (y-label) is replicated at each time point, thus forcing the model to correctly
+# classify each video frame.
 #
 # Since the training requires a few GPU hours to complete, we will load a pre-trained model for
 # inference. Pre-trained models are available either in floating point or quantized version.
 # First, we'll look at the floating point model, available using the following apis. The evaluation
 # tool is also available to rapidly test the performance on the validation dataset.
 #
-# .. Note: the accuracy here is low because it is computed weighing each time point equally, i.e. the first frame when the event has
-#          not started contributes as much to the predicted label as a frame with an actual movement in it.
-#          The validation accuracy will dramatically improve once we allow the model to weigh its output in time
-#          (see section below).
+# .. Note: the accuracy here is low because it is computed weighing each time point equally, i.e.
+#          the first frame when the event has not started contributes as much to the predicted label
+#          as a frame with an actual movement in it. The validation accuracy will dramatically
+#          improve once we allow the model to weigh its output in time (see section below).
 
 ######################################################################
 from akida_models.model_io import get_model_path, load_model
@@ -284,12 +289,15 @@ print(hist)
 #
 # **How to?** : Akida models provides a simple and easy to use API that transforms compatible
 # spatiotemporal blocks into their equivalent bufferized version found in
-# `akida_models.tenn_spatiotemporal.convert_to_buffer <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__
+# `akida_models.tenn_spatiotemporal.convert_to_buffer
+# <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__
 #
 # .. Note::
 #
 #   - After conversion, the 3D Convolution layers are transformed into custom
-#     `BufferTempConv <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__ layers.
+#     `BufferTempConv
+#     <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__
+#     layers.
 #   - As opposed to training where the whole 16 frames samples is passed to the model, the inference
 #     model requires samples to be passed one by one.
 
@@ -308,16 +316,17 @@ evaluate_bufferized_model(model, val_dataset, val_steps // batch_size, in_akida=
 # 6.2 Weighing information
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The performance of the buffered model is improved because we use a smoothing mecanism on the model's output:
+# The performance of the buffered model is improved because we use a smoothing mecanism on the
+# model's output:
 #
 # - at time *t*, the model's outputs is softmaxed
 # - the softmaxed values from time *t-1* are decayed (using a decay_factor of 0.8)
 # - the two are added
 #
 # This is done across all frames available in the video.
-# The predicted class is only computed once all the frames have been seen by the model for the benchmark,
-# but it is possible for the model to predict the video's class after each new frame. Section 7 below
-# shows an example of this.
+# The predicted class is only computed once all the frames have been seen by the model for the
+# benchmark, but it is possible for the model to predict the video's class after each new frame.
+# Section 7 below shows an example of this.
 
 ######################################################################
 # 7. Visualizing the predictions of the model in real time
@@ -326,7 +335,8 @@ evaluate_bufferized_model(model, val_dataset, val_steps // batch_size, in_akida=
 # Because of this buffering and how the model was trained to output a prediction after each time
 # step, we can effectively visualize the response of the model in time.
 # This part of the tutorial is heavily inspired from the tensorflow tutorial on streaming
-# recognition of gestures based on the `movinet models <https://www.tensorflow.org/hub/tutorials/movinet>`__.
+# recognition of gestures based on the `movinet models
+# <https://www.tensorflow.org/hub/tutorials/movinet>`__.
 #
 # We pass the data through the trained model frame by frame and collect the predicted classes,
 # applying a softmax on the output of the model.
@@ -351,8 +361,9 @@ evaluate_bufferized_model(model, val_dataset, val_steps // batch_size, in_akida=
 ######################################################################
 # 8. Quantizing the model and convertion to akida
 # -----------------------------------------------
-# Once bufferized, the model can be easily quantized with no cost in accuracy. It can then be easily be
-# deployed on hardware for online gesture recognition using the convert method from the cnn2snn package.
+# Once bufferized, the model can be easily quantized with no cost in accuracy. It can then be easily
+# be deployed on hardware for online gesture recognition using the convert method from the cnn2snn
+# package.
 
 ######################################################################
 import numpy as np
@@ -380,11 +391,13 @@ model_quantized = quantize(model, qparams=qparams, samples=samples_arr,
                            num_samples=num_samples, batch_size=100, epochs=1)
 
 ######################################################################
+
 # Evaluate the quantized model
 evaluate_bufferized_model(model_quantized, val_dataset, val_steps // batch_size, in_akida=False)
 reset_buffers(model_quantized)
 
 ######################################################################
+
 # Convert to akida
 from cnn2snn import convert
 akida_model = convert(model_quantized)
