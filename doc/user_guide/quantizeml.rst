@@ -191,10 +191,8 @@ handle some layers that are not in the
 Model loading
 ~~~~~~~~~~~~~
 
-The toolkit offers a
-`keras.models.load_model <https://www.tensorflow.org/api_docs/python/tf/keras/saving/load_model>`__
-wrapper that allows to load models with quantized layers:
-`quantizeml.load_model <../api_reference/quantizeml_apis.html#quantizeml.load_model>`__
+The toolkit offers a helper that allows to load float and quantized models from Keras or ONNX
+frameworks: `quantizeml.load_model <../api_reference/quantizeml_apis.html#quantizeml.load_model>`__.
 
 Command line interface
 ----------------------
