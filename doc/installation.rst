@@ -23,7 +23,7 @@ Quick installation
     TensorFlow package is required to use the `CNN2SNN tool
     <https://pypi.org/project/cnn2snn>`_, the `Akida model zoo
     <https://pypi.org/project/akida-models>`_ and to run the `examples
-    <examples/index.html>`_. Please refer to
+    <./examples/index.html>`_. Please refer to
     `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_
     for installation.
 
@@ -50,7 +50,7 @@ be setup with Python's pip package manager:
 Running examples
 ----------------
 
-The Akida tutorials can be downloaded from the `examples <examples/index.html>`_
+The Akida tutorials can be downloaded from the `examples <./examples/index.html>`_
 section as python scripts or Jupyter Notebooks. Dependencies needed to replay
 the examples can be installed using the :download:`requirements.txt <../requirements.txt>`
 file:

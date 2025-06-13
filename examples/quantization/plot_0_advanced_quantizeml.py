@@ -57,7 +57,7 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 # - ``per_tensor_activations`` is a boolean that allows to define a per-axis (default) or per-tensor
 #   quantization for ReLU activations. Per-axis quantization will usually provide more accurate
 #   results (default ``False`` value) but it might be more challenging to `calibrate
-#   <plot_0_advanced_quantizeml.html#calibration>`__ the model. Note that Akida 1.0 only supports
+#   <./plot_0_advanced_quantizeml.html#calibration>`__ the model. Note that Akida 1.0 only supports
 #   per-tensor activations.
 # - ``output_bits`` is the bitwidth used to quantize intermediate results in
 #   `OutputQuantizer <../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__.

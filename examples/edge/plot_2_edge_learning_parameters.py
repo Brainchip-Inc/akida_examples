@@ -7,7 +7,7 @@ set their values in a first try in an edge learning application. The KWS dataset
 and the DS-CNN-edge model are used as a classification example to showcase the
 handy tips.
 
-One can consult the `KWS edge learning tutorial <plot_1_edge_learning_kws.html>`_
+One can consult the `KWS edge learning tutorial <./plot_1_edge_learning_kws.html>`_
 for a first approach about Akida learning.
 
 .. Note:: The hints given in this tutorial are not a promise to get the best

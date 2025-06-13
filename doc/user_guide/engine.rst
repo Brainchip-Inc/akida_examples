@@ -14,7 +14,7 @@ trained/converted (offline) can be passed for inference.
 
 The program generation part must be done on a host PC, using the whole Akida
 library containing what is called Hardware Backend. Refer to the
-`model hardware mapping <akida.html#model-hardware-mapping>`__ section for
+`model hardware mapping <./akida.html#model-hardware-mapping>`__ section for
 details on how to achieve this.
 
 The engine library is deployed as source files. The deployment can be done using the

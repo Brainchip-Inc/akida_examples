@@ -177,7 +177,7 @@ print(f'Floating point model accuracy: {correctly_classified_floating}/{num_imag
 #
 # .. Note::
 #    Please refer to the `QuantizeML toolkit user guide <../../user_guide/quantizeml.html>`__
-#    and the `Advanced QuantizeML tutorial <plot_0_advanced_quantizeml.html>`__ for details
+#    and the `Advanced QuantizeML tutorial <./plot_0_advanced_quantizeml.html>`__ for details
 #    about quantization parameters.
 #
 

@@ -66,7 +66,7 @@ scaling parameters are now deprecated.
 
 CNN2SNN CLI comes with additional actions that are also deprecated and should no longer be used:
 ``quantize``, ``reshape`` and  ``calibrate``. You should rather use
-`QuantizeML <quantizeml.html#>`__ tool to perform the same operations.
+`QuantizeML <./quantizeml.html#>`__ tool to perform the same operations.
 
 
 Handling Akida 1.0 and Akida 2.0 specificities
@@ -96,8 +96,8 @@ Using the CLI interface:
   CNN2SNN_TARGET_AKIDA_VERSION=v1 cnn2snn convert -m ds_cnn_kws_iq8_wq4_aq4_laq1.h5
 
 .. note::
-    - converting a model `quantized with QuantizeML <quantizeml.html>`__ will use the contextual
+    - converting a model `quantized with QuantizeML <./quantizeml.html>`__ will use the contextual
       `AkidaVersion <../api_reference/cnn2snn_apis.html#cnn2snn.AkidaVersion>`__ to target either
       1.0 or 2.0.
-    - converting a model `quantized with CNN2SNN <cnn2snn.html#legacy-quantization-api>`__
+    - converting a model `quantized with CNN2SNN <./cnn2snn.html#legacy-quantization-api>`__
       (deprecated path) will always target 1.0.

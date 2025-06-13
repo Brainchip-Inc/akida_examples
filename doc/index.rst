@@ -7,14 +7,14 @@ Overview
    :maxdepth: 2
 
    self
-   Installation <installation.rst>
-   User guide <user_guide/user_guide.rst>
-   API reference <api_reference/api_reference.rst>
-   Examples <examples/index.rst>
-   Model zoo performance <model_zoo_performance.rst>
-   Changelog <changelog.rst>
+   Installation <./installation.rst>
+   User guide <./user_guide/user_guide.rst>
+   API reference <./api_reference/api_reference.rst>
+   Examples <./examples/index.rst>
+   Model zoo performance <./model_zoo_performance.rst>
+   Changelog <./changelog.rst>
    Support <https://support.brainchip.com/portal/home>
-   license.rst
+   ./license.rst
 
 
 The Akida Neuromorphic ML Framework
@@ -30,8 +30,8 @@ The Akida Neuromorphic ML Framework
   Python API for neural networks. This API facilitates early evaluation,
   design, final tuning, and productization of neural network models.
 
-.. figure:: img/Akida_Neural_Processor.png
-  :target: _images/Akida_Neural_Processor.png
+.. figure:: ./img/Akida_Neural_Processor.png
+  :target: ./_images/Akida_Neural_Processor.png
   :alt: Brainchip
   :scale: 40%
   :align: center
@@ -60,8 +60,8 @@ The Akida Neuromorphic ML Framework
     backend. It allows the simulation of the Akida Neuromorphic Processor and
     use of the AKD1000 reference SoC.
 
- .. figure:: img/metatf.png
-   :target: _images/metatf.png
+ .. figure:: ./img/metatf.png
+   :target: ./_images/metatf.png
    :alt: Brainchip
    :scale: 40%
    :align: center
@@ -83,12 +83,12 @@ The Akida Neuromorphic ML Framework
   * a simulator (software backend) - a CPU implementation of the Akida Neuromorphic
     Processor IP,
 
-  * and the `Akida Engine Library <user_guide/engine.html>`_ - a C++ library supporting the instantiation of model
+  * and the `Akida Engine Library <./user_guide/engine.html>`_ - a C++ library supporting the instantiation of model
     programs produced by the model library on actual hardware devices and inference on
     programmed devices.
 
-.. figure:: img/akida_runtime.png
-   :target: _images/akida_runtime.png
+.. figure:: ./img/akida_runtime.png
+   :target: ./_images/akida_runtime.png
    :alt: Brainchip
    :scale: 40%
    :align: center
@@ -99,7 +99,7 @@ The Akida Neuromorphic ML Framework
 The Akida examples
 ------------------
 
-The `examples section <examples/index.html>`_ includes tutorials and examples to easily
+The `examples section <./examples/index.html>`_ includes tutorials and examples to easily
 get started with Akida technology. This section illustrates the use of Akida technology
 on a variety of inference and incremental, on-device learning applications.
 
@@ -107,5 +107,5 @@ on a variety of inference and incremental, on-device learning applications.
     | While the Akida examples are provided under an
       `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
       the underlying Akida library is proprietary.
-    | Please refer to the `End User License Agreement <license.html>`__ for
+    | Please refer to the `End User License Agreement <./license.html>`__ for
       terms and conditions.

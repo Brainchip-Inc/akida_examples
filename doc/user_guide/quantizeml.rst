@@ -166,7 +166,7 @@ Compatibility constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The tookit supports a wide range of layers (see the
-`supported type section <quantizeml.html#supported-layer-types>`__). When hitting a non-compatible
+`supported type section <./quantizeml.html#supported-layer-types>`__). When hitting a non-compatible
 layer, QuantizeML will simply stop the quantization before this layer and add a
 `Dequantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer>`__ before it so
 that inference is still possible. When such an event occurs, a warning is raised to the user with the
@@ -178,7 +178,7 @@ placed before ReLU activation), the
 called before quantization to deal with such restrictions and edit the model accordingly.
 `sanitize <../api_reference/quantizeml_apis.html#quantizeml.models.transforms.sanitize>`__ will also
 handle some layers that are not in the
-`supported layer types <quantizeml.html#supported-layer-types>`__ such as:
+`supported layer types <./quantizeml.html#supported-layer-types>`__ such as:
 
 - ZeroPadding2D which is replaced with 'same' padding convolution when possible
 - Lambda layers:

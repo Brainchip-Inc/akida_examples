@@ -24,7 +24,7 @@ between 1.0 and 2.0.
 # quantization step that was based on CNN2SNN and that is now based on QuantizeML.
 #
 # Providing your model architecture is 2.0 compatible (`next section
-# <plot_1_upgrading_to_2.0.html#models-architecture-differences>`__ lists differences), upgrading to
+# <./plot_1_upgrading_to_2.0.html#models-architecture-differences>`__ lists differences), upgrading to
 # 2.0 is limited to moving from a `cnn2snn.quantize` call to a `quantizeml.models.quantize
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ call. The code snippets
 # below show the two different calls.
@@ -75,7 +75,7 @@ akida_model_2_0.summary()
 # QuantizeML quantization API is close to the legacy CNN2SNN quantization API and further details on
 # how to use it are given in the `global workflow tutorial
 # <../general/plot_0_global_workflow.html>`__ and the `advanced QuantizeML tutorial
-# <plot_0_advanced_quantizeml.html>`__.
+# <./plot_0_advanced_quantizeml.html>`__.
 
 ######################################################################
 # 2. Models architecture differences

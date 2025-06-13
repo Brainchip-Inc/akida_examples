@@ -22,7 +22,7 @@ tackle this object detection problem.
 # Object detection is a computer vision task that combines two elemental tasks:
 #
 #  - object classification that consists in assigning a class label to an image
-#    like shown in the `AkidaNet/ImageNet inference <plot_1_akidanet_imagenet.html>`_
+#    like shown in the `AkidaNet/ImageNet inference <./plot_1_akidanet_imagenet.html>`_
 #    example
 #  - object localization that consists of drawing a bounding box around one or
 #    several objects in an image
@@ -220,7 +220,7 @@ full_model.output
 # As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
 # training a YOLO model. See the `PlantVillage transfer learning example
-# <plot_4_transfer_learning.html>`_ for a detail explanation on transfer
+# <./plot_4_transfer_learning.html>`_ for a detail explanation on transfer
 # learning principles.
 # Additionally, for achieving optimal results, consider the following approach:
 #

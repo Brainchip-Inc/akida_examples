@@ -23,7 +23,7 @@ save models from the zoo.
 
 Instantiating models using the CLI makes use of the model definitions from the
 programming interface with default values. To quantize a given model, the
-`QuantizeML quantize CLI <quantizeml.html#command-line-interface>`__ should be used.
+`QuantizeML quantize CLI <./quantizeml.html#command-line-interface>`__ should be used.
 
 **Examples**
 
@@ -104,7 +104,7 @@ and ``quantizeml quantize``.
 
 If the quantized model offers acceptable performance, it can be converted into an Akida model,
 ready to be loaded on the Akida NSoC using the
-`CNN2SNN convert CLI <cnn2snn.html#command-line-interface>`_.
+`CNN2SNN convert CLI <./cnn2snn.html#command-line-interface>`_.
 
 KWS training
 ^^^^^^^^^^^^

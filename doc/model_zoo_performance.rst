@@ -17,7 +17,7 @@ Model zoo performance
 .. note::
     The download links provided point towards standard Tensorflow Keras models
     that must be converted to Akida model using
-    `cnn2snn.convert <api_reference/cnn2snn_apis.html#convert>`_.
+    `cnn2snn.convert <./api_reference/cnn2snn_apis.html#convert>`_.
 
 .. |image_icon_ref| image:: ./img/image_icon.png
    :scale: 5 %
@@ -43,8 +43,8 @@ For 1.0 models, 4-bit accuracy is provided and is always obtained through a QAT 
 .. note::
     The NPs column provides the minimal number of neural processors required for the model excecution
     on the Akida IP. The numbers given are the result of the
-    `map <api_reference/akida_apis.html#akida.Model.map>`_ operation using the
-    `Minimal MapMode <api_reference/akida_apis.html#akida.MapMode>`_ targetting AKD1000 reference SoC.
+    `map <./api_reference/akida_apis.html#akida.Model.map>`_ operation using the
+    `Minimal MapMode <./api_reference/akida_apis.html#akida.MapMode>`_ targetting AKD1000 reference SoC.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

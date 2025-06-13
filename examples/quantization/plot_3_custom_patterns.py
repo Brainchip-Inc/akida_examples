@@ -122,7 +122,7 @@ print(f'Floating point model accuracy: {correctly_classified_floating}/{num_imag
 #
 # .. Note::
 #   Please refer to the `QuantizeML toolkit user guide <../../user_guide/quantizeml.html>`__
-#   and the `Advanced QuantizeML tutorial <plot_0_advanced_quantizeml.html>`__ for further details.
+#   and the `Advanced QuantizeML tutorial <./plot_0_advanced_quantizeml.html>`__ for further details.
 #   In particular here, for simplicity, we pass only the small number of samples we already prepared
 #   for calibration. Typically, you will want to use many more samples for calibration, say 1000 if
 #   you have them available; and not drawn from your test data. The akida_models package provides a
