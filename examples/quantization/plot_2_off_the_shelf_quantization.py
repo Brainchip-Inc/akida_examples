@@ -112,16 +112,13 @@ x_test = np.transpose(x_test, (0, 3, 1, 2))
 # is used for downloading and exporting models to ONNX.
 #
 
+import onnx
 from optimum.exporters.onnx import main_export
 
 # Download and convert MobiletNet V2 to ONNX
 main_export(model_name_or_path="google/mobilenet_v2_1.0_224",
             task="image-classification",
             output="./")
-
-######################################################################
-
-import onnx
 
 # Load the model in memory
 model_onnx = onnx.load_model("./model.onnx")

@@ -56,6 +56,11 @@ warnings.filterwarnings("ignore",
                         category=UserWarning,
                         message='Matplotlib is currently using agg, which is a'
                         ' non-GUI backend, so cannot show the figure.')
+# ONNXScript will raise a FutureWarning for "onnxscript.values.Op.param_schemas' is deprecated"
+warnings.filterwarnings("ignore", category=FutureWarning, module="onnxscript")
+# Optimum will raise warnings when using "main_export"
+warnings.filterwarnings("ignore", module="transformers")
+warnings.filterwarnings("ignore", category=UserWarning, module="torch", message="Constant folding -*")
 
 # -- Options for HTML output -------------------------------------------------
 # Logo image displayed at the top of the sidebar
