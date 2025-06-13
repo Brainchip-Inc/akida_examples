@@ -39,12 +39,12 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
      <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__ tutorial and
      does not aim to describe PyTorch training in detail. We assume that if you are following
      this example, it's because you already have a trained PyTorch model.
-   | `PyTorch 2.0.1 <https://github.com/pytorch/pytorch/releases/tag/v2.0.1>`__ is used
+   | `PyTorch 2.7.0 <https://github.com/pytorch/pytorch/releases/tag/v2.7.0>`__ is used
      for this example.
 
      .. code-block::
 
-        pip install torch==2.0.1 torchvision
+        pip install torch==2.7.0 torchvision
 
 .. Warning::
    | The MNIST example below is light enough to train on the CPU only.
