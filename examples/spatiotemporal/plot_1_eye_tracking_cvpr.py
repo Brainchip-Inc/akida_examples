@@ -291,14 +291,14 @@ events, centers = data["events"], data["centers"]
 # prediction space (60, 80).
 
 def process_detector_prediction(pred):
-    """Post-processing of model predictions to extract the predicted pupil coordinates for a model that has a
-    centernet like head.
+    """Post-processing of model predictions to extract the predicted pupil coordinates for a model
+    that has a centernet like head.
 
     Args:
-        preds (torch.Tensor): shape (B, 3, H, W)
+        preds (torch.Tensor): shape (B, C, T, H, W)
 
     Returns:
-        torch matrice of (B, 2) containing the x and y predicted coordinates
+        torch tensor of (B, 2) containing the x and y predicted coordinates
     """
     torch_device = pred.device
     batch_size, _, frames, height, width = pred.shape
@@ -455,7 +455,7 @@ pretty_print_results(collected_l2_distances)
 # 2. Our submission model was trained on both the train and validation data to achieve the best
 #    possible performance (as allowed by the rules), but the model below that was used for the
 #    ablation studies was trained on the train set only.
-# 3. the validation dataset, it turns out, is much harder than the test dataset
+# 3. The validation dataset, it turns out, is much harder than the test dataset
 
 ######################################################################
 # 6. Ablation studies and efficiency optimization
@@ -486,7 +486,8 @@ pretty_print_results(collected_l2_distances)
 # 4. Using only batch normalization (BN) layers gave a small improvement over group norm (GN) only
 #    or a mix of BN/GN(96.9 vs 96.0 or 96.3).
 #
-# For more details you can refer to the paper (links below).
+# For more details you can refer to the `paper
+# <https://openaccess.thecvf.com/content/CVPR2024W/AI4Streaming/papers/Pei_A_Lightweight_Spatiotemporal_Network_for_Online_Eye_Tracking_with_Event_CVPRW_2024_paper.pdf>`__.
 
 ######################################################################
 # 6.2 Efficiency-accuracy trade-offs
@@ -500,8 +501,9 @@ pretty_print_results(collected_l2_distances)
 # 6.2.1 Spatial resolution
 # """"""""""""""""""""""""
 #
-# We looked at how reducing input image size affects model performance (see figure 3.A). Even with
-# an input size of 60 x 80 (downsampling by a factor of 8), the model still performs almost as well
+# We looked at how reducing input image size affects model performance (see `figure 3.A
+# <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__). Even with an
+# input size of 60 x 80 (downsampling by a factor of 8), the model still performs almost as well
 # as with our default setting (downsampling by a factor of 5), while requiring only a third of the
 # computation.
 
@@ -511,12 +513,15 @@ pretty_print_results(collected_l2_distances)
 #
 # From the outset, we decided to further decompose our factorized convolutions into depthwise and
 # pointwise convolutions (similar to depthwise separable convolutions introduced in MobileNet V1).
-# We explored howthese impacted model performance (see figure 3.B): as the number of separable
-# convolutions used increases,the MACs of the model decrease, with a relatively small impact on the
-# validation distance. When no separablelayers are used, the final validation distance is 2.6 vs.
-# 3.1 when all layers are separable. Our baselinemodel had the last 4 layers configured as
-# separable. Changing just 2 more to separable could lead to areduction of almost 30% in compute,
-# with almost no impact on performance (compare the turquoise vers greenlines on the figure 3.B).
+# We explored how these impacted model performance (see `figure 3.B
+# <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__): as the number
+# of separable convolutions used increases, the MACs of the model decrease, with a relatively small
+# impact on the validation distance. When no separable layers are used, the final validation
+# distance is 2.6 vs. 3.1 when all layers are separable. Our baseline model had the last 4 layers
+# configured as separable. Changing just 2 more to separable could lead to a reduction of almost 30%
+# in compute, with almost no impact on performance (compare the turquoise with green lines on the
+# `figure 3.B
+# <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__).
 #
 # The combination of these techniques results in a highly efficient model with a computational cost
 # of just 55M MACs/frame, and even less when sparsity is exploited.
@@ -531,10 +536,13 @@ pretty_print_results(collected_l2_distances)
 # functions), much of which may not be informative given the very high spatial sparsity of the input
 # to the network. By applying L1 regularization to ReLU activations during training, the model is
 # encouraged to silence unnecessary activations. We applied 5 different levels of regularization to
-# our model: figure 3.C shows how the average distance varies depending on the regularization
-# strength while figure 3.D shows how the sparse aware MACs (i.e. MACs multiplied by the model's
-# mean sparsity per layer) is affected by regularization. We can see that over 90% activation
-# sparsity is achievable with a negligible performance degradation (p10 remains >0.96).
+# our model: `figure 3.C
+# <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__ shows how the
+# average distance varies depending on the regularization strength while `figure 3.D
+# <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__ shows how the
+# sparse aware MACs (i.e. MACs multiplied by the model's mean sparsity per layer) is affected by
+# regularization. We can see that over 90% activation sparsity is achievable with a negligible
+# performance degradation (p10 remains >0.96).
 #
 # This is especially interesting because Akida is an event based hardware: it is capable of skipping
 # zero operations. In such hardware, high level of activation sparsity can translate into ~5× speedups.
