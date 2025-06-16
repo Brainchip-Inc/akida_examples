@@ -22,7 +22,7 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 #
 # The base model is an AkidaNet 0.5 that was trained on the
 # ImageNet dataset. Please refer to the `dedicated example
-# <plot_1_akidanet_imagenet.html>`__ for more information on the model
+# <./plot_1_akidanet_imagenet.html>`__ for more information on the model
 # architecture and performance.
 #
 # **Classification head**

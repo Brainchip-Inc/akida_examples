@@ -189,6 +189,9 @@ val_dataset, val_steps = get_data("val", data_dir, sampling_frequency, input_sha
 import csv
 with open(os.path.join(data_dir, "jester-v1-labels.csv")) as csvfile:
     class_names = [row[0] for row in csv.reader(csvfile)]
+
+##############################################################################
+
 print(f"classes available are : {class_names}")
 
 ######################################################################
@@ -227,6 +230,8 @@ model_path = fetch_file(model_path,
 
 model = load_model(model_path)
 compile_model(model, 3e-4, val_steps, 1, sampling_frequency)
+
+##############################################################################
 
 hist = model.evaluate(val_dataset)
 print(hist)

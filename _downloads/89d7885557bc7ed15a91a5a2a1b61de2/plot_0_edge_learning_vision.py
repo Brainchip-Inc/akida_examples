@@ -10,7 +10,7 @@ is re-trained to be able to classify images from 4 new classes.
 Just a few samples (few-shot learning) of the new classes are sufficient
 to augment the Akida model with extra classes, while preserving high accuracy.
 
-Please refer to the `keyword spotting (KWS) tutorial <plot_1_edge_learning_kws.html>`__
+Please refer to the `keyword spotting (KWS) tutorial <./plot_1_edge_learning_kws.html>`__
 for edge learning documentation, parameters fine tuning and steps details.
 
 """
@@ -33,6 +33,9 @@ fdir = os.path.dirname(fname)
 dl_and_prepare = {'download_config': tfds.download.DownloadConfig(manual_dir=fdir)}
 ds, ds_info = tfds.load('coil100:2.*.*', split='train', with_info=True, data_dir=fdir,
                         download_and_prepare_kwargs=dl_and_prepare)
+
+##############################################################################
+
 print(ds_info.description)
 
 ##############################################################################

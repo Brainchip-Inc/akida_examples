@@ -185,6 +185,8 @@ with open(fname2, 'rb') as f:
         word_to_index_new, dt2
     ] = pickle.load(f)
 
+##############################################################################
+
 print("Wanted words and labels:\n", word_to_index)
 print("New words:\n", word_to_index_new)
 
@@ -225,6 +227,9 @@ from cnn2snn import set_akida_version, AkidaVersion
 # Instantiate a quantized model with pretrained quantized weights
 with set_akida_version(AkidaVersion.v1):
     model = ds_cnn_kws_pretrained()
+
+##############################################################################
+
 model.summary()
 
 ######################################################################
