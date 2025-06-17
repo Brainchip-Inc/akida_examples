@@ -269,18 +269,18 @@ _ = model.eval().cpu()
 # 4.2 Evaluation
 # ^^^^^^^^^^^^^^
 #
-# The preprocessed validation data have been set aside and can be loaded from the archive available
+# The preprocessed test data have been set aside and can be loaded from the archive available
 # online.
 #
 # .. Note::
-#   To optimize storage and reduce processing time, only the first 500 frames from each validation
-#   file have been mirrored on the dataset server. This subset is representative and sufficient for
-#   validation purposes in this tutorial.
+#   To optimize storage and reduce processing time, only the first 400 frames from each test file
+#   have been mirrored on the dataset server. This subset is representative and sufficient for
+#   evaluation purposes in this tutorial.
 
 import numpy as np
 
-samples = fetch_file("https://data.brainchip.com/dataset-mirror/eye_tracking_ais2024_cvpr/eye_tracking_preprocessed_500frames_val.npz",
-                     fname="eye_tracking_preprocessed_500frames_val.npz")
+samples = fetch_file("https://data.brainchip.com/dataset-mirror/eye_tracking_ais2024_cvpr/eye_tracking_preprocessed_400frames_test.npz",
+                     fname="eye_tracking_preprocessed_400frames_test.npz")
 data = np.load(samples, allow_pickle=True)
 events, centers = data["events"], data["centers"]
 
@@ -448,14 +448,11 @@ pretty_print_results(collected_l2_distances)
 # The best metric in class is highlighted in bold, 🡑 means higher values are best, 🡓 means lower
 # values are best.
 #
-# The code below shows an inference on the model using the *validation* dataset. Note that the
-# results below differ from the challenge metrics reported above because:
-#
-# 1. As mentionned, the metrics reported above are on the *test* set (no label available).
-# 2. Our submission model was trained on both the train and validation data to achieve the best
-#    possible performance (as allowed by the rules), but the model below that was used for the
-#    ablation studies was trained on the train set only.
-# 3. The validation dataset, it turns out, is much harder than the test dataset
+# The code below shows an inference on the model using the *test* dataset. Note that the
+# results below differ from the challenge metrics reported above because our submission model was
+# trained on both the train and validation data to achieve the best possible performance (as allowed
+# by the rules), but the model below that was used for the ablation studies was trained on the train
+# set only.
 
 ######################################################################
 # 6. Ablation studies and efficiency optimization
