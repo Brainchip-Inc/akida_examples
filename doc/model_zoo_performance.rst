@@ -263,8 +263,7 @@ QAT is the same as for 1.0.
 
 .. note::
     The digit for quantization scheme stands for both weights and activations bitwidth. Weights in
-    the first layer are always quantized to 8-bit. When given, 'edge' means that the model backbone
-    output (before classification layer) is quantized to 1-bit to allow Akida edge learning.
+    the first layer are always quantized to 8-bit.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -569,10 +568,6 @@ Keyword spotting
    :scale: 4 %
    :target: https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_i8_w4_a4.h5
 
-.. |kws4e_dl| image:: ./img/download_icon.png
-   :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws_edge_i8_w4_a4.h5
-
 +--------------+-----------------------+---------+--------------+----------------+------------+
 | Architecture | Dataset               | #Params | Quantization | Top-1 accuracy | Download   |
 +==============+=======================+=========+==============+================+============+
@@ -580,7 +575,6 @@ Keyword spotting
 |              |                       |         |              |                |            |
 |              |                       |         | 4            | 92.67%         | |kws4_dl|  |
 |              |                       |         |              |                |            |
-|              |                       |         | 4 + edge     | 90.61%         | |kws4e_dl| |
 +--------------+-----------------------+---------+--------------+----------------+------------+
 
 |pointcloud_icon_ref| Point cloud
