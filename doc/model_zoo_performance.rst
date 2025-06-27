@@ -393,7 +393,7 @@ Classification
 
 .. |gx2_dl| image:: ./img/download_icon.png
    :scale: 4 %
-   :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i4_w4_a4.h5
+   :target: https://data.brainchip.com/models/AkidaV2/gxnor/gxnor_mnist_i8_w4_a4.h5
 
 +------------------+------------+--------------------+---------+--------------+----------+------------------+
 | Architecture     | Resolution | Dataset            | #Params | Quantization | Accuracy | Download         |
