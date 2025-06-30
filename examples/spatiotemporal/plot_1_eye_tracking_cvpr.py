@@ -641,8 +641,8 @@ model_quant = quantize(model, qparams=qparams, epochs=1, batch_size=100, samples
 # - The post processing function needs to be modified to use numpy functions (instead of torch)
 # - Once all frames from a given trial have been passed through, the FIFO buffers of the temporal
 #   convolutions need to be reset using the `reset_buffers
-#   <../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.buffertempconv.reset_buffers>`__
-#   available from QuantizeML.
+#   <../../api_reference/quantizeml_apis.html#quantizeml.models.reset_buffers>`__ available from
+#   QuantizeML.
 
 
 def custom_process_detector_prediction(pred):
@@ -694,7 +694,7 @@ session = InferenceSession(model_quant.serialized, sess_options=sess_options,
                            providers=['CPUExecutionProvider'])
 
 ######################################################################
-from quantizeml.onnx_support.layers.buffertempconv import reset_buffers
+from quantizeml.models import reset_buffers
 from tqdm import tqdm
 
 # And then evaluate the model

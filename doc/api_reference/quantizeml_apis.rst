@@ -39,7 +39,6 @@ QuantizeML API
     .. autoclass:: quantizeml.layers.QuantizedBufferTempConv
     .. autoclass:: quantizeml.layers.DepthwiseBufferTempConv
     .. autoclass:: quantizeml.layers.QuantizedDepthwiseBufferTempConv
-    .. autofunction:: quantizeml.layers.reset_buffers
 
     Dense
     -----
@@ -119,6 +118,11 @@ QuantizeML API
     -----
     .. autofunction:: quantizeml.models.apply_weights_to_model
 
+    Reset buffers
+    -------------
+    .. autofunction:: quantizeml.models.reset_buffers
+
+
     Tensors
     =======
 
@@ -152,7 +156,6 @@ QuantizeML API
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedBufferTempConv
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv
-    .. autofunction:: quantizeml.onnx_support.layers.buffertempconv.reset_buffers
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedDense1D
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedAdd
     .. autoclass:: quantizeml.onnx_support.layers.QuantizedConcat
