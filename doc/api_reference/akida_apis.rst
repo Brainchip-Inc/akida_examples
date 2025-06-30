@@ -125,6 +125,7 @@ Akida runtime API
     .. autofunction:: TwoNodesIPv2
     .. autofunction:: SixNodesIPv2
     .. autofunction:: create_device
+    .. autofunction:: compute_minimal_memory
 
     HwVersion
     ---------
@@ -171,6 +172,8 @@ Akida runtime API
     .. autoclass:: akida.NP.MemoryInfo
         :members:
     .. autoclass:: akida.NP.Component
+        :members:
+    .. autoclass:: akida.NP.SramSize
         :members:
 
     Mapping
