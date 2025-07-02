@@ -15,8 +15,7 @@ Preparing a model for Akida requires two steps: quantization, followed by conver
 for a specific target hardware device. We try to catch as many incompatibilities as
 possible at the quantization step. However, some constraints depend on the specific
 target device, and can only be caught at the conversion step. To illustrate, we will
-simply walk through the process of preparing `ResNet50
-<https://github.com/onnx/models/tree/main/validated/vision/classification/resnet#model>`__ for
+simply walk through the process of preparing `MobileNetV4 <https://arxiv.org/abs/2404.10518>`__ for
 acceleration on Akida - we'll run into several incompatibilities at different points
 in that process, and see how to resolve them.
 
@@ -24,10 +23,21 @@ This example assumes a moderate level of experience with deep learning, and good
 with the operations typically encountered in these types of models. For example, here we'll
 use the following workarounds:
 
-* to avoid some incompatible sequences of operations we'll insert layers with "identity"
-  convolution kernels,
-* in order to avoid an unusual kernel-size 1/stride 2 convolution, we'll substitute those
-  kernels with equivalent size 3 kernels.
+* to avoid an incompatible padding scheme in convolution, we will overwrite paddings values when
+  not aligned with Akida expectations,
+* in order to handle an unsupported kernel-size 5/stride 2 depthwise convolution, we'll split that
+  into two equivalent operations: a kernel-size 5 depthwise convolution using the same weights, but
+  with stride 1; followed by a kernel-size 3/stride 2 depthwise convolution with identity weights.
+
+.. Note::
+   | This tutorial leverages the `Optimum toolkit
+     <https://huggingface.co/docs/optimum/main/en/exporters/onnx/usage_guides/export_a_model>`__,
+     an external tool, based on `PyTorch <https://pytorch.org/>`__, that allows models direct
+     download and export to ONNX.
+
+     .. code-block::
+
+        pip install optimum[exporters]
 """
 
 ######################################################################
@@ -74,15 +84,19 @@ print(f'{num_images} images and their labels are loaded and preprocessed.')
 # 1.2 Download the model
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
-# We download ResNet50 from the `ONNX ZOO
-# <https://github.com/onnx/models/tree/main/validated/vision/classification>`_.
+# We download MobileNetV4 small from the `HuggingFace hub
+# <https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k>`_.
 #
 
 import onnx
-import onnx.hub
-from onnxruntime import InferenceSession
+from optimum.exporters.onnx import main_export
 
-onnx_model = onnx.hub.load("ResNet50")
+# Download and convert MobiletNetV4 to ONNX
+main_export(model_name_or_path="timm/mobilenetv4_conv_small.e2400_r224_in1k",
+            task="image-classification", output="./")
+
+# Load the model in memory
+onnx_model = onnx.load_model("./model.onnx")
 
 ######################################################################
 # 1.3 Evaluate model performance
@@ -96,6 +110,8 @@ onnx_model = onnx.hub.load("ResNet50")
 # .. Note:: For example purposes, we only compute accuracy on 10 images.
 #    Accuracy on the full ImageNet validation set is reported at the end.
 #
+
+from onnxruntime import InferenceSession
 
 
 def evaluate_onnx_model(model):
@@ -134,25 +150,50 @@ from quantizeml.models import quantize
 model_quantized = quantize(onnx_model, samples=x_test)
 
 ######################################################################
-# We can see that the model is not fully quantized, stopping at the first unrecognized
-# pattern (node ``resnetv17_pool1_fwd (GlobalAveragePool)``). We know that Akida can definitely
-# handle GlobalAveragePool functions, so we have to look more closely to understand the
-# problem. Analyzing the model, the pooling immediately follows an ``Add > ReLU`` operator. It is
-# this sequence of operations which is not supported by Akida.
-#
-# .. figure:: ../../img/unsupported_gap.png
-#    :target: ../../_images/unsupported_gap.png
-#    :alt: Unsupported pooling
-#    :scale: 80 %
-#    :align: center
-#
-#    Unsupported pattern: [``GlobalAveragePool``].
-#
-#
+# The model was quantized successfully, we can check its accuracy:
+
+correctly_classified = evaluate_onnx_model(model_quantized)
+print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 
 ######################################################################
-# 2.1 About Patterns
-# ^^^^^^^^^^^^^^^^^^
+# 3. Conversion
+# -------------
+
+######################################################################
+# 3.1. Incompatibility at Conversion
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# While most imcompatibilities will be picked up at the quantization step, some constraints are
+# specific to the target hardware device, and can only be applied at the conversion step. We can
+# detect these either with the `check_model_compatibility
+# <../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__ tool,
+# or by trying to `convert the model into Akida
+# <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__.
+
+from cnn2snn import convert
+
+try:
+    akida_model = convert(model_quantized)
+except Exception as e:
+    print(f"MobileNetV4 is not fully accelerated by Akida. Reason: {str(e)}")
+
+######################################################################
+# This error is raised because the MobileNetV4 padding scheme is specific and differs from the
+# Keras/Akida standard.
+#
+# Ideally, we should aim to swap incompatible operations with mathematically
+# equivalent replacements. For issues of convolution kernel size or padding, we can
+# often achieve that by putting the kernel weights within a larger kernel, placed
+# eccentrically to compensate for any padding issues etc. In this case, we'll
+# try simply modifying the padding to be Akida-compatible.
+#
+# To achieve this, we'll define custom quantization pattern to modify the model before
+# quantization. Rather than try to provide a general solution, we'll hard code this for
+# the problem layers.
+
+######################################################################
+# 3.2. About Patterns
+# ^^^^^^^^^^^^^^^^^^^
 #
 # For efficiency, Akida hardware actually groups certain commonly occuring
 # operations together. For example, ReLU activation functions, where present,
@@ -195,8 +236,6 @@ from quantizeml.onnx_support.quantization.register_patterns import PATTERNS_MAP
 print(*PATTERNS_MAP, sep='\n')
 
 ######################################################################
-# Looking at that list, it should be apparent that a ``GlobalAveragePool`` operation on its own or
-# following an ``Add>ReLU`` is not considered a compatible pattern.
 #
 # .. Note::
 #   Before the conversion the following changes are automatically done to allow the
@@ -212,9 +251,8 @@ print(*PATTERNS_MAP, sep='\n')
 #          to optimize the graph (e.g. fuse BatchNorm into convolutions).
 #
 
-
 ######################################################################
-# 2.2. Custom quantization patterns
+# 3.3. Custom quantization patterns
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The existing patterns won't allow us to map an isolated GlobalAveragePool operation. But, for
@@ -233,126 +271,178 @@ print(*PATTERNS_MAP, sep='\n')
 
 from quantizeml.onnx_support import layers
 from quantizeml.onnx_support.quantization import custom_pattern_scope
-from quantizeml.onnx_support.layers.set_weights import set_range_max_on_qnode
 
 
-class IdentityQuantizedConv2D(layers.QuantizedConv2D):
-    def __build__(self, input_ts, downscale=True):
-        # Produces a kernel such that the convolution does not modify the input.
-        identity_kernel = np.identity(input_ts.shape[1], "float32")[..., None, None]
-        self.set_weight("kernel", identity_kernel)
-        return super().__build__(input_ts, downscale)
-
-
-def gap_pattern_fn(block_nodes, graph, tensor_ranges):
-    """Convert the incompatible patterns ['GlobalAveragePool'] into an IdentityQuantizedConv2D.
+def align_conv_with_akida(block_nodes, graph, tensor_ranges):
+    """Pattern function that handles convolutions incompatible with Akida
     """
-    # Note that as 'quantization_pattern_map' is written, this function expects to receive
-    # only the isolated ('GlobalAveragePool') that matches in the graph.
-    qconv = IdentityQuantizedConv2D(pool_type="gap")
-    set_range_max_on_qnode(qconv, tensor_ranges[block_nodes[-1].output[0]])
-    return qconv
+    # Recover initial ONNXLayer from block nodes and graph
+    try:
+        qlayer = layers.get_qdepthwise(block_nodes, graph, tensor_ranges)
+    except RuntimeError:
+        qlayer = layers.get_qconv(block_nodes, graph, tensor_ranges)
+
+    # Force the pads in some convolution to Akida compatible values
+    target_pads = None
+    if qlayer.name in ['/conv_stem/Conv', '/blocks/blocks.0/blocks.0.0/conv/Conv',
+                       '/blocks/blocks.1/blocks.1.0/conv/Conv',
+                       '/blocks/blocks.3/blocks.3.0/dw_mid/conv/Conv']:
+        target_pads = np.array([0, 0, 0, 0, 0, 0, 1, 1], np.int64)
+    elif qlayer.name == '/blocks/blocks.2/blocks.2.0/dw_mid/conv/Conv':
+        target_pads = np.array([0, 0, 1, 1, 0, 0, 2, 2], np.int64)
+
+    if target_pads is not None:
+        print(f"Setting Akida pads in {qlayer.name}...")
+        # Note: pads in convolution include spatial dimension
+        qlayer.set_weight("pads", target_pads)
+
+    return qlayer
 
 
-# Define a custom patterns map, as a new pattern and associated replacement function.
-quantization_pattern_map = {"GlobalAvgPool": gap_pattern_fn}
+# Define a custom patterns map as a new pattern and associated replacement function
+quantization_pattern_map = {}
+for qpattern in PATTERNS_MAP:
+    if "Conv" in qpattern.pattern:
+        # Update all patterns that contains Conv op_type
+        quantization_pattern_map.update({qpattern.pattern: align_conv_with_akida})
 
-# Include quantization_pattern_map in the quantization context
+######################################################################
+
+# Quantize model with custom patterns
 with custom_pattern_scope(quantization_pattern_map):
     model_quantized = quantize(onnx_model, samples=x_test)
 
 ######################################################################
-# The full model is now quantized successfully.
-# At this point we can re-check its accuracy:
-
-correctly_classified = evaluate_onnx_model(model_quantized)
-print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
-
-######################################################################
-# 3. Conversion
-# -------------
-
-######################################################################
-# 3.1. Incompatibility at Conversion
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# As indicated above, while most imcompatibilities will be picked up at the
-# quantization step, some constraints are specific to the target hardware
-# device, and can only be applied at the conversion step. We can detect these
-# either with the `check_model_compatibility <../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__ tool,
-# or by trying to `convert the model into Akida <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__.
-
-from cnn2snn import convert
-
-try:
-    akida_model = convert(model_quantized)
-except Exception as e:
-    print(f"ResNet50 is not fully accelerated by Akida. Reason: {str(e)}")
-
-######################################################################
-# This error is raised because the ResNet50 padding scheme is very specific and differs
-# from the Keras/Akida standard.
-#
-# Ideally, we should aim to swap incompatible operations with mathematically
-# equivalent replacements. For issues of convolution kernel size or padding, we can
-# often achieve that by putting the kernel weights within a larger kernel, placed
-# eccentrically to compensate for any padding issues etc. More on that below - but
-# we can't use that strategy here, because the kernel size for this layer (7x7) is
-# already the maximum supported by the Akida input layer. In this case, we'll have to
-# try simply modifying the padding to be Akida-compatible. Because this is the input
-# layer, we could actually negate that change by padding the input image along two
-# edges before passing to Akida. However, precisely because this is the very start of
-# the network, and the consequence is only a single pixel of spatial offset, we might
-# expect that the impact on model performance will be negligible, and that's precisely
-# what we find on testing. So let's keep things simple in this case: simply replace the
-# incompatible values with compatible ones.
-#
-# To achieve this, we'll again customize the pattern functions to modify the model before
-# quantization. Rather than try to provide a general solution, we'll hard code this for
-# the problem layer:
-
-from quantizeml.onnx_support import graph_tools
-
-
-def align_input_conv_with_akida(block_nodes, graph, tensor_ranges):
-    """Pattern function that handles convolutions incompatible with Akida
-    """
-    # Recover initial ONNXLayer from block nodes and graph
-    qconv = layers.get_qconv(block_nodes, graph, tensor_ranges)
-
-    # Force the pads in first convolution to Akida compatible values
-    if qconv.name == 'resnetv17_conv0_fwd':
-        print("Setting Akida pads in first convolution...")
-        # Note: pads in convolution include spatial dimension
-        qconv.set_weight("pads", np.array([0, 0, 2, 2, 0, 0, 3, 3]))
-        graph_tools.replace_field(qconv, "pool_pads", [0, 0, 1, 1])
-        set_range_max_on_qnode(qconv, tensor_ranges[block_nodes[-1].output[0]])
-    return qconv
-
-
-# Infer intermediate shape: This is required for some custom pattern functions
-onnx_model_temp = onnx.shape_inference.infer_shapes(onnx_model)
-
-# Quantize model with custom patterns
-quantization_pattern_map = {
-    ("Conv", "MaxPool", "Relu"): align_input_conv_with_akida,
-    ("Conv", "Relu"): align_input_conv_with_akida,
-    ("Conv",): align_input_conv_with_akida,
-    ("GlobalAveragePool",): gap_pattern_fn,
-}
-with custom_pattern_scope(quantization_pattern_map):
-    model_quantized = quantize(onnx_model_temp, samples=x_test)
 
 # Evaluate quantized model performance
 correctly_classified = evaluate_onnx_model(model_quantized)
 print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 
 ######################################################################
-# 3.2. Successful Conversion
+# At this point we can re-check conversion:
+
+try:
+    akida_model = convert(model_quantized)
+except Exception as e:
+    print(f"MobileNetV4 is not fully accelerated by Akida. Reason: {str(e)}")
+
+######################################################################
+# Another error is raised due to an Akida incompatiblity: the model comes with a depthwise layer
+# with a kernel size 5 and and stride of 2. Akida only supports stride 2 for kernel size 3 depthwise
+# layers.
+
+######################################################################
+# 3.4. Custom sanitizing
+# ^^^^^^^^^^^^^^^^^^^^^^
+# Handling the kernel 5 stride 2 depthwise layer cannot be done using custom quantization
+# pattern. Patterns can only be used to transform one or several nodes towards a single node that
+# matches the chain of operations of an Akida layer.
+# In this case, to overcome the compatibilty issue, the original layer will be replaced by an
+# equivalent set of two layers, decoupling the kernel size and the stride into two distinct layers.
+# A custom santizing step will then be defined and applied to the original model:
+
+######################################################################
+# The custom sanitizer is implemented using `onnxscript
+# <https://github.com/microsoft/onnxscript>`__. The ONNX Rewriter provides functionality to replace
+# certain patterns in an ONNX graph with replacement patterns based on user-defined rewrite rules,
+# which fits our needs. A tutorial on how to use the ONNX Rewriter can be found at
+# https://microsoft.github.io/onnxscript/tutorial/rewriter/index.html.
+
+
+from onnxscript.rewriter import ir, pattern
+from quantizeml.onnx_support.quantization import ONNXModel
+
+
+def make_depthwise_compatible(model):
+    # Parse all 'Conv' operations
+    def find_convs(op, x, w):
+        return op.Conv(x, w, _allow_other_inputs=True, _outputs=["conv"])
+
+    # Edit out the depthwise layer so that it becomes: a convolution with kernel 5 and stride 1 with
+    # original weights followed by a kernel 3 stride 2 convolution with identity weights
+    def replace_depthwise(op, x, w, conv, **__):
+        ir_node = conv.producer()
+        attributes = ir_node.attributes
+
+        # Change strides to 1 and padding to the Akida expected paddings
+        attributes['strides'] = ir.AttrInt64s('strides', [1, 1])
+        attributes['pads'] = ir.AttrInt64s('pads', [2, 2, 2, 2])
+        dw_kernel_5 = op.Conv(*ir_node.inputs, **attributes)
+
+        # Apply "identity" with kernel size=3 and strides=2 and the Akida expected paddings
+        identity_w = np.zeros((w.shape[0], 1, 3, 3), dtype="float32")
+        identity_w[np.arange(w.shape[0]), 0, 1, 1] = 1
+        identity_w = op.initializer(ir.tensor(identity_w), name=f"{ir_node.name}_identity_weights")
+
+        dw_stride_2 = op.Conv(dw_kernel_5, identity_w, kernel_shape=[3, 3], strides=[2, 2],
+                              pads=[0, 0, 1, 1], group=w.shape[0])
+
+        # Note that the new nodes will have different names, so custom patterns that are using names
+        # will not be applied.
+        return dw_stride_2
+
+    # Only trigger the replacement on the target nodes with group=input channels, kernel_size=5
+    # and strides=2
+    def is_depthwise_k5_s2(*_, w, conv, **__):
+        attributes = conv.producer().attributes
+        group = attributes.get('group', ir.AttrInt64('group', 1))
+        strides = attributes.get('strides', ir.AttrInt64s('strides', [1]))
+        return group.value == w.shape[0] and w.shape[2:] == (5, 5) and strides.value == [2, 2]
+
+    # Define transformation rules
+    rules = [pattern.RewriteRule(find_convs, replace_depthwise, is_depthwise_k5_s2)]
+
+    # Apply rewrites
+    model.rewrite(rules)
+
+######################################################################
+# The helper above will replace the depthwise layer with two layers, one with kernel size 5 and
+# stride 1, and the second with kernel size 3 and stride 2:
+#
+# .. figure:: ../../img/sanitized_mbv4.png
+#    :target: ../../_images/sanitized_mbv4.png
+#    :alt: Sanitized Depthwise layer
+#    :scale: 120 %
+#    :align: center
+
+######################################################################
+
+
+# Wrap in an ONNXModel: in addition to rewriting, it will infer the shapes and check the model
+# after transformations
+model_to_sanitize = ONNXModel(onnx_model)
+make_depthwise_compatible(model_to_sanitize)
+sanitized_model = model_to_sanitize.model
+
+######################################################################
+
+# Evaluate the transformed model
+correctly_classified = evaluate_onnx_model(sanitized_model)
+print(f'Sanitized model accuracy: {correctly_classified}/{num_images}.')
+
+######################################################################
+
+# Quantize again
+with custom_pattern_scope(quantization_pattern_map):
+    model_quantized = quantize(sanitized_model, samples=x_test)
+
+######################################################################
+
+# Re-evaluate quantized model performance
+correctly_classified = evaluate_onnx_model(model_quantized)
+print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
+
+######################################################################
+# 3.5. Successful Conversion
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Time to check conversion again
 
 akida_model = convert(model_quantized)
+
+######################################################################
+# .. Note:: paddings are compatible in the modified depthwise layer because we've explicitely set
+#           paddings values when rewriting the model (custom sanitize) and they were not overwritten
+#           by the quantization patterns since the new nodes have different names.
 
 ######################################################################
 # Great - the model is now both quantized successfully, and can be
@@ -367,18 +457,5 @@ akida_accuracy = akida_model.evaluate(x_test_raw, labels_test)
 print(f'Akida model accuracy: {100 * akida_accuracy:.2f} %')
 
 ######################################################################
-# 3.3. Performance on the full ImageNet validation set
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# The table below summarizes the obtained accuracy at the various stages using the full
-# ImageNet dataset. Note that forcing pads on the first layer decreases the performance
-# of the model by 0.445% - as noted, that change could be rendered lossless by padding
-# the input image prior to sending instead.
-#
-# +------------------------------------------+----------------+--------------------+----------------+
-# | Float accuracy (before Akida adaptation) | Float accuracy | Quantized accuracy | Akida accuracy |
-# +==========================================+================+====================+================+
-# | 74.368                                   | 73.918         | 73.590             | 73.620         |
-# +------------------------------------------+----------------+--------------------+----------------+
-#
 # .. Note::
 #    The images shown in this tutorial are produced through `Netron <https://netron.app/>`_.
