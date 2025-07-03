@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -568,7 +570,8 @@
              
   <h1>Source code for akida.virtual_devices</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">sqrt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">NP</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">NP</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span>
 
 
 <div class="viewcode-block" id="AKD1000">
@@ -665,7 +668,7 @@
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">}),</span>
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">})</span>
     <span class="p">]</span>
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 
 
@@ -691,7 +694,7 @@
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">}),</span>
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">})</span>
     <span class="p">]</span>
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 
 
@@ -741,7 +744,7 @@
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">}),</span>
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">})</span>
     <span class="p">]</span>
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 
 
@@ -773,7 +776,7 @@
         <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">})</span>
     <span class="p">]</span>
 
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span> <span class="n">skip_dmas</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span> <span class="n">skip_dmas</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 
 
@@ -842,7 +845,7 @@
                                     <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">})</span>
     <span class="p">]</span>
 
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span> <span class="n">skip_dmas</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span> <span class="n">skip_dmas</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 
 
@@ -853,8 +856,7 @@
                   <span class="n">num_fnp</span><span class="p">,</span>
                   <span class="n">num_skip_dma_channel</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                   <span class="n">include_hrc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                  <span class="n">input_buffer_memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">weight_memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">sram_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">hw_version</span><span class="o">=</span><span class="n">FPGA_v2</span><span class="p">,</span>
                   <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates an Akida device with the specified hardware components.</span>
@@ -866,8 +868,8 @@
 <span class="sd">        num_skip_dma_channel (int, optional): Number of skip DMA channels (only applicable for</span>
 <span class="sd">            2.x devices). Defaults to 0.</span>
 <span class="sd">        include_hrc (bool, optional): Whether to include the HRC. Defaults to True.</span>
-<span class="sd">        input_buffer_memory (int, optional): Size of shared input packet SRAM in bytes available</span>
-<span class="sd">            inside the mesh for each two NPs. Defaults to None.</span>
+<span class="sd">        sram_size (akida.NP.SramSize, optional): Size of shared SRAM available inside the mesh.</span>
+<span class="sd">          Defaults to None.</span>
 <span class="sd">        weight_memory (int, optional): Size of shared filter SRAM in bytes available inside the</span>
 <span class="sd">            mesh for each two NPs. Defaults to None.</span>
 <span class="sd">        hw_version (akida.HwVersion, optional): The version of the device. Defaults to FPGA_v2.</span>
@@ -881,24 +883,10 @@
     <span class="n">MAX_SKIP_DMA_CHANNELS_PER_COL</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">NUM_NPS_PER_NODE</span> <span class="o">=</span> <span class="mi">4</span>
 
-    <span class="k">class</span><span class="w"> </span><span class="nc">V1_INFO</span><span class="p">:</span>
-        <span class="n">INPUT_BUFFER_MEMORY</span> <span class="o">=</span> <span class="mi">43008</span>
-        <span class="n">WEIGHT_MEMORY</span> <span class="o">=</span> <span class="mi">44800</span>
-        <span class="n">HW_VERSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">]</span>
-
-    <span class="k">class</span><span class="w"> </span><span class="nc">V2_INFO</span><span class="p">:</span>
-        <span class="n">INPUT_BUFFER_MEMORY</span> <span class="o">=</span> <span class="mi">65536</span>
-        <span class="n">WEIGHT_MEMORY</span> <span class="o">=</span> <span class="mi">51200</span>
-        <span class="n">HW_VERSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">FPGA_v2</span><span class="p">]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_memory_info</span><span class="p">(</span><span class="n">input_buffer_memory</span><span class="p">,</span> <span class="n">weight_memory</span><span class="p">,</span> <span class="n">hw_info</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">input_buffer_memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">input_buffer_memory</span> <span class="o">=</span> <span class="n">hw_info</span><span class="o">.</span><span class="n">INPUT_BUFFER_MEMORY</span>
-
-        <span class="k">if</span> <span class="n">weight_memory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">weight_memory</span> <span class="o">=</span> <span class="n">hw_info</span><span class="o">.</span><span class="n">WEIGHT_MEMORY</span>
-
-        <span class="k">return</span> <span class="n">input_buffer_memory</span><span class="p">,</span> <span class="n">weight_memory</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_supported_hw_version</span><span class="p">(</span><span class="n">ip_version</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">FPGA_v2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_total_nps</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">):</span>
         <span class="n">total_nps</span> <span class="o">=</span> <span class="n">num_cnp_tnp</span> <span class="o">+</span> <span class="n">num_fnp</span>
@@ -983,21 +971,14 @@
                         <span class="n">num_fnp</span> <span class="o">-=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">nps</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_hrc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Disabling HRC is not supported.&quot;</span><span class="p">)</span>
-
     <span class="c1"># Get Ip version</span>
     <span class="n">ip_version</span> <span class="o">=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span> <span class="k">if</span> <span class="n">hw_version</span><span class="o">.</span><span class="n">product_id</span> <span class="o">==</span> <span class="mh">0xA2</span> <span class="k">else</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v1</span>
 
     <span class="c1"># Check HW version</span>
-    <span class="n">hw_info</span> <span class="o">=</span> <span class="n">V2_INFO</span> <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span> <span class="k">else</span> <span class="n">V1_INFO</span>
-    <span class="k">if</span> <span class="n">hw_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hw_info</span><span class="o">.</span><span class="n">HW_VERSIONS</span><span class="p">:</span>
+    <span class="n">supported_hw_version</span> <span class="o">=</span> <span class="n">_get_supported_hw_version</span><span class="p">(</span><span class="n">ip_version</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hw_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_hw_version</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid HW version &#39;</span><span class="si">{</span><span class="n">hw_version</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-                         <span class="sa">f</span><span class="s2">&quot;Expected one of: </span><span class="si">{</span><span class="n">hw_info</span><span class="o">.</span><span class="n">HW_VERSIONS</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Fill input and weight memory with defaults if necessary</span>
-    <span class="n">input_buffer_memory</span><span class="p">,</span> <span class="n">weight_memory</span> <span class="o">=</span> <span class="n">_get_memory_info</span><span class="p">(</span><span class="n">input_buffer_memory</span><span class="p">,</span> <span class="n">weight_memory</span><span class="p">,</span>
-                                                          <span class="n">hw_info</span><span class="p">)</span>
+                         <span class="sa">f</span><span class="s2">&quot;Expected one of: </span><span class="si">{</span><span class="n">supported_hw_version</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Compute total nps and construct the optimal grid for NPs</span>
     <span class="c1"># The mesh should be as square as possible</span>
@@ -1018,11 +999,52 @@
     <span class="c1"># Make NPs</span>
     <span class="n">nps</span> <span class="o">=</span> <span class="n">_make_nps</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span> <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">)</span>
 
+    <span class="c1"># Default SRAM size if not specified</span>
+    <span class="k">if</span> <span class="n">sram_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v2</span> <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span> <span class="k">else</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v1</span>
+
     <span class="c1"># Make the mesh</span>
-    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">ip_version</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span>
-                   <span class="n">skip_dmas</span><span class="p">,</span> <span class="n">input_buffer_memory</span><span class="p">,</span> <span class="n">weight_memory</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">ip_version</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="n">include_hrc</span><span class="p">,</span> <span class="n">nps</span><span class="p">,</span> <span class="n">skip_dmas</span><span class="p">,</span> <span class="n">sram_size</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">hw_version</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_minimal_memory">
+<a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_minimal_memory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the minimal memory required for inputs and weights on the device.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (akida.Model): an Akida model.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int, int: minimal input_buffer memory and minimal weight memory in bytes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check that model is mapped</span>
+    <span class="k">assert</span> <span class="nb">any</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">]),</span> <span class="s2">&quot;Model needs to be mapped&quot;</span>
+
+    <span class="n">minimal_input_buffer_memory</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">minimal_weight_memory</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">np</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">nps</span><span class="p">:</span>
+            <span class="n">np_weight_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">weight_size</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">FNP3</span><span class="p">:</span>
+                <span class="c1"># FNP weight SRAM in 32-bit words, 48 bits are used per 50-bit word.</span>
+                <span class="c1"># We need to convert first to 32 bit by dividing by 4 to compute weight size</span>
+                <span class="n">np_weight_size</span> <span class="o">/=</span> <span class="mi">4</span>
+
+                <span class="c1"># Compute weight size and convert back to bytes by multiplying by 4</span>
+                <span class="n">np_weight_size</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="mi">50</span> <span class="o">*</span> <span class="n">np_weight_size</span> <span class="o">/</span> <span class="mi">48</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span>
+
+            <span class="n">minimal_input_buffer_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minimal_input_buffer_memory</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+            <span class="n">minimal_weight_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minimal_weight_memory</span><span class="p">,</span> <span class="n">np_weight_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">minimal_input_buffer_memory</span><span class="p">,</span> <span class="n">minimal_weight_memory</span></div>
 
 </pre></div>
 

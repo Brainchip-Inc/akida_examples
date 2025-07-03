@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>quantizeml.onnx_support.layers.buffertempconv &mdash; Akida Examples  documentation</title>
+  <title>quantizeml.onnx_support.layers.buffer_temp_conv &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -557,7 +559,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">quantizeml.onnx_support.layers.buffertempconv</li>
+      <li class="breadcrumb-item active">quantizeml.onnx_support.layers.buffer_temp_conv</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -566,7 +568,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for quantizeml.onnx_support.layers.buffertempconv</h1><div class="highlight"><pre>
+  <h1>Source code for quantizeml.onnx_support.layers.buffer_temp_conv</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
 <span class="c1"># Copyright 2025 Brainchip Holdings Ltd.</span>
@@ -586,7 +588,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;VariableRegistry&quot;</span><span class="p">,</span> <span class="s2">&quot;FifoOp&quot;</span><span class="p">,</span> <span class="s2">&quot;btc_function&quot;</span><span class="p">,</span> <span class="s2">&quot;dwbtc_function&quot;</span><span class="p">,</span>
            <span class="s2">&quot;QuantizedBufferTempConv&quot;</span><span class="p">,</span> <span class="s2">&quot;QuantizedDepthwiseBufferTempConv&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;get_qbtc&quot;</span><span class="p">,</span> <span class="s2">&quot;get_qdbtc&quot;</span><span class="p">]</span>
+           <span class="s2">&quot;get_qbtc&quot;</span><span class="p">,</span> <span class="s2">&quot;get_qdbtc&quot;</span><span class="p">,</span> <span class="s2">&quot;reset_buffers&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -600,8 +602,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops.activation</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_activation_ops</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.set_weights</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_weights_on_qnode</span><span class="p">,</span> <span class="n">set_range_max_on_qnode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_activation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..layers.compute_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_onnx_btc_output</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.compute_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_onnx_btc_output</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize_to_qfloat</span><span class="p">,</span> <span class="n">aligned_quantize</span><span class="p">,</span> <span class="n">align_to</span><span class="p">,</span> <span class="n">downscale</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.register</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_new_subgraph</span>
 
 
@@ -661,8 +664,8 @@
 
 
 <span class="c1"># The BufferTempConv operation is made of a FifoOp and a convolution:</span>
-<span class="c1">#  - Reshape FIFO to perform a 2-D convolution: (B, C, T, H, W) -&gt; (B, T * C, H, W)</span>
-<span class="c1">#  - Perform convolution: (B, T * C, H, W) * (F, T * C, 1, 1) -&gt; (B, F, H, W)</span>
+<span class="c1">#  - Reshape FIFO to perform a 2-D convolution: (B, C, T, H, W) -&gt; (B, C * T, H, W)</span>
+<span class="c1">#  - Perform convolution: (B, C * T, H, W) * (F, C * T, 1, 1) -&gt; (B, F, H, W)</span>
 <span class="n">btc_function</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_function</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    &lt;opset_import: [&quot;&quot;: </span><span class="si">{onnx_opset}</span><span class="s2">, &quot;</span><span class="si">{domain}</span><span class="s2">&quot;: 1], domain:&quot;</span><span class="si">{domain}</span><span class="s2">&quot;&gt;</span>
 <span class="s2">    BufferTempConv &lt;model_id: string, fifo_name: string, fifo_size: int&gt;(X, W, B) =&gt; (Y)</span>
@@ -700,27 +703,36 @@
 <span class="n">onnx</span><span class="o">.</span><span class="n">checker</span><span class="o">.</span><span class="n">check_function</span><span class="p">(</span><span class="n">dwbtc_function</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="reset_buffers">
-<a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.reset_buffers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">reset_buffers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Resets all FIFO-buffer of (Depthwise)BufferTempConv layers within the model.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model (ONNXModel): the model to reset</span>
+<span class="sd">        model (ModelProto or ONNXModel): the model to reset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">ONNXModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
     <span class="n">model_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;FifoOp&quot;</span><span class="p">,</span> <span class="s2">&quot;BufferTempConv&quot;</span><span class="p">,</span> <span class="s2">&quot;DepthwiseBufferTempConv&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;BufferTempConv&quot;</span><span class="p">,</span> <span class="s2">&quot;FifoOp&quot;</span><span class="p">)):</span>
             <span class="n">model_id</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">helper</span><span class="o">.</span><span class="n">get_node_attr_value</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;model_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
             <span class="n">model_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
-    <span class="n">VariableRegistry</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">model_ids</span><span class="p">)</span></div>
-
+    <span class="n">VariableRegistry</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">model_ids</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="QuantizedBufferTempConv">
 <a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedBufferTempConv">[docs]</a>
 <span class="nd">@register_node_format</span><span class="p">(</span><span class="n">requires_downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">QuantizedBufferTempConv</span><span class="p">(</span><span class="n">OnnxLayer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of the BufferTempConv layer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fifo_name (str): name of the FIFO buffer.</span>
+<span class="sd">        fifo_size (int): length of the FIFO buffer.</span>
+<span class="sd">        model_id (str) : name id of the model the layer belongs to.</span>
+<span class="sd">        activation (str, optional): activation type to be applied. Defaults to &quot;&quot;.</span>
+<span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">fifo_name</span><span class="p">,</span>
                  <span class="n">fifo_size</span><span class="p">,</span>
@@ -853,6 +865,15 @@
 <a class="viewcode-back" href="../../../../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv">[docs]</a>
 <span class="nd">@register_node_format</span><span class="p">(</span><span class="n">requires_downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">QuantizedDepthwiseBufferTempConv</span><span class="p">(</span><span class="n">OnnxLayer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of the DepthwiseBufferTempConv layer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fifo_name (str): name of the FIFO buffer.</span>
+<span class="sd">        fifo_size (int): length of the FIFO buffer.</span>
+<span class="sd">        model_id (str) : name id of the model the layer belongs to.</span>
+<span class="sd">        activation (str, optional): activation type to be applied. Defaults to &quot;&quot;.</span>
+<span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">fifo_name</span><span class="p">,</span>
                  <span class="n">fifo_size</span><span class="p">,</span>

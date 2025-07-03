@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -594,7 +596,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
 
 <div class="viewcode-block" id="ds_cnn_kws">
@@ -710,7 +712,7 @@
 
 <div class="viewcode-block" id="ds_cnn_kws_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.ds_cnn_kws_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">ds_cnn_kws_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ds_cnn_kws_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `ds_cnn_kws` model that was trained on</span>
 <span class="sd">    KWS dataset.</span>
@@ -718,16 +720,28 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;2ba6220bb9545857c99a327ec14d2d777420c7848cb6a9b17d87e5a01951fe6f&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5b7c9e7b6016cef67a0c048bbbfbfc0590f0ec7af17879956234fb97cc774435&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;2ba6220bb9545857c99a327ec14d2d777420c7848cb6a9b17d87e5a01951fe6f&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;d281251de6368a2efac0190b49a1b1276038f14ab6555f7e0cbfe85ba7c7cb1b&#39;</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_i8_w8_a8.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5b7c9e7b6016cef67a0c048bbbfbfc0590f0ec7af17879956234fb97cc774435&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;95a51677b340ee2420015a8576a8aaf41e84138ac0334cd42080b60499b4f146&#39;</span>

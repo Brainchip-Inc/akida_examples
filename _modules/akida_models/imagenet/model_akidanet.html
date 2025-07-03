@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -601,7 +603,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.imagenet_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">obtain_input_shape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
 
 <div class="viewcode-block" id="akidanet_imagenet">
@@ -858,7 +860,7 @@
 
 <div class="viewcode-block" id="akidanet_imagenet_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    ImageNet dataset.</span>
@@ -868,17 +870,29 @@
 <span class="sd">            0.5, 1]. Defaults to 1.0.</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">quantized</span> <span class="ow">and</span> <span class="n">bitwidth</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                         <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;359e0ff05abbb26fe215830ca467ef40761767c0d77f8c743c6d6e4fffa7a925&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;08ba150a1a21a69dfe8743b688ef1b018b8474826e5a26792d160614b4769267&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;359e0ff05abbb26fe215830ca467ef40761767c0d77f8c743c6d6e4fffa7a925&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c0e150651a2ea543bd54b19f7b4f8ceedbbebc4a11320172fc356aa945aa91a1&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_1_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;08ba150a1a21a69dfe8743b688ef1b018b8474826e5a26792d160614b4769267&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9208233d21c3251777b1f700b7c2c51491590133f97f81f04348ab131679b00f&#39;</span>
@@ -886,10 +900,15 @@
             <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fc4aaf81a8aec8792709ae0fa10aac2dcb9517202a6f919e049c4db96f272339&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1d9493115d43625f2644f8265f71b8487c4019047fc331e892a233a3d6520371&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;801bd49da790625672896050648cc348da93bb99ec61bce4c4f7dbbd25b9c1d6&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1d9493115d43625f2644f8265f71b8487c4019047fc331e892a233a3d6520371&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a7524a9967402fb5cab5260e7e75406ae0b4025692d6bce7edcf3caf2ac34092&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;801bd49da790625672896050648cc348da93bb99ec61bce4c4f7dbbd25b9c1d6&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;61f2883a6b798f922a5c0411296219a85f25581d7571f65546557b46066f058f&#39;</span>
@@ -897,10 +916,15 @@
             <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6d202e9477d89192abe069e3a87105e0db8fe4a6a1a152afc933b687dd5418b8&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9146d6228d859d8b8db1c1b7a795471096e5a49ee4ff5656eabc6be749d42f5e&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3ca17743c0bc815b80912f2a316c41bf4ca633d5fe8a0d647584e4f4260be88b&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;9146d6228d859d8b8db1c1b7a795471096e5a49ee4ff5656eabc6be749d42f5e&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c3e7bab27cc76cb80dc43bf456d16a9828755765de1fec0e9d8d5f1ad699cbdc&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.25_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3ca17743c0bc815b80912f2a316c41bf4ca633d5fe8a0d647584e4f4260be88b&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_25.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;23d96a1c73397a5c2060808f3843d99fa3cd96b5b1af36e03b0d039be393c001&#39;</span>
@@ -922,7 +946,7 @@
 
 <div class="viewcode-block" id="akidanet_faceidentification_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_faceidentification_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_faceidentification_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_faceidentification_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    CASIA Webface dataset and that performs face identification.</span>
@@ -930,16 +954,28 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b287f86155c51dc73053f7e5f3e58be1beb4a35d543dd817a63a782ffaf5bff1&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6818d82b8a94ebe369b8973721856b43369e8b0ff10c31b41f2610983b7a9531&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;b287f86155c51dc73053f7e5f3e58be1beb4a35d543dd817a63a782ffaf5bff1&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1adf47af3f2e1112abc21594eefe4e9600dc3dcce164c00c43291a5af2340fd0&#39;</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_i8_w8_a8.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6818d82b8a94ebe369b8973721856b43369e8b0ff10c31b41f2610983b7a9531&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;998b6cdce5adbdb0b7c3e9f8eb1011c3582e05f0c159e473d226a9a94c4309a1&#39;</span>
@@ -958,7 +994,7 @@
 
 <div class="viewcode-block" id="akidanet_plantvillage_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_plantvillage_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_plantvillage_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_plantvillage_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    PlantVillage dataset.</span>
@@ -966,19 +1002,30 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1400910c774fd78a5e6ea227ff28cb28e79ecec0909a378068cd9f40ddaf4e0a&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5b8f7f6eb5ce5fa84c8b3cb28cd9816c124063c256934e8291d62d40a24ed9ea&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1400910c774fd78a5e6ea227ff28cb28e79ecec0909a378068cd9f40ddaf4e0a&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3eaf40d54424a1663fff439ea62fb02428ae92246ec606aedf299ecb74df6dff&#39;</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage_i8_w8_a8.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5b8f7f6eb5ce5fa84c8b3cb28cd9816c124063c256934e8291d62d40a24ed9ea&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_plantvillage.h5&#39;</span>
         <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;625145dec17e286beb61b9f683dc2f518752e5f9203d3b69b27c07d802528dbd&#39;</span>
 
@@ -994,7 +1041,7 @@
 
 <div class="viewcode-block" id="akidanet_vww_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.akidanet_vww_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_vww_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">akidanet_vww_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve an `akidanet_imagenet` model that was trained on</span>
 <span class="sd">    VWW dataset.</span>
@@ -1002,16 +1049,28 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;cd130d90ed736447b6244dc1228e708b9dab20af0d2bf57b9a49df4362467ea8&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5802a9555741c1daa2517458cab3c9550515d4d389fcdbc378fe5e102df8287d&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;cd130d90ed736447b6244dc1228e708b9dab20af0d2bf57b9a49df4362467ea8&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5aec6c3ec09413db4c0071cdad9ad6ce6b8df595d1237a65a2a31e32287472de&#39;</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww_i8_w8_a8.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5802a9555741c1daa2517458cab3c9550515d4d389fcdbc378fe5e102df8287d&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_vww.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;00e03f13226cd622ad92bdb3402c4b4399a69875f2dde6ccadfb235ad6994d78&#39;</span>

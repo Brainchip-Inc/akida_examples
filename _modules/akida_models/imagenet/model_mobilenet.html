@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -604,7 +606,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.imagenet_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">obtain_input_shape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
 
 <div class="viewcode-block" id="mobilenet_imagenet">
@@ -885,7 +887,7 @@
 
 <div class="viewcode-block" id="mobilenet_imagenet_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.mobilenet_imagenet_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mobilenet_imagenet_pretrained</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `mobilenet_imagenet` model that was trained on</span>
 <span class="sd">    ImageNet dataset.</span>
@@ -894,17 +896,30 @@
 <span class="sd">        alpha (float): width of the model.</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">quantized</span> <span class="ow">and</span> <span class="n">bitwidth</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                         <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;4e63ea329b3f2f773a0b9d6fef4e449639fda89d17e48bb7132b6ad86585c867&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6f2d5f98e4bb1136f9a6389a71b661a4aa9fca53d9d95d4aa8f4bb0339c908bd&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;4e63ea329b3f2f773a0b9d6fef4e449639fda89d17e48bb7132b6ad86585c867&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7f61dd6f10b1e3e2d6e8483eca6b071289c0a76a7f12255d42027fba51a390f7&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e9c74f84e0ecbf5064e2ab853e48afdb2f94a0c4cabb93dc34cd3038a03ce80e&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fb674f627337995f4aa372e4a270445457573fc7aae61e28c05f94da14cf2980&#39;</span>
@@ -912,10 +927,15 @@
             <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4305ca6e03bffaf4e39a840fb2c6108101136f572ae784bebc3bd9406a6ecd0c&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;af9a31774467de96acceeed46cee14d7864fa2cc247601beff5521e7a5e6da99&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b9dfe97b5171308860483beb62976dd3edd642ee7c7b6013c541ea5e0a8c0d8a&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;af9a31774467de96acceeed46cee14d7864fa2cc247601beff5521e7a5e6da99&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3176d7576acbe733205d2df9e47753705cfda67c492680383ed0d61fba4fe18f&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b9dfe97b5171308860483beb62976dd3edd642ee7c7b6013c541ea5e0a8c0d8a&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1bffadb48f3fd194cdeecf4e02d91d0b3a87df103620c645f1c00f5e5cfbca9a&#39;</span>
@@ -923,10 +943,15 @@
             <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1ded4e456b59b4286329b2e8694d1d3adce9745a73a59cc4670dc0eae60ff2bc&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
-            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;35ad51e662ed04b68978865ccb1c16bf024fa013146488b2a9c18c80d1efab29&#39;</span>
-            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7f0c7378cecef5ee5128c414465e25a2d6d8212b2f35ea7c7557c5292e3723a3&#39;</span>
+            <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
+                <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;35ad51e662ed04b68978865ccb1c16bf024fa013146488b2a9c18c80d1efab29&#39;</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;372920d15af986e8d527cb063ff8b5487ca0af8e09329d8ef53bd353f24d80ea&#39;</span>
+            <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w8_a8.h5&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7f0c7378cecef5ee5128c414465e25a2d6d8212b2f35ea7c7557c5292e3723a3&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;33c49bb4ec868558a2a9687be19a7e51756ddb9f00a032535069dcd5a727e0dd&#39;</span>

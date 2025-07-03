@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -594,7 +596,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.pointnet_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_reshape_factor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span><span class="p">,</span> <span class="n">act_to_layer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
 
 <div class="viewcode-block" id="pointnet_plus_modelnet40">
@@ -752,7 +754,7 @@
 
 <div class="viewcode-block" id="pointnet_plus_modelnet40_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.pointnet_plus_modelnet40_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">pointnet_plus_modelnet40_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pointnet_plus_modelnet40_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper method to retrieve a `pointnet_plus` model that was trained on</span>
 <span class="sd">    ModelNet40 dataset.</span>
@@ -760,15 +762,27 @@
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_iq8_wq4_aq4.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;8c6cb08a72909a50e2792f9b0b52c17e9972a9a42e8ace11443e811c18b6573c&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e97664416fb2e8b66573e0718d4107d813ba87472abb24ab0bf6aeb511e3042e&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_iq8_wq4_aq4.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;8c6cb08a72909a50e2792f9b0b52c17e9972a9a42e8ace11443e811c18b6573c&#39;</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;ccb8acffa0372f14a43597c833e93e97ab9c987f8481834b5609c3d8512b5e0c&#39;</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w8_a8.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e97664416fb2e8b66573e0718d4107d813ba87472abb24ab0bf6aeb511e3042e&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1499e8d629642c0f67436bdc8ba7d883c2f1cc1f5993a758588fa177a3fc585c&#39;</span>

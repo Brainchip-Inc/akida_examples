@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.detection.generate_anchors &mdash; Akida Examples  documentation</title>
+  <title>quantizeml.models.reset_buffers &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -559,7 +559,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">akida_models.detection.generate_anchors</li>
+      <li class="breadcrumb-item active">quantizeml.models.reset_buffers</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -568,142 +568,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.detection.generate_anchors</h1><div class="highlight"><pre>
-<span></span><span class="c1"># ******************************************************************************</span>
-<span class="c1"># MIT License</span>
-<span class="c1">#</span>
-<span class="c1"># Copyright (c) 2017 Ngoc Anh Huynh</span>
-<span class="c1">#</span>
-<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy</span>
-<span class="c1"># of this software and associated documentation files (the &quot;Software&quot;), to deal</span>
-<span class="c1"># in the Software without restriction, including without limitation the rights</span>
-<span class="c1"># to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
-<span class="c1"># copies of the Software, and to permit persons to whom the Software is</span>
-<span class="c1"># furnished to do so, subject to the following conditions:</span>
-
-<span class="c1"># The above copyright notice and this permission notice shall be included in all</span>
-<span class="c1"># copies or substantial portions of the Software.</span>
-
-<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
-<span class="c1"># IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
-<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
-<span class="c1"># AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
-<span class="c1"># LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
-<span class="c1"># OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
-<span class="c1"># SOFTWARE.</span>
+  <h1>Source code for quantizeml.models.reset_buffers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module provides a method to generate YOLO anchors from dataset annotations.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright 2025 Brainchip Holdings Ltd.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#    http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;generate_anchors&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;reset_buffers&quot;</span><span class="p">]</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.data_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Coord</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_iou</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">centroids</span><span class="p">):</span>
-    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">ann</span>
-    <span class="n">similarities</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">centroid</span> <span class="ow">in</span> <span class="n">centroids</span><span class="p">:</span>
-        <span class="n">c_w</span><span class="p">,</span> <span class="n">c_h</span> <span class="o">=</span> <span class="n">centroid</span>
-
-        <span class="k">if</span> <span class="n">c_w</span> <span class="o">&gt;=</span> <span class="n">w</span> <span class="ow">and</span> <span class="n">c_h</span> <span class="o">&gt;=</span> <span class="n">h</span><span class="p">:</span>
-            <span class="n">similarity</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">/</span> <span class="p">(</span><span class="n">c_w</span> <span class="o">*</span> <span class="n">c_h</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">c_w</span> <span class="o">&gt;=</span> <span class="n">w</span> <span class="ow">and</span> <span class="n">c_h</span> <span class="o">&lt;=</span> <span class="n">h</span><span class="p">:</span>
-            <span class="n">similarity</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">c_h</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">+</span> <span class="p">(</span><span class="n">c_w</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">c_h</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">c_w</span> <span class="o">&lt;=</span> <span class="n">w</span> <span class="ow">and</span> <span class="n">c_h</span> <span class="o">&gt;=</span> <span class="n">h</span><span class="p">:</span>
-            <span class="n">similarity</span> <span class="o">=</span> <span class="n">c_w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">+</span> <span class="n">c_w</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_h</span> <span class="o">-</span> <span class="n">h</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># means both w,h are bigger than c_w and c_h respectively</span>
-            <span class="n">similarity</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_w</span> <span class="o">*</span> <span class="n">c_h</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
-        <span class="n">similarities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">similarity</span><span class="p">)</span>  <span class="c1"># will become (k,) shape</span>
-
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..onnx_support.quantization.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..onnx_support.layers.buffer_temp_conv</span><span class="w"> </span><span class="kn">import</span> <span class="n">reset_buffers</span> <span class="k">as</span> <span class="n">reset_buffers_onnx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layers.buffer_temp_conv</span><span class="w"> </span><span class="kn">import</span> <span class="n">reset_buffers</span> <span class="k">as</span> <span class="n">reset_buffers_keras</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_avg_iou</span><span class="p">(</span><span class="n">anns</span><span class="p">,</span> <span class="n">centroids</span><span class="p">):</span>
-    <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">anns</span><span class="o">.</span><span class="n">shape</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="mf">0.</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">anns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_iou</span><span class="p">(</span><span class="n">anns</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">centroids</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="n">s</span> <span class="o">/</span> <span class="n">n</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_run_kmeans</span><span class="p">(</span><span class="n">ann_dims</span><span class="p">,</span> <span class="n">anchor_num</span><span class="p">):</span>
-    <span class="n">ann_num</span> <span class="o">=</span> <span class="n">ann_dims</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">prev_assignments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">ann_num</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">ann_dims</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">anchor_num</span><span class="p">)]</span>
-    <span class="n">centroids</span> <span class="o">=</span> <span class="n">ann_dims</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-    <span class="n">anchor_dim</span> <span class="o">=</span> <span class="n">ann_dims</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">iteration</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ann_num</span><span class="p">):</span>
-            <span class="n">d</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">_iou</span><span class="p">(</span><span class="n">ann_dims</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">centroids</span><span class="p">)</span>
-            <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
-
-        <span class="c1"># assign samples to centroids</span>
-        <span class="n">assignments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="n">assignments</span> <span class="o">==</span> <span class="n">prev_assignments</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">centroids</span>
-
-        <span class="c1"># calculate new centroids</span>
-        <span class="n">centroid_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">anchor_num</span><span class="p">,</span> <span class="n">anchor_dim</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ann_num</span><span class="p">):</span>
-            <span class="n">centroid_sums</span><span class="p">[</span><span class="n">assignments</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">ann_dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">anchor_num</span><span class="p">):</span>
-            <span class="n">centroids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">centroid_sums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">assignments</span> <span class="o">==</span> <span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>
-
-        <span class="n">prev_assignments</span> <span class="o">=</span> <span class="n">assignments</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-
-<div class="viewcode-block" id="generate_anchors">
-<a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.generate_anchors.generate_anchors">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">generate_anchors</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">grid_size</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Creates anchors by clustering dimensions of the ground truth boxes</span>
-<span class="sd">    from the training dataset.</span>
+<div class="viewcode-block" id="reset_buffers">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.reset_buffers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_buffers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resets all FIFO-buffers of the given model.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        dataset (tf.Dataset): dataset used to generate anchors</span>
-<span class="sd">        num_anchors (int, optional): number of anchors</span>
-<span class="sd">        grid_size (tuple, optional): size of the YOLO grid</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: the computed anchors</span>
+<span class="sd">        model (ONNXModel or keras.Model): The model to reset.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">annotation_dims</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
-        <span class="n">image_height</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">image_width</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">cell_w</span> <span class="o">=</span> <span class="n">image_width</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">cell_h</span> <span class="o">=</span> <span class="n">image_height</span> <span class="o">/</span> <span class="n">grid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">][</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">box</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-            <span class="c1"># Tensorflow box (ymin/height, xmin/width, ymax/height, xmax/width)</span>
-            <span class="n">relative_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_width</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">cell_w</span>
-            <span class="n">relative_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_height</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">-</span> <span class="n">box</span><span class="p">[</span><span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">cell_h</span>
-            <span class="n">annotation_dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">(</span><span class="n">relative_w</span><span class="p">,</span> <span class="n">relative_h</span><span class="p">))))</span>
-
-    <span class="n">annotation_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">annotation_dims</span><span class="p">)</span>
-    <span class="n">centroids</span> <span class="o">=</span> <span class="n">_run_kmeans</span><span class="p">(</span><span class="n">annotation_dims</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Average IOU for&#39;</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="s1">&#39;anchors:&#39;</span><span class="p">,</span>
-          <span class="s1">&#39;</span><span class="si">%0.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">_avg_iou</span><span class="p">(</span><span class="n">annotation_dims</span><span class="p">,</span> <span class="n">centroids</span><span class="p">))</span>
-    <span class="n">anchors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">centroids</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Anchors: &#39;</span><span class="p">,</span> <span class="n">anchors</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">anchors</span></div>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">,</span> <span class="n">ONNXModel</span><span class="p">,</span> <span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">)),</span> <span class="p">(</span>
+        <span class="s2">&quot;Unsupported model type: expected onnx.ModelProto or ONNXModel or keras.Model, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">onnx</span><span class="o">.</span><span class="n">ModelProto</span><span class="p">,</span> <span class="n">ONNXModel</span><span class="p">)):</span>
+        <span class="n">reset_buffers_onnx</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reset_buffers_keras</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
 
 </pre></div>
 

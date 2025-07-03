@@ -207,6 +207,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_apis.html#mapping">Mapping</a><ul>
@@ -253,6 +254,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#tensors">Tensors</a><ul>
@@ -590,11 +592,11 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gxnor_mnist&quot;</span><span class="p">,</span> <span class="s2">&quot;gxnor_mnist_pretrained&quot;</span><span class="p">]</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Rescaling</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
 
 <div class="viewcode-block" id="gxnor_mnist">
@@ -612,6 +614,9 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for GXNOR/MNIST</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Model version management</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">post_relu_gap</span><span class="p">,</span> <span class="n">relu_activation</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
+
     <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="mi">255</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
 
@@ -622,7 +627,7 @@
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU2&#39;</span><span class="p">,</span>
+                   <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
                    <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
                    <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
@@ -633,12 +638,21 @@
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU2&#39;</span><span class="p">,</span>
+                   <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
                    <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                    <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="c1"># Block 3</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_3/conv_1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
+                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;global_avg&#39;</span><span class="p">,</span>
+                   <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">)</span>
 
     <span class="c1"># Classification block</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Flatten</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;flatten&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                     <span class="n">units</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
                     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc_1&#39;</span><span class="p">,</span>
@@ -657,27 +671,38 @@
 
 <div class="viewcode-block" id="gxnor_mnist_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">gxnor_mnist_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gxnor_mnist_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper method to retrieve a `gxnor_mnist` model that was trained on MNIST dataset.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        quantized (bool, optional): a boolean indicating whether the model should be loaded</span>
 <span class="sd">            quantized or not. Defaults to True.</span>
+<span class="sd">        bitwidth (int, optional): the number of bits for quantized model. Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bitwidth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bitwidth</span> <span class="o">=</span> <span class="n">get_default_bitwidth</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
-        <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_iq2_wq2_aq1.h5&#39;</span>
-        <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;f6f3e077c39fa4a65e401d3758af624fb276322e1d694fbf4f773941d43e7c5f&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_i4_w4_a4.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b6ff95699525666a6f43600d002f8a8d63c389875066e8ce1c4d9fdd002ceeb5&#39;</span>
+        <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_iq2_wq2_aq1.h5&#39;</span>
+            <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;f6f3e077c39fa4a65e401d3758af624fb276322e1d694fbf4f773941d43e7c5f&#39;</span>
+            <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist_i8_w4_a4.h5&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;71acbf6b4dcb77e82c3d01e031a7abb936ab4d1d91e70b84b10d8578ebb65538&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=2 or 4 for this&quot;</span>
+                             <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;8546a8efde963ff46e42072e2752baeb0cf984ad9a87c88e1d5ee0eb25af25f5&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;gxnor_mnist.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;83537b8f24acd843ecf4645f0b7286c6ae90868973298ebb67f2a078797d6055&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;484bbc4cc85c1a91f135129eb45be66e31ee4f7194c97fc4352aa500b8aaed93&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;gxnor&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

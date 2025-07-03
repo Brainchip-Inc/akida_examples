@@ -211,6 +211,7 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Type"><code class="docutils literal notranslate"><span class="pre">Type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida.NP.SramSize"><code class="docutils literal notranslate"><span class="pre">SramSize</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#mapping">Mapping</a><ul>
@@ -257,6 +258,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#quantization-parameters">Quantization parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id1">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#utils">Utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reset-buffers">Reset buffers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#tensors">Tensors</a><ul>
@@ -727,21 +729,20 @@ configuration. Defaults to None.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.layers.BufferTempConv">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">BufferTempConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/buffer_temp_conv.html#BufferTempConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.BufferTempConv" title="Link to this definition"></a></dt>
-<dd><p>A Conv3D layer working on the first dimension implemented as a Conv1D associated with a FIFO.
-The FIFO buffer acts as a temporal sliding window on inputs for which content is convolved with the
-layer kernel.</p>
-<blockquote>
-<div><p>Expects the input data to be streamed into the layer sequentially in time.</p>
-<dl>
-<dt>Args:</dt><dd><dl class="simple">
-<dt>filters (int): the dimensionality of the output space (i.e. the number of output filters in</dt><dd><p>the convolution).</p>
+<dd><p>A Conv3D layer working on the first dimension implemented as a Conv1D associated with a FIFO.</p>
+<p>The FIFO buffer acts as a temporal sliding window on inputs for which content is convolved with
+the layer kernel.</p>
+<p>Expects the input data to be streamed into the layer sequentially in time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filters</strong> (<em>int</em>) – the dimensionality of the output space (i.e. the number of output filters in
+the convolution).</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – an integer, specifying the height and width of the 1D convolution window.</p></li>
+<li><p><strong>use_bias</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the layer uses a bias vector. Defaults to False</p></li>
+</ul>
 </dd>
 </dl>
-<p>kernel_size (int): an integer, specifying the height and width of the 1D convolution window.
-use_bias (bool, optional): whether the layer uses a bias vector. Defaults to False</p>
-</dd>
-</dl>
-</div></blockquote>
 </dd></dl>
 
 <dl class="py class">
@@ -779,17 +780,6 @@ and weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>quant_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – the serialized quantization configuration. Defaults to None.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.layers.reset_buffers">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">reset_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/buffer_temp_conv.html#reset_buffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.reset_buffers" title="Link to this definition"></a></dt>
-<dd><p>Resets all FIFO-buffer of (Depthwise)BufferTempConv layers within the model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.Model</em>) – the model to reset</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1309,7 +1299,7 @@ model quantization ready.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.models.quantize">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">quantize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationParams(activation_bits=8,</span> <span class="pre">per_tensor_activations=False,</span> <span class="pre">weight_bits=8,</span> <span class="pre">output_bits=8,</span> <span class="pre">input_weight_bits=8,</span> <span class="pre">input_dtype=uint8,</span> <span class="pre">buffer_bits=32,</span> <span class="pre">last_output_bits=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize_until</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/quantize.html#quantize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.quantize" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">quantize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationParams(activation_bits=8,</span> <span class="pre">per_tensor_activations=False,</span> <span class="pre">weight_bits=8,</span> <span class="pre">output_bits=8,</span> <span class="pre">input_weight_bits=8,</span> <span class="pre">input_dtype=uint8,</span> <span class="pre">buffer_bits=32,</span> <span class="pre">last_output_bits=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize_until</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/quantize.html#quantize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.quantize" title="Link to this definition"></a></dt>
 <dd><p>Quantizes a Keras or ONNX model using the provided configuration or parameters.</p>
 <p>Details on how this function behaves:</p>
 <ul class="simple">
@@ -1343,6 +1333,8 @@ samples to generate. Defaults to 1024.</p></li>
 Defaults to 1.</p></li>
 <li><p><strong>quantize_until</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer/node until which to quantize:
 other ones after it will stay unchanged. Defaults to None.</p></li>
+<li><p><strong>input_shape</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>optional</em>) – A list or tuple specifying the new model input shape
+excluding batch dimension. Defaults to None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1510,6 +1502,20 @@ model and partially load its weights.</p>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, throw warning messages if a dict item is not found in the
 model. Defaults to True.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="reset-buffers">
+<h3>Reset buffers<a class="headerlink" href="#reset-buffers" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="quantizeml.models.reset_buffers">
+<span class="sig-prename descclassname"><span class="pre">quantizeml.models.</span></span><span class="sig-name descname"><span class="pre">reset_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/models/reset_buffers.html#reset_buffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.models.reset_buffers" title="Link to this definition"></a></dt>
+<dd><p>Resets all FIFO-buffers of the given model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>ONNXModel</em><em> or </em><em>keras.Model</em>) – The model to reset.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2447,21 +2453,34 @@ Defaults to False.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedBufferTempConv">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedBufferTempConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fifo_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/buffertempconv.html#QuantizedBufferTempConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedBufferTempConv" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedBufferTempConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fifo_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/buffer_temp_conv.html#QuantizedBufferTempConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedBufferTempConv" title="Link to this definition"></a></dt>
+<dd><p>Intermediate representation of the BufferTempConv layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fifo_name</strong> (<em>str</em>) – name of the FIFO buffer.</p></li>
+<li><p><strong>fifo_size</strong> (<em>int</em>) – length of the FIFO buffer.</p></li>
+<li><p><strong>model_id</strong> (<em>str</em>) – name id of the model the layer belongs to.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwiseBufferTempConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fifo_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/buffertempconv.html#QuantizedDepthwiseBufferTempConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.onnx_support.layers.buffertempconv.reset_buffers">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.buffertempconv.</span></span><span class="sig-name descname"><span class="pre">reset_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/buffertempconv.html#reset_buffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.buffertempconv.reset_buffers" title="Link to this definition"></a></dt>
-<dd><p>Resets all FIFO-buffer of (Depthwise)BufferTempConv layers within the model.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwiseBufferTempConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fifo_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/buffer_temp_conv.html#QuantizedDepthwiseBufferTempConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwiseBufferTempConv" title="Link to this definition"></a></dt>
+<dd><p>Intermediate representation of the DepthwiseBufferTempConv layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>ONNXModel</em>) – the model to reset</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fifo_name</strong> (<em>str</em>) – name of the FIFO buffer.</p></li>
+<li><p><strong>fifo_size</strong> (<em>int</em>) – length of the FIFO buffer.</p></li>
+<li><p><strong>model_id</strong> (<em>str</em>) – name id of the model the layer belongs to.</p></li>
+<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
