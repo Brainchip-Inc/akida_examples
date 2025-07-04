@@ -590,18 +590,32 @@ to retrain.</p>
 for a specific target hardware device. We try to catch as many incompatibilities as
 possible at the quantization step. However, some constraints depend on the specific
 target device, and can only be caught at the conversion step. To illustrate, we will
-simply walk through the process of preparing <a class="reference external" href="https://github.com/onnx/models/tree/main/validated/vision/classification/resnet#model">ResNet50</a> for
+simply walk through the process of preparing <a class="reference external" href="https://arxiv.org/abs/2404.10518">MobileNetV4</a> for
 acceleration on Akida - we’ll run into several incompatibilities at different points
 in that process, and see how to resolve them.</p>
 <p>This example assumes a moderate level of experience with deep learning, and good familiarity
 with the operations typically encountered in these types of models. For example, here we’ll
 use the following workarounds:</p>
 <ul class="simple">
-<li><p>to avoid some incompatible sequences of operations we’ll insert layers with “identity”
-convolution kernels,</p></li>
-<li><p>in order to avoid an unusual kernel-size 1/stride 2 convolution, we’ll substitute those
-kernels with equivalent size 3 kernels.</p></li>
+<li><p>to avoid an incompatible padding scheme in convolution, we will overwrite paddings values when
+not aligned with Akida expectations,</p></li>
+<li><p>in order to handle an unsupported kernel-size 5/stride 2 depthwise convolution, we’ll split that
+into two equivalent operations: a kernel-size 5 depthwise convolution using the same weights, but
+with stride 1; followed by a kernel-size 3/stride 2 depthwise convolution with identity weights.</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<div class="line-block">
+<div class="line">This tutorial leverages the <a class="reference external" href="https://huggingface.co/docs/optimum/main/en/exporters/onnx/usage_guides/export_a_model">Optimum toolkit</a>,
+an external tool, based on <a class="reference external" href="https://pytorch.org/">PyTorch</a>, that allows models direct
+download and export to ONNX.</div>
+</div>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">optimum</span><span class="p">[</span><span class="n">exporters</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <section id="get-model-and-data">
 <h2>1. Get model and data<a class="headerlink" href="#get-model-and-data" title="Link to this heading"></a></h2>
 <p>Before diving into the model incompatibilities and how to resolve them, we’ll need to acquire
@@ -643,15 +657,16 @@ these images.</p>
 </section>
 <section id="download-the-model">
 <h3>1.2 Download the model<a class="headerlink" href="#download-the-model" title="Link to this heading"></a></h3>
-<p>We download ResNet50 from the <a class="reference external" href="https://github.com/onnx/models/tree/main/validated/vision/classification">ONNX ZOO</a>.</p>
+<p>We download MobileNetV4 small from the <a class="reference external" href="https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k">HuggingFace hub</a>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">onnx.hub</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">onnxruntime</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferenceSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">optimum.exporters.onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">main_export</span>
 
-<span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;ResNet50&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading ResNet50 to local path /root/.cache/onnx/hub/validated/vision/classification/resnet/model/af16a04a6ec48ac494065d4439fe9dea590d337b9ca6dc328160ccf04a217b9c_resnet50-v1-7.onnx
+<span class="c1"># Download and convert MobiletNetV4 to ONNX</span>
+<span class="n">main_export</span><span class="p">(</span><span class="n">model_name_or_path</span><span class="o">=</span><span class="s2">&quot;timm/mobilenetv4_conv_small.e2400_r224_in1k&quot;</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="s2">&quot;image-classification&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load the model in memory</span>
+<span class="n">onnx_model</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;./model.onnx&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -666,7 +681,10 @@ model.</p>
 <p>For example purposes, we only compute accuracy on 10 images.
 Accuracy on the full ImageNet validation set is reported at the end.</p>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_onnx_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">onnxruntime</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferenceSession</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_onnx_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="n">sess</span> <span class="o">=</span> <span class="n">InferenceSession</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">())</span>
     <span class="c1"># Calculate outputs by running images through the session</span>
     <span class="n">outputs</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">x_test</span><span class="p">})</span>
@@ -681,7 +699,7 @@ Accuracy on the full ImageNet validation set is reported at the end.</p>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floating point model accuracy: </span><span class="si">{</span><span class="n">correctly_classified_floating</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 10/10.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floating point model accuracy: 9/10.
 </pre></div>
 </div>
 </section>
@@ -705,26 +723,50 @@ which may be helpful in preparing those.</p>
 <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
-Applied 1 of general pattern rewrite rules.
-
-Calibrating with 10/10.0 samples
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
 </pre></div>
 </div>
-<p>We can see that the model is not fully quantized, stopping at the first unrecognized
-pattern (node <code class="docutils literal notranslate"><span class="pre">resnetv17_pool1_fwd</span> <span class="pre">(GlobalAveragePool)</span></code>). We know that Akida can definitely
-handle GlobalAveragePool functions, so we have to look more closely to understand the
-problem. Analyzing the model, the pooling immediately follows an <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">&gt;</span> <span class="pre">ReLU</span></code> operator. It is
-this sequence of operations which is not supported by Akida.</p>
-<figure class="align-center" id="id2">
-<a class="reference external image-reference" href="../../_images/unsupported_gap.png"><img alt="Unsupported pooling" src="../../_images/unsupported_gap.png" style="width: 644.8000000000001px; height: 264.8px;" />
-</a>
-<figcaption>
-<p><span class="caption-text">Unsupported pattern: [<code class="docutils literal notranslate"><span class="pre">GlobalAveragePool</span></code>].</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
-</figcaption>
-</figure>
+<p>The model was quantized successfully, we can check its accuracy:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Quantized model accuracy: 9/10.
+</pre></div>
+</div>
+</section>
+<section id="conversion">
+<h2>3. Conversion<a class="headerlink" href="#conversion" title="Link to this heading"></a></h2>
+<section id="incompatibility-at-conversion">
+<h3>3.1. Incompatibility at Conversion<a class="headerlink" href="#incompatibility-at-conversion" title="Link to this heading"></a></h3>
+<p>While most imcompatibilities will be picked up at the quantization step, some constraints are
+specific to the target hardware device, and can only be applied at the conversion step. We can
+detect these either with the <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">check_model_compatibility</a> tool,
+or by trying to <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">convert the model into Akida</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">akida_model</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MobileNetV4 is not fully accelerated by Akida. Reason: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>MobileNetV4 is not fully accelerated by Akida. Reason: Expect pads [0, 0, 1, 1] (found [1, 1, 1, 1]) in /conv_stem/Conv.
+</pre></div>
+</div>
+<p>This error is raised because the MobileNetV4 padding scheme is specific and differs from the
+Keras/Akida standard.</p>
+<p>Ideally, we should aim to swap incompatible operations with mathematically
+equivalent replacements. For issues of convolution kernel size or padding, we can
+often achieve that by putting the kernel weights within a larger kernel, placed
+eccentrically to compensate for any padding issues etc. In this case, we’ll
+try simply modifying the padding to be Akida-compatible.</p>
+<p>To achieve this, we’ll define custom quantization pattern to modify the model before
+quantization. Rather than try to provide a general solution, we’ll hard code this for
+the problem layers.</p>
+</section>
 <section id="about-patterns">
-<h3>2.1 About Patterns<a class="headerlink" href="#about-patterns" title="Link to this heading"></a></h3>
+<h3>3.2. About Patterns<a class="headerlink" href="#about-patterns" title="Link to this heading"></a></h3>
 <p>For efficiency, Akida hardware actually groups certain commonly occuring
 operations together. For example, ReLU activation functions, where present,
 are almost always applied on the outputs of the hard-working computational
@@ -740,11 +782,11 @@ continuous <a class="reference external" href="https://onnx.ai/onnx/operators/">
 <strong>can be converted</strong> to an
 <a class="reference external" href="../../api_reference/akida_apis.html#akida-v2-layers">Akida V2 layer</a>.
 For example, the following model would be converted to an <a class="reference external" href="../../api_reference/akida_apis.html#akida.InputConv2D">akida.InputConv2D</a> layer:</p>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id2">
 <a class="reference external image-reference" href="../../_images/onnx_input_conv2d.png"><img alt="InputConv2D example model" src="../../_images/onnx_input_conv2d.png" style="width: 114.4px; height: 349.6px;" />
 </a>
 <figcaption>
-<p><span class="caption-text">One ONNX configuration that would map to an <a class="reference external" href="../../api_reference/akida_apis.html#akida.InputConv2D">InputConv2D</a>.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+<p><span class="caption-text">One ONNX configuration that would map to an <a class="reference external" href="../../api_reference/akida_apis.html#akida.InputConv2D">InputConv2D</a>.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>The sequence of operators [<code class="docutils literal notranslate"><span class="pre">Conv</span></code>, <code class="docutils literal notranslate"><span class="pre">Clip</span></code>, <code class="docutils literal notranslate"><span class="pre">MaxPool</span></code>] <strong>is one valid pattern</strong>
@@ -755,42 +797,40 @@ for conversion towards <a class="reference external" href="../../api_reference/a
 <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">PATTERNS_MAP</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7f097357d8a0&gt;, &lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;activation&#39;), f=[&lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7f097357d8a0&gt;, &lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;), f=[&lt;function get_qdepthwise at 0x7f097357d8a0&gt;, &lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7f097357d8a0&gt;, &lt;function get_qconv at 0x7f097357e5c0&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7f097357d760&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7f097357e020&gt;])
-QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7f097357e020&gt;])
-QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7f097357e8e0&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7f097357d120&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7f097357d120&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;activation&#39;), f=[&lt;function get_qconv_transpose at 0x7f097357d120&gt;])
-QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7f097357d120&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f09735547c0&gt;])
-QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7f09735547c0&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7f09735547c0&gt;])
-QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7f09735547c0&gt;])
-QuantizerPattern(pattern=(&#39;BufferTempConv&#39;, &#39;Relu&#39;), f=[&lt;function get_qbtc at 0x7f09735d0400&gt;])
-QuantizerPattern(pattern=(&#39;DepthwiseBufferTempConv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdbtc at 0x7f09735d04a0&gt;])
-QuantizerPattern(pattern=(&#39;BufferTempConv&#39;,), f=[&lt;function get_qbtc at 0x7f09735d0400&gt;])
-QuantizerPattern(pattern=(&#39;DepthwiseBufferTempConv&#39;,), f=[&lt;function get_qdbtc at 0x7f09735d04a0&gt;])
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdepthwise at 0x7efb4e5c18a0&gt;, &lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;, &#39;GlobalAveragePool&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;MaxPool&#39;, &#39;activation&#39;), f=[&lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;Clip&#39;), f=[&lt;function get_qdepthwise at 0x7efb4e5c18a0&gt;, &lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;, &#39;activation&#39;), f=[&lt;function get_qdepthwise at 0x7efb4e5c18a0&gt;, &lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Conv&#39;,), f=[&lt;function get_qdepthwise at 0x7efb4e5c18a0&gt;, &lt;function get_qconv at 0x7efb4e5c25c0&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Flatten&#39;, &#39;Gemm&#39;), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Relu&#39;), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;, &#39;Clip&#39;), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Gemm&#39;,), f=[&lt;function get_qgemm at 0x7efb4e5c1760&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;, &#39;Relu&#39;), f=[&lt;function get_qadd at 0x7efb4e5c2020&gt;])
+QuantizerPattern(pattern=(&#39;Add&#39;,), f=[&lt;function get_qadd at 0x7efb4e5c2020&gt;])
+QuantizerPattern(pattern=(&#39;Concat&#39;,), f=[&lt;function get_qconcat at 0x7efb4e5c28e0&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Clip&#39;), f=[&lt;function get_qconv_transpose at 0x7efb4e5c1120&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;Relu&#39;), f=[&lt;function get_qconv_transpose at 0x7efb4e5c1120&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;, &#39;activation&#39;), f=[&lt;function get_qconv_transpose at 0x7efb4e5c1120&gt;])
+QuantizerPattern(pattern=(&#39;ConvTranspose&#39;,), f=[&lt;function get_qconv_transpose at 0x7efb4e5c1120&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7efb4e5987c0&gt;])
+QuantizerPattern(pattern=(&#39;Transpose&#39;, &#39;Mul&#39;), f=[&lt;function get_input_quantizer at 0x7efb4e5987c0&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;, &#39;Add&#39;), f=[&lt;function get_input_quantizer at 0x7efb4e5987c0&gt;])
+QuantizerPattern(pattern=(&#39;Mul&#39;,), f=[&lt;function get_input_quantizer at 0x7efb4e5987c0&gt;])
+QuantizerPattern(pattern=(&#39;BufferTempConv&#39;, &#39;Relu&#39;), f=[&lt;function get_qbtc at 0x7efb4e118400&gt;])
+QuantizerPattern(pattern=(&#39;DepthwiseBufferTempConv&#39;, &#39;Relu&#39;), f=[&lt;function get_qdbtc at 0x7efb4e1184a0&gt;])
+QuantizerPattern(pattern=(&#39;BufferTempConv&#39;,), f=[&lt;function get_qbtc at 0x7efb4e118400&gt;])
+QuantizerPattern(pattern=(&#39;DepthwiseBufferTempConv&#39;,), f=[&lt;function get_qdbtc at 0x7efb4e1184a0&gt;])
 </pre></div>
 </div>
-<p>Looking at that list, it should be apparent that a <code class="docutils literal notranslate"><span class="pre">GlobalAveragePool</span></code> operation on its own or
-following an <code class="docutils literal notranslate"><span class="pre">Add&gt;ReLU</span></code> is not considered a compatible pattern.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Before the conversion the following changes are automatically done to allow the
@@ -810,7 +850,7 @@ to optimize the graph (e.g. fuse BatchNorm into convolutions).</p></li>
 </div>
 </section>
 <section id="custom-quantization-patterns">
-<h3>2.2. Custom quantization patterns<a class="headerlink" href="#custom-quantization-patterns" title="Link to this heading"></a></h3>
+<h3>3.3. Custom quantization patterns<a class="headerlink" href="#custom-quantization-patterns" title="Link to this heading"></a></h3>
 <p>The existing patterns won’t allow us to map an isolated GlobalAveragePool operation. But, for
 example, the pooling operation can be mapped when following a Conv layer, and we can easily
 implement a Conv layer that performs an identity operation on its inputs, just by setting the
@@ -824,44 +864,174 @@ and the pattern-matched sequence of nodes extracted from it.</p>
 in the quantization context through the <code class="docutils literal notranslate"><span class="pre">custom_pattern_scope</span></code> function.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support</span><span class="w"> </span><span class="kn">import</span> <span class="n">layers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom_pattern_scope</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.layers.set_weights</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_range_max_on_qnode</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">IdentityQuantizedConv2D</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">QuantizedConv2D</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="c1"># Produces a kernel such that the convolution does not modify the input.</span>
-        <span class="n">identity_kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;float32&quot;</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;kernel&quot;</span><span class="p">,</span> <span class="n">identity_kernel</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__build__</span><span class="p">(</span><span class="n">input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">gap_pattern_fn</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the incompatible patterns [&#39;GlobalAveragePool&#39;] into an IdentityQuantizedConv2D.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">align_conv_with_akida</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pattern function that handles convolutions incompatible with Akida</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Note that as &#39;quantization_pattern_map&#39; is written, this function expects to receive</span>
-    <span class="c1"># only the isolated (&#39;GlobalAveragePool&#39;) that matches in the graph.</span>
-    <span class="n">qconv</span> <span class="o">=</span> <span class="n">IdentityQuantizedConv2D</span><span class="p">(</span><span class="n">pool_type</span><span class="o">=</span><span class="s2">&quot;gap&quot;</span><span class="p">)</span>
-    <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">block_nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-    <span class="k">return</span> <span class="n">qconv</span>
+    <span class="c1"># Recover initial ONNXLayer from block nodes and graph</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">qlayer</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qdepthwise</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="n">qlayer</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qconv</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">)</span>
+
+    <span class="c1"># Force the pads in some convolution to Akida compatible values</span>
+    <span class="n">target_pads</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">qlayer</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;/conv_stem/Conv&#39;</span><span class="p">,</span> <span class="s1">&#39;/blocks/blocks.0/blocks.0.0/conv/Conv&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;/blocks/blocks.1/blocks.1.0/conv/Conv&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;/blocks/blocks.3/blocks.3.0/dw_mid/conv/Conv&#39;</span><span class="p">]:</span>
+        <span class="n">target_pads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">qlayer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;/blocks/blocks.2/blocks.2.0/dw_mid/conv/Conv&#39;</span><span class="p">:</span>
+        <span class="n">target_pads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">target_pads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting Akida pads in </span><span class="si">{</span><span class="n">qlayer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+        <span class="c1"># Note: pads in convolution include spatial dimension</span>
+        <span class="n">qlayer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">target_pads</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">qlayer</span>
 
 
-<span class="c1"># Define a custom patterns map, as a new pattern and associated replacement function.</span>
-<span class="n">quantization_pattern_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GlobalAvgPool&quot;</span><span class="p">:</span> <span class="n">gap_pattern_fn</span><span class="p">}</span>
-
-<span class="c1"># Include quantization_pattern_map in the quantization context</span>
+<span class="c1"># Define a custom patterns map as a new pattern and associated replacement function</span>
+<span class="n">quantization_pattern_map</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">qpattern</span> <span class="ow">in</span> <span class="n">PATTERNS_MAP</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;Conv&quot;</span> <span class="ow">in</span> <span class="n">qpattern</span><span class="o">.</span><span class="n">pattern</span><span class="p">:</span>
+        <span class="c1"># Update all patterns that contains Conv op_type</span>
+        <span class="n">quantization_pattern_map</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">qpattern</span><span class="o">.</span><span class="n">pattern</span><span class="p">:</span> <span class="n">align_conv_with_akida</span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Quantize model with custom patterns</span>
 <span class="k">with</span> <span class="n">custom_pattern_scope</span><span class="p">(</span><span class="n">quantization_pattern_map</span><span class="p">):</span>
     <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
-Applied 1 of general pattern rewrite rules.
-
-Calibrating with 10/10.0 samples
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
+Setting Akida pads in /conv_stem/Conv...
+Setting Akida pads in /blocks/blocks.0/blocks.0.0/conv/Conv...
+Setting Akida pads in /blocks/blocks.1/blocks.1.0/conv/Conv...
+Setting Akida pads in /blocks/blocks.2/blocks.2.0/dw_mid/conv/Conv...
+Setting Akida pads in /blocks/blocks.3/blocks.3.0/dw_mid/conv/Conv...
 </pre></div>
 </div>
-<p>The full model is now quantized successfully.
-At this point we can re-check its accuracy:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Evaluate quantized model performance</span>
+<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Quantized model accuracy: 10/10.
+</pre></div>
+</div>
+<p>At this point we can re-check conversion:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">akida_model</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MobileNetV4 is not fully accelerated by Akida. Reason: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>MobileNetV4 is not fully accelerated by Akida. Reason: Stride 2 is only supported with kernel size 3.
+</pre></div>
+</div>
+<p>Another error is raised due to an Akida incompatiblity: the model comes with a depthwise layer
+with a kernel size 5 and and stride of 2. Akida only supports stride 2 for kernel size 3 depthwise
+layers.</p>
+</section>
+<section id="custom-sanitizing">
+<h3>3.4. Custom sanitizing<a class="headerlink" href="#custom-sanitizing" title="Link to this heading"></a></h3>
+<p>Handling the kernel 5 stride 2 depthwise layer cannot be done using custom quantization
+pattern. Patterns can only be used to transform one or several nodes towards a single node that
+matches the chain of operations of an Akida layer.
+In this case, to overcome the compatibilty issue, the original layer will be replaced by an
+equivalent set of two layers, decoupling the kernel size and the stride into two distinct layers.
+A custom santizing step will then be defined and applied to the original model:</p>
+<p>The custom sanitizer is implemented using <a class="reference external" href="https://github.com/microsoft/onnxscript">onnxscript</a>. The ONNX Rewriter provides functionality to replace
+certain patterns in an ONNX graph with replacement patterns based on user-defined rewrite rules,
+which fits our needs. A tutorial on how to use the ONNX Rewriter can be found at
+<a class="reference external" href="https://microsoft.github.io/onnxscript/tutorial/rewriter/index.html">https://microsoft.github.io/onnxscript/tutorial/rewriter/index.html</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">onnxscript.rewriter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ir</span><span class="p">,</span> <span class="n">pattern</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ONNXModel</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_depthwise_compatible</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="c1"># Parse all &#39;Conv&#39; operations</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_convs</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">_allow_other_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;conv&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Edit out the depthwise layer so that it becomes: a convolution with kernel 5 and stride 1 with</span>
+    <span class="c1"># original weights followed by a kernel 3 stride 2 convolution with identity weights</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replace_depthwise</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
+        <span class="n">ir_node</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">producer</span><span class="p">()</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="n">ir_node</span><span class="o">.</span><span class="n">attributes</span>
+
+        <span class="c1"># Change strides to 1 and padding to the Akida expected paddings</span>
+        <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;strides&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ir</span><span class="o">.</span><span class="n">AttrInt64s</span><span class="p">(</span><span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;pads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ir</span><span class="o">.</span><span class="n">AttrInt64s</span><span class="p">(</span><span class="s1">&#39;pads&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">dw_kernel_5</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="o">*</span><span class="n">ir_node</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">attributes</span><span class="p">)</span>
+
+        <span class="c1"># Apply &quot;identity&quot; with kernel size=3 and strides=2 and the Akida expected paddings</span>
+        <span class="n">identity_w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+        <span class="n">identity_w</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">identity_w</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">initializer</span><span class="p">(</span><span class="n">ir</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">identity_w</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ir_node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_identity_weights&quot;</span><span class="p">)</span>
+
+        <span class="n">dw_stride_2</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">dw_kernel_5</span><span class="p">,</span> <span class="n">identity_w</span><span class="p">,</span> <span class="n">kernel_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                              <span class="n">pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">group</span><span class="o">=</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Note that the new nodes will have different names, so custom patterns that are using names</span>
+        <span class="c1"># will not be applied.</span>
+        <span class="k">return</span> <span class="n">dw_stride_2</span>
+
+    <span class="c1"># Only trigger the replacement on the target nodes with group=input channels, kernel_size=5</span>
+    <span class="c1"># and strides=2</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_depthwise_k5_s2</span><span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">producer</span><span class="p">()</span><span class="o">.</span><span class="n">attributes</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="n">ir</span><span class="o">.</span><span class="n">AttrInt64</span><span class="p">(</span><span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="n">ir</span><span class="o">.</span><span class="n">AttrInt64s</span><span class="p">(</span><span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">group</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="ow">and</span> <span class="n">strides</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Define transformation rules</span>
+    <span class="n">rules</span> <span class="o">=</span> <span class="p">[</span><span class="n">pattern</span><span class="o">.</span><span class="n">RewriteRule</span><span class="p">(</span><span class="n">find_convs</span><span class="p">,</span> <span class="n">replace_depthwise</span><span class="p">,</span> <span class="n">is_depthwise_k5_s2</span><span class="p">)]</span>
+
+    <span class="c1"># Apply rewrites</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The helper above will replace the depthwise layer with two layers, one with kernel size 5 and
+stride 1, and the second with kernel size 3 and stride 2:</p>
+<figure class="align-center">
+<a class="reference external image-reference" href="../../_images/sanitized_mbv4.png"><img alt="Sanitized Depthwise layer" src="../../_images/sanitized_mbv4.png" style="width: 292.8px; height: 175.2px;" />
+</a>
+</figure>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wrap in an ONNXModel: in addition to rewriting, it will infer the shapes and check the model</span>
+<span class="c1"># after transformations</span>
+<span class="n">model_to_sanitize</span> <span class="o">=</span> <span class="n">ONNXModel</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
+<span class="n">make_depthwise_compatible</span><span class="p">(</span><span class="n">model_to_sanitize</span><span class="p">)</span>
+<span class="n">sanitized_model</span> <span class="o">=</span> <span class="n">model_to_sanitize</span><span class="o">.</span><span class="n">model</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Evaluate the transformed model</span>
+<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Sanitized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Sanitized model accuracy: 9/10.
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Quantize again</span>
+<span class="k">with</span> <span class="n">custom_pattern_scope</span><span class="p">(</span><span class="n">quantization_pattern_map</span><span class="p">):</span>
+    <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Calibrating with 10/10.0 samples
+Setting Akida pads in /conv_stem/Conv...
+Setting Akida pads in /blocks/blocks.0/blocks.0.0/conv/Conv...
+Setting Akida pads in /blocks/blocks.1/blocks.1.0/conv/Conv...
+Setting Akida pads in /blocks/blocks.3/blocks.3.0/dw_mid/conv/Conv...
+</pre></div>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Re-evaluate quantized model performance</span>
+<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -869,96 +1039,17 @@ At this point we can re-check its accuracy:</p>
 </pre></div>
 </div>
 </section>
-</section>
-<section id="conversion">
-<h2>3. Conversion<a class="headerlink" href="#conversion" title="Link to this heading"></a></h2>
-<section id="incompatibility-at-conversion">
-<h3>3.1. Incompatibility at Conversion<a class="headerlink" href="#incompatibility-at-conversion" title="Link to this heading"></a></h3>
-<p>As indicated above, while most imcompatibilities will be picked up at the
-quantization step, some constraints are specific to the target hardware
-device, and can only be applied at the conversion step. We can detect these
-either with the <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility">check_model_compatibility</a> tool,
-or by trying to <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.convert">convert the model into Akida</a>.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">akida_model</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ResNet50 is not fully accelerated by Akida. Reason: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>ResNet50 is not fully accelerated by Akida. Reason: Expect pads [2, 2, 3, 3] (found [3, 3, 3, 3]) in resnetv17_conv0_fwd.
-</pre></div>
-</div>
-<p>This error is raised because the ResNet50 padding scheme is very specific and differs
-from the Keras/Akida standard.</p>
-<p>Ideally, we should aim to swap incompatible operations with mathematically
-equivalent replacements. For issues of convolution kernel size or padding, we can
-often achieve that by putting the kernel weights within a larger kernel, placed
-eccentrically to compensate for any padding issues etc. More on that below - but
-we can’t use that strategy here, because the kernel size for this layer (7x7) is
-already the maximum supported by the Akida input layer. In this case, we’ll have to
-try simply modifying the padding to be Akida-compatible. Because this is the input
-layer, we could actually negate that change by padding the input image along two
-edges before passing to Akida. However, precisely because this is the very start of
-the network, and the consequence is only a single pixel of spatial offset, we might
-expect that the impact on model performance will be negligible, and that’s precisely
-what we find on testing. So let’s keep things simple in this case: simply replace the
-incompatible values with compatible ones.</p>
-<p>To achieve this, we’ll again customize the pattern functions to modify the model before
-quantization. Rather than try to provide a general solution, we’ll hard code this for
-the problem layer:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.onnx_support</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_tools</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">align_input_conv_with_akida</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pattern function that handles convolutions incompatible with Akida</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Recover initial ONNXLayer from block nodes and graph</span>
-    <span class="n">qconv</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">get_qconv</span><span class="p">(</span><span class="n">block_nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">)</span>
-
-    <span class="c1"># Force the pads in first convolution to Akida compatible values</span>
-    <span class="k">if</span> <span class="n">qconv</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;resnetv17_conv0_fwd&#39;</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting Akida pads in first convolution...&quot;</span><span class="p">)</span>
-        <span class="c1"># Note: pads in convolution include spatial dimension</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
-        <span class="n">graph_tools</span><span class="o">.</span><span class="n">replace_field</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="s2">&quot;pool_pads&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-        <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">block_nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-    <span class="k">return</span> <span class="n">qconv</span>
-
-
-<span class="c1"># Infer intermediate shape: This is required for some custom pattern functions</span>
-<span class="n">onnx_model_temp</span> <span class="o">=</span> <span class="n">onnx</span><span class="o">.</span><span class="n">shape_inference</span><span class="o">.</span><span class="n">infer_shapes</span><span class="p">(</span><span class="n">onnx_model</span><span class="p">)</span>
-
-<span class="c1"># Quantize model with custom patterns</span>
-<span class="n">quantization_pattern_map</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;MaxPool&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span> <span class="s2">&quot;Relu&quot;</span><span class="p">):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;Conv&quot;</span><span class="p">,):</span> <span class="n">align_input_conv_with_akida</span><span class="p">,</span>
-    <span class="p">(</span><span class="s2">&quot;GlobalAveragePool&quot;</span><span class="p">,):</span> <span class="n">gap_pattern_fn</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="k">with</span> <span class="n">custom_pattern_scope</span><span class="p">(</span><span class="n">quantization_pattern_map</span><span class="p">):</span>
-    <span class="n">model_quantized</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">onnx_model_temp</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">x_test</span><span class="p">)</span>
-
-<span class="c1"># Evaluate quantized model performance</span>
-<span class="n">correctly_classified</span> <span class="o">=</span> <span class="n">evaluate_onnx_model</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Quantized model accuracy: </span><span class="si">{</span><span class="n">correctly_classified</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Applied 1 of general pattern rewrite rules.
-Applied 1 of general pattern rewrite rules.
-
-Calibrating with 10/10.0 samples
-Setting Akida pads in first convolution...
-Quantized model accuracy: 10/10.
-</pre></div>
-</div>
-</section>
 <section id="successful-conversion">
-<h3>3.2. Successful Conversion<a class="headerlink" href="#successful-conversion" title="Link to this heading"></a></h3>
+<h3>3.5. Successful Conversion<a class="headerlink" href="#successful-conversion" title="Link to this heading"></a></h3>
 <p>Time to check conversion again</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">akida_model</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">)</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>paddings are compatible in the modified depthwise layer because we’ve explicitely set
+paddings values when rewriting the model (custom sanitize) and they were not overwritten
+by the quantization patterns since the new nodes have different names.</p>
 </div>
 <p>Great - the model is now both quantized successfully, and can be
 entirely converted for acceleration on Akida. To check its
@@ -975,34 +1066,11 @@ performance, we need to bear in mind that</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida model accuracy: 100.00 %
 </pre></div>
 </div>
-</section>
-<section id="performance-on-the-full-imagenet-validation-set">
-<h3>3.3. Performance on the full ImageNet validation set<a class="headerlink" href="#performance-on-the-full-imagenet-validation-set" title="Link to this heading"></a></h3>
-<p>The table below summarizes the obtained accuracy at the various stages using the full
-ImageNet dataset. Note that forcing pads on the first layer decreases the performance
-of the model by 0.445% - as noted, that change could be rendered lossless by padding
-the input image prior to sending instead.</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Float accuracy (before Akida adaptation)</p></th>
-<th class="head"><p>Float accuracy</p></th>
-<th class="head"><p>Quantized accuracy</p></th>
-<th class="head"><p>Akida accuracy</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>74.368</p></td>
-<td><p>73.918</p></td>
-<td><p>73.590</p></td>
-<td><p>73.620</p></td>
-</tr>
-</tbody>
-</table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The images shown in this tutorial are produced through <a class="reference external" href="https://netron.app/">Netron</a>.</p>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (5 minutes 10.325 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 14.281 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-3-custom-patterns-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/0f6914e51d30caef6efa95eb7c8a1624/plot_3_custom_patterns.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_custom_patterns.ipynb</span></code></a></p>
