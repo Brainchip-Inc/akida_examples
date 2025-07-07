@@ -307,6 +307,9 @@ layers for most part and custom QuantizeML layers for some of them:
 - Activations
     - `ReLU <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU>`__
       (both unbounded and with a max value)
+    - GeLU, SiLU(Swish), HardSiLU, LeakyReLU and PReLU (with a fixed slope) through
+      `QuantizedActivation <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedActivation>`__
+      (custom QuantizeML layer)
 
 - Pooling
     - `MaxPool2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedMaxPool2D>`__
@@ -329,16 +332,16 @@ The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' an
 - `QuantizedConv2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2D>`__
   when the pattern is:
 
-    - <Conv, Relu/Clip, GlobalAveragePool>
+    - <Conv, Activation, GlobalAveragePool>
     - <Conv, MaxPool, Relu/Clip>
     - <Conv, GlobalAveragePool>
-    - <Conv, Relu/Clip>
+    - <Conv, Activation>
     - <Conv>
 
 - `QuantizedDepthwise2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2D>`__
   when the pattern is:
 
-    - <Conv, Relu>
+    - <Conv, Activation>
     - <Conv>
 
 and groups=input_channels.
@@ -346,13 +349,13 @@ and groups=input_channels.
 - `QuantizedConv2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2DTranspose>`__
   when the pattern is:
 
-    - <ConvTranspose, Relu/Clip>
+    - <ConvTranspose, Activation>
     - <ConvTranspose>
 
 - `QuantizedDepthwise2DTranspose <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedDepthwise2DTranspose>`__
   when the pattern is:
 
-    - <ConvTranspose, Relu/Clip>
+    - <ConvTranspose, Activation>
     - <ConvTranspose>
 
 and groups=input_channels.

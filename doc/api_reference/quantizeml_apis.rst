@@ -16,6 +16,7 @@ QuantizeML API
     Activations
     -----------
     .. autoclass:: quantizeml.layers.QuantizedReLU
+    .. autoclass:: quantizeml.layers.QuantizedActivation
 
     Convolution
     -----------

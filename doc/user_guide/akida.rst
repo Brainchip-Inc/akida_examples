@@ -109,6 +109,11 @@ Akida 2.0 layers
 - `Concatenate <../api_reference/akida_apis.html#akida.Concatenate>`__
 - `Dequantizer <../api_reference/akida_apis.html#akida.Dequantizer>`__
 
+.. note::
+  While Akida 1.0 layers only supported bounded ReLU activations, Akida 2.0 layers support unbounded
+  ReLU as well as a wider range of activation functions through a look-up-table (LUT): GeLU, SiLU
+  (Swish), HardSiLU, LeakyReLU and PReLU (with a fixed slope).
+
 Model Hardware Mapping
 ----------------------
 
