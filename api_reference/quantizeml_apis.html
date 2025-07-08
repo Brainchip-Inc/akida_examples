@@ -628,6 +628,36 @@ dimension (batch size).</p>
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="quantizeml.layers.QuantizedActivation">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedActivation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/activations.html#QuantizedActivation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.QuantizedActivation" title="Link to this definition"></a></dt>
+<dd><p>Quantized version of <cite>keras.layers.Activation</cite> layer applicable on <code class="docutils literal notranslate"><span class="pre">FixedPoint</span></code> tensor.</p>
+<p>The input values are mapped through a look-up-table that simulates the activation behavior.</p>
+<dl>
+<dt>Example</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Represent 2.5 as a FixedPoint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">value_bits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">frac_bits</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># QuantizedActivation.call() maps `input` through the table to obtain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># an integer that represent the float value of tf.nn.gelu(2.5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">QuantizedActivation</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">)(</span><span class="nb">input</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">output</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="mi">80</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or which is equivalent in float domain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">max_error</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="o">-</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span><span class="mf">2.5</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">max_error</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>activation</strong> (<em>callable</em><em> or </em><em>str</em>) – Activation function. It could be a callable,
+or the name of an activation from the keras.activations namespace.</p></li>
+<li><p><strong>quant_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – the serialized quantization configuration. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="convolution">
 <h3>Convolution<a class="headerlink" href="#convolution" title="Link to this heading"></a></h3>
