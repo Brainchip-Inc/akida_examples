@@ -1,6 +1,20 @@
 Installation
 ============
 
+.. warning::
+    As of July 7, 2025, the latest
+    `opencv-python <https://pypi.org/project/opencv-python/#history>`__ package introduces
+    conflicting dependencies.
+
+    **Before installing any version of MetaTF, you must run:**
+
+    .. code-block:: bash
+
+        pip install opencv-python==4.11.0.86
+
+    From MetaTF 2.15 onward, this issue will no longer occur.
+
+
 Supported configurations
 ------------------------
 
