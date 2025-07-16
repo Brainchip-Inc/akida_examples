@@ -87,21 +87,22 @@ sequenceDiagram
     participant 2.12.0
     participant 2.13.0
     participant 2.14.0
+    participant 2.15.0
     participant next
-    Note right of 2.14.0: Today
+    Note right of 2.15.0: Today
 rect rgb(171, 170, 166)
     [...]-->>2.2.5: TensorFlow 2.8
     2.2.5->>+2.8.1: TensorFlow 2.10
     2.4.0->>+2.8.1: TensorFlow 2.11/2.12
-    2.8.1->>+2.14.0: TensorFlow 2.15
-    2.14.0->>+next: TensorFlow 2.16 (Keras 3)
+    2.8.1->>+2.15.0: TensorFlow 2.15
+    2.15.0->>+next: TensorFlow 2.16 (Keras 3)
 end
 rect rgb(250, 229, 160)
     [...]-->>+2.4.0: Python 3.7 (EOL June 2023)
     [...]->>+2.8.1: Python 3.8 (EOL October 2024)
     [...]->>+next: Python 3.9, 3.10
     2.4.0->>+next: Python 3.11
-    2.14.0->>+next: Python 3.12
+    2.15.0->>+next: Python 3.12
 end
 rect rgb(171, 170, 166)
     [...]-->>+2.4.0: Ubuntu 18.04 (EOL April 2023)
