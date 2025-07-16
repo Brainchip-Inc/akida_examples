@@ -275,7 +275,6 @@ The layer block functions provided are:
 * `conv_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_block>`__
 * `separable_conv_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.separable_conv_block>`__
 * `dense_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__
-* `mlp_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.mlp_block>`__
 * `conv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.conv_transpose_block>`__
 * `sepconv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
 * `yolo_head_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.yolo_head_block>`__

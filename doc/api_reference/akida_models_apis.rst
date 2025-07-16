@@ -48,7 +48,6 @@ Akida models API
     ======================
 
     .. autoclass:: akida_models.distiller.Distiller
-    .. autofunction:: akida_models.distiller.KLDistillationLoss
 
     Sparsity
     ========
