@@ -297,7 +297,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#knowledge-distillation">Knowledge distillation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller"><code class="docutils literal notranslate"><span class="pre">Distiller</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akida_models.distiller.KLDistillationLoss"><code class="docutils literal notranslate"><span class="pre">KLDistillationLoss()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
@@ -592,11 +591,8 @@
 <span class="sd">Reference Hinton et al. (2015) https://arxiv.org/abs/1503.02531</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientTape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">keras.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">KLDivergence</span><span class="p">,</span> <span class="n">CategoricalCrossentropy</span>
 
 
 <div class="viewcode-block" id="Distiller">
@@ -711,141 +707,6 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">load_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">DeitDistiller</span><span class="p">(</span><span class="n">Distiller</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Distiller class to train the student model using the</span>
-<span class="sd">    Knowledge Distillation (KD) method, found on https://arxiv.org/pdf/2012.12877.pdf</span>
-
-<span class="sd">    The main difference with the classic KD is that the student has to produce two potential</span>
-<span class="sd">    classification outputs. This type of training is based on the assumption that each output</span>
-<span class="sd">    has sufficiently interacted with the whole model, therefore the main architecture can be</span>
-<span class="sd">    trained through two different sources, as follows:</span>
-
-<span class="sd">        &gt;&gt;&gt; output, output_kd = student(input)</span>
-<span class="sd">        &gt;&gt;&gt; output_tc = teacher(input)</span>
-<span class="sd">        &gt;&gt;&gt; student_loss = student_loss_fn(y_true, output)</span>
-<span class="sd">        &gt;&gt;&gt; distillation_loss = distillation_loss_fn(output_tc, output_kd)</span>
-
-<span class="sd">    This means we will expect to have different inputs for each loss, unlike classical KD,</span>
-<span class="sd">    where the student&#39;s prediction is shared for both losses. However, given that each</span>
-<span class="sd">    classifier has interacted with the student model, the gradient of each loss will contribute</span>
-<span class="sd">    to the update of the model weights according to the alpha percentage.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        student (keras.Model): the student model</span>
-<span class="sd">        teacher (keras.Model): the well trained teacher model</span>
-<span class="sd">        alpha (float, optional): weight to student_loss_fn and 1-alpha</span>
-<span class="sd">            to distillation_loss_fn. Defaults to 0.1</span>
-<span class="sd">        temperature (float, optional): if ``distiller_type`` when compile is equal to &#39;soft&#39;,</span>
-<span class="sd">            this value will be used as temperature parameter of KLDistillationLoss.</span>
-<span class="sd">            Defaults to 1.0.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Student must be a multi-output model, with 2 outputs&quot;</span>
-
-        <span class="c1"># Append an output with the sum of heads</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">add_n</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="n">_student</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">student</span><span class="o">.</span><span class="n">outputs</span> <span class="o">+</span> <span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">student</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_student</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_student</span> <span class="o">=</span> <span class="n">student</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">base_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_student</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">student_loss_fn</span><span class="p">,</span> <span class="n">distiller_type</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Configure the distiller.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            optimizer (keras.optimizers.Optimizer): Keras optimizer</span>
-<span class="sd">                for the student weights</span>
-<span class="sd">            metrics (keras.metrics.Metric): Keras metrics for evaluation</span>
-<span class="sd">            student_loss_fn (keras.losses.Loss): loss function of difference</span>
-<span class="sd">                between student predictions and ground-truth</span>
-<span class="sd">            distiller_type (str): loss function type to define the difference</span>
-<span class="sd">                between student predictions and teacher-truth, within [&#39;soft&#39;, &#39;hard&#39;, &#39;none&#39;] which</span>
-<span class="sd">                will result in performing KLDistillationLoss, CategoricalCrossentropy or</span>
-<span class="sd">                student_loss_fn only respectively.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="n">distiller_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;soft&#39;</span><span class="p">,</span> <span class="s1">&#39;hard&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_loss_forward</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-                <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_compile_distillation_loss_fn</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">distiller_type</span> <span class="o">==</span> <span class="s2">&quot;soft&quot;</span><span class="p">:</span>
-                <span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="n">KLDistillationLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Follow https://arxiv.org/pdf/2012.12877.pdf, this variant takes the</span>
-                <span class="c1"># hard decision of the teacher as a true label. Therefore, we add the</span>
-                <span class="c1"># prediction encoder, as well as a label smoothing equal to 0.1</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                <span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="n">CategoricalCrossentropy</span><span class="p">(</span>
-                    <span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">_loss_forward</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">distillation_loss_fn</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">distiller_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># In this case, we just train the first output of student</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="o">=</span> <span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">student</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">student_loss_fn</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">distillation_loss_fn</span> <span class="o">=</span> <span class="n">_compile_distillation_loss_fn</span><span class="p">()</span>
-            <span class="n">student_loss_fn</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_loss_forward</span><span class="p">,</span> <span class="n">loss_fn</span><span class="o">=</span><span class="n">student_loss_fn</span><span class="p">)</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">student_loss_fn</span><span class="p">,</span> <span class="n">distillation_loss_fn</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
-        <span class="c1"># Rename keys in the result dictionary for a more explicit display</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_1_&#39;</span><span class="p">,</span> <span class="s1">&#39;head_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_2_&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_head_&#39;</span><span class="p">)</span>
-                 <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;output_3_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metrics</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metrics</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-
-
-<div class="viewcode-block" id="KLDistillationLoss">
-<a class="viewcode-back" href="../../api_reference/akida_models_apis.html#akida_models.distiller.KLDistillationLoss">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">KLDistillationLoss</span><span class="p">(</span><span class="n">KLDivergence</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The `KLDistillationLoss` is a simple wrapper around the KLDivergence loss</span>
-<span class="sd">    that accepts raw predictions instead of probability distributions.</span>
-
-<span class="sd">    Before invoking the KLDivergence loss, it converts the inputs predictions to</span>
-<span class="sd">    probabilities by dividing them by a constant &#39;temperature&#39; and applies a</span>
-<span class="sd">    softmax.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        temperature (float): temperature for softening probability</span>
-<span class="sd">            distributions. Larger temperature gives softer distributions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="c1"># Following https://github.com/facebookresearch/deit/blob/main/losses.py#L63</span>
-        <span class="c1"># The result of KLDivergence must be scaled</span>
-        <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span>
-            <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">y_true</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-            <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">scale_factor</span></div>
 
 </pre></div>
 

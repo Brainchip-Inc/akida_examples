@@ -297,7 +297,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#knowledge-distillation">Knowledge distillation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.distiller.Distiller"><code class="docutils literal notranslate"><span class="pre">Distiller</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#akida_models.distiller.KLDistillationLoss"><code class="docutils literal notranslate"><span class="pre">KLDistillationLoss()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/akida_models_apis.html#sparsity">Sparsity</a><ul>
@@ -660,8 +659,8 @@
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_dvs128_buffer_i8_w8_a8.h5&#39;</span>
         <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2c117af91de8b1eee65cd521cb6255d247c2786b0f7514fd963fee9ceb34bc31&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_dvs128_buffer.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2dfd9f50d953eb560dea3b60546abb9102b6ff49c521138358a6297764ecb1c8&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_dvs128.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1b8e6ab2432cba2401636ca8c31d62a5f6fabb6eaf07c6b761fe527c16c4cf0b&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_spatiotemporal&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
@@ -711,7 +710,7 @@
     <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">i_chan</span><span class="p">,</span> <span class="n">m_chan</span><span class="p">,</span> <span class="n">o_chan</span><span class="p">,</span> <span class="n">temp_dw</span><span class="p">,</span> <span class="n">spa_dw</span><span class="p">)</span> <span class="ow">in</span> \
             <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">channels</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">channels</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">t_dws</span><span class="p">,</span> <span class="n">s_dws</span><span class="p">)):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">spatiotemporal_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i_chan</span><span class="p">,</span> <span class="n">m_chan</span><span class="p">,</span> <span class="n">o_chan</span><span class="p">,</span> <span class="n">t_kernel_size</span><span class="p">,</span> <span class="n">temp_dw</span><span class="p">,</span>
-                                 <span class="n">spa_dw</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">reg_factor</span><span class="p">)</span>
+                                 <span class="n">spa_dw</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">temporal_first</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reg_factor</span><span class="o">=</span><span class="n">reg_factor</span><span class="p">)</span>
 
     <span class="c1"># Head convolutions</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span>
@@ -752,10 +751,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_eye_buffer_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7b9c4bb8ce66d0e2bc1ca5d7e7c4a93ff38c42678e0781c17dcd05e18580ff85&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;9603d63f55d7b76424a96542b08549684bb49f0f908570cfba7c8ea9320454b7&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_eye_buffer.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;60a00c37a59b9787d0c19dc71e1018a435983623769cc62f69f65f244204411e&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_eye.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;12b09cf0e5b56ae8def5b04240bd0c696cfe2d2abeea22a83065de9654b4a41e&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_spatiotemporal&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
@@ -834,8 +833,8 @@
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_jester_buffer_i8_w8_a8.h5&#39;</span>
         <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b42a446d5527e2971ff4ba613a2dac2565b1aa98d0df9f2fedb7d9f4b058cf40&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_jester_buffer.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;586fc778bdc40975cb4e9e61e1d15056cbbc65fb1e0ecb23da3cfa1007a072dc&#39;</span>
+        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_jester.h5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fca52a23152f7c56be1f0db59844a5babb443aaf55babed7669df35b516b8204&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_spatiotemporal&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>

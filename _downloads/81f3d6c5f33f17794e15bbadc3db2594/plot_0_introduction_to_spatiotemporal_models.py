@@ -292,30 +292,32 @@ print(hist)
 # **The result?**: Real-time gesture classification, running continuously, with predictions
 # ready after every frame.
 #
-# **How to?** : Akida models provides a simple and easy to use API that transforms compatible
-# spatiotemporal blocks into their equivalent bufferized version found in
-# `akida_models.tenn_spatiotemporal.convert_to_buffer
-# <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__
+# **How to?**: Quantization will automatically transform compatible spatiotemporal blocks into
+# their equivalent bufferized version during the *sanitizing* step.
 #
 # .. Note::
 #
 #   - After conversion, the 3D Convolution layers are transformed into custom
-#     `BufferTempConv
-#     <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal.convert_to_buffer>`__
+#     `BufferTempConv <../../api_reference/quantizeml_apis.html#quantizeml.layers.BufferTempConv>`__
 #     layers.
 #   - As opposed to training where the whole 16 frames samples is passed to the model, the inference
 #     model requires samples to be passed one by one.
+#   - For a better understanding of the buffering process, the sections below will explicitly use
+#     `quantizeml.models.transforms.sanitize
+#     <../../api_reference/quantizeml_apis.html#quantizeml.models.transforms.sanitize>`__ to convert
+#     the model to its bufferized version. This is not necessary in practice, as the conversion is
+#     done automatically during quantization (see section 8 below).
 
 ######################################################################
-from akida_models.tenn_spatiotemporal.convert_spatiotemporal import convert_to_buffer
-model = convert_to_buffer(model)
-model.summary()
+from quantizeml.models.transforms import sanitize
+model_buffer = sanitize(model)
+model_buffer.summary()
 
 ######################################################################
 # The models then can be evaluated on the data using the helper available that passes
 # data frame by frame to the model, accumulating the model's responses
 from akida_models.tenn_spatiotemporal.jester_train import evaluate_bufferized_model
-evaluate_bufferized_model(model, val_dataset, val_steps // batch_size, in_akida=False)
+evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in_akida=False)
 
 ######################################################################
 # 6.2 Weighing information
@@ -366,9 +368,8 @@ evaluate_bufferized_model(model, val_dataset, val_steps // batch_size, in_akida=
 ######################################################################
 # 8. Quantizing the model and convertion to akida
 # -----------------------------------------------
-# Once bufferized, the model can be easily quantized with no cost in accuracy. It can then be easily
-# be deployed on hardware for online gesture recognition using the convert method from the cnn2snn
-# package.
+# The model can be easily quantized with no cost in accuracy. It can then be easily deployed on
+# hardware for online gesture recognition using the convert method from the cnn2snn package.
 
 ######################################################################
 import numpy as np
