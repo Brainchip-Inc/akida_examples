@@ -231,7 +231,3 @@ Akida models API
     .. autofunction:: akida_models.tenn_spatiotemporal_eye_pretrained
     .. autofunction:: akida_models.tenn_spatiotemporal_jester
     .. autofunction:: akida_models.tenn_spatiotemporal_jester_pretrained
-
-    Conversion
-    ~~~~~~~~~~
-    .. autofunction:: akida_models.tenn_spatiotemporal.convert_to_buffer
