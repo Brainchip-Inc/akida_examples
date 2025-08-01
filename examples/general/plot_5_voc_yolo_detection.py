@@ -4,7 +4,7 @@ YOLO/PASCAL-VOC detection tutorial
 
 This tutorial demonstrates that Akida can perform object detection. This is illustrated using a
 subset of the
-`PASCAL-VOC 2007 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2007/htmldoc/index.html>`__
+`PASCAL-VOC 2007 dataset <https://www.tensorflow.org/datasets/catalog/voc>`__
 which contains 20 classes. The YOLOv2 architecture from
 `Redmon et al (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
 tackle this object detection problem.
