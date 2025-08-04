@@ -49,7 +49,7 @@ quantization yields a satisfactory performance on the task, one can proceed with
 
 .. note:: For simplicity, the following leverages the Keras API to define a model, but QuantizeML
           also comes with ONNX support, see the `PyTorch to Akida
-          <../examples/general/plot_8_global_pytorch_workflow.html#sphx-glr-examples-general-plot-8-global-pytorch-workflow-py>`__
+          <../examples/general/plot_7_global_pytorch_workflow.html#sphx-glr-examples-general-plot-7-global-pytorch-workflow-py>`__
           or `off-the-shelf models
           <../examples/quantization/plot_2_off_the_shelf_quantization.html#sphx-glr-examples-quantization-plot-2-off-the-shelf-quantization-py>`__
           examples for more information.
