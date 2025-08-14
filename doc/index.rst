@@ -25,7 +25,7 @@ The Akida Neuromorphic ML Framework
   networks on the Akida Neuromorphic Processor Platform. MetaTF includes an
   `Akida Neuromorphic Processor IP <https://brainchip.com/akida2-0//>`_
   simulator for execution of models in addition to Akida hardware implementations
-  such as the `AKD1000 reference SoC <https://brainchip.com/akida-neural-processor-soc/>`_.
+  such as the AKD1000 reference SoC.
 | Inspired by the `Keras API <https://keras.io>`_, MetaTF provides a high-level
   Python API for neural networks. This API facilitates early evaluation,
   design, final tuning, and productization of neural network models.
