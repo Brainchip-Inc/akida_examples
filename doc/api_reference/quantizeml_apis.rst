@@ -113,7 +113,6 @@ QuantizeML API
     Calibration
     -----------
     .. autofunction:: quantizeml.models.calibrate
-    .. autofunction:: quantizeml.models.calibration_required
 
     Utils
     -----
