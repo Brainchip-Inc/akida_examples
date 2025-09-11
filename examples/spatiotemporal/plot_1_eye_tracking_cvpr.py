@@ -393,12 +393,12 @@ pretty_print_results(collected_l2_distances)
 #    * - **Team**
 #      - **Rank**
 #      - p10 private (primary)
-#      - p10 🡑
-#      - p5 🡑
-#      - p3 🡑
-#      - p1 🡑
-#      - *L2* 🡓
-#      - *L1* 🡓
+#      - p10 ↑
+#      - p5 ↑
+#      - p3 ↑
+#      - p1 ↑
+#      - *L2* ↓
+#      - *L1* ↓
 #    * - USTCEventGroup
 #      - 1
 #      - **99.58**
@@ -445,7 +445,7 @@ pretty_print_results(collected_l2_distances)
 #      - 3.2
 #      - 4.04
 #
-# The best metric in class is highlighted in bold, 🡑 means higher values are best, 🡓 means lower
+# The best metric in class is highlighted in bold, ↑ means higher values are best, ↓ means lower
 # values are best.
 #
 # The code below shows an inference on the model using the *test* dataset. Note that the
