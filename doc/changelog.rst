@@ -13,6 +13,7 @@ Changelog
 .. dropdown:: MetaTF documentation previous versions
    :animate: fade-in
 
+   * `2.15.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.15.0-doc-1/>`_
    * `2.14.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.14.0-doc-1/>`_
    * `2.13.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.13.0-doc-1/>`_
    * `2.12.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.12.0-doc-1/>`_
