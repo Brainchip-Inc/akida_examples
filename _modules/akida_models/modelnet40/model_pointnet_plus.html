@@ -598,7 +598,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">layers</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.pointnet_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_reshape_factor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">dense_block</span><span class="p">,</span> <span class="n">act_to_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_block</span><span class="p">,</span> <span class="n">act_to_layer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span><span class="p">,</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">get_default_bitwidth</span>
 
@@ -730,23 +730,35 @@
                    <span class="n">filters</span><span class="o">=</span><span class="n">base_filter_num</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span>
                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_5/conv_1&#39;</span><span class="p">,</span>
                    <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                   <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;global_avg&#39;</span><span class="p">,</span>
                    <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">,</span>
                    <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Block 6</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="n">base_filter_num</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc_1&#39;</span><span class="p">,</span>
-                    <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">dense_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
-                    <span class="n">units</span><span class="o">=</span><span class="n">base_filter_num</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fc_2&#39;</span><span class="p">,</span>
-                    <span class="n">relu_activation</span><span class="o">=</span><span class="n">relu_activation</span><span class="p">,</span>
-                    <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="n">base_filter_num</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_6/conv_1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">,</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">relu_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">act_to_layer</span><span class="p">(</span><span class="n">relu_activation</span><span class="p">,</span> <span class="n">activity_regularizer</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_6/conv_1/relu_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># Block 7</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                   <span class="n">filters</span><span class="o">=</span><span class="n">base_filter_num</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_7/conv_1&#39;</span><span class="p">,</span>
+                   <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="n">pooling</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">post_relu_gap</span> <span class="k">else</span> <span class="s1">&#39;global_avg&#39;</span><span class="p">,</span>
+                   <span class="n">post_relu_gap</span><span class="o">=</span><span class="n">post_relu_gap</span><span class="p">,</span>
+                   <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                   <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">relu_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">act_to_layer</span><span class="p">(</span><span class="n">relu_activation</span><span class="p">,</span> <span class="n">activity_regularizer</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block_7/conv_1/relu_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">post_relu_gap</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">GlobalAveragePooling2D</span><span class="p">(</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gap_1&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
     <span class="n">x</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dense&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">act_function</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span> <span class="k">if</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;sigmoid&#39;</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Activation</span><span class="p">(</span><span class="n">act_function</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;act_</span><span class="si">{</span><span class="n">act_function</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
@@ -779,11 +791,11 @@
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_iq8_wq4_aq4.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;8c6cb08a72909a50e2792f9b0b52c17e9972a9a42e8ace11443e811c18b6573c&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w4_a4.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;ccb8acffa0372f14a43597c833e93e97ab9c987f8481834b5609c3d8512b5e0c&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;444431a24e9bede6c3124b046943994c2f276c37f98484da1d1e623bae8b1991&#39;</span>
         <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
             <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e97664416fb2e8b66573e0718d4107d813ba87472abb24ab0bf6aeb511e3042e&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c0aae0dab56f072789ffb0a72e429f3118eed1eee0b96f775328f8113e148501&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
                              <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
@@ -791,7 +803,7 @@
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1499e8d629642c0f67436bdc8ba7d883c2f1cc1f5993a758588fa177a3fc585c&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;pointnet_plus_modelnet40.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4c9ce75c9acc9a98070ba3a385f388e3672a534972f6e921e2746b1b8e451e92&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e90e006168f7c7f6d0dee82e27c18c9f265bb72c82606fdd95da8f2faa33dfef&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;pointnet_plus&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

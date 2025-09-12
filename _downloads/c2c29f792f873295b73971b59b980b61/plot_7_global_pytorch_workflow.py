@@ -287,6 +287,8 @@ model_akida.summary()
 # 2. the channel dimension must be in the last dimension.
 #
 
+import numpy as np
+
 # Read raw data and convert it into numpy
 x_test = testloader.dataset.data.numpy()
 y_test = testloader.dataset.targets.numpy()
@@ -296,9 +298,8 @@ y_test = testloader.dataset.targets.numpy()
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
 x_test = x_test[..., None]
-y_test = y_test[..., None]
 
-accuracy = model_akida.evaluate(x_test, y_test)
+accuracy = model_akida.evaluate(x_test, y_test.astype(np.int32))
 print('Test accuracy after conversion:', accuracy)
 
 # For non-regression purposes

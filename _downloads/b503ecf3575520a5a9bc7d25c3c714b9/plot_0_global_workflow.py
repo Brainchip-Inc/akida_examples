@@ -258,7 +258,7 @@ model_akida.summary()
 ######################################################################
 # 3.2. Check performance
 # ^^^^^^^^^^^^^^^^^^^^^^
-accuracy = model_akida.evaluate(x_test, y_test)
+accuracy = model_akida.evaluate(x_test, y_test.astype(np.int32))
 print('Test accuracy after conversion:', accuracy)
 
 # For non-regression purposes
