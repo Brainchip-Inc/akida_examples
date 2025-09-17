@@ -9,7 +9,7 @@ guide <../../user_guide/quantizeml.html>`__  and `Global Akida workflow tutorial
 
 `QuantizeML python package <../../user_guide/quantizeml.html#quantizeml-toolkit>`__ provides
 a user-friendly collection of functions for obtaining a quantized model. The `quantize
-<../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function replaces Keras
+<../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function replaces TF-Keras
 layers with quantized, integer only layers from `QuantizeML <../../user_guide/quantizeml.html>`__.
 
 """
@@ -133,8 +133,8 @@ print(json.dumps(config, indent=4))
 #   when calling ``quantize``).
 # - the depthwise layer weights are quantized to 16-bit because it is the first layer
 #   (``input_weight_bits=16``) and are quantized per-axis (default for weights). The given axis is
-#   -2 because of Keras depthwise kernel shape that is (Kx, Ky, F, 1), channel dimension is at index
-#   -2.
+#   -2 because of TF-Keras depthwise kernel shape that is (Kx, Ky, F, 1), channel dimension is at
+#   index -2.
 # - the pointwise layer has weights quantized to 4-bit (``weight_bits=4``) but the quantization axis
 #   is not specified as it defaults to -1 for a per-axis quantization. One would need to set it to
 #   ``None`` for a per-tensor quantization.

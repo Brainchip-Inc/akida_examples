@@ -47,7 +47,7 @@ The first step in the workflow is to train a model. The trained model is the sta
 quantization stage. Once it is established that the overall model configuration prior to
 quantization yields a satisfactory performance on the task, one can proceed with quantization.
 
-.. note:: For simplicity, the following leverages the Keras API to define a model, but QuantizeML
+.. note:: For simplicity, the following leverages the TF-Keras API to define a model, but QuantizeML
           also comes with ONNX support, see the `PyTorch to Akida
           <../examples/general/plot_7_global_pytorch_workflow.html#sphx-glr-examples-general-plot-7-global-pytorch-workflow-py>`__
           or `off-the-shelf models
@@ -67,8 +67,8 @@ targets KWS task as an example:
 
 The QuantizeML toolkit offers a turnkey solution to quantize a model: the
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function. It
-replaces the Keras layers (or custom QuantizeML layers) with quantized, integer only layers. The
-obtained quantized model is still a Keras model that can be evaluated with a standard Keras
+replaces the TF-Keras layers (or custom QuantizeML layers) with quantized, integer only layers. The
+obtained quantized model is still a TF-Keras model that can be evaluated with a standard TF-Keras
 pipeline.
 
 The quantization scheme used by
@@ -146,7 +146,7 @@ Quantizing the DS-CNN model to 8-bit is then done with:
 Please refer to `calibrate <../api_reference/quantizeml_apis.html#quantizeml.models.calibrate>`__
 for more details on calibration.
 
-Direct quantization of a standard Keras model (also called Post Training Quantization, PTQ)
+Direct quantization of a standard TF-Keras model (also called Post Training Quantization, PTQ)
 generally introduces a drop in performance. This drop is usually small for 8-bit or even 4-bit
 quantization of simple models, but it can be very significant for low quantization bitwidth and
 complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
@@ -156,8 +156,8 @@ If the quantized model offers acceptable performance, it can be directly convert
 model (see the `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
 
 However, if the performance drop is too high, a Quantization Aware Training (QAT) step is required
-to recover the performance prior to quantization. Since the quantized model is a Keras model, it can
-then be trained using the standard Keras API.
+to recover the performance prior to quantization. Since the quantized model is a TF-Keras model, it
+can then be trained using the standard TF-Keras API.
 
 Check out the `examples section <../examples/index.html>`__ for tutorials on quantization, PTQ and
 QAT.
@@ -191,7 +191,7 @@ handle some layers that are not in the
 Model loading
 ~~~~~~~~~~~~~
 
-The toolkit offers a helper that allows to load float and quantized models from Keras or ONNX
+The toolkit offers a helper that allows to load float and quantized models from TF-Keras or ONNX
 frameworks: `quantizeml.load_model <../api_reference/quantizeml_apis.html#quantizeml.load_model>`__.
 
 Command line interface
@@ -248,7 +248,7 @@ option.
     accuracy or even model graph. This should be reserved to users deeply familiar with QuantizeML
     concepts.
 
-.. note:: This is only available for Keras models.
+.. note:: This is only available for TF-Keras models.
 
 check CLI
 ~~~~~~~~~
@@ -260,7 +260,7 @@ weight scales quantization or saturation in integer operations.
 
     quantizeml check -m model_keras_i8_w8_a8.h5
 
-.. note:: This is only available for Keras models.
+.. note:: This is only available for TF-Keras models.
 
 insert_rescaling CLI
 ~~~~~~~~~~~~~~~~~~~~
@@ -276,16 +276,16 @@ a Rescaling layer at the beginning of a given model.
 
 where :math:`0.007843 = 1/127.5`.
 
-.. note:: This is only available for Keras models.
+.. note:: This is only available for TF-Keras models.
 
 Supported layer types
 ---------------------
 
-Keras support
-~~~~~~~~~~~~~
+TF-Keras support
+~~~~~~~~~~~~~~~~
 
-The QuantizeML toolkit provides quantization of the following layer types which are standard Keras
-layers for most part and custom QuantizeML layers for some of them:
+The QuantizeML toolkit provides quantization of the following layer types which are standard
+TF-Keras layers for most part and custom QuantizeML layers for some of them:
 
 - Neural layers
     - `Conv2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedConv2D>`__

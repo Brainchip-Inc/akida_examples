@@ -18,7 +18,7 @@ machine learning frameworks.
 
 Going from the standard deep learning world to Akida world is done by following simple steps:
 
-- build a model using Keras or optionally using a model from the
+- build a model using TF-Keras or optionally using a model from the
   `Brainchip zoo <./akida_models.html>`__
 - quantize the model using the `QuantizeML toolkit <./quantizeml.html>`__
 - convert the model to Akida using the `CNN2SNN toolkit <./cnn2snn.html>`__

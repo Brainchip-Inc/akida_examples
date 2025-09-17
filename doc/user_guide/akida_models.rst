@@ -190,8 +190,8 @@ or ``--akida`` option allows to convert to Akida then evaluate the model.
 Command-line interface to display summary
 -----------------------------------------
 
-CLI comes with a ``summary`` action that allows to display a model summary (supports Keras, ONNX and
-Akida model files).
+CLI comes with a ``summary`` action that allows to display a model summary (supports TF-Keras, ONNX
+and Akida model files).
 
 .. code-block:: bash
 
@@ -200,8 +200,8 @@ Akida model files).
 Command-line interface to display sparsity
 ------------------------------------------
 
-CLI comes with a ``sparsity`` action that allows to display a model sparsity (supports Keras, ONNX
-and Akida model files).
+CLI comes with a ``sparsity`` action that allows to display a model sparsity (supports TF-Keras,
+ONNX and Akida model files).
 
 .. code-block:: bash
 
@@ -218,7 +218,7 @@ layers. The ``--layer_names`` option allows to display sparsity for target layer
 Layer Blocks
 ------------
 
-In Keras, it is very common for activations or other functions to be defined along with the
+In TF-Keras, it is very common for activations or other functions to be defined along with the
 processing layer, e.g.:
 
 .. code-block:: python
@@ -227,7 +227,7 @@ processing layer, e.g.:
    x = BatchNormalization()(x)
    x = Activation('relu')(x)
 
-In order to ease the design of a Keras model compatible for conversion into an Akida model, a
+In order to ease the design of a TF-Keras model compatible for conversion into an Akida model, a
 higher-level interface is proposed with the use of layer blocks. These blocks are available
 in the package through:
 

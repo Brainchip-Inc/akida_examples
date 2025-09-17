@@ -199,17 +199,17 @@ model_quantized = quantize(model_keras, qparams=qparams,
 # 6. Compute accuracy
 # -------------------
 #
-# Because training is not included in this tutorial, the pretrained Keras model
+# Because training is not included in this tutorial, the pretrained TF-Keras model
 # is retrieved from the zoo.
 
 from akida_models import akidanet_plantvillage_pretrained
 
 model = akidanet_plantvillage_pretrained()
 
-# Evaluate Keras accuracy
+# Evaluate TF-Keras accuracy
 model.compile(metrics=['accuracy'])
 history = model.evaluate(test_batches, verbose=0)
-print('Keras accuracy: ', history[1])
+print('TF-Keras accuracy: ', history[1])
 
 ######################################################################
 # Convert the model and evaluate the Akida model.
