@@ -7,8 +7,8 @@ Documentation is based on [Sphinx](https://www.sphinx-doc.org/en/master/) and
 can be generated locally from the repository top.
 
 ## Requirements:
-* Python version: python >= 3.9
-* TensorFlow version ~= 2.15
+* Python version: python >= 3.10, <= 3.12
+* TF-Keras version ~= 2.19
 * Sphinx version 2.1 or above
 
 ## Docker image

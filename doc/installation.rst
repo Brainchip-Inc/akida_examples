@@ -2,10 +2,11 @@ Installation
 ============
 
 .. important::
-    MetaTF 2.16 is the last release supporting Tensorflow 2.15.0 (Keras 2) and python 3.9.
+    MetaTF 2.16 was the last release supporting Tensorflow 2.15.0 (Keras 2) and python 3.9.
 
-    Future releases will support `TF-Keras <https://github.com/keras-team/tf-keras>`__ 2.19
-    (Tensorflow 2.19) and python 3.10+ only.
+    Starting with MetaTF 2.17, releases will support
+    `TF-Keras <https://github.com/keras-team/tf-keras>`__ 2.19 (Tensorflow 2.19) and python 3.10 to
+    3.12.
 
 .. warning::
     As of July 7, 2025, the latest
@@ -27,8 +28,8 @@ Supported configurations
 * **Operating systems:**
     * Windows 10, Windows 11
     * Any Linux variant compatible with `manylinux 2.28 <https://github.com/pypa/manylinux>`_ (Ubuntu 22.04, Ubuntu 24.04, ...)
-* **Python versions:** 3.9 to 3.11
-* **TensorFlow versions:** 2.15
+* **Python versions:** 3.10 to 3.12
+* **TF-Keras versions:** 2.19
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
