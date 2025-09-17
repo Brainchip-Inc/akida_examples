@@ -1,11 +1,13 @@
-ARG TF_VERSION=2.15.0-gpu
+ARG TF_VERSION=2.19.0-gpu
 FROM tensorflow/tensorflow:$TF_VERSION
-MAINTAINER KT <ktsiknos@brainchip.com>
+LABEL maintainer "KT <ktsiknos@brainchip.com>"
 
 RUN apt-get update && apt-get install libgl1-mesa-glx libasound2-dev -y
 RUN python -m pip install --upgrade pip && \
     pip install torch==2.7.0 torchvision --index-url https://download.pytorch.org/whl/cu118 && \
-    pip install sphinx \
+    pip install tensorflow[and-cuda]==2.19.0 \
+                tf_keras~=2.19.0 \
+                sphinx \
                 sphinx_rtd_theme \
                 sphinx-gallery \
                 sphinx_design \
@@ -15,19 +17,27 @@ RUN python -m pip install --upgrade pip && \
                 scikit-learn \
                 tensorflow-datasets \
                 scipy \
-                'opencv-python<4.12' \
+                opencv-python \
                 mtcnn==0.1.1 \
-                imgaug \
+                imaug \
                 trimesh \
                 librosa \
                 soundata \
-                'tensorboardX<2.6.1' \
+                tensorboardX \
                 optimum[exporters]==1.23.3 \
-                onnx~=1.16.1 \
-                onnxruntime==1.19.0 \
+                onnxscript~=0.4.0 \
+                onnxruntime~=1.19.2 \
                 torchinfo==1.8.0 \
                 flake8==4.0.1
 
 ENV TF_FORCE_GPU_ALLOW_GROWTH=true
+
+# Install a newer version of libstdc++6 to be compatible with an Akida build on Ubuntu 24.04.
+# Please note that this may cause compatibility issues with certain packages.
+RUN echo "deb http://archive.ubuntu.com/ubuntu noble main" | tee /etc/apt/sources.list.d/noble.list \
+    && apt update \
+    && apt install -y libstdc++6 \
+    && rm /etc/apt/sources.list.d/noble.list \
+    && apt update
 
 CMD ["/bin/bash"]
