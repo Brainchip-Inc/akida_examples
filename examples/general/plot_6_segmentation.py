@@ -88,7 +88,7 @@ model_keras.summary()
 
 ######################################################################
 
-from keras.metrics import BinaryIoU
+from tf_keras.metrics import BinaryIoU
 
 # Compile the native TF-Keras model (required to evaluate the metrics)
 model_keras.compile(loss='binary_crossentropy', metrics=[BinaryIoU(), 'accuracy'])
@@ -141,7 +141,7 @@ model_akida.summary()
 
 #####################################################################
 
-import tensorflow as tf
+import tf_keras as keras
 
 # Check Akida model performance
 labels, pots = None, None
@@ -157,13 +157,13 @@ for s in range(steps):
     else:
         labels = np.concatenate((labels, label_batch))
         pots = np.concatenate((pots, pots_batch))
-preds = tf.keras.activations.sigmoid(pots)
+preds = keras.activations.sigmoid(pots)
 
-m_binary_iou = tf.keras.metrics.BinaryIoU(target_class_ids=[0, 1], threshold=0.5)
+m_binary_iou = keras.metrics.BinaryIoU(target_class_ids=[0, 1], threshold=0.5)
 m_binary_iou.update_state(labels, preds)
 binary_iou = m_binary_iou.result().numpy()
 
-m_accuracy = tf.keras.metrics.Accuracy()
+m_accuracy = keras.metrics.Accuracy()
 m_accuracy.update_state(labels, preds > 0.5)
 accuracy = m_accuracy.result().numpy()
 print(f"Akida binary IoU / pixel accuracy: {binary_iou:.4f} / {100*accuracy:.2f}%")
@@ -185,7 +185,7 @@ import matplotlib.pyplot as plt
 # Estimate age on a random single image and display TF-Keras and Akida outputs
 sample = np.expand_dims(x_val[id, :], 0)
 keras_out = model_keras(sample)
-akida_out = tf.keras.activations.sigmoid(model_akida.forward(sample.astype('uint8')))
+akida_out = keras.activations.sigmoid(model_akida.forward(sample.astype('uint8')))
 
 fig, axs = plt.subplots(1, 3, constrained_layout=True)
 axs[0].imshow(keras_out[0] * sample[0] / 255.)

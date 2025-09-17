@@ -62,7 +62,7 @@ print("Wanted words and labels:\n", word_to_index)
 # All layers are followed by a batch normalization and a ReLU activation.
 #
 
-from tensorflow.keras.models import load_model
+from tf_keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = fetch_file(fname="ds_cnn_kws.h5",

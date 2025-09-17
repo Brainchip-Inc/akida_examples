@@ -91,7 +91,7 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 # customize quantization.
 #
 
-import keras
+import tf_keras as keras
 import json
 from quantizeml.models import quantize, dump_config, QuantizationParams
 

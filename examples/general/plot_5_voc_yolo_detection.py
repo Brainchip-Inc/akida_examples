@@ -202,8 +202,8 @@ model.summary()
 # `decode_output <../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
 # function.
 
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Reshape
+from tf_keras import Model
+from tf_keras.layers import Reshape
 
 # Define a reshape output to be added to the YOLO model
 output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),

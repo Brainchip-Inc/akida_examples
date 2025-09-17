@@ -41,7 +41,7 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-from keras.datasets import mnist
+from tf_keras.datasets import mnist
 
 # Load MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -70,7 +70,7 @@ plt.show()
 # is a completely standard `TF-Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__ CNN model.
 #
 
-import keras
+import tf_keras as keras
 
 model_keras = keras.models.Sequential([
     keras.layers.Rescaling(1. / 255, input_shape=(28, 28, 1)),
@@ -95,7 +95,7 @@ model_keras.summary()
 # Given the model created above, train the model and check its accuracy. The model should achieve
 # a test accuracy over 98% after 10 epochs.
 #
-from keras.optimizers import Adam
+from tf_keras.optimizers import Adam
 
 model_keras.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),

@@ -30,7 +30,7 @@ between 1.0 and 2.0.
 # below show the two different calls.
 #
 
-import keras
+import tf_keras as keras
 
 # Build a simple model that is cross-compatible
 input = keras.layers.Input((32, 32, 3))

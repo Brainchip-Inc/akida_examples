@@ -52,7 +52,7 @@ x_test_akida = x_test.astype('uint8')
 # weighted in the average.
 
 from akida_models import fetch_file
-from tensorflow.keras.models import load_model
+from tf_keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = fetch_file(fname="vgg_utk_face.h5",

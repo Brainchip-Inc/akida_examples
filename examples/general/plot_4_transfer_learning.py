@@ -133,8 +133,8 @@ base_model.summary()
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__, followed by
 # a dropout layer and a second dense layer.
 
-from keras import Model
-from keras.layers import Activation, Dropout, Reshape
+from tf_keras import Model
+from tf_keras.layers import Activation, Dropout, Reshape
 from akida_models.layer_blocks import dense_block
 
 x = base_model.output
