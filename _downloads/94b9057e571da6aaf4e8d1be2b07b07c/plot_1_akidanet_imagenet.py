@@ -75,11 +75,11 @@ num_images = len(x_test)
 start = timer()
 potentials_keras = model_keras_quantized_pretrained.predict(x_test, batch_size=100)
 end = timer()
-print(f'Keras inference on {num_images} images took {end-start:.2f} s.\n')
+print(f'TF-Keras inference on {num_images} images took {end-start:.2f} s.\n')
 
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 accuracy_keras = np.sum(np.equal(preds_keras, labels_test)) / num_images
-print(f"Keras accuracy: {accuracy_keras*num_images:.0f}/{num_images}.")
+print(f"TF-Keras accuracy: {accuracy_keras*num_images:.0f}/{num_images}.")
 
 ######################################################################
 # 3. Conversion to Akida
@@ -89,10 +89,10 @@ print(f"Keras accuracy: {accuracy_keras*num_images:.0f}/{num_images}.")
 # 3.1 Convert to Akida model
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Here, the Keras quantized model is converted into a suitable version for
+# Here, the TF-Keras quantized model is converted into a suitable version for
 # the Akida accelerator. The
 # `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function only needs
-# the Keras model as argument.
+# the TF-Keras model as argument.
 
 from cnn2snn import convert
 

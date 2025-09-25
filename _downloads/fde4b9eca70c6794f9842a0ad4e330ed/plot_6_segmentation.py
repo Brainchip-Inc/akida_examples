@@ -7,9 +7,9 @@ illustrated through person segmentation using the `Portrait128 dataset
 <https://github.com/anilsathyan7/Portrait-Segmentation>`__.
 
 Using pre-trained models for quick runtime, this example shows the evolution of
-model performance for a trained keras floating point model, a keras quantized and
+model performance for a trained TF-Keras floating point model, a TF-Keras quantized and
 Quantization Aware Trained (QAT) model, and an Akida-converted model. Notice that
-the performance of the original keras floating point model is maintained throughout
+the performance of the original TF-Keras floating point model is maintained throughout
 the model conversion flow.
 """
 
@@ -53,13 +53,13 @@ fig.suptitle('Image, mask and masked image', fontsize=10)
 plt.show()
 
 ######################################################################
-# 2. Load a pre-trained native Keras model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. Load a pre-trained native TF-Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The model used in this example is AkidaUNet. It has an AkidaNet (0.5) backbone to extract
 # features combined with a succession of `separable transposed convolutional
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
-# blocks to build an image segmentation map. A pre-trained floating point keras model is
+# blocks to build an image segmentation map. A pre-trained floating point TF-Keras model is
 # downloaded to save training time.
 #
 # .. note::
@@ -82,28 +82,28 @@ model_file = fetch_file(fname="akida_unet_portrait128.h5",
                         origin="https://data.brainchip.com/models/AkidaV2/akida_unet/akida_unet_portrait128.h5",
                         cache_subdir='models')
 
-# Load the native Keras pre-trained model
+# Load the native TF-Keras pre-trained model
 model_keras = load_model(model_file)
 model_keras.summary()
 
 ######################################################################
 
-from keras.metrics import BinaryIoU
+from tf_keras.metrics import BinaryIoU
 
-# Compile the native Keras model (required to evaluate the metrics)
+# Compile the native TF-Keras model (required to evaluate the metrics)
 model_keras.compile(loss='binary_crossentropy', metrics=[BinaryIoU(), 'accuracy'])
 
 # Check Keras model performance
 _, biou, acc = model_keras.evaluate(x_val, y_val, steps=steps, verbose=0)
 
-print(f"Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
+print(f"TF-Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 
 ######################################################################
 # 3. Load a pre-trained quantized Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The next step is to quantize and potentially perform Quantize Aware Training (QAT) on the
-# Keras model from the previous step. After the Keras model is quantized to 8-bits for
+# TF-Keras model from the previous step. After the TF-Keras model is quantized to 8-bits for
 # all weights and activations, QAT is used to maintain the performance of the quantized
 # model. Again, a pre-trained model is downloaded to save runtime.
 #
@@ -116,20 +116,20 @@ model_quantized_keras.summary()
 
 ######################################################################
 
-# Compile the quantized Keras model (required to evaluate the metrics)
+# Compile the quantized TF-Keras model (required to evaluate the metrics)
 model_quantized_keras.compile(loss='binary_crossentropy', metrics=[BinaryIoU(), 'accuracy'])
 
 # Check Keras model performance
 _, biou, acc = model_quantized_keras.evaluate(x_val, y_val, steps=steps, verbose=0)
 
-print(f"Keras quantized binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
+print(f"TF-Keras quantized binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 
 ######################################################################
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# Finally, the quantized Keras model from the previous step is converted into an Akida
-# model and its performance is evaluated. Note that the original performance of the keras
+# Finally, the quantized TF-Keras model from the previous step is converted into an Akida
+# model and its performance is evaluated. Note that the original performance of the TF-Keras
 # floating point model is maintained throughout the conversion process in this example.
 #
 
@@ -141,7 +141,7 @@ model_akida.summary()
 
 #####################################################################
 
-import tensorflow as tf
+import tf_keras as keras
 
 # Check Akida model performance
 labels, pots = None, None
@@ -157,13 +157,13 @@ for s in range(steps):
     else:
         labels = np.concatenate((labels, label_batch))
         pots = np.concatenate((pots, pots_batch))
-preds = tf.keras.activations.sigmoid(pots)
+preds = keras.activations.sigmoid(pots)
 
-m_binary_iou = tf.keras.metrics.BinaryIoU(target_class_ids=[0, 1], threshold=0.5)
+m_binary_iou = keras.metrics.BinaryIoU(target_class_ids=[0, 1], threshold=0.5)
 m_binary_iou.update_state(labels, preds)
 binary_iou = m_binary_iou.result().numpy()
 
-m_accuracy = tf.keras.metrics.Accuracy()
+m_accuracy = keras.metrics.Accuracy()
 m_accuracy.update_state(labels, preds > 0.5)
 accuracy = m_accuracy.result().numpy()
 print(f"Akida binary IoU / pixel accuracy: {binary_iou:.4f} / {100*accuracy:.2f}%")
@@ -182,10 +182,10 @@ assert binary_iou > 0.9
 
 import matplotlib.pyplot as plt
 
-# Estimate age on a random single image and display Keras and Akida outputs
+# Estimate age on a random single image and display TF-Keras and Akida outputs
 sample = np.expand_dims(x_val[id, :], 0)
 keras_out = model_keras(sample)
-akida_out = tf.keras.activations.sigmoid(model_akida.forward(sample.astype('uint8')))
+akida_out = keras.activations.sigmoid(model_akida.forward(sample.astype('uint8')))
 
 fig, axs = plt.subplots(1, 3, constrained_layout=True)
 axs[0].imshow(keras_out[0] * sample[0] / 255.)

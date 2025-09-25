@@ -3,7 +3,7 @@ PyTorch to Akida workflow
 =========================
 
 The `Global Akida workflow <../general/plot_0_global_workflow.html>`__ guide
-describes the steps to prepare a model for Akida starting from a TensorFlow/Keras model.
+describes the steps to prepare a model for Akida starting from a TF-Keras model.
 Here we will instead describe a workflow to go from a model trained in PyTorch.
 
 .. Note::

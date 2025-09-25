@@ -5,7 +5,7 @@ DS-CNN/KWS inference
 This tutorial illustrates the process of developing an Akida-compatible speech recognition
 model that can identify thirty-two different keywords.
 
-Initially, the model is defined as a CNN in Keras and trained regularly. Next, it undergoes
+Initially, the model is defined as a CNN in TF-Keras and trained regularly. Next, it undergoes
 quantization using `QuantizeML <../../user_guide/quantizeml.html>`__ and finally converted
 to Akida using `CNN2SNN <../../user_guide/cnn2snn.html>`__.
 
@@ -49,8 +49,8 @@ num_classes = len(word_to_index)
 print("Wanted words and labels:\n", word_to_index)
 
 ######################################################################
-# 2. Load a pre-trained native Keras model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 2. Load a pre-trained native TF-Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The model consists of:
 #
@@ -62,14 +62,14 @@ print("Wanted words and labels:\n", word_to_index)
 # All layers are followed by a batch normalization and a ReLU activation.
 #
 
-from tensorflow.keras.models import load_model
+from tf_keras.models import load_model
 
 # Retrieve the model file from the BrainChip data server
 model_file = fetch_file(fname="ds_cnn_kws.h5",
                         origin="https://data.brainchip.com/models/AkidaV2/ds_cnn/ds_cnn_kws.h5",
                         cache_subdir='models')
 
-# Load the native Keras pre-trained model
+# Load the native TF-Keras pre-trained model
 model_keras = load_model(model_file)
 model_keras.summary()
 
@@ -79,7 +79,7 @@ import numpy as np
 
 from sklearn.metrics import accuracy_score
 
-# Check Keras Model performance
+# Check TF-Keras Model performance
 potentials_keras = model_keras.predict(x_valid)
 preds_keras = np.squeeze(np.argmax(potentials_keras, 1))
 
@@ -87,10 +87,10 @@ accuracy = accuracy_score(y_valid, preds_keras)
 print("Accuracy: " + "{0:.2f}".format(100 * accuracy) + "%")
 
 ######################################################################
-# 3. Load a pre-trained quantized Keras model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Load a pre-trained quantized TF-Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The above native Keras model has been quantized to 8-bit. Note that
+# The above native TF-Keras model has been quantized to 8-bit. Note that
 # a 4-bit version is also available from the `model zoo <../../model_zoo_performance.html#id10>`_.
 #
 

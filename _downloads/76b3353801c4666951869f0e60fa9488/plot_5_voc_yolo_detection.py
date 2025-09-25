@@ -202,8 +202,8 @@ model.summary()
 # `decode_output <../../api_reference/akida_models_apis.html#akida_models.detection.processing.decode_output>`__
 # function.
 
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Reshape
+from tf_keras import Model
+from tf_keras.layers import Reshape
 
 # Define a reshape output to be added to the YOLO model
 output = Reshape((grid_size[1], grid_size[0], num_anchors, 4 + 1 + classes),
@@ -287,7 +287,7 @@ end = timer()
 for label, average_precision in average_precisions.items():
     print(labels[label], '{:.4f}'.format(average_precision))
 print('mAP 50: {:.4f}'.format(map_dict[0.5]))
-print(f'Keras inference on {len_val_dataset} images took {end-start:.2f} s.\n')
+print(f'TF-Keras inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
 # 6. Conversion to Akida
@@ -303,7 +303,7 @@ print(f'Keras inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 compatible_model = Model(model_keras.input, model_keras.layers[-2].output)
 
 ######################################################################
-# When converting to an Akida model, we just need to pass the Keras model
+# When converting to an Akida model, we just need to pass the TF-Keras model
 # to `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#convert>`_.
 #
 
