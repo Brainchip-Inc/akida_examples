@@ -410,6 +410,15 @@ tool can help pinpoint faulty layers or kernels that might be poorly quantized a
 accuracy. Once the culprit is found, adding regularization or training constraints can help tackle
 the issue, quantizing per-tensor or per-axis can also help.
 
+.. note::
+    `analysis` is shipped as an optional submodule and might not be installed by default. To install
+    it, use:
+
+    .. code-block:: python
+
+        pip install quantizeml[analysis]
+
+
 Kernel distribution
 ~~~~~~~~~~~~~~~~~~~
 
