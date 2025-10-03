@@ -92,13 +92,30 @@ steps:
   - git fetch
   - git checkout gh-pages
   - git clean -xf
+  - cd beta/
   - rm -rf _* examples/ api_reference/ user_guide/
   - rm *.html *.inv *.js
-  - cp -R ./build/* .
-  - rm -Rf doc/ build/
+  - cp -R ../build/* .
   - rm -rf _sources/
   - git add .
-  - git diff --quiet && git diff --staged --quiet || git commit -am "Automated tutorials push"
+  - git diff --quiet && git diff --staged --quiet || git commit -am "Automated - Push to beta"
+  - git push origin gh-pages
+
+- name: promote_beta_to_prod
+  image: bender:5000/drone/git:linux
+  when:
+    ref:
+      include:
+      - refs/tags/**
+    event:
+      - tag
+  commands:
+  - git fetch
+  - git checkout gh-pages
+  - git clean -xf
+  - cp -r beta/* .
+  - git add .
+  - git diff --quiet && git diff --staged --quiet || git commit -am 'Automated - Promote beta to prod [tag:${DRONE_TAG}]'
   - git push origin gh-pages
 
 volumes:
