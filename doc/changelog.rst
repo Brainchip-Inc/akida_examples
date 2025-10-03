@@ -31,3 +31,15 @@ Changelog
    :animate: fade-in
 
       {PIP_FREEZE}
+
+MetaTF Beta
+-----------
+
+Beta releases are not intended for production use and may be unstable. They are provided to allow
+users to test new features and provide feedback.
+
+- Beta releases are available at https://doc.brainchipinc.com/beta
+- Related packages are to be downloaded from https://data.brainchip.com/metatf_beta/
+- Please fill-in the `feedback survey
+  <https://docs.google.com/forms/d/e/1FAIpQLSd9gzZROr-CHdY5jipGdIB8VtNNa5vPL4UvLZ5GOBXOZv2MGw/viewform>`_
+  to help us improve future releases.
