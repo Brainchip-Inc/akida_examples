@@ -27,9 +27,7 @@ Changelog
    * `2.4.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.4.0-doc-1/>`_
    * `2.3.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.3.0-doc-1/>`_
 
-.. dropdown::
+.. dropdown:: For reference, this documentation was generated using the following packages
    :animate: fade-in
-
-   .. note:: For reference, the latest documentation was generated using:
 
       {PIP_FREEZE}
