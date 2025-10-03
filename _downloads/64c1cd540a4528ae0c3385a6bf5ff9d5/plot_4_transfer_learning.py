@@ -133,8 +133,8 @@ base_model.summary()
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__, followed by
 # a dropout layer and a second dense layer.
 
-from tf_keras import Model
-from tf_keras.layers import Activation, Dropout, Reshape
+from keras import Model
+from keras.layers import Activation, Dropout, Reshape
 from akida_models.layer_blocks import dense_block
 
 x = base_model.output
@@ -199,17 +199,17 @@ model_quantized = quantize(model_keras, qparams=qparams,
 # 6. Compute accuracy
 # -------------------
 #
-# Because training is not included in this tutorial, the pretrained TF-Keras model
+# Because training is not included in this tutorial, the pretrained Keras model
 # is retrieved from the zoo.
 
 from akida_models import akidanet_plantvillage_pretrained
 
 model = akidanet_plantvillage_pretrained()
 
-# Evaluate TF-Keras accuracy
+# Evaluate Keras accuracy
 model.compile(metrics=['accuracy'])
 history = model.evaluate(test_batches, verbose=0)
-print('TF-Keras accuracy: ', history[1])
+print('Keras accuracy: ', history[1])
 
 ######################################################################
 # Convert the model and evaluate the Akida model.

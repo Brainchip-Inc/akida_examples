@@ -179,7 +179,7 @@ except Exception as e:
 
 ######################################################################
 # This error is raised because the MobileNetV4 padding scheme is specific and differs from the
-# TF-Keras/Akida standard.
+# Keras/Akida standard.
 #
 # Ideally, we should aim to swap incompatible operations with mathematically
 # equivalent replacements. For issues of convolution kernel size or padding, we can

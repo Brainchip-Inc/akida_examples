@@ -91,7 +91,7 @@ Efficient online eye tracking with a lightweight spatiotemporal network and even
 # 2.2 Instantiating the spatiotemporal blocks
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# QuantizeML and Akida Models natively work with TF-Keras layers: akida_models has all the
+# QuantizeML and Akida Models natively work with Tensorflow/Keras layers: akida_models has all the
 # necessary functions to instantiate a network based on spatiotemporal layers as well as training
 # pipelines available to train models on the jester dataset, the dvs128 dataset or this dataset.
 #
@@ -735,7 +735,7 @@ akida_model.summary()
 # .. Note::
 #   - For more information you can refer to the paper available `here
 #     <https://openaccess.thecvf.com/content/CVPR2024W/AI4Streaming/papers/Pei_A_Lightweight_Spatiotemporal_Network_for_Online_Eye_Tracking_with_Event_CVPRW_2024_paper.pdf>`__.
-#   - There is also a full training pipeline available in TF-Keras from the akida_models
+#   - There is also a full training pipeline available in tensorflow/Keras from the akida_models
 #     package that reproduces the performance presented in the paper available with the
 #     `akida_models.tenn_spatiotemporal
 #     <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal_eye>`__ function.

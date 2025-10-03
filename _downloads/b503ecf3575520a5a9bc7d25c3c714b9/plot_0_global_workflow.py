@@ -2,14 +2,14 @@
 Global Akida workflow
 =====================
 
-Using the MNIST dataset, this example shows the definition and training of a TF-Keras
+Using the MNIST dataset, this example shows the definition and training of a keras
 floating point model, its quantization to 8-bit with the help of calibration,
 its quantization to 4-bit using QAT and its conversion to Akida.
-Notice that the performance of the original TF-Keras floating point model is maintained
+Notice that the performance of the original keras floating point model is maintained
 throughout the Akida flow.
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
 
-.. Note:: Please refer to the TensorFlow  `tf_keras.models
+.. Note:: Please refer to the TensorFlow  `tf.keras.models
           <https://www.tensorflow.org/api_docs/python/tf/keras/models>`__
           module for model creation/import details and the `TensorFlow Guide
           <https://www.tensorflow.org/guide>`__ for TensorFlow usage.
@@ -41,7 +41,7 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-from tf_keras.datasets import mnist
+from keras.datasets import mnist
 
 # Load MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -67,10 +67,10 @@ plt.show()
 # Note that at this stage, there is nothing specific to the Akida IP.
 # The model constructed below, as inspired by `this example
 # <https://www.tensorflow.org/model_optimization/guide/quantization/training_example#train_a_model_for_mnist_without_quantization_aware_training>`__,
-# is a completely standard `TF-Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__ CNN model.
+# is a completely standard `Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__ CNN model.
 #
 
-import tf_keras as keras
+import keras
 
 model_keras = keras.models.Sequential([
     keras.layers.Rescaling(1. / 255, input_shape=(28, 28, 1)),
@@ -95,7 +95,7 @@ model_keras.summary()
 # Given the model created above, train the model and check its accuracy. The model should achieve
 # a test accuracy over 98% after 10 epochs.
 #
-from tf_keras.optimizers import Adam
+from keras.optimizers import Adam
 
 model_keras.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -117,17 +117,16 @@ print('Test accuracy:', score[1])
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # An Akida accelerator processes 8 or 4-bits integer activations and weights. Therefore,
-# the floating point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
+# the floating point Keras model must be quantized in preparation to run on an Akida accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
-# function can be used to quantize a TF-Keras model for Akida. For this step in this example, an
-# “8/8/8” quantization scheme will be applied to the floating point TF-Keras model to produce 8-bit
+# function can be used to quantize a Keras model for Akida. For this step in this example, an
+# “8/8/8” quantization scheme will be applied to the floating point Keras model to produce 8-bit
 # weights in the first layer, 8-bit weights in all other layers, and 8-bit activations.
 #
-# The quantization process results in a TF-Keras model with custom `QuantizeML quantized layers
-# <../../api_reference/quantizeml_apis.html#layers>`__ substituted for the original TF-Keras layers.
-# All TF-Keras API functions can be applied on this new model: ``summary()``, ``compile()``,
-# ``fit()``. etc.
+# The quantization process results in a Keras model with custom `QuantizeML quantized layers
+# <../../api_reference/quantizeml_apis.html#layers>`__ substituted for the original Keras layers.
+# All Keras API functions can be applied on this new model: ``summary()``, ``compile()``, ``fit()``. etc.
 #
 # .. Note:: The ``quantize`` function applies `several transformations
 #           <../../api_reference/quantizeml_apis.html#transforms>`__ to
@@ -248,7 +247,7 @@ print('Test accuracy after fine tuning:', score)
 # Akida format. The `convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function
 # returns a model in Akida format ready for inference.
 #
-# As with TF-Keras, the summary() method provides a textual representation of the Akida model.
+# As with Keras, the summary() method provides a textual representation of the Akida model.
 #
 
 from cnn2snn import convert

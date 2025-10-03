@@ -309,7 +309,7 @@ print("The number of weights is then set to:", num_weights)
 # Once the last layer is compiled, the
 # `fit <../../api_reference/akida_apis.html#akida.Model.fit>`_ method is used to
 # pass the dataset for training. This call is similar to the `fit` method in
-# tf-keras.
+# tf.keras.
 #
 # After training, the model is assessed on the validation set using the
 # `predict <../../api_reference/akida_apis.html#akida.Model.predict>`_ method. It

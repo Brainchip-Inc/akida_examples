@@ -44,7 +44,7 @@ for a first approach about Akida learning.
 # binary spikes. From then, we will be able to estimate the parameters for
 # the trainable layer that will be added later.
 #
-# After loading the KWS dataset, we create the pre-trained TF-Keras model and
+# After loading the KWS dataset, we create the pre-trained Keras model and
 # convert it to an Akida model. We then remove the last layer to get the
 # feature extractor.
 

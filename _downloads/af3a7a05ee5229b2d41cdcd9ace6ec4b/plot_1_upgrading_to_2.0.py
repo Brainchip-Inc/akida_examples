@@ -30,7 +30,7 @@ between 1.0 and 2.0.
 # below show the two different calls.
 #
 
-import tf_keras as keras
+import keras
 
 # Build a simple model that is cross-compatible
 input = keras.layers.Input((32, 32, 3))
@@ -84,7 +84,7 @@ akida_model_2_0.summary()
 # 2.1. Separable convolution
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# In Akida 1.0, a TF-Keras `SeparableConv2D
+# In Akida 1.0, a Keras `SeparableConv2D
 # <https://www.tensorflow.org/api_docs/python/tf/keras/layers/SeparableConv2D>`__ used to be
 # quantized as a `QuantizedSeparableConv2D` and converted to an Akida `SeparableConvolutional
 # <../../api_reference/akida_apis.html#akida.SeparableConvolutional>`__ layer. These 3 layers each
@@ -135,7 +135,7 @@ akida_model_2_0.summary()
 # <../../api_reference/akida_models_apis.html#layer-blocks>`__.
 #
 # To migrate an existing model from 1.0 to 2.0, it is possible to load 1.0 weights into a 2.0
-# oriented architecture using `TF-Keras save and load APIs
+# oriented architecture using `Keras save and load APIs
 # <https://www.tensorflow.org/tutorials/keras/save_and_load>`__ because the global average pooling
 # position does not have an effect on model weights. However, the sequences between 1.0 and 2.0 are
 # not mathematically equivalent so it might be required to tune or even retrain the model.
