@@ -42,7 +42,7 @@ The Akida Neuromorphic ML Framework
 |
 | MetaTF is comprised of four Python packages which leverage both the
   `TensorFlow <https://www.tensorflow.org/>`_ (through
-  `TF-Keras <https://github.com/keras-team/tf-keras>`__) and `ONNX <https://onnx.ai/>`__`
+  `TF-Keras <https://github.com/keras-team/tf-keras>`__) and `ONNX <https://onnx.ai/>`__
   frameworks, and are installed from the `PyPI <https://pypi.org/>`_ repository via `pip` command.
 | The four MetaTF packages contain:
 
