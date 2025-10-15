@@ -40,8 +40,8 @@ sphinx_gallery_conf = {
     'first_notebook_cell': ("%matplotlib inline"),
     'subsection_order':
         ExplicitOrder([
-            '../examples/general', '../examples/quantization', '../examples/edge',
-            '../examples/spatiotemporal'
+            '../examples/general', '../examples/quantization', '../examples/spatiotemporal',
+            '../examples/edge'
         ]),
     'within_subsection_order':
         FileNameSortKey,
