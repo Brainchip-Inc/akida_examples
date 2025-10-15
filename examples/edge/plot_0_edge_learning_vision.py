@@ -2,6 +2,9 @@
 Akida vision edge learning
 ==========================
 
+.. important::
+    Edge learning is only supported for Akida 1.0 models and devices.
+
 This tutorial demonstrates the Akida NSoC **edge learning** capabilities using
 its built-in learning algorithm.
 It focuses on an image classification example, where an existing Akida network

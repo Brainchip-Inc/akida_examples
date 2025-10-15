@@ -81,7 +81,8 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 # parameter of the `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function. This usage should be limited to targeted customization as writing a whole
 # configuration from scratch is really error prone. An example of targeted customization is to set
-# the quantization bitwidth of the output of a feature extractor to 1 which will allow edge learning.
+# the quantization bitwidth of the output of a feature extractor to 1 which will allow edge learning
+# (1.0 feature only).
 #
 # .. warning:: When provided, the configuration file has priority over arguments. As a result
 #              however, the configuration file therefore must contain all parameters - you cannot
