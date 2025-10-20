@@ -2,6 +2,9 @@
 Tips to set Akida edge learning parameters
 ==========================================
 
+.. important::
+    Edge learning is only supported for Akida 1.0 models and devices.
+
 This tutorial gives details about the Akida learning parameters and tips to
 set their values in a first try in an edge learning application. The KWS dataset
 and the DS-CNN-edge model are used as a classification example to showcase the

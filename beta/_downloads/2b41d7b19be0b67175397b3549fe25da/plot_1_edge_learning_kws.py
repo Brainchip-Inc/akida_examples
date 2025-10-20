@@ -2,6 +2,9 @@
 Akida edge learning for keyword spotting
 ========================================
 
+.. important::
+    Edge learning is only supported for Akida 1.0 models and devices.
+
 This tutorial demonstrates the Akida NSoC **edge learning** capabilities using
 its built-in learning algorithm.
 
