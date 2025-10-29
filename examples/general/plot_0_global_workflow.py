@@ -47,7 +47,7 @@ from tf_keras.datasets import mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # Add a channels dimension to the image sets as Akida expects 4-D inputs (corresponding to
-# (num_samples, width, height, channels). Note: MNIST is a grayscale dataset and is unusual
+# (num_samples, height, width, channels). Note: MNIST is a grayscale dataset and is unusual
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
 x_train = np.expand_dims(x_train, -1)
