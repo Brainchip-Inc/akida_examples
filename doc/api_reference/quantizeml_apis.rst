@@ -162,10 +162,6 @@ QuantizeML API
     .. autoclass:: quantizeml.onnx_support.layers.InputQuantizer
     .. autoclass:: quantizeml.onnx_support.layers.Dequantizer
 
-    Custom patterns
-    ---------------
-    .. autofunction:: quantizeml.onnx_support.quantization.custom_pattern_scope
-
     Model I/O
     =========
     .. autofunction:: quantizeml.load_model

@@ -391,13 +391,6 @@ and groups=input_channels.
 
     - <Concat>
 
-While Akida directly supports the most important models, it is not feasible to support all
-possibilities. There might occasionally be models which are nearly compatible with Akida but which
-will fail to quantize due to just a few incompatibilities. The `custom pattern feature
-<../api_reference/quantizeml_apis.html#quantizeml.onnx_support.quantization.custom_pattern_scope>`__
-allows to handle such models as illustrated in `the dedicated advanced example
-<../examples/quantization/plot_3_custom_patterns.html#sphx-glr-examples-quantization-plot-3-custom-patterns-py>`__.
-
 
 Analysis module
 ---------------
