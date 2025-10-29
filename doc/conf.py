@@ -105,11 +105,11 @@ html_css_files = [
 html_js_files = ['leadlander_tag.js']
 
 # -- Exported variables -----------------------------------------------------
-import pkg_resources
+from importlib.metadata import version as importlib_version
 
-akida_version = pkg_resources.get_distribution('akida').version
-cnn2snn_version = pkg_resources.get_distribution('cnn2snn').version
-models_version = pkg_resources.get_distribution('akida-models').version
+akida_version = importlib_version('akida')
+cnn2snn_version = importlib_version('cnn2snn')
+models_version = importlib_version('akida-models')
 
 from pip._internal.operations.freeze import freeze
 pip_freeze = ', '.join([str(i) for i in freeze(local_only=True)])
