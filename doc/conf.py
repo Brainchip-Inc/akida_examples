@@ -90,18 +90,18 @@ autodoc_default_options = {
     'autosummary': True,
 }
 
-# silence warning raised by autodocsumm
+# Silence warning raised by autodocsumm
 suppress_warnings = ['app.add_directive', 'config.cache']
 
-# this folder is copied to the documentation's HTML output
+# This folder is copied to the documentation's HTML output
 html_static_path = ['_static']
 
-# add a custom css file to remove rtd theme page width limit
+# Add a custom css file to remove rtd theme page width limit
 html_css_files = [
     'custom.css',
 ]
 
-# add Leadlander tag for activity tracking
+# Add Leadlander tag for activity tracking
 html_js_files = ['leadlander_tag.js']
 
 # -- Exported variables -----------------------------------------------------

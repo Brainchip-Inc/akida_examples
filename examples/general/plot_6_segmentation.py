@@ -103,7 +103,7 @@ print(f"TF-Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The next step is to quantize and potentially perform Quantize Aware Training (QAT) on the
-# TF-Keras model from the previous step. After the TF-Keras model is quantized to 8-bits for
+# TF-Keras model from the previous step. After the TF-Keras model is quantized to 8-bit for
 # all weights and activations, QAT is used to maintain the performance of the quantized
 # model. Again, a pre-trained model is downloaded to save runtime.
 #

@@ -94,7 +94,7 @@ To interact with an Akida device, the main entry point is the ``HardwareDevice``
 Dense
 ^^^^^
 
-In akida, all input and output buffers are wrapped in an abstract ``Dense`` class (defined in ``akida/dense.h``). This class is used to describe multidimensional dense arrays with a given type. Here's a list of the most useful methods:
+In Akida, all input and output buffers are wrapped in an abstract ``Dense`` class (defined in ``akida/dense.h``). This class is used to describe multidimensional dense arrays with a given type. Here's a list of the most useful methods:
 
 - ``create``, a static function to allocate a buffer of a given ``TensorType``, ``Shape`` and ``Dense::Layout``, and create a ``Dense`` unique pointer that holds the buffer.
 - ``create_view``, another static function, similar to the previous one, but whose data buffer is not allocated, but rather provided by the calling function. This function can be used to create a ``Dense`` instance to use as inference input coming from a user-provided buffer.
@@ -116,7 +116,7 @@ Defined in header ``akida/hw_version.h``, it is a structure that identifies uniq
 Sparse and Input conversion functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In some models, akida will require inputs to be provided as sparse tensors, or it might provide sparse outputs. For these situations, an ``api/input_conversion.h`` header provides a collection of functions that allow conversion from dense to sparse and viceversa.
+In some models, Akida will require inputs to be provided as sparse tensors, or it might provide sparse outputs. For these situations, an ``api/input_conversion.h`` header provides a collection of functions that allow conversion from dense to sparse and viceversa.
 
 Other headers in the API
 ^^^^^^^^^^^^^^^^^^^^^^^^

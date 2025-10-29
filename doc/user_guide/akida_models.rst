@@ -249,7 +249,7 @@ The ``dense_block`` function will produce a group of layers that we call a "bloc
      block.
    - The ReLU activation max_value can be set in the parameter using a string expression, that is
      ``relu_activation='ReLU6'`` will create a ReLU activation with max_value set to 6.
-   - The ReLu activation can also be defined as unbounded, that is ``relu_activation='ReLU'`` (only
+   - The ReLU activation can also be defined as unbounded, that is ``relu_activation='ReLU'`` (only
      supported for models targeting Akida 2.0)
 
 Separable layers can be defined as ``fused`` (Akida 1.0) or ``unfused`` (Akida 2.0):

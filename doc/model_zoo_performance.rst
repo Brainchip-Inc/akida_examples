@@ -2,7 +2,7 @@ Model zoo performance
 =====================
 
 | The Brainchip `akida_models <https://pypi.org/project/akida-models>`__ package offers a set of pre-built
-  akida compatible models (e.g MobileNet, AkidaNet), pretrained weights for those models and training
+  Akida compatible models (e.g MobileNet, AkidaNet), pretrained weights for those models and training
   scripts. Please refer to the `model zoo API reference <./api_reference/akida_models_apis.html#model-zoo>`__
   for a complete list of the available models.
 

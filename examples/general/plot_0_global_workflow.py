@@ -116,7 +116,7 @@ print('Test accuracy:', score[1])
 # 2.1. 8-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# An Akida accelerator processes 8 or 4-bits integer activations and weights. Therefore,
+# An Akida accelerator processes 8 or 4-bit integer activations and weights. Therefore,
 # the floating point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
@@ -215,13 +215,13 @@ model_quantized = quantize(model_keras, qparams=qparams,
 print('Test accuracy after 4-bit quantization:', compile_evaluate(model_quantized))
 
 ######################################################################
-# 2.4. Model fine tuning (Quantization Aware Training)
+# 2.4. Model fine-tuning (Quantization Aware Training)
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# When a model suffers from an accuracy drop after quantization, fine tuning or Quantization
+# When a model suffers from an accuracy drop after quantization, fine-tuning or Quantization
 # Aware Training (QAT) may recover some or all of the original performance.
 #
-# Note that since this is a fine tuning step, both the number of epochs and learning rate are
+# Note that since this is a fine-tuning step, both the number of epochs and learning rate are
 # expected to be lower than during the initial float training.
 #
 model_quantized.compile(
@@ -233,7 +233,7 @@ model_quantized.fit(x_train, y_train, epochs=5, validation_split=0.1)
 
 ######################################################################
 score = model_quantized.evaluate(x_test, y_test, verbose=0)[1]
-print('Test accuracy after fine tuning:', score)
+print('Test accuracy after fine-tuning:', score)
 
 ######################################################################
 # 3. Convert

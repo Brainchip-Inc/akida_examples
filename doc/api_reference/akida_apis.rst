@@ -132,10 +132,10 @@ Akida runtime API
     .. autoclass:: HwVersion
         :members:
 
-    HWDevice
+    HwDevice
     ========
 
-    HWDevice
+    HwDevice
     --------
     .. autoclass:: HardwareDevice
         :members:

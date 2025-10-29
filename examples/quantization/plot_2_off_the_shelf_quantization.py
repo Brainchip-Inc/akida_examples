@@ -18,7 +18,7 @@ Off-the-shelf models quantization
    | Their training recipe and framework have no importance as long as they can be exported
      to `ONNX <https://onnx.ai>`__.
    | Note however that this pathway offers slightly less flexibility than our default,
-     TensorFlow-based pathway - specifically, fine tuning of the quantized model is
+     TensorFlow-based pathway - specifically, fine-tuning of the quantized model is
      not possible.
    | In most cases, that won't matter, there should be almost no performance drop when
      quantizing to 8-bit anyway.

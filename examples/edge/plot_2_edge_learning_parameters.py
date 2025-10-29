@@ -266,10 +266,10 @@ plt.grid(linestyle='--')
 plt.show()
 
 ##############################################################################
-# From the figures above, we can see that the point of inflection occured with
+# From the figures above, we can see that the point of inflection occurred with
 # about 300 neurons. Setting the number of neurons per class to this value is a
 # good starting point: we expect a very good accuracy after training. Adding
-# more neurons won't improve the acccuracy and will increase the computing time.
+# more neurons won't improve the accuracy and will increase the computing time.
 #
 # However, one could gradually reduce the number of neurons per class to see its
 # influence on the accuracy of a complete training. In the KWS edge tutorial, we

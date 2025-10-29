@@ -219,7 +219,7 @@ generated samples. It is generally advised to use real samples serialized in a n
 
     quantizeml quantize -m model_keras.h5 -i 8 -w 8 -a 8 -sa some_samples.npz -bs 128 -e 2
 
-For akida 1.0 compatibility, it is mandatory to have activations quantized per-tensor instead of
+For Akida 1.0 compatibility, it is mandatory to have activations quantized per-tensor instead of
 the default per-axis quantization:
 
 .. code-block:: bash
@@ -404,7 +404,7 @@ Analysis module
 
 The QuantizeML toolit comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
 submodule that provides tools to better analyze the impact of quantization on a model. Quantization
-errors and minimal accuracy drops are an expected behavior going from float to integer (8-bits).
+errors and minimal accuracy drops are an expected behavior going from float to integer (8-bit).
 While no simple and generic solution can be provided to solve larger accuracy issues, the analyis
 tool can help pinpoint faulty layers or kernels that might be poorly quantized and thus harm
 accuracy. Once the culprit is found, adding regularization or training constraints can help tackle

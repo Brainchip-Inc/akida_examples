@@ -91,7 +91,7 @@ Akida models API
     .. autofunction:: akida_models.imagenet.preprocessing.preprocess_image
     .. autofunction:: akida_models.imagenet.preprocessing.index_to_label
 
-    Mobilenet
+    MobileNet
     ---------
 
     ImageNet
