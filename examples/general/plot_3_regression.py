@@ -30,10 +30,9 @@ x_train, y_train, x_test, y_test = load_data()
 
 ######################################################################
 # Akida models accept only `uint8 tensors <../../api_reference/akida_apis.html?highlight=uint8#akida.Model>`_
-# as inputs. Use uint8 raw data for Akida performance evaluation.
-
-# For Akida inference, use uint8 raw data
-x_test_akida = x_test.astype('uint8')
+# as inputs. Use uint8 raw data to train the model and for Akida performance evaluation.
+x_train = x_train.astype('uint8')
+x_test = x_test.astype('uint8')
 
 
 ######################################################################
@@ -114,7 +113,7 @@ model_akida.summary()
 import numpy as np
 
 # Check Akida model performance
-y_akida = model_akida.predict(x_test_akida)
+y_akida = model_akida.predict(x_test)
 
 # Compute and display the MAE
 mae_akida = np.sum(np.abs(y_test.squeeze() - y_akida.squeeze())) / len(y_test)
@@ -137,7 +136,7 @@ rng = np.random.default_rng()
 id = rng.integers(0, len(y_test))
 age_keras = model_keras.predict(x_test[np.newaxis, id])
 
-plt.imshow(x_test_akida[id], interpolation='bicubic')
+plt.imshow(x_test[id], interpolation='bicubic')
 plt.xticks([]), plt.yticks([])
 plt.show()
 

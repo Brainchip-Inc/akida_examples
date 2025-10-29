@@ -37,6 +37,7 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
 # 1.1. Load and reshape MNIST dataset
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 import numpy as np
+import tensorflow as tf
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -73,7 +74,8 @@ plt.show()
 import tf_keras as keras
 
 model_keras = keras.models.Sequential([
-    keras.layers.Rescaling(1. / 255, input_shape=(28, 28, 1)),
+    keras.layers.Input(shape=(28, 28, 1), name="input", dtype=tf.uint8),
+    keras.layers.Rescaling(1. / 255),
     keras.layers.Conv2D(filters=32, kernel_size=3, strides=2),
     keras.layers.BatchNormalization(),
     keras.layers.ReLU(),

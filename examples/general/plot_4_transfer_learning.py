@@ -91,7 +91,6 @@ _ = tfds.show_examples(test_ds, ds_info)
 
 # Format test data
 def format_example(image, label):
-    image = tf.cast(image, tf.float32)
     image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
     return image, label
 

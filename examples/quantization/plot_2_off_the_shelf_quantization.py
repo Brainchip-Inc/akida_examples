@@ -201,6 +201,6 @@ model_akida.summary()
 ######################################################################
 
 # Evaluate Akida performance using raw data
-out = model_akida.forward(x_test_raw)
+out = model_akida.forward(x_test)
 preds = np.squeeze(np.argmax(out, -1))
 print(f'Akida model accuracy: {int((preds == labels_test).sum())}/{num_images}.')

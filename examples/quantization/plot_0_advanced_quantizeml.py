@@ -93,12 +93,15 @@ qparams = QuantizationParams(input_weight_bits=8, weight_bits=8, activation_bits
 #
 
 import tf_keras as keras
+import tensorflow as tf
 import json
 from quantizeml.models import quantize, dump_config, QuantizationParams
 
 # Define an example model with few layers to keep what follows readable
-input = keras.layers.Input((28, 28, 3))
-x = keras.layers.DepthwiseConv2D(kernel_size=3, name="dw_conv")(input)
+input = keras.layers.Input((28, 28, 3), dtype=tf.uint8)
+x = keras.layers.Rescaling(scale=1. / 255, name="rescale")(input)
+x = keras.layers.Conv2D(filters=16, kernel_size=3, name="input_conv")(x)
+x = keras.layers.DepthwiseConv2D(kernel_size=3, name="dw_conv")(x)
 x = keras.layers.Conv2D(filters=32, kernel_size=1, name="pw_conv")(x)
 x = keras.layers.ReLU(name="relu")(x)
 x = keras.layers.Dense(units=10, name="dense")(x)

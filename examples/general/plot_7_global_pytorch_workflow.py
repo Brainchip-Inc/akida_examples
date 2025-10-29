@@ -297,7 +297,7 @@ y_test = testloader.dataset.targets.numpy()
 # (num_samples, width, height, channels). Note: MNIST is a grayscale dataset and is unusual
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
-x_test = x_test[..., None]
+x_test = np.expand_dims(x_test, axis=1)
 
 accuracy = model_akida.evaluate(x_test, y_test.astype(np.int32))
 print('Test accuracy after conversion:', accuracy)
@@ -316,7 +316,7 @@ assert accuracy > 0.96
 # Test a single example
 sample_image = 0
 image = x_test[sample_image]
-outputs = model_akida.predict(image.reshape(1, 28, 28, 1))
+outputs = model_akida.predict(image.reshape(1, 1, 28, 28))
 
 plt.imshow(x_test[sample_image].reshape((28, 28)), cmap="Greys")
 print('Input Label:', y_test[sample_image].item())
