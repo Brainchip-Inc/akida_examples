@@ -126,6 +126,8 @@ Akida runtime API
     .. autofunction:: SixNodesIPv2
     .. autofunction:: create_device
     .. autofunction:: compute_minimal_memory
+    .. autofunction:: compute_min_device
+    .. autofunction:: compute_common_device
 
     HwVersion
     ---------
