@@ -2,9 +2,6 @@
 Off-the-shelf models quantization
 =================================
 
-.. Warning::
-   QuantizeML ONNX quantization is an **evolving feature**. Some models may not be compatible.
-
 | The `Global Akida workflow <../general/plot_0_global_workflow.html>`__ and the
   `PyTorch to Akida workflow <../general/plot_8_global_pytorch_workflow.html>`__ guides
   describe all the steps required to create, train, quantize and convert a model for Akida,
