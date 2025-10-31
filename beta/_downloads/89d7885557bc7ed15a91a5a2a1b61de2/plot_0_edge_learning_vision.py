@@ -14,7 +14,7 @@ Just a few samples (few-shot learning) of the new classes are sufficient
 to augment the Akida model with extra classes, while preserving high accuracy.
 
 Please refer to the `keyword spotting (KWS) tutorial <./plot_1_edge_learning_kws.html>`__
-for edge learning documentation, parameters fine tuning and steps details.
+for edge learning documentation, parameters fine-tuning and steps details.
 
 """
 

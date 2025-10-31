@@ -59,7 +59,7 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 # variants are needed:
 #
 #   - Quantization in the 4th step might lead to drop in accuracy (especially for 4
-#     bits quantization). In such a case, an additional step of fine tuning is needed
+#     bits quantization). In such a case, an additional step of fine-tuning is needed
 #     and consists in training for a few additional epochs with a lower learning rate
 #     (e.g 10 to 100 times lower than the initial rate).
 

@@ -173,16 +173,16 @@ def adjust_spines(ax, spines):
             spine.set_position(('outward', 10))  # outward by 10 points
         else:
             spine.set_color('none')  # don't draw spine
-    # turn off ticks where there is no spine
+    # Turn off ticks where there is no spine
     if 'left' in spines:
         ax.yaxis.set_ticks_position('left')
     else:
-        # no yaxis ticks
+        # No yaxis ticks
         ax.yaxis.set_ticks([])
     if 'bottom' in spines:
         ax.xaxis.set_ticks_position('bottom')
     else:
-        # no xaxis ticks
+        # No xaxis ticks
         ax.xaxis.set_ticks([])
 
 
@@ -211,7 +211,7 @@ def prepare_plots():
     # Add title box
     plt.figtext(0.5,
                 0.9,
-                "Imagenet Classification by Akida",
+                "ImageNet Classification by Akida",
                 size=20,
                 ha="center",
                 va="center",

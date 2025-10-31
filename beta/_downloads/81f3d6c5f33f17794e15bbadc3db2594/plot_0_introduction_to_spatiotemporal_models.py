@@ -366,7 +366,7 @@ evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in
 #    :align: center
 
 ######################################################################
-# 8. Quantizing the model and convertion to akida
+# 8. Quantizing the model and convertion to Akida
 # -----------------------------------------------
 # The model can be easily quantized with no cost in accuracy. It can then be easily deployed on
 # hardware for online gesture recognition using the convert method from the cnn2snn package.
@@ -404,7 +404,7 @@ reset_buffers(model_quantized)
 
 ######################################################################
 
-# Convert to akida
+# Convert to Akida
 from cnn2snn import convert
 akida_model = convert(model_quantized)
 akida_model.summary()

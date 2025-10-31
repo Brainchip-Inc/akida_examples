@@ -11,7 +11,7 @@ Here we will instead describe a workflow to go from a model trained in PyTorch.
      in place, and a trained model: this workflow will allow you to rapidly convert
      your model to Akida 2.0.
    | Note however that this pathway offers slightly less flexibility than our default,
-     TensorFlow-based pathway - specifically, fine tuning of the quantized model is
+     TensorFlow-based pathway - specifically, fine-tuning of the quantized model is
      not possible when starting from PyTorch.
    | In most cases, that won't matter, there should be almost no performance drop when
      quantizing to 8-bit anyway.
@@ -56,7 +56,7 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
 
 .. figure:: ../../img/overall_onnx_flow.png
    :target: ../../_images/overall_onnx_flow.png
-   :alt: Overall pytorch flow
+   :alt: Overall PyTorch flow
    :scale: 60 %
    :align: center
 
