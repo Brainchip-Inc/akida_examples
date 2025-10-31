@@ -67,6 +67,12 @@ QuantizeML API
     Quantizers
     ----------
     .. autoclass:: quantizeml.layers.Quantizer
+    .. autoclass:: quantizeml.layers.InputQuantizer
+        :members:
+        :show-inheritance:
+    .. autoclass:: quantizeml.layers.Dequantizer
+        :members:
+        :show-inheritance:
     .. autoclass:: quantizeml.layers.WeightQuantizer
         :members:
         :show-inheritance:
@@ -74,9 +80,6 @@ QuantizeML API
         :members:
         :show-inheritance:
     .. autoclass:: quantizeml.layers.OutputQuantizer
-        :members:
-        :show-inheritance:
-    .. autoclass:: quantizeml.layers.Dequantizer
         :members:
         :show-inheritance:
 

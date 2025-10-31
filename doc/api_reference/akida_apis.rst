@@ -30,6 +30,8 @@ Akida runtime API
     ------------
     .. autoclass:: InputData
         :members:
+    .. autoclass:: Quantizer
+        :members:
 
     Akida V1 layers
     ---------------
