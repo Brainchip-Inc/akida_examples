@@ -64,24 +64,12 @@ QuantizeML API
     -------
     .. autoclass:: quantizeml.layers.QuantizedDropout
 
-    Quantizers
-    ----------
-    .. autoclass:: quantizeml.layers.Quantizer
+    Quantizer/Dequantizer
+    ---------------------
     .. autoclass:: quantizeml.layers.InputQuantizer
         :members:
-        :show-inheritance:
     .. autoclass:: quantizeml.layers.Dequantizer
         :members:
-        :show-inheritance:
-    .. autoclass:: quantizeml.layers.WeightQuantizer
-        :members:
-        :show-inheritance:
-    .. autoclass:: quantizeml.layers.AlignedWeightQuantizer
-        :members:
-        :show-inheritance:
-    .. autoclass:: quantizeml.layers.OutputQuantizer
-        :members:
-        :show-inheritance:
 
     Calibration
     -----------
