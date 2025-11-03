@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -593,62 +586,40 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;calibrate&quot;</span><span class="p">,</span> <span class="s2">&quot;calibration_required&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;calibrate&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">SeparableConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span>
-                             <span class="n">Dropout</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">)</span>
+                             <span class="n">Dropout</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">MaxPool2D</span><span class="p">,</span> <span class="n">GlobalAvgPool2D</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_keras_random_samples</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.insert_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">insert_in_config</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_layers_by_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_layers_by_type</span><span class="p">,</span> <span class="n">get_layer_index</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.transforms.align_rescaling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_fold_rescaling</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_weights_to_model</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">OutputQuantizer</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">InputObserver</span><span class="p">,</span> <span class="n">OutputObserver</span><span class="p">,</span> <span class="n">PaddedConv2D</span><span class="p">,</span> <span class="n">DepthwiseConv2DTranspose</span><span class="p">,</span>
                       <span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">,</span> <span class="n">StatefulRecurrent</span><span class="p">,</span>
-                      <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">update_batch_size</span><span class="p">)</span>
+                      <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">InputQuantizer</span><span class="p">,</span> <span class="n">Dequantizer</span><span class="p">,</span> <span class="n">update_batch_size</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FixedPoint</span><span class="p">,</span> <span class="n">floor_log2</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">calibration_required</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if a model requires calibration.</span>
-
-<span class="sd">    If one of the &#39;OutputQuantizer&#39; layers in the model has its range_max variable set to 1, it</span>
-<span class="sd">    requires calibration.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (keras.Model): the model to check</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        bool: True if calibration is required, False otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">calibrables</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">OutputQuantizer</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">calibrable</span> <span class="ow">in</span> <span class="n">calibrables</span><span class="p">:</span>
-        <span class="c1"># If the model has never been calibrated, all range_max of the OutputQuantizer objects</span>
-        <span class="c1"># will be set to 1.</span>
-        <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_all</span><span class="p">(</span><span class="n">calibrable</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-    <span class="c1"># all calibrable objects are set</span>
-    <span class="k">return</span> <span class="kc">False</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_calibration_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a calibration model with OutputObserver added between blocks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a calibration model with Observers added.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (keras.Model): input model</span>
 <span class="sd">        qmodel (keras.Model): quantized model</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        keras.Model, dict: the calibration ready model and dict mapping end of block layer names to</span>
-<span class="sd">        the name of their OutputObserver.</span>
+<span class="sd">        keras.Model, dict: the calibration ready model and mapping of layer names with its Observer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get model config to edit</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="c1"># Insert OutputObservers where OutputQuantizers are</span>
+    <span class="c1"># Insert Observers</span>
     <span class="n">end_of_blocks</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s1">&#39;out_quantizer&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
@@ -657,6 +628,20 @@
             <span class="n">end_of_blocks</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">observer</span><span class="o">.</span><span class="n">name</span>
             <span class="c1"># Insert observer in config</span>
             <span class="n">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">observer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">InputQuantizer</span><span class="p">):</span>
+            <span class="c1"># Search layer linked to InputQuantizer.</span>
+            <span class="n">input_layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">inbound_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbound_layers</span>
+            <span class="c1"># Build an observer and store it for future use.</span>
+            <span class="c1"># Note we specified its input shape in cases it is the first layer.</span>
+            <span class="n">observer</span> <span class="o">=</span> <span class="n">InputObserver</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="n">input_layer</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">end_of_blocks</span><span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">observer</span><span class="o">.</span><span class="n">name</span>
+            <span class="c1"># Verify that model contains input_layer in config.</span>
+            <span class="c1"># Otherwise, InputObserver will be set in the input.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">layer_id</span> <span class="o">:=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">],</span> <span class="n">input_layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">input_layer_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">][</span><span class="n">layer_id</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">input_layer_name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">insert_in_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_layer_name</span><span class="p">,</span> <span class="n">observer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
     <span class="c1"># Build the calibration model from the config</span>
     <span class="n">calibration_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -743,8 +728,13 @@
     <span class="n">next_layer</span> <span class="o">=</span> <span class="n">_get_next_layer</span><span class="p">(</span><span class="n">target_layer</span><span class="p">,</span> <span class="n">supported_layers</span><span class="p">,</span> <span class="n">skippable_layers</span><span class="p">,</span> <span class="n">reshape_ops</span><span class="p">)</span>
     <span class="c1"># For now cross layer equalization for (Dephwise)BufferTempConvLayers is possible only if their</span>
     <span class="c1"># input is quantized per-tensor.</span>
-    <span class="k">if</span> <span class="n">next_layer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
-                              <span class="ow">and</span> <span class="n">target_layer</span><span class="o">.</span><span class="n">out_quantizer</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;per-axis&#39;</span><span class="p">):</span>
+    <span class="c1"># cross layer equalization is not applied on conv2d when groups is greater than 1 and when</span>
+    <span class="c1"># data_format is &#39;channels_first&#39;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">next_layer</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="n">target_layer</span><span class="o">.</span><span class="n">out_quantizer</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;per-axis&#39;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="s1">&#39;groups&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span>
+            <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="s1">&#39;data_format&#39;</span><span class="p">,</span> <span class="s1">&#39;channels_last&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;channels_first&#39;</span><span class="p">):</span>
         <span class="k">return</span>
 
     <span class="c1"># Compute ideal range_max</span>
@@ -816,6 +806,39 @@
     <span class="n">next_layer</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">next_weights</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_and_fold_zero_point</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">range_min</span><span class="p">,</span> <span class="n">range_max</span><span class="p">):</span>
+    <span class="n">quantizer</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
+
+    <span class="c1"># Update range_min if required.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">signed</span><span class="p">:</span>
+        <span class="n">range_min</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">range_min</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">range_min</span><span class="p">)</span>
+
+    <span class="c1"># Set ranges in quantizer.</span>
+    <span class="n">quantizer</span><span class="o">.</span><span class="n">range_min</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">range_min</span><span class="p">)</span>
+    <span class="n">quantizer</span><span class="o">.</span><span class="n">range_max</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">range_max</span><span class="p">)</span>
+
+    <span class="c1"># Stop procedure if all range_min are zero (zero point folding is not required).</span>
+    <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_all</span><span class="p">(</span><span class="n">range_min</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">signed</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">qmodel</span>
+
+    <span class="c1"># Retrieve next_layer.</span>
+    <span class="n">skippable_layers</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rescaling</span><span class="p">,)</span>
+    <span class="n">next_layer</span> <span class="o">=</span> <span class="n">quantizer</span>
+    <span class="k">while</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">outbounds</span> <span class="o">:=</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">outbound_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+           <span class="nb">isinstance</span><span class="p">((</span><span class="n">next_layer</span> <span class="o">:=</span> <span class="n">outbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">layer</span><span class="p">),</span> <span class="n">skippable_layers</span><span class="p">)):</span>
+        <span class="c1"># Update value to fold depending of next layer.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_layer</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">):</span>
+            <span class="n">range_min</span> <span class="o">=</span> <span class="n">range_min</span> <span class="o">*</span> <span class="n">next_layer</span><span class="o">.</span><span class="n">scale</span>
+
+    <span class="c1"># Fold zero point into bias of next layer.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fake_rescaling_layer</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">range_min</span><span class="p">)</span>
+        <span class="n">_fold_rescaling</span><span class="p">(</span><span class="n">fake_rescaling_layer</span><span class="p">,</span> <span class="n">next_layer</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;During calibration, impossible to fold zero point in &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">next_layer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+
 <div class="viewcode-block" id="calibrate">
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.models.calibrate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -844,16 +867,14 @@
 <span class="sd">        epochs (int, optional): the number of epochs. Defaults to 1.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_required</span><span class="p">(</span><span class="n">qmodel</span><span class="p">):</span>
-        <span class="k">return</span>
-
-    <span class="c1"># Build a calibration model which is a float model with OutputObservers at locations where the</span>
-    <span class="c1"># quantized model has OutputQuantizers.</span>
+    <span class="c1"># Build a calibration model which is a float model with Observers at locations where the</span>
+    <span class="c1"># quantized model has InputQuantizers/OutputQuantizers.</span>
     <span class="n">calibration_model</span><span class="p">,</span> <span class="n">end_of_blocks</span> <span class="o">=</span> <span class="n">_get_calibration_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qmodel</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Generate random samples</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="n">generate_keras_random_samples</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
+        <span class="c1"># Generate random samples.</span>
+        <span class="c1"># Note we use the float model since the quantized model has not yet been calibrated.</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">generate_keras_random_samples</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
 
     <span class="c1"># Extract number of (Depthwise)BufferTempConv and StatefulRecurrent layers</span>
     <span class="n">buf_layers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">calibration_model</span><span class="p">,</span> <span class="p">(</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">DepthwiseBufferTempConv</span><span class="p">))</span>
@@ -911,9 +932,12 @@
             <span class="n">calibration_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
                 <span class="n">x</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
 
-    <span class="c1"># Update quantized model OutputQuantizers range_max using OutputObservers calibrated values</span>
+    <span class="c1"># Update quantized model calibration ranges using Observers calibrated values.</span>
     <span class="k">for</span> <span class="n">eob</span><span class="p">,</span> <span class="n">observer</span> <span class="ow">in</span> <span class="n">end_of_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">_set_and_equalize</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">eob</span><span class="p">,</span> <span class="n">calibration_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">observer</span> <span class="o">:=</span> <span class="n">calibration_model</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="n">observer</span><span class="p">),</span> <span class="n">OutputObserver</span><span class="p">):</span>
+            <span class="n">_set_and_equalize</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">eob</span><span class="p">,</span> <span class="n">observer</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_set_and_fold_zero_point</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">eob</span><span class="p">,</span> <span class="n">observer</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span> <span class="n">observer</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span></div>
 
 </pre></div>
 

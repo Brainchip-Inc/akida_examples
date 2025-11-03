@@ -252,7 +252,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -273,7 +273,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -439,12 +438,6 @@
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
 </ul>
 </li>
 </ul>
@@ -660,12 +653,15 @@ rely on argument defaults to set non-specified values.</p>
 <p>The following code snippets show what a configuration file looks like and how to edit it to
 customize quantization.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize</span><span class="p">,</span> <span class="n">dump_config</span><span class="p">,</span> <span class="n">QuantizationParams</span>
 
 <span class="c1"># Define an example model with few layers to keep what follows readable</span>
-<span class="nb">input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">DepthwiseConv2D</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dw_conv&quot;</span><span class="p">)(</span><span class="nb">input</span><span class="p">)</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">((</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.</span> <span class="o">/</span> <span class="mi">255</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescale&quot;</span><span class="p">)(</span><span class="nb">input</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_conv&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">DepthwiseConv2D</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dw_conv&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pw_conv&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dense&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
@@ -681,26 +677,28 @@ customize quantization.</p>
 <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">qparams</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:39
-  56/1024 [&gt;.............................] - ETA: 0s  
- 112/1024 [==&gt;...........................] - ETA: 0s
- 169/1024 [===&gt;..........................] - ETA: 0s
- 225/1024 [=====&gt;........................] - ETA: 0s
- 283/1024 [=======&gt;......................] - ETA: 0s
- 339/1024 [========&gt;.....................] - ETA: 0s
- 395/1024 [==========&gt;...................] - ETA: 0s
- 451/1024 [============&gt;.................] - ETA: 0s
- 507/1024 [=============&gt;................] - ETA: 0s
- 563/1024 [===============&gt;..............] - ETA: 0s
- 618/1024 [=================&gt;............] - ETA: 0s
- 675/1024 [==================&gt;...........] - ETA: 0s
- 732/1024 [====================&gt;.........] - ETA: 0s
- 789/1024 [======================&gt;.......] - ETA: 0s
- 845/1024 [=======================&gt;......] - ETA: 0s
- 901/1024 [=========================&gt;....] - ETA: 0s
- 957/1024 [===========================&gt;..] - ETA: 0s
-1015/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 898us/step
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 2:22
+  50/1024 [&gt;.............................] - ETA: 1s  
+ 100/1024 [=&gt;............................] - ETA: 0s
+ 150/1024 [===&gt;..........................] - ETA: 0s
+ 201/1024 [====&gt;.........................] - ETA: 0s
+ 251/1024 [======&gt;.......................] - ETA: 0s
+ 302/1024 [=======&gt;......................] - ETA: 0s
+ 352/1024 [=========&gt;....................] - ETA: 0s
+ 402/1024 [==========&gt;...................] - ETA: 0s
+ 452/1024 [============&gt;.................] - ETA: 0s
+ 502/1024 [=============&gt;................] - ETA: 0s
+ 551/1024 [===============&gt;..............] - ETA: 0s
+ 601/1024 [================&gt;.............] - ETA: 0s
+ 652/1024 [==================&gt;...........] - ETA: 0s
+ 702/1024 [===================&gt;..........] - ETA: 0s
+ 752/1024 [=====================&gt;........] - ETA: 0s
+ 802/1024 [======================&gt;.......] - ETA: 0s
+ 853/1024 [=======================&gt;......] - ETA: 0s
+ 904/1024 [=========================&gt;....] - ETA: 0s
+ 954/1024 [==========================&gt;...] - ETA: 0s
+1003/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 1ms/step
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">quantized_model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
@@ -712,21 +710,27 @@ _________________________________________________________________
 =================================================================
  input_1 (InputLayer)        [(None, 28, 28, 3)]       0
 
- dw_conv (QuantizedDepthwis  (None, 26, 26, 3)         32
+ rescale (QuantizedRescalin  (None, 28, 28, 3)         0
+ g)
+
+ input_conv (QuantizedConv2  (None, 26, 26, 16)        450
+ D)
+
+ dw_conv (QuantizedDepthwis  (None, 24, 24, 16)        162
  eConv2D)
 
- pw_conv (QuantizedConv2D)   (None, 26, 26, 32)        128
+ pw_conv (QuantizedConv2D)   (None, 24, 24, 32)        544
 
- relu (QuantizedReLU)        (None, 26, 26, 32)        2
+ relu (QuantizedReLU)        (None, 24, 24, 32)        2
 
- dense (QuantizedDense)      (None, 26, 26, 10)        330
+ dense (QuantizedDense)      (None, 24, 24, 10)        330
 
- dequantizer (Dequantizer)   (None, 26, 26, 10)        0
+ dequantizer (Dequantizer)   (None, 24, 24, 10)        0
 
 =================================================================
-Total params: 492 (1.92 KB)
-Trainable params: 488 (1.91 KB)
-Non-trainable params: 4 (16.00 Byte)
+Total params: 1488 (5.81 KB)
+Trainable params: 1482 (5.79 KB)
+Non-trainable params: 6 (24.00 Byte)
 _________________________________________________________________
 </pre></div>
 </div>
@@ -738,6 +742,17 @@ _________________________________________________________________
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{
+    &quot;input_conv&quot;: {
+        &quot;output_quantizer&quot;: {
+            &quot;bitwidth&quot;: 12,
+            &quot;axis&quot;: &quot;per-tensor&quot;,
+            &quot;buffer_bitwidth&quot;: 24
+        },
+        &quot;weight_quantizer&quot;: {
+            &quot;bitwidth&quot;: 16
+        },
+        &quot;buffer_bitwidth&quot;: 24
+    },
     &quot;dw_conv&quot;: {
         &quot;output_quantizer&quot;: {
             &quot;bitwidth&quot;: 12,
@@ -745,7 +760,7 @@ _________________________________________________________________
             &quot;buffer_bitwidth&quot;: 24
         },
         &quot;weight_quantizer&quot;: {
-            &quot;bitwidth&quot;: 16,
+            &quot;bitwidth&quot;: 4,
             &quot;axis&quot;: -2
         },
         &quot;buffer_bitwidth&quot;: 24
@@ -809,6 +824,17 @@ parameter.</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{
+    &quot;input_conv&quot;: {
+        &quot;output_quantizer&quot;: {
+            &quot;bitwidth&quot;: 12,
+            &quot;axis&quot;: &quot;per-tensor&quot;,
+            &quot;buffer_bitwidth&quot;: 24
+        },
+        &quot;weight_quantizer&quot;: {
+            &quot;bitwidth&quot;: 16
+        },
+        &quot;buffer_bitwidth&quot;: 24
+    },
     &quot;relu&quot;: {
         &quot;output_quantizer&quot;: {
             &quot;bitwidth&quot;: 1,
@@ -827,26 +853,28 @@ quantized using the given configuration and the other layers will use what is pr
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">new_quantized_model</span> <span class="o">=</span> <span class="n">quantize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">q_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">qparams</span><span class="o">=</span><span class="n">qparams</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:29
-  57/1024 [&gt;.............................] - ETA: 0s  
- 114/1024 [==&gt;...........................] - ETA: 0s
- 170/1024 [===&gt;..........................] - ETA: 0s
- 226/1024 [=====&gt;........................] - ETA: 0s
- 282/1024 [=======&gt;......................] - ETA: 0s
- 337/1024 [========&gt;.....................] - ETA: 0s
- 393/1024 [==========&gt;...................] - ETA: 0s
- 449/1024 [============&gt;.................] - ETA: 0s
- 505/1024 [=============&gt;................] - ETA: 0s
- 560/1024 [===============&gt;..............] - ETA: 0s
- 616/1024 [=================&gt;............] - ETA: 0s
- 672/1024 [==================&gt;...........] - ETA: 0s
- 728/1024 [====================&gt;.........] - ETA: 0s
- 785/1024 [=====================&gt;........] - ETA: 0s
- 842/1024 [=======================&gt;......] - ETA: 0s
- 899/1024 [=========================&gt;....] - ETA: 0s
- 955/1024 [==========================&gt;...] - ETA: 0s
-1011/1024 [============================&gt;.] - ETA: 0s
-1024/1024 [==============================] - 1s 899us/step
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>   1/1024 [..............................] - ETA: 1:50
+  50/1024 [&gt;.............................] - ETA: 1s  
+ 100/1024 [=&gt;............................] - ETA: 0s
+ 150/1024 [===&gt;..........................] - ETA: 0s
+ 199/1024 [====&gt;.........................] - ETA: 0s
+ 250/1024 [======&gt;.......................] - ETA: 0s
+ 300/1024 [=======&gt;......................] - ETA: 0s
+ 351/1024 [=========&gt;....................] - ETA: 0s
+ 401/1024 [==========&gt;...................] - ETA: 0s
+ 452/1024 [============&gt;.................] - ETA: 0s
+ 502/1024 [=============&gt;................] - ETA: 0s
+ 552/1024 [===============&gt;..............] - ETA: 0s
+ 603/1024 [================&gt;.............] - ETA: 0s
+ 652/1024 [==================&gt;...........] - ETA: 0s
+ 702/1024 [===================&gt;..........] - ETA: 0s
+ 752/1024 [=====================&gt;........] - ETA: 0s
+ 803/1024 [======================&gt;.......] - ETA: 0s
+ 854/1024 [========================&gt;.....] - ETA: 0s
+ 905/1024 [=========================&gt;....] - ETA: 0s
+ 954/1024 [==========================&gt;...] - ETA: 0s
+1004/1024 [============================&gt;.] - ETA: 0s
+1024/1024 [==============================] - 1s 1ms/step
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Dump the new configuration</span>
@@ -857,6 +885,17 @@ quantized using the given configuration and the other layers will use what is pr
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{
+    &quot;input_conv&quot;: {
+        &quot;output_quantizer&quot;: {
+            &quot;bitwidth&quot;: 12,
+            &quot;axis&quot;: &quot;per-tensor&quot;,
+            &quot;buffer_bitwidth&quot;: 24
+        },
+        &quot;weight_quantizer&quot;: {
+            &quot;bitwidth&quot;: 16
+        },
+        &quot;buffer_bitwidth&quot;: 24
+    },
     &quot;dw_conv&quot;: {
         &quot;output_quantizer&quot;: {
             &quot;bitwidth&quot;: 12,
@@ -864,7 +903,7 @@ quantized using the given configuration and the other layers will use what is pr
             &quot;buffer_bitwidth&quot;: 24
         },
         &quot;weight_quantizer&quot;: {
-            &quot;bitwidth&quot;: 16,
+            &quot;bitwidth&quot;: 4,
             &quot;axis&quot;: -2
         },
         &quot;buffer_bitwidth&quot;: 24
@@ -962,7 +1001,7 @@ that is made on the first batch of samples. The recommended value is 100.</p>
 <p>It is the number of iterations over the calibration samples. Increasing the value will allow for
 more updates of the <code class="docutils literal notranslate"><span class="pre">range_max</span></code> variables thanks to the momentum policy without requiring a huge
 amount of samples. The recommended value is 2.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 5.243 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 6.310 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-0-advanced-quantizeml-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/cd1062e93ddc7ea7bc6cf2b21b24d697/plot_0_advanced_quantizeml.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_0_advanced_quantizeml.ipynb</span></code></a></p>

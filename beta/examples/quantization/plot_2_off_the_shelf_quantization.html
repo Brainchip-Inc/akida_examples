@@ -28,7 +28,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Advanced ONNX models quantization" href="plot_3_custom_patterns.html" />
+    <link rel="next" title="Gesture recognition with spatiotemporal models" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html" />
     <link rel="prev" title="Upgrading to Akida 2.0" href="plot_1_upgrading_to_2.0.html" /> 
 </head>
 
@@ -252,7 +252,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -273,7 +273,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -441,12 +440,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -585,10 +578,6 @@ to download the full example code.</p>
 </div>
 <section class="sphx-glr-example-title" id="off-the-shelf-models-quantization">
 <span id="sphx-glr-examples-quantization-plot-2-off-the-shelf-quantization-py"></span><h1>Off-the-shelf models quantization<a class="headerlink" href="#off-the-shelf-models-quantization" title="Link to this heading"></a></h1>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>QuantizeML ONNX quantization is an <strong>evolving feature</strong>. Some models may not be compatible.</p>
-</div>
 <div class="line-block">
 <div class="line">The <a class="reference external" href="../general/plot_0_global_workflow.html">Global Akida workflow</a> and the
 <a class="reference external" href="../general/plot_8_global_pytorch_workflow.html">PyTorch to Akida workflow</a> guides
@@ -698,7 +687,7 @@ is used for downloading and exporting models to ONNX.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">onnx</span><span class="o">.</span><span class="n">helper</span><span class="o">.</span><span class="n">printable_graph</span><span class="p">(</span><span class="n">model_onnx</span><span class="o">.</span><span class="n">graph</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/drone/src/examples/quantization/plot_2_off_the_shelf_quantization.py:125: DeprecationWarning: Deprecated since 1.19. Consider using onnx.printer.to_text() instead.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/drone/src/examples/quantization/plot_2_off_the_shelf_quantization.py:122: DeprecationWarning: Deprecated since 1.19. Consider using onnx.printer.to_text() instead.
   print(onnx.helper.printable_graph(model_onnx.graph))
 graph main_graph (
   %pixel_values[FLOAT, batch_sizex3x224x224]
@@ -1971,14 +1960,16 @@ Quantized model accuracy: 10/10.
 ________________________________________________
 Input shape    Output shape  Sequences  Layers
 ================================================
-[224, 224, 3]  [1, 1, 1001]  1          64
+[3, 224, 224]  [1, 1, 1001]  1          65
 ________________________________________________
 
 ________________________________________________________________________________________________________
 Layer (type)                                                         Output shape    Kernel shape
 
-============= SW//mobilenet_v2/conv_stem/first_conv/convolution/Conv-dequantizer (Software) ============
+================================== SW/quantize-dequantizer (Software) ==================================
 
+quantize (Quantizer)                                                 [224, 224, 3]   N/A
+________________________________________________________________________________________________________
 /mobilenet_v2/conv_stem/first_conv/convolution/Conv (InputConv2D)    [112, 112, 32]  (3, 3, 3, 32)
 ________________________________________________________________________________________________________
 /mobilenet_v2/conv_stem/conv_3x3/convolution/Conv (DepthwiseConv2D)  [112, 112, 32]  (3, 3, 32, 1)
@@ -2110,15 +2101,15 @@ ________________________________________________________________________________
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Evaluate Akida performance using raw data</span>
-<span class="n">out</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_test_raw</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">model_akida</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
 <span class="n">preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Akida model accuracy: </span><span class="si">{</span><span class="nb">int</span><span class="p">((</span><span class="n">preds</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">labels_test</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">num_images</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida model accuracy: 10/10.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Akida model accuracy: 8/10.
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 12.063 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 13.186 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-quantization-plot-2-off-the-shelf-quantization-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/14135bb429c6b69940b3b3da0b5c2156/plot_2_off_the_shelf_quantization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_2_off_the_shelf_quantization.ipynb</span></code></a></p>
@@ -2139,7 +2130,7 @@ ________________________________________________________________________________
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="plot_1_upgrading_to_2.0.html" class="btn btn-neutral float-left" title="Upgrading to Akida 2.0" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="plot_3_custom_patterns.html" class="btn btn-neutral float-right" title="Advanced ONNX models quantization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html" class="btn btn-neutral float-right" title="Gesture recognition with spatiotemporal models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

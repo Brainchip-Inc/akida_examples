@@ -106,12 +106,11 @@ A tutorial on designing efficient models for streaming video tasks.
 ######################################################################
 input_shape = (100, 100, 3)
 sampling_frequency = 16
-input_scaling = (127.5, -1.0)
 n_classes = 27
 
 from akida_models.tenn_spatiotemporal import tenn_spatiotemporal_jester
 model = tenn_spatiotemporal_jester(input_shape=(sampling_frequency,) + input_shape,
-                                   input_scaling=input_scaling, n_classes=n_classes)
+                                   n_classes=n_classes)
 model.summary()
 
 ######################################################################

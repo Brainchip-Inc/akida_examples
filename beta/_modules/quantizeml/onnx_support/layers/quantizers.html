@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -598,7 +591,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttributeProto</span> <span class="k">as</span> <span class="n">AP</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValueInfoProto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValueInfoProto</span><span class="p">,</span> <span class="n">TensorProto</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnx.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_node</span><span class="p">,</span> <span class="n">make_tensor_value_info</span><span class="p">,</span> <span class="n">np_dtype_to_tensor_dtype</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnxruntime.quantization.calibrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorData</span>
 
@@ -612,6 +605,9 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_input_quantizer</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
     <span class="n">check_node_link_to_input</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">cast_node</span> <span class="o">:=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;Cast&quot;</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">get_field</span><span class="p">(</span><span class="n">cast_node</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">TensorProto</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s2">&quot;Cast node dtype must be float32&quot;</span>
 
     <span class="n">perm</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">transpose_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;Transpose&quot;</span><span class="p">)</span>
@@ -694,7 +690,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">downscale</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_name</span><span class="si">}</span><span class="s2">) does not support 32bit output&quot;</span>
         <span class="n">input_ts</span> <span class="o">=</span> <span class="n">value_info_to_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">input_ts</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
 
         <span class="c1"># Add/initialize weights</span>
         <span class="n">zp_dtype</span> <span class="o">=</span> <span class="s2">&quot;int8&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_signed</span> <span class="k">else</span> <span class="s2">&quot;uint8&quot;</span>
@@ -758,9 +753,11 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_subgraph</span><span class="p">(</span><span class="n">op_type</span><span class="p">):</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;Transpose&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Yi&quot;</span><span class="p">])]</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;Cast&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y_cast&quot;</span><span class="p">],</span> <span class="n">to</span><span class="o">=</span><span class="n">TensorProto</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">)]</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;Transpose&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y_cast&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y_transpose&quot;</span><span class="p">]))</span>
         <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;perm&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;perm&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">))</span>
-        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;QuantizeLinear&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="s2">&quot;zp&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]))</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s1">&#39;QuantizeLinear&#39;</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+                     <span class="s2">&quot;Y_transpose&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="s2">&quot;zp&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">nodes</span></div>
 
 

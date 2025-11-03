@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>akida_models.detection.map_evaluation &mdash; Akida Examples  documentation</title>
+  <title>akida.layers.quantizer &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -559,7 +559,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">akida_models.detection.map_evaluation</li>
+      <li class="breadcrumb-item active">akida.layers.quantizer</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -568,363 +568,46 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for akida_models.detection.map_evaluation</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/env python</span>
-<span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2017-2018 Fizyr (https://fizyr.com)</span>
-<span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
-<span class="c1"># you may not use this file except in compliance with the License.</span>
-<span class="c1"># You may obtain a copy of the License at</span>
-<span class="c1">#</span>
-<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
-<span class="c1">#</span>
-<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
-<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-<span class="c1"># See the License for the specific language governing permissions and</span>
-<span class="c1"># limitations under the License.</span>
-<span class="c1"># ******************************************************************************</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Module used to compute mAP scores for YOLO classification.</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;MapEvaluation&quot;</span><span class="p">]</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">keras</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.src.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_utils</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_output</span><span class="p">,</span> <span class="n">desize_bboxes</span><span class="p">,</span> <span class="n">get_affine_transform</span><span class="p">,</span> <span class="n">preprocess_image</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.box_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_overlap</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.data_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Coord</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+  <h1>Source code for akida.layers.quantizer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">LayerParams</span><span class="p">,</span> <span class="n">LayerType</span>
 
 
-<div class="viewcode-block" id="MapEvaluation">
-<a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MapEvaluation</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Evaluate a given dataset using a given model.</span>
-<span class="sd">        Code originally from https://github.com/fizyr/keras-retinanet.</span>
-<span class="sd">        Note that mAP is computed for IoU thresholds from 0.5 to 0.95</span>
-<span class="sd">        with a step size of 0.05.</span>
+<div class="viewcode-block" id="Quantizer">
+<a class="viewcode-back" href="../../../api_reference/akida_apis.html#akida.Quantizer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Quantizer</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Layer capable of Quantizing an input tensor.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            model (keras.Model): model to evaluate.</span>
-<span class="sd">            val_data (dict): dictionary containing validation data as obtained</span>
-<span class="sd">             using `preprocess_widerface.py` module</span>
-<span class="sd">            num_valid (int): the length of the validation dataset</span>
-<span class="sd">            labels (list): list of labels as strings</span>
-<span class="sd">            anchors (list): list of anchors boxes</span>
-<span class="sd">            period (int, optional): periodicity the precision is printed,</span>
-<span class="sd">                defaults to once per epoch. Defaults to 1.</span>
-<span class="sd">            obj_threshold (float, optional): confidence threshold for a box. Defaults to 0.5.</span>
-<span class="sd">            nms_threshold (float, optional): non-maximal supression threshold. Defaults to 0.5.</span>
-<span class="sd">            max_box_per_image (int, optional): maximum number of detections per</span>
-<span class="sd">                image, Defaults to 10.</span>
-<span class="sd">            preserve_aspect_ratio (bool, optional): Whether aspect ratio is preserved</span>
-<span class="sd">                during resizing. Defaults to False.</span>
-<span class="sd">            is_keras_model (bool, optional): indicated if the model is a Keras</span>
-<span class="sd">                model (True) or an Akida model (False). Defaults to True.</span>
-<span class="sd">            decode_output_fn (Callable, optional): function to decode model&#39;s outputs.</span>
-<span class="sd">                Defaults to :func:`decode_output` (yolo decode output function).</span>
+<span class="sd">    This quantizes an input tensor, following the equation:</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            A dict mapping class names to mAP scores.</span>
+<span class="sd">        output = round(input x scales) + zero_points</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_shape (tuple): 3D input shape.</span>
+<span class="sd">        output_bits (int): output bitwidth.</span>
+<span class="sd">        output_signed (bool): True if the output is signed, False if unsigned.</span>
+<span class="sd">        channels_first (bool, optional): True if input shape has channels first. Defaults to False.</span>
+<span class="sd">        name (str, optional): name of the layer. Defaults to empty string.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">model</span><span class="p">,</span>
-                 <span class="n">val_data</span><span class="p">,</span>
-                 <span class="n">num_valid</span><span class="p">,</span>
-                 <span class="n">labels</span><span class="p">,</span>
-                 <span class="n">anchors</span><span class="p">,</span>
-                 <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">obj_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                 <span class="n">nms_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                 <span class="n">max_box_per_image</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                 <span class="n">preserve_aspect_ratio</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">is_keras_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">decode_output_fn</span><span class="o">=</span><span class="n">decode_output</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">output_bits</span><span class="p">,</span> <span class="n">output_signed</span><span class="p">,</span> <span class="n">channels_first</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">LayerParams</span><span class="p">(</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Quantizer</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;input_width&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;input_height&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;input_channels&quot;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="s2">&quot;output_bits&quot;</span><span class="p">:</span> <span class="n">output_bits</span><span class="p">,</span>
+                <span class="s2">&quot;output_signed&quot;</span><span class="p">:</span> <span class="n">output_signed</span><span class="p">,</span>
+                <span class="s2">&quot;channels_first&quot;</span><span class="p">:</span> <span class="n">channels_first</span>
+            <span class="p">})</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">val_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span> <span class="o">=</span> <span class="n">num_valid</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_anchors</span> <span class="o">=</span> <span class="n">anchors</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_period</span> <span class="o">=</span> <span class="n">period</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obj_threshold</span> <span class="o">=</span> <span class="n">obj_threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nms_threshold</span> <span class="o">=</span> <span class="n">nms_threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_max_box_per_image</span> <span class="o">=</span> <span class="n">max_box_per_image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_preserve_aspect_ratio</span> <span class="o">=</span> <span class="n">preserve_aspect_ratio</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_is_keras_model</span> <span class="o">=</span> <span class="n">is_keras_model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_output</span> <span class="o">=</span> <span class="n">decode_output_fn</span>
-
-<div class="viewcode-block" id="MapEvaluation.on_epoch_end">
-<a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.on_epoch_end">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Keras callback called at the end of an epoch.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            epoch (int): index of epoch.</span>
-<span class="sd">            logs (dict, optional): metric results for this training epoch, and</span>
-<span class="sd">                for the validation epoch if validation is performed. Validation</span>
-<span class="sd">                result keys are prefixed with val. For training epoch, the</span>
-<span class="sd">                values of the Model’s metrics are returned.</span>
-<span class="sd">                Example: {‘loss’: 0.2, ‘acc’: 0.7}. Defaults to None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_period</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_period</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span>
-                                  <span class="n">epoch</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;epochs&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
-            <span class="n">_map_dict</span><span class="p">,</span> <span class="n">average_precisions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_map</span><span class="p">()</span>
-            <span class="n">mean_map</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">_map_dict</span><span class="p">)</span>
-            <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="s1">&#39;mAP 50: </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_map_dict</span><span class="p">[</span><span class="mf">0.5</span><span class="p">]))</span>
-            <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="s1">&#39;mAP 75: </span><span class="si">{:.4f}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_map_dict</span><span class="p">[</span><span class="mf">0.75</span><span class="p">]))</span>
-            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">average_precision</span> <span class="ow">in</span> <span class="n">average_precisions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">average_precision</span><span class="p">))</span>
-            <span class="n">io_utils</span><span class="o">.</span><span class="n">print_msg</span><span class="p">(</span><span class="s1">&#39;mAP: </span><span class="si">{:.4f}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mean_map</span><span class="p">))</span>
-            <span class="n">logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;map&#39;</span><span class="p">:</span> <span class="n">mean_map</span><span class="p">})</span></div>
-
-
-<div class="viewcode-block" id="MapEvaluation.evaluate_map">
-<a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.detection.map_evaluation.MapEvaluation.evaluate_map">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Evaluates current mAP score on the model. mAP is computed for IoU</span>
-<span class="sd">        thresholds from 0.5 to 0.95 with a step size of 0.05</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            tuple: a dictionnary containing mAP for each threshold and a dictionnary of label</span>
-<span class="sd">            containing mAP for each class.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># predictions, overlaps and 10 IoU thresholds</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_predictions</span><span class="p">()</span>
-        <span class="n">all_overlaps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_all_overlaps</span><span class="p">(</span><span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span><span class="p">)</span>
-
-        <span class="c1"># Thresholds from 0.5 to 0.95 with a step size of 0.05</span>
-        <span class="n">iou_thresholds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-        <span class="n">total_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iou_thresholds</span><span class="p">)</span>
-        <span class="n">mean_avgs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">map_dict</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">iou_thresholds</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing average precisions th = </span><span class="si">{</span><span class="n">th</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">average_precisions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_avg_precisions</span><span class="p">(</span><span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span><span class="p">,</span>
-                                                           <span class="n">all_overlaps</span><span class="p">,</span> <span class="n">th</span><span class="p">)</span>
-            <span class="n">_map</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">average_precisions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">average_precisions</span><span class="p">)</span>
-            <span class="n">map_dict</span><span class="p">[</span><span class="n">th</span><span class="p">]</span> <span class="o">=</span> <span class="n">_map</span>
-
-            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">ap</span> <span class="ow">in</span> <span class="n">average_precisions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">mean_avgs</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ap</span> <span class="o">/</span> <span class="n">total_iterations</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">clear_session</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">map_dict</span><span class="p">,</span> <span class="n">mean_avgs</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="n">objects</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">]</span>
-        <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">bbox</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-
-        <span class="n">x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">x1</span><span class="p">]</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">y1</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">y1</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">x2</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">x2</span><span class="p">]</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">y2</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[:,</span> <span class="n">Coord</span><span class="o">.</span><span class="n">y2</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">labels</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># gather all detections and annotations</span>
-        <span class="n">all_detections</span> <span class="o">=</span> <span class="p">[[</span><span class="kc">None</span>
-                           <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">)]</span>
-                          <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span><span class="p">)]</span>
-        <span class="n">all_annotations</span> <span class="o">=</span> <span class="p">[[</span><span class="kc">None</span>
-                            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">)]</span>
-                           <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="s2">&quot;Getting predictions&quot;</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">):</span>
-            <span class="n">raw_image</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
-            <span class="n">raw_height</span><span class="p">,</span> <span class="n">raw_width</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">raw_image</span><span class="o">.</span><span class="n">shape</span>
-            <span class="n">input_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_keras_model</span> \
-                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">input_shape</span>
-
-            <span class="n">affine_transform</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preserve_aspect_ratio</span><span class="p">:</span>
-                <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">raw_width</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">raw_height</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-                <span class="n">affine_transform</span> <span class="o">=</span> <span class="n">get_affine_transform</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="p">[</span><span class="n">raw_width</span><span class="p">,</span> <span class="n">raw_height</span><span class="p">],</span>
-                                                        <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                                                        <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-
-            <span class="n">image</span> <span class="o">=</span> <span class="n">preprocess_image</span><span class="p">(</span><span class="n">raw_image</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">affine_transform</span><span class="p">)</span>
-            <span class="n">input_image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_keras_model</span><span class="p">:</span>
-                <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">potentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_image</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anchors</span><span class="p">:</span>
-                    <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">potentials</span><span class="o">.</span><span class="n">shape</span>
-                    <span class="n">output</span> <span class="o">=</span> <span class="n">potentials</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                        <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_anchors</span><span class="p">),</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">output</span> <span class="o">=</span> <span class="n">potentials</span>
-
-            <span class="n">pred_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anchors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">,</span>
-                                             <span class="bp">self</span><span class="o">.</span><span class="n">_obj_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nms_threshold</span><span class="p">)</span>
-
-            <span class="n">score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">get_score</span><span class="p">()</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">pred_boxes</span><span class="p">])</span>
-            <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">get_label</span><span class="p">()</span> <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">pred_boxes</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_boxes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">desize_bboxes</span><span class="p">(</span><span class="n">pred_boxes</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">raw_height</span><span class="p">,</span> <span class="n">raw_width</span><span class="p">,</span>
-                                           <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">_preserve_aspect_ratio</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[]])</span>
-
-            <span class="c1"># sort the boxes and the labels according to scores</span>
-            <span class="n">score_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">score</span><span class="p">)</span>
-            <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">pred_labels</span><span class="p">[</span><span class="n">score_sort</span><span class="p">]</span>
-            <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">score_sort</span><span class="p">]</span>
-
-            <span class="c1"># limit the number of predictions to max_box_per_image based on</span>
-            <span class="c1"># score</span>
-            <span class="n">number_of_predictions</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">number_of_predictions</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_box_per_image</span><span class="p">:</span>
-                <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">pred_labels</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_box_per_image</span><span class="p">]</span>
-                <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_box_per_image</span><span class="p">,</span> <span class="p">:]</span>
-
-            <span class="c1"># copy detections to all_detections</span>
-            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">):</span>
-                <span class="n">all_detections</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">pred_labels</span> <span class="o">==</span> <span class="n">label</span><span class="p">,</span> <span class="p">:]</span>
-
-            <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_annotations</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-
-            <span class="c1"># copy ground truth to all_annotations</span>
-            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">):</span>
-                <span class="n">all_annotations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotations</span><span class="p">[</span><span class="n">annotations</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">==</span>
-                                                        <span class="n">label</span><span class="p">,</span> <span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_all_overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span><span class="p">):</span>
-        <span class="n">all_overlaps</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="s2">&quot;Computing overlaps&quot;</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span><span class="p">):</span>
-                <span class="n">detections</span> <span class="o">=</span> <span class="n">all_detections</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
-                <span class="n">annotations</span> <span class="o">=</span> <span class="n">all_annotations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
-                <span class="n">overlaps</span> <span class="o">=</span> <span class="n">compute_overlap</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span>
-                                           <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;outer_product&quot;</span><span class="p">,</span> <span class="n">box_format</span><span class="o">=</span><span class="s2">&quot;xyxy&quot;</span><span class="p">)</span>
-                <span class="n">all_overlaps</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">label</span><span class="p">)]</span> <span class="o">=</span> <span class="n">overlaps</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">all_overlaps</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_avg_precisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_detections</span><span class="p">,</span> <span class="n">all_annotations</span><span class="p">,</span> <span class="n">all_overlaps</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="p">):</span>
-        <span class="c1"># compute mAP by comparing all detections and all annotations</span>
-        <span class="n">average_precisions</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span><span class="p">):</span>
-            <span class="n">false_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,))</span>
-            <span class="n">true_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,))</span>
-            <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,))</span>
-            <span class="n">num_annotations</span> <span class="o">=</span> <span class="mf">0.0</span>
-
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_len</span><span class="p">):</span>
-                <span class="n">detections</span> <span class="o">=</span> <span class="n">all_detections</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
-                <span class="n">annotations</span> <span class="o">=</span> <span class="n">all_annotations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">label</span><span class="p">]</span>
-                <span class="n">num_annotations</span> <span class="o">+=</span> <span class="n">annotations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">overlaps</span> <span class="o">=</span> <span class="n">all_overlaps</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">label</span><span class="p">)]</span>
-                <span class="n">detected_annotations</span> <span class="o">=</span> <span class="p">[]</span>
-
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">detections</span><span class="p">):</span>
-                    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
-
-                    <span class="k">if</span> <span class="n">annotations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">false_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">false_positives</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                        <span class="n">true_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_positives</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                        <span class="k">continue</span>
-
-                    <span class="n">assigned_annotation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">overlaps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">idx</span><span class="p">]</span>
-                    <span class="n">max_overlap</span> <span class="o">=</span> <span class="n">overlaps</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">assigned_annotation</span><span class="p">]</span>
-
-                    <span class="k">if</span> <span class="p">(</span><span class="n">max_overlap</span> <span class="o">&gt;=</span> <span class="n">iou_threshold</span> <span class="ow">and</span>
-                            <span class="n">assigned_annotation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">detected_annotations</span><span class="p">):</span>
-                        <span class="n">false_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">false_positives</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                        <span class="n">true_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_positives</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                        <span class="n">detected_annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assigned_annotation</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">false_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">false_positives</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                        <span class="n">true_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_positives</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-
-            <span class="c1"># no annotations -&gt; AP for this class is 0 (is this correct?)</span>
-            <span class="k">if</span> <span class="n">num_annotations</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">average_precisions</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># sort by score</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">scores</span><span class="p">)</span>
-            <span class="n">false_positives</span> <span class="o">=</span> <span class="n">false_positives</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-            <span class="n">true_positives</span> <span class="o">=</span> <span class="n">true_positives</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
-
-            <span class="c1"># compute false positives and true positives</span>
-            <span class="n">false_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">false_positives</span><span class="p">)</span>
-            <span class="n">true_positives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">true_positives</span><span class="p">)</span>
-
-            <span class="c1"># compute recall and precision</span>
-            <span class="n">recall</span> <span class="o">=</span> <span class="n">true_positives</span> <span class="o">/</span> <span class="n">num_annotations</span>
-            <span class="n">precision</span> <span class="o">=</span> <span class="n">true_positives</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
-                <span class="n">true_positives</span> <span class="o">+</span> <span class="n">false_positives</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
-
-            <span class="c1"># compute average precision</span>
-            <span class="n">average_precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_ap</span><span class="p">(</span><span class="n">recall</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
-            <span class="n">average_precisions</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">average_precision</span>
-
-        <span class="k">return</span> <span class="n">average_precisions</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_ap</span><span class="p">(</span><span class="n">recall</span><span class="p">,</span> <span class="n">precision</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute the average precision, given the recall and precision</span>
-<span class="sd">        curves.</span>
-<span class="sd">        Code originally from https://github.com/rbgirshick/py-faster-rcnn.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            recall (list): the recall curve</span>
-<span class="sd">            precision (list): the precision curve</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The average precision as computed in py-faster-rcnn.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># correct AP calculation</span>
-        <span class="c1"># first append sentinel values at the end</span>
-        <span class="n">mrec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.</span><span class="p">],</span> <span class="n">recall</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.</span><span class="p">]))</span>
-        <span class="n">mpre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mf">0.</span><span class="p">],</span> <span class="n">precision</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]))</span>
-
-        <span class="c1"># compute the precision envelope</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mpre</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">mpre</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">mpre</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">mpre</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-
-        <span class="c1"># to calculate area under PR curve, look for points</span>
-        <span class="c1"># where X axis (recall) changes value</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mrec</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">mrec</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="c1"># and sum (\Delta recall) * prec</span>
-        <span class="n">ap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mrec</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mrec</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">mpre</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">ap</span></div>
+            <span class="c1"># Call parent constructor to initialize C++ bindings.</span>
+            <span class="c1"># Note that we invoke directly __init__ instead of using super, as</span>
+            <span class="c1"># specified in pybind documentation.</span>
+            <span class="n">Layer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+            <span class="bp">self</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">raise</span></div>
 
 </pre></div>
 

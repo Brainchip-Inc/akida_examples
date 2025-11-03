@@ -252,7 +252,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -273,7 +273,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -439,12 +438,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
 </ul>
 </li>
 </ul>
@@ -627,21 +620,23 @@ model presented in the next section.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/imagenet_like/imagenet_like.zip.
 
        0/20418307 [..............................] - ETA: 0s
-  229376/20418307 [..............................] - ETA: 4s
- 1146880/20418307 [&gt;.............................] - ETA: 1s
- 2588672/20418307 [==&gt;...........................] - ETA: 1s
- 3178496/20418307 [===&gt;..........................] - ETA: 1s
- 6078464/20418307 [=======&gt;......................] - ETA: 0s
- 6193152/20418307 [========&gt;.....................] - ETA: 0s
- 8962048/20418307 [============&gt;.................] - ETA: 0s
-11083776/20418307 [===============&gt;..............] - ETA: 0s
-12517376/20418307 [=================&gt;............] - ETA: 0s
-13516800/20418307 [==================&gt;...........] - ETA: 0s
-14991360/20418307 [=====================&gt;........] - ETA: 0s
-15974400/20418307 [======================&gt;.......] - ETA: 0s
-17498112/20418307 [========================&gt;.....] - ETA: 0s
-18530304/20418307 [==========================&gt;...] - ETA: 0s
-20021248/20418307 [============================&gt;.] - ETA: 0s
+  114688/20418307 [..............................] - ETA: 8s
+  925696/20418307 [&gt;.............................] - ETA: 2s
+ 1867776/20418307 [=&gt;............................] - ETA: 1s
+ 3227648/20418307 [===&gt;..........................] - ETA: 1s
+ 4259840/20418307 [=====&gt;........................] - ETA: 0s
+ 5414912/20418307 [======&gt;.......................] - ETA: 0s
+ 6733824/20418307 [========&gt;.....................] - ETA: 0s
+ 7979008/20418307 [==========&gt;...................] - ETA: 0s
+ 9035776/20418307 [============&gt;.................] - ETA: 0s
+10354688/20418307 [==============&gt;...............] - ETA: 0s
+11780096/20418307 [================&gt;.............] - ETA: 0s
+13189120/20418307 [==================&gt;...........] - ETA: 0s
+14204928/20418307 [===================&gt;..........] - ETA: 0s
+15728640/20418307 [======================&gt;.......] - ETA: 0s
+17235968/20418307 [========================&gt;.....] - ETA: 0s
+18612224/20418307 [==========================&gt;...] - ETA: 0s
+19546112/20418307 [===========================&gt;..] - ETA: 0s
 20418307/20418307 [==============================] - 1s 0us/step
 Download complete.
 10 images and their labels are loaded and preprocessed.
@@ -668,17 +663,15 @@ Download complete.
 <span class="n">model_keras_quantized_pretrained</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.11/dist-packages/akida_models/model_io.py:147: UserWarning: Model akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5 has been trained with akida_models 1.1.10 which is the last version supporting 1.0 models training
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.11/dist-packages/akida_models/model_io.py:147: UserWarning: Model akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5 has been trained with akida_models 1.1.10 which is the last version supporting 1.0 models training. Continuing execution.
   warnings.warn(f&#39;Model {model_name_v1} has been trained with akida_models 1.1.10 which is &#39;
 Downloading data from https://data.brainchip.com/models/AkidaV1/akidanet/akidanet_imagenet_224_alpha_50_iq8_wq4_aq4.h5.
 
       0/5589312 [..............................] - ETA: 0s
- 237568/5589312 [&gt;.............................] - ETA: 1s
-1155072/5589312 [=====&gt;........................] - ETA: 0s
-2072576/5589312 [==========&gt;...................] - ETA: 0s
-3104768/5589312 [===============&gt;..............] - ETA: 0s
-4120576/5589312 [=====================&gt;........] - ETA: 0s
-5267456/5589312 [===========================&gt;..] - ETA: 0s
+ 188416/5589312 [&gt;.............................] - ETA: 1s
+1212416/5589312 [=====&gt;........................] - ETA: 0s
+2744320/5589312 [=============&gt;................] - ETA: 0s
+4399104/5589312 [======================&gt;.......] - ETA: 0s
 5589312/5589312 [==============================] - 0s 0us/step
 Download complete.
 Model: &quot;sequential_2&quot;
@@ -902,7 +895,7 @@ _____________________________________________________________
 <span class="k">assert</span> <span class="n">accuracy_akida</span> <span class="o">&gt;=</span> <span class="mf">0.8</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Inference on 10 images took 0.26 s.
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Inference on 10 images took 0.27 s.
 
 Accuracy: 8/10.
 </pre></div>
@@ -1098,7 +1091,7 @@ ______________________________________________
 _________________________________________________________________________
 Layer (type)              Output shape    Kernel shape       Components
 
-========= HW/conv_0-classifier (Hardware) - size: 1361244 bytes =========
+========= HW/conv_0-classifier (Hardware) - size: 1361268 bytes =========
 
 conv_0 (InputConv.)       [112, 112, 16]  (3, 3, 3, 16)      1 HRC
 _________________________________________________________________________
@@ -1172,15 +1165,15 @@ the <a class="reference external" href="../../api_reference/akida_apis.html#akid
 <span class="nb">print</span><span class="p">(</span><span class="n">model_akida</span><span class="o">.</span><span class="n">statistics</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floor power: 907.80 mW
-Average framerate = 52.36 fps
-Last inference power range (mW):  Avg 1038.50 / Min 907.00 / Max 1170.00 / Std 185.97
-Last inference energy consumed (mJ/frame): 19.84
-Last inference clock: 43013426
-Last program clock: 999960
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floor power: 882.88 mW
+Average framerate = 52.08 fps
+Last inference power range (mW):  Avg 1021.50 / Min 882.00 / Max 1161.00 / Std 197.28
+Last inference energy consumed (mJ/frame): 19.61
+Last inference clock: 43012171
+Last program clock: 1004439
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 7.207 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 7.219 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-1-akidanet-imagenet-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/444e89f5c3dcd07f5ef875180bc6108c/plot_1_akidanet_imagenet.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_1_akidanet_imagenet.ipynb</span></code></a></p>

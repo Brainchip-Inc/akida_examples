@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -601,10 +594,12 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;akidanet_edge_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;akidanet_edge_imagenet_pretrained&quot;</span><span class="p">,</span>
            <span class="s2">&quot;akidanet_faceidentification_edge_pretrained&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reshape</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize_layer</span><span class="p">,</span> <span class="n">get_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">..layer_blocks</span><span class="w"> </span><span class="kn">import</span> <span class="n">separable_conv_block</span><span class="p">,</span> <span class="n">dense_block</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span><span class="p">,</span> <span class="n">get_params_by_version</span>
@@ -624,6 +619,10 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras Model instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">get_akida_version</span><span class="p">()</span> <span class="o">!=</span> <span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Edge learning is only supported for Akida 1.0, the model will be created &quot;</span>
+                      <span class="s2">&quot;but will not be compatible with Akida 2.0.&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">base_model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
 
@@ -708,16 +707,11 @@
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge_iq8_wq4_aq4.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;71ffc3acb09e5682e479505f6b288bd2736311ce46d3974bdf7b2c02916e52a8&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_edge_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;411ace11f534c51431458ed541c0f73b14e520f6787fb5a0b47f671510841aff&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_50_edge.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;586ab1fb1baf9e171c54bbc6f4e7ef9fd6910bb5b169ef5b9dd5a29122683d31&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_imagenet_224_alpha_0.5_edge.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;9763ff8d95d2be88766339171c5ffb6f407f706802bb5939d39c87e5218521ed&#39;</span>
 
-    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
-                                                       <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
+    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
                             <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                             <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>
@@ -744,16 +738,11 @@
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_iq8_wq4_aq4.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;61838682cc88cec6dc9a347f1a301bfa9e94fbcbc7a52a273789259de07d3104&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7f4b31cee430f04325ac3351a42ab9eedb0158b3706f57aa6f137e5b0291564b&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fc0e6f06078dcafb503ec8944a871c781297bc120ef6335b17a17f6f8b316bbf&#39;</span>
-        <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;akidanet_faceidentification_edge.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;bc5054c3370c8194d27380df0f99c5ac285ce160d04c7776e665436668fe416f&#39;</span>
 
-    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
-                                                       <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>
+    <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;akidanet_edge&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">)</span>
     <span class="n">model_path</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span>
                             <span class="n">fname</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                             <span class="n">file_hash</span><span class="o">=</span><span class="n">file_hash</span><span class="p">,</span>

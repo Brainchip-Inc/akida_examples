@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -600,7 +593,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">register_quantize_target</span><span class="p">,</span> <span class="n">register_no_output_quantizer</span><span class="p">,</span> <span class="n">tensor_inputs</span><span class="p">,</span>
                           <span class="n">QuantizedLayer</span><span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">QFloat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">QFloat</span>
 
 
 <div class="viewcode-block" id="QuantizedRescaling">
@@ -630,9 +623,11 @@
         <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;QuantizedRescaling only accepts zero offset.&quot;</span><span class="p">)</span>
 
-    <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span>
+    <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">QTensor</span><span class="p">])</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="c1"># Wrap them into a QFloat with the specified scale</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">QFloat</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">scales</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">QFloat</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

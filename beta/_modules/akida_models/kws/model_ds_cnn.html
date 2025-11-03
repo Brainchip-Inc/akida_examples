@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -598,6 +591,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ds_cnn_kws&quot;</span><span class="p">,</span> <span class="s2">&quot;ds_cnn_kws_pretrained&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -641,13 +635,11 @@
     <span class="c1"># Model version management</span>
     <span class="n">fused</span><span class="p">,</span> <span class="n">post_relu_gap</span><span class="p">,</span> <span class="n">relu_activation</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+    <span class="c1"># Use default input scaling (1, 0) if not provided</span>
+    <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_scaling</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
@@ -741,11 +733,11 @@
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_iq8_wq4_aq4_laq1.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;2ba6220bb9545857c99a327ec14d2d777420c7848cb6a9b17d87e5a01951fe6f&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_i8_w4_a4.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;d281251de6368a2efac0190b49a1b1276038f14ab6555f7e0cbfe85ba7c7cb1b&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;ca41ba5d64cb7b51c55beffb83c4bd433d850afe77826a79f6f65249537b791d&#39;</span>
         <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
             <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5b7c9e7b6016cef67a0c048bbbfbfc0590f0ec7af17879956234fb97cc774435&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;881fb69874bb4c64f701bb2dc40c4e244e7959313c2b371466b8a7859c8208df&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=4 or 8 for this&quot;</span>
                              <span class="s2">&quot; model.&quot;</span><span class="p">)</span>
@@ -753,7 +745,7 @@
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;95a51677b340ee2420015a8576a8aaf41e84138ac0334cd42080b60499b4f146&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;ds_cnn_kws.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e897da2760206aad1328179c2b6861bae4f0e56a9380c78cf1287d18929a2143&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;f6c5f029de10989756b612a268e4c297aa74946c2328f526d8abbbe6d384c9a2&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;ds_cnn&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

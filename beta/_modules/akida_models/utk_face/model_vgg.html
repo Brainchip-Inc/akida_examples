@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -598,6 +591,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;vgg_utk_face&quot;</span><span class="p">,</span> <span class="s2">&quot;vgg_utk_face_pretrained&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -624,13 +618,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a Keras model for VGG/UTKFace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+    <span class="c1"># Use default input scaling (1, 0) if not provided</span>
+    <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_scaling</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
 
     <span class="c1"># Model version management</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">post_relu_gap</span><span class="p">,</span> <span class="n">relu_activation</span> <span class="o">=</span> <span class="n">get_params_by_version</span><span class="p">()</span>
@@ -732,11 +724,11 @@
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w4_a4.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;2eac20ca2626e13fe39c4adbf6484a5dfa23f8612bd286f9d821c10505bcb87e&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w4_a4.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;0fb583742ff9a4f1f5220640a83f3955d6c8dbfd8243cc5d19aca08145908dde&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;29aabd7d767181e1382dceb0d2d0bc4e8aaae5031d88fec8bcd1a34671a9fbfa&#39;</span>
         <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
             <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face_i8_w8_a8.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c7a728368885cd743155cf3ba877abfd487e282adfaa2f1aa613750d3c858bd1&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;eb9ac44d9b7b3b7661f4a86b13a200b922b1e86784163e59e54cbd19f598c9ee&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bitwidth=</span><span class="si">{</span><span class="n">bitwidth</span><span class="si">}</span><span class="s2"> is not available, use bitwidth=2 or 4 or 8 for&quot;</span>
                              <span class="s2">&quot; this model.&quot;</span><span class="p">)</span>
@@ -744,7 +736,7 @@
         <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
         <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;3f9084c452ef006a16f10f2d124804b6db267f7a5149b735a9c383a9b00a4922&#39;</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;vgg_utk_face.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;f1fc29e4ab0c1615902d0dd48afc6bad1f3bbf4b1a6a2e3642e5c2ee37208121&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1322e015d79db6872963694595e25f38d60313c644f4e9c79c2123812f7ac449&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span><span class="s2">&quot;vgg&quot;</span><span class="p">,</span> <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span><span class="p">,</span>
                                                        <span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="p">)</span>

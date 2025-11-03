@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -600,6 +593,7 @@
            <span class="s1">&#39;tenn_spatiotemporal_eye&#39;</span><span class="p">,</span>  <span class="s1">&#39;tenn_spatiotemporal_eye_pretrained&#39;</span><span class="p">,</span>
            <span class="s1">&#39;tenn_spatiotemporal_jester&#39;</span><span class="p">,</span> <span class="s1">&#39;tenn_spatiotemporal_jester_pretrained&#39;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">AveragePooling3D</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">ReLU</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -628,9 +622,12 @@
     <span class="n">t_kernel_size</span> <span class="o">=</span> <span class="mi">5</span>
 
     <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_length</span><span class="p">,)</span> <span class="o">+</span> <span class="n">input_shape</span>
-    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># Dummy rescaling layer to allow int8 inputs</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                      <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_conv&quot;</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                      <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
 
@@ -665,10 +662,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_dvs128_buffer_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2c117af91de8b1eee65cd521cb6255d247c2786b0f7514fd963fee9ceb34bc31&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;76cf8c739f13910849370680cdbd88ccd3441cd84cdeceb4180d9ce95739d2d7&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_dvs128.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1b8e6ab2432cba2401636ca8c31d62a5f6fabb6eaf07c6b761fe527c16c4cf0b&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;470ef9c5cf558e3851b22f67c7fbf10d9f0ebf590cd650ad1e993308a2784cc3&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_spatiotemporal&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
@@ -708,12 +705,11 @@
     <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="n">in_channels</span><span class="p">]</span> <span class="o">+</span> <span class="n">channels</span>
 
     <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_length</span><span class="p">,)</span> <span class="o">+</span> <span class="n">input_shape</span>
-    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">input_scaling</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+    <span class="c1"># Use default input scaling (1, 0) if not provided</span>
+    <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_scaling</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">i_chan</span><span class="p">,</span> <span class="n">m_chan</span><span class="p">,</span> <span class="n">o_chan</span><span class="p">,</span> <span class="n">temp_dw</span><span class="p">,</span> <span class="n">spa_dw</span><span class="p">)</span> <span class="ow">in</span> \
             <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">channels</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">channels</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">t_dws</span><span class="p">,</span> <span class="n">s_dws</span><span class="p">)):</span>
@@ -759,10 +755,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_eye_buffer_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;9603d63f55d7b76424a96542b08549684bb49f0f908570cfba7c8ea9320454b7&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;2c699a16e4fe1a4bac210e384e7e2075db584c30c62c196c4e6ee4c00f037902&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_eye.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;12b09cf0e5b56ae8def5b04240bd0c696cfe2d2abeea22a83065de9654b4a41e&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;47845ee6cf2457fa40c1e86395c33f7f4fc590444815f9870057d79d050114e5&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_spatiotemporal&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
@@ -774,16 +770,11 @@
 
 <div class="viewcode-block" id="tenn_spatiotemporal_jester">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal_jester">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tenn_spatiotemporal_jester</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mf">127.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
-                               <span class="n">n_classes</span><span class="o">=</span><span class="mi">27</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tenn_spatiotemporal_jester</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">n_classes</span><span class="o">=</span><span class="mi">27</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Instantiates a TENN spatiotemporal Jester architecture.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_shape (tuple, optional): the input shape. Defaults to (16, 100, 100, 3).</span>
-<span class="sd">        input_scaling (None or tuple, optional): scale factor set to the max value of a 8-bits</span>
-<span class="sd">            unsigned inputs and offset set to 0. Note that following Akida convention, the scale</span>
-<span class="sd">            factor is a number used as a divisor. If None, no Rescaling layer is added.</span>
-<span class="sd">            Defaults to (127.5, -1.0).</span>
 <span class="sd">        n_classes (int, optional): number of output features. Defaults to 27.</span>
 
 <span class="sd">    Returns:</span>
@@ -795,14 +786,12 @@
     <span class="n">s_dws</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
     <span class="n">t_kernel_size</span> <span class="o">=</span> <span class="mi">5</span>
 
-    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">input_scaling</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="c1"># This model trains better without rescaling. A dummy layer is added to allow uint8 inputs.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv3d_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                      <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_conv&quot;</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                      <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">reg_factor</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">normalize_reg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -839,7 +828,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_jester_buffer_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b42a446d5527e2971ff4ba613a2dac2565b1aa98d0df9f2fedb7d9f4b058cf40&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;388f0e312499190ed2cc839fb4c4e6c791e54e5ee4d35736f33fc36acae24015&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_spatiotemporal_jester.h5&#39;</span>
         <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fca52a23152f7c56be1f0db59844a5babb443aaf55babed7669df35b516b8204&#39;</span>

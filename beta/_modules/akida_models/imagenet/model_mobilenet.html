@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -607,6 +600,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mobilenet_imagenet&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenet_imagenet_pretrained&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Rescaling</span>
 
@@ -703,13 +697,11 @@
     <span class="n">rows</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">cols</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+    <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">img_input</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">input_scaling</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+    <span class="c1"># Use default input scaling (1, 0) if not provided</span>
+    <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">input_scaling</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_scaling</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rescaling&quot;</span><span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
                    <span class="n">filters</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">32</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">),</span>
@@ -922,48 +914,48 @@
                 <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_iq8_wq4_aq4.h5&#39;</span>
                 <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;4e63ea329b3f2f773a0b9d6fef4e449639fda89d17e48bb7132b6ad86585c867&#39;</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w4_a4.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;e9c74f84e0ecbf5064e2ab853e48afdb2f94a0c4cabb93dc34cd3038a03ce80e&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;c39404d8d42e0c9c3f8ec7cd6e20e4abe2e0776e3e8e5c1ef0c76442c2f6871f&#39;</span>
             <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
                 <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1_i8_w8_a8.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6f2d5f98e4bb1136f9a6389a71b661a4aa9fca53d9d95d4aa8f4bb0339c908bd&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;da5dc8433d14cc93ea6524321758b831221eea84c81d7f8709f1d20ec6ee503a&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;fb674f627337995f4aa372e4a270445457573fc7aae61e28c05f94da14cf2980&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_1.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;4305ca6e03bffaf4e39a840fb2c6108101136f572ae784bebc3bd9406a6ecd0c&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;23e3a9e7d5d11fd1db2ecb0caa5c909c1cadb0f3b8c72e10adce08596909b1f1&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50_iq8_wq4_aq4.h5&#39;</span>
                 <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;af9a31774467de96acceeed46cee14d7864fa2cc247601beff5521e7a5e6da99&#39;</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w4_a4.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;3176d7576acbe733205d2df9e47753705cfda67c492680383ed0d61fba4fe18f&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;9d0d971a76649e3d70f8f6e8aba0f74d5f773c9be560fa737bb769314c5e723c&#39;</span>
             <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
                 <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5_i8_w8_a8.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;b9dfe97b5171308860483beb62976dd3edd642ee7c7b6013c541ea5e0a8c0d8a&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;af3e9fde35d0eeb5a69a3058ef4b0e571ef08f2ac88ae98024b134d330409131&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_50.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;1bffadb48f3fd194cdeecf4e02d91d0b3a87df103620c645f1c00f5e5cfbca9a&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.5.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;1ded4e456b59b4286329b2e8694d1d3adce9745a73a59cc4670dc0eae60ff2bc&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6771032d03e20afa6861610fb31621b6c85e25a283623c0fe12f77f3728fd56e&#39;</span>
     <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.25</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25_iq8_wq4_aq4.h5&#39;</span>
                 <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;35ad51e662ed04b68978865ccb1c16bf024fa013146488b2a9c18c80d1efab29&#39;</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w4_a4.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;372920d15af986e8d527cb063ff8b5487ca0af8e09329d8ef53bd353f24d80ea&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;15fe5c0bdcca1528be312b01a76722c44987e1a4fd728a9522028e8a340e0e31&#39;</span>
             <span class="k">elif</span> <span class="n">bitwidth</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
                 <span class="n">model_name_v1</span><span class="p">,</span> <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
                 <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25_i8_w8_a8.h5&#39;</span>
-                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;7f0c7378cecef5ee5128c414465e25a2d6d8212b2f35ea7c7557c5292e3723a3&#39;</span>
+                <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;faa7155478388ca017affc561a9f2b33dcf74514c65073060803974713aad7b2&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">model_name_v1</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_25.h5&#39;</span>
             <span class="n">file_hash_v1</span> <span class="o">=</span> <span class="s1">&#39;33c49bb4ec868558a2a9687be19a7e51756ddb9f00a032535069dcd5a727e0dd&#39;</span>
             <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;mobilenet_imagenet_224_alpha_0.25.h5&#39;</span>
-            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;5f70598352ddeb7bf2c19126d7009f569fc9cf6d52124334c4ccebe9030f3c39&#39;</span>
+            <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;8656689abb7ddabcb72fc2d230c187891d3813cdfc54d6312cfbb81970ab1d17&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Requested model with alpha=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2"> is not available.&quot;</span><span class="p">)</span>

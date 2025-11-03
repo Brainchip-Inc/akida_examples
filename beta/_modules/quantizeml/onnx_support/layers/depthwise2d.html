@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -600,13 +593,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnx.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_node</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">OnnxLayer</span><span class="p">,</span> <span class="n">register_node_format</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span><span class="p">,</span> <span class="n">get_pool_ops</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops.activation</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_activation_ops</span><span class="p">,</span> <span class="n">get_lut_ops</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops.padding</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_padding_ops</span><span class="p">,</span> <span class="n">transform_pads_into_array</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.compute_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_onnx_conv_output</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.set_weights</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_weights_on_qnode</span><span class="p">,</span> <span class="n">set_max_value_on_qnode</span><span class="p">,</span> <span class="n">set_range_max_on_qnode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.layer_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_conv_depthwise_compatibility</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_activation</span><span class="p">,</span> <span class="n">to_field</span><span class="p">,</span> <span class="n">check_node_attributes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_activation</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span>
+                           <span class="n">to_field</span><span class="p">,</span> <span class="n">check_node_attributes</span><span class="p">,</span> <span class="n">get_tensor_shape</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">quantize_to_qfloat</span><span class="p">,</span> <span class="n">aligned_quantize</span><span class="p">,</span> <span class="n">align_to</span><span class="p">,</span> <span class="n">downscale</span><span class="p">,</span>
                                  <span class="n">compute_lut_values</span><span class="p">)</span>
 
@@ -622,11 +616,30 @@
 
     <span class="c1"># Retrieve attributes</span>
     <span class="n">strides</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">pool_type</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">pool_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">pool_strides</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">pool_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;MaxPool&#39;</span><span class="p">)</span>
+    <span class="n">pool_pads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pool_node</span><span class="p">:</span>
+        <span class="n">pool_type</span> <span class="o">=</span> <span class="s2">&quot;max&quot;</span>
+        <span class="c1"># kernel_shape attribute is mandatory for MaxPool</span>
+        <span class="n">pool_size</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="s1">&#39;kernel_shape&#39;</span><span class="p">)</span>
+        <span class="n">pool_strides</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="s1">&#39;strides&#39;</span><span class="p">,</span> <span class="n">pool_strides</span><span class="p">)</span>
+        <span class="n">pool_pads</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">pool_pads</span><span class="p">)</span>
+    <span class="n">pool_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s1">&#39;GlobalAveragePool&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pool_node</span><span class="p">:</span>
+        <span class="n">pool_type</span> <span class="o">=</span> <span class="s2">&quot;gap&quot;</span>
+
     <span class="n">act_node</span> <span class="o">=</span> <span class="n">get_activation</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">NodeProto</span><span class="p">()</span>
     <span class="n">activation</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">act_node</span><span class="p">,</span> <span class="s1">&#39;main_op_type&#39;</span><span class="p">,</span> <span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">act_node</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
 
     <span class="n">qdepthwise</span> <span class="o">=</span> <span class="n">QuantizedDepthwise2D</span><span class="p">(</span><span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                                      <span class="n">pool_type</span><span class="o">=</span><span class="n">pool_type</span><span class="p">,</span>
+                                      <span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">,</span>
+                                      <span class="n">pool_strides</span><span class="o">=</span><span class="n">pool_strides</span><span class="p">,</span>
+                                      <span class="n">pool_pads</span><span class="o">=</span><span class="n">pool_pads</span><span class="p">,</span>
                                       <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
                                       <span class="n">name</span><span class="o">=</span><span class="n">conv_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                       <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
@@ -661,11 +674,27 @@
 <span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                 <span class="n">pool_type</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                 <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                 <span class="n">pool_strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                 <span class="n">pool_pads</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                 <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="c1"># Serialize attributes in operation name</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;QuantizedDepthwise2D&quot;</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">pool_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="s2">&quot;gap&quot;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;QuantizedDepthwise2D&quot;</span><span class="p">,</span>
+                         <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+                         <span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">,</span>
+                         <span class="n">pool_strides</span><span class="o">=</span><span class="n">pool_strides</span><span class="p">,</span>
+                         <span class="n">pool_pads</span><span class="o">=</span><span class="n">pool_pads</span><span class="p">,</span>
+                         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
         <span class="c1"># Save properties need to serialize operation name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;pool_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pool_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -739,6 +768,12 @@
                                                      <span class="n">alpha</span><span class="o">=</span><span class="n">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">))</span>
             <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;LUT&quot;</span><span class="p">:</span> <span class="n">lut_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)})</span>
 
+        <span class="c1"># Compute spatial factor when GAP</span>
+        <span class="k">if</span> <span class="s2">&quot;GlobalAvgPool&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">get_tensor_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">compute_onnx_conv_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">apply_pool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">i_scale</span> <span class="o">*=</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
         <span class="c1"># Now consider calibrated output range</span>
         <span class="n">range_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;range_max&quot;</span><span class="p">]</span>
         <span class="n">scale</span><span class="p">,</span> <span class="n">s_out</span><span class="p">,</span> <span class="n">o_scale</span> <span class="o">=</span> <span class="n">downscale</span><span class="p">(</span><span class="n">range_max</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="n">force_fp</span><span class="p">)</span>
@@ -764,6 +799,12 @@
         <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;strides&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INTS</span><span class="p">),</span>
                                    <span class="n">AP</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="n">ref_attr_name</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">AP</span><span class="o">.</span><span class="n">INT</span><span class="p">)])</span>
 
+        <span class="c1"># Maxpool (optional)</span>
+        <span class="k">if</span> <span class="s2">&quot;MaxPool&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
+            <span class="c1"># Replace previous output as maxpool input</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_pool_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="n">pool_op_type</span><span class="o">=</span><span class="s2">&quot;MaxPool&quot;</span><span class="p">)</span>
+
         <span class="c1"># LUT (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;LUT&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
             <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
@@ -778,6 +819,12 @@
             <span class="c1"># Replace previous output as relu input</span>
             <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
             <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_activation_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;ReLUClipped&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">)</span>
+
+        <span class="c1"># AvgPool (optional)</span>
+        <span class="k">if</span> <span class="s2">&quot;GlobalAvgPool&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
+            <span class="c1"># Replace previous output as maxpool input</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_pool_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="n">pool_op_type</span><span class="o">=</span><span class="s2">&quot;GlobalAvgPool&quot;</span><span class="p">)</span>
 
         <span class="c1"># Scale out (with saturation) in float domain</span>
         <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="s2">&quot;Yscaled&quot;</span><span class="p">)</span>

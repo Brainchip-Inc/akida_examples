@@ -252,7 +252,7 @@
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -273,7 +273,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -439,12 +438,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
 </ul>
 </li>
 </ul>
@@ -1610,6 +1603,27 @@ For images input, model must start instead with an image-specific input layer.</
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="akida.Quantizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">Quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_signed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/quantizer.html#Quantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.Quantizer" title="Link to this definition"></a></dt>
+<dd><p>Layer capable of Quantizing an input tensor.</p>
+<p>This quantizes an input tensor, following the equation:</p>
+<blockquote>
+<div><p>output = round(input x scales) + zero_points</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>tuple</em>) – 3D input shape.</p></li>
+<li><p><strong>output_bits</strong> (<em>int</em>) – output bitwidth.</p></li>
+<li><p><strong>output_signed</strong> (<em>bool</em>) – True if the output is signed, False if unsigned.</p></li>
+<li><p><strong>channels_first</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if input shape has channels first. Defaults to False.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer. Defaults to empty string.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="akida-v1-layers">
 <h3>Akida V1 layers<a class="headerlink" href="#akida-v1-layers" title="Link to this heading"></a></h3>
@@ -2202,10 +2216,10 @@ sign.</p>
 <dt class="sig sig-object py" id="akida.Dequantizer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">Dequantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/dequantizer.html#Dequantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.Dequantizer" title="Link to this definition"></a></dt>
 <dd><p>Layer capable of dequantizing an input tensor.</p>
-<p>This resolve the scales of an input tensor, following the equantion:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="nb">input</span> <span class="n">x</span> <span class="n">scales</span>
-</pre></div>
-</div>
+<p>This resolves the scales of an input tensor, following the equation:</p>
+<blockquote>
+<div><p>output = input x scales</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer. Defaults to empty string.</p>
@@ -2244,6 +2258,7 @@ sign.</p>
 <p>DepthwiseBufferTempConv</p>
 <p>StatefulRecurrent</p>
 <p>Dense1D</p>
+<p>Quantizer</p>
 </div></blockquote>
 </dd></dl>
 
@@ -2272,7 +2287,8 @@ sign.</p>
 <p>Members:</p>
 <blockquote>
 <div><p>Valid : No padding</p>
-<p>Same : Padded so that output size is input size divided by the stride</p>
+<p>Same : Padded so that output size is input size divided by the stride. It always produces a bottom right padding.</p>
+<p>SameUpper : Padded so that output size is input size divided by the stride. It always produces a top left padding.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -2643,6 +2659,53 @@ mesh for each two NPs. Defaults to None.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int, int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida.compute_min_device">
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_min_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_hwpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sram_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimal_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_num_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">36</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_min_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_min_device" title="Link to this definition"></a></dt>
+<dd><p>Builds the Akida virtual device that can fit the model entirely
+with or without reconfiguration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a>) – the model used to determine the device.</p></li>
+<li><p><strong>enable_hwpr</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the device is computed assuming
+partial reconfiguration. Defaults to False.</p></li>
+<li><p><strong>sram_size</strong> (<a class="reference internal" href="#akida.NP.SramSize" title="akida.NP.SramSize"><em>NP.SramSize</em></a><em>, </em><em>optional</em>) – Size of shared SRAM available inside the mesh.
+Ignored when <cite>minimal_memory</cite> is True. Defaults to None.</p></li>
+<li><p><strong>minimal_memory</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, computes and sets the minimal required
+inputs and weights memory for the device. Defaults to False.</p></li>
+<li><p><strong>initial_num_nodes</strong> (<em>int</em><em>, </em><em>optional</em>) – the initial number of nodes with which to compute
+the base device. Defaults to 36.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the computed device</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#akida.Device" title="akida.Device">akida.Device</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida.compute_common_device">
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_common_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ak_models</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_common_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_common_device" title="Link to this definition"></a></dt>
+<dd><p>Computes a common Akida device that can run all the given models.
+Ensures all models were mapped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ak_models</strong> (<em>List</em><em>[</em><a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a><em>]</em>) – A list of Akida models whose hardware
+requirements will be combined.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new device that can map all the given models.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#akida.Device" title="akida.Device">akida.Device</a></p>
 </dd>
 </dl>
 </dd></dl>

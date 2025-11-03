@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -596,14 +589,13 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorProto</span> <span class="k">as</span> <span class="n">TP</span><span class="p">,</span> <span class="n">NodeProto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">onnx</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorProto</span> <span class="k">as</span> <span class="n">TP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnx.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_node</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">OnnxLayer</span><span class="p">,</span> <span class="n">register_node_format</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast_tensors_to</span><span class="p">,</span> <span class="n">get_scale_out_ops</span><span class="p">,</span> <span class="n">get_input_shift_ops</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.subgraph_ops.activation</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_activation_ops</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.set_weights</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_range_max_on_qnode</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_tensor_shape</span><span class="p">,</span> <span class="n">get_activation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_tensor_shape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">align_to</span><span class="p">,</span> <span class="n">downshift</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_field</span>
 
@@ -617,8 +609,7 @@
     <span class="n">add_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">add_name</span> <span class="o">=</span> <span class="n">add_node</span><span class="o">.</span><span class="n">name</span>
 
-    <span class="n">act_node</span> <span class="o">=</span> <span class="n">get_activation</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">NodeProto</span><span class="p">()</span>
-    <span class="n">qadd</span> <span class="o">=</span> <span class="n">QuantizedAdd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">add_name</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
+    <span class="n">qadd</span> <span class="o">=</span> <span class="n">QuantizedAdd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">add_name</span><span class="p">)</span>
 
     <span class="c1"># Set calibration ranges</span>
     <span class="n">set_range_max_on_qnode</span><span class="p">(</span><span class="n">qadd</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
@@ -639,28 +630,14 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation of Add() as an exportable node.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        activation (str, optional): activation type to be applied. Defaults to &quot;&quot;.</span>
 <span class="sd">        name (str, optional): the node name. Defaults to &#39;&#39;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;QuantizedAdd&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="c1"># Save properties need to serialize operation name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span>
 
         <span class="c1"># Declare weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">op_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Overriding op_type as ReLU comes after Scaling</span>
-        <span class="n">op_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_name</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]:</span>
-            <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;Scaled&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_attr</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">]:</span>
-            <span class="n">op_name</span> <span class="o">+=</span> <span class="s2">&quot;ReLU&quot;</span>
-        <span class="k">return</span> <span class="n">op_name</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__build__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_input_ts</span><span class="p">,</span> <span class="n">b_input_ts</span><span class="p">,</span> <span class="n">downscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">a_input_ts</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">b_input_ts</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span>
@@ -730,12 +707,6 @@
             <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;Cast&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Zscaled&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">],</span> <span class="n">to</span><span class="o">=</span><span class="n">TP</span><span class="o">.</span><span class="n">INT8</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">make_node</span><span class="p">(</span><span class="s2">&quot;Cast&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Zi&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">],</span> <span class="n">to</span><span class="o">=</span><span class="n">TP</span><span class="o">.</span><span class="n">INT32</span><span class="p">))</span>
-
-        <span class="c1"># Activation (optional)</span>
-        <span class="k">if</span> <span class="s2">&quot;ReLU&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
-            <span class="c1"># rename previous output</span>
-            <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Z_no_act&quot;</span>
-            <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_activation_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Z&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">nodes</span></div>
 

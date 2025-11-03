@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -576,9 +569,16 @@
            <div itemprop="articleBody">
              
   <h1>Source code for akida.virtual_devices</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">sqrt</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">sqrt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">NP</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">NP</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span>
+                   <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Model</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.mapping</span><span class="w"> </span><span class="kn">import</span> <span class="n">MapMode</span>
+
+
+<span class="n">LayerSequence</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;LayerSequence&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="AKD1000">
@@ -1037,6 +1037,253 @@
             <span class="n">minimal_weight_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minimal_weight_memory</span><span class="p">,</span> <span class="n">np_weight_size</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">minimal_input_buffer_memory</span><span class="p">,</span> <span class="n">minimal_weight_memory</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_outbounds</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">layers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">ly</span> <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">layers</span> <span class="k">if</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">ly</span><span class="o">.</span><span class="n">inbounds</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_model_generator</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+    <span class="c1"># Scroll through a list of layers, returning a pair of consecutive layers. Notes:</span>
+    <span class="c1"># - one of the two branches must not have nodes (not implemented yet)</span>
+    <span class="c1"># - merge layer is performed in the following NP, so we take their inbounds</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">t_layer</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">inbounds</span> <span class="o">=</span> <span class="n">t_layer</span><span class="o">.</span><span class="n">inbounds</span>
+        <span class="c1"># Skip a layer if it is a merge one.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">inbounds</span> <span class="o">=</span> <span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inbounds</span>
+        <span class="c1"># Check inbounds constraints.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># In case of multiple branches, one of them must not contain layers.</span>
+            <span class="c1"># This translates to some inbound having multiple outbounds.</span>
+            <span class="n">new_inbounds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">inbounds</span><span class="p">:</span>
+                <span class="c1"># Remove the branch with empty layers</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_get_outbounds</span><span class="p">(</span><span class="n">ly</span><span class="p">,</span> <span class="n">layers</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">new_inbounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ly</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_inbounds</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t_layer</span><span class="si">}</span><span class="s2"> has multiple inbounds, &quot;</span>
+                                          <span class="s2">&quot;but there is no empty branch.&quot;</span><span class="p">)</span>
+            <span class="c1"># Remove the inbounds that are not empty branches.</span>
+            <span class="n">inbounds</span> <span class="o">=</span> <span class="n">new_inbounds</span>
+
+        <span class="c1"># Yield the pair (inbound, target_layer) if both have been mapped</span>
+        <span class="c1"># Or if taget_layer is mapped and the inbound is an InputData layer.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">t_layer</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span> <span class="ow">or</span> \
+                    <span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">LayerSequence</span><span class="p">((</span><span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_layer</span><span class="p">))</span>
+                <span class="c1"># Then, update the queue with the inbound layer.</span>
+                <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_skip_dma_channels</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="c1"># The initial number of skip DMAs is len(btc) + len(skips)</span>
+    <span class="n">SKIP_LAYER_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">Concatenate</span><span class="p">]</span>
+    <span class="n">BTC_LAYER_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerType</span><span class="o">.</span><span class="n">BufferTempConv</span><span class="p">,</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">DepthwiseBufferTempConv</span><span class="p">]</span>
+    <span class="n">skip_dma_channels</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ly</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="n">SKIP_LAYER_TYPES</span> <span class="o">+</span> <span class="n">BTC_LAYER_TYPES</span><span class="p">:</span>
+            <span class="n">skip_dma_channels</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">skip_dma_channels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_initial_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="c1"># The initial number of FNP is len(dense), since they are not split</span>
+    <span class="n">FNP_LAYER_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayerType</span><span class="o">.</span><span class="n">Dense1D</span><span class="p">]</span>
+    <span class="n">nb_fnp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ly</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ly</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="ow">in</span> <span class="n">FNP_LAYER_TYPES</span><span class="p">:</span>
+            <span class="n">nb_fnp</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">nb_fnp</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="n">np_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">total_nps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model_or_pass</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="p">,</span> <span class="s1">&#39;nps&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">np</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">nps</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np_types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">np_types</span><span class="p">:</span>
+                    <span class="n">total_nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="p">,</span> <span class="s1">&#39;skipdma_loads&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">np</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">skipdma_loads</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np_types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">np_types</span><span class="p">:</span>
+                    <span class="n">total_nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="p">,</span> <span class="s1">&#39;skipdma_stores&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">np</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">skipdma_stores</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np_types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">np_types</span><span class="p">:</span>
+                    <span class="n">total_nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total_nps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">):</span>
+    <span class="c1"># Compute the number of skip DMA channels as max(len(SKIP_DMA_STORE), len(SKIP_DMA_LOAD))</span>
+    <span class="n">skip_dma_load</span> <span class="o">=</span> <span class="n">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">SKIP_DMA_LOAD</span><span class="p">,))</span>
+    <span class="n">skip_dma_store</span> <span class="o">=</span> <span class="n">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">SKIP_DMA_STORE</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">skip_dma_load</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">skip_dma_store</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">):</span>
+    <span class="c1"># Compute the number of CNP/TNP-B.</span>
+    <span class="n">CNP_TNP_B_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">CNP2</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">)</span>
+    <span class="n">total_cnps</span> <span class="o">=</span> <span class="n">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="n">CNP_TNP_B_TYPES</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">total_cnps</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_number_of_fnp</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">):</span>
+    <span class="c1"># Compute the number of FNP.</span>
+    <span class="n">FNP_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">FNP2</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">FNP3</span><span class="p">)</span>
+    <span class="n">total_fnps</span> <span class="o">=</span> <span class="n">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="n">FNP_TYPES</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">total_fnps</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_min_device">
+<a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_min_device">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_min_device</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                       <span class="n">enable_hwpr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">sram_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">minimal_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">initial_num_nodes</span><span class="o">=</span><span class="mi">36</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds the Akida virtual device that can fit the model entirely</span>
+<span class="sd">    with or without reconfiguration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (akida.Model): the model used to determine the device.</span>
+<span class="sd">        enable_hwpr (bool, optional): if True, the device is computed assuming</span>
+<span class="sd">            partial reconfiguration. Defaults to False.</span>
+<span class="sd">        sram_size (NP.SramSize, optional): Size of shared SRAM available inside the mesh.</span>
+<span class="sd">            Ignored when `minimal_memory` is True. Defaults to None.</span>
+<span class="sd">        minimal_memory (bool, optional): if True, computes and sets the minimal required</span>
+<span class="sd">            inputs and weights memory for the device. Defaults to False.</span>
+<span class="sd">        initial_num_nodes (int, optional): the initial number of nodes with which to compute</span>
+<span class="sd">            the base device. Defaults to 36.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        akida.Device: the computed device</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected model to be an </span><span class="si">{</span><span class="n">Model</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">NUM_NPS_PER_NODE</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">!=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only IpVersion.v2 models are supported. &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;Current model version=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">ip_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create a copy of the model to avoid modifying the original one.</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">layers</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+
+    <span class="c1"># Compute a base device with which to compute the next parameters.</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">:</span> <span class="n">_get_initial_skip_dma_channels</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
+              <span class="s2">&quot;num_fnp&quot;</span><span class="p">:</span> <span class="n">_get_initial_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
+              <span class="s2">&quot;sram_size&quot;</span><span class="p">:</span> <span class="n">sram_size</span><span class="p">}</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NUM_NPS_PER_NODE</span> <span class="o">*</span> <span class="n">initial_num_nodes</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Impossible to compute base device: &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;the number of initial nodes (</span><span class="si">{</span><span class="n">initial_num_nodes</span><span class="si">}</span><span class="s2">) is not enough.&quot;</span><span class="p">)</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># Map model with the default parameters.</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">MapMode</span><span class="o">.</span><span class="n">Minimal</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Now that the model has been mapped onto the base device,</span>
+    <span class="c1"># we can compute the parameters to build the required device.</span>
+    <span class="k">if</span> <span class="n">enable_hwpr</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">layer_seq</span> <span class="ow">in</span> <span class="n">_model_generator</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+            <span class="c1"># Compute the number of CNP/FNP needed to map the model in multiple passes,</span>
+            <span class="c1"># as the larger sum of 2 consecutive layers.</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">],</span>
+                                        <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">],</span> <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
+        <span class="c1"># To compute the minimum number of skip DMA channels needed when partial reconfiguration</span>
+        <span class="c1"># is allowed, we iterate the device until we find a valid one.</span>
+        <span class="k">for</span> <span class="n">num_skip_dma_channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="n">num_skip_dma_channel</span><span class="o">=</span><span class="n">num_skip_dma_channel</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">MapMode</span><span class="o">.</span><span class="n">Minimal</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_skip_dma_channel</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">continue</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">minimal_memory</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sram_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The &#39;sram_size&#39; argument will be ignored because &#39;minimal_memory&#39; is set to True. &quot;</span>
+                <span class="s2">&quot;The required memory will be computed automatically. Continuing execution&quot;</span>
+            <span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sram_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="o">*</span><span class="n">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
+
+    <span class="c1"># Create a virtual device with the requirements.</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># Sanity check: map model on device.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">MapMode</span><span class="o">.</span><span class="n">Minimal</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;It was not possible to find a device for this model. &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;Reason:</span><span class="se">\n</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">device</span></div>
+
+
+
+<div class="viewcode-block" id="compute_common_device">
+<a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_common_device">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_common_device</span><span class="p">(</span><span class="n">ak_models</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes a common Akida device that can run all the given models.</span>
+<span class="sd">    Ensures all models were mapped.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ak_models (List[akida.Model]): A list of Akida models whose hardware</span>
+<span class="sd">            requirements will be combined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        akida.Device: A new device that can map all the given models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ak_models</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The list of Akida models cannot be empty.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wrong_model_types</span> <span class="o">:=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ak_models</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Model</span><span class="p">)]:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Devices cannot be computed for models of type </span><span class="si">{</span><span class="n">wrong_model_types</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All models must be mapped on a device.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># For safety, check that all models devices have the same version</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">ak_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">),</span> \
+        <span class="s2">&quot;Models devices have different versions.&quot;</span>
+
+    <span class="n">include_hrc</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">hrc</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">)</span>
+    <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_num_fnp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_num_skip_dma_channel</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">:</span>
+        <span class="c1"># Update params</span>
+        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">pass_</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">passes</span><span class="p">:</span>
+                <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span>
+                                      <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+                <span class="n">max_num_fnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_fnp</span><span class="p">,</span>
+                                  <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+                <span class="n">max_num_skip_dma_channel</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_skip_dma_channel</span><span class="p">,</span>
+                                               <span class="n">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+
+        <span class="c1"># Update Sram size</span>
+        <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sram_size</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">,</span>
+                                    <span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">),</span>
+                                <span class="nb">max</span><span class="p">(</span><span class="n">sram_size</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">,</span>
+                                    <span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">create_device</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span> <span class="n">max_num_fnp</span><span class="p">,</span>
+                         <span class="n">max_num_skip_dma_channel</span><span class="p">,</span> <span class="n">include_hrc</span><span class="p">,</span>
+                         <span class="n">sram_size</span><span class="p">,</span> <span class="n">ak_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span><span class="p">)</span></div>
 
 </pre></div>
 

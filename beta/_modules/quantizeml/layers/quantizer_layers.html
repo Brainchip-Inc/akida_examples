@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>quantizeml.layers.output_observer &mdash; Akida Examples  documentation</title>
+  <title>quantizeml.layers.quantizer_layers &mdash; Akida Examples  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
 </ul>
@@ -270,7 +270,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api_reference/quantizeml_apis.html#model-i-o">Model I/O</a><ul>
@@ -438,12 +437,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../examples/index.html#spatiotemporal-examples">Spatiotemporal examples</a><ul>
@@ -566,7 +559,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">quantizeml.layers.output_observer</li>
+      <li class="breadcrumb-item active">quantizeml.layers.quantizer_layers</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -575,10 +568,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for quantizeml.layers.output_observer</h1><div class="highlight"><pre>
+  <h1>Source code for quantizeml.layers.quantizer_layers</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># ******************************************************************************</span>
-<span class="c1"># Copyright 2023 Brainchip Holdings Ltd.</span>
+<span class="c1"># Copyright 2025 Brainchip Holdings Ltd.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -593,93 +586,152 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ******************************************************************************</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OutputObserver&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;InputQuantizer&quot;</span><span class="p">,</span> <span class="s2">&quot;Dequantizer&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tf_keras</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">keras</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layer</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_arg_constraints</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">QTensor</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">,</span> <span class="n">FixedPoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..debugging</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_less_equal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.recorders</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorRecorder</span><span class="p">,</span> <span class="n">QFloatRecorder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layers_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_arg_constraints</span><span class="p">,</span> <span class="n">QuantizedLayer</span>
 
 
-<div class="viewcode-block" id="OutputObserver">
-<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.OutputObserver">[docs]</a>
+<div class="viewcode-block" id="InputQuantizer">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer">[docs]</a>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">OutputObserver</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Calibration layer.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InputQuantizer</span><span class="p">(</span><span class="n">QuantizedLayer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantizer layer for input tensors.</span>
 
-<span class="sd">    This layer is used to compute the future `range_max` of the equivalent OutputQuantizer in the</span>
-<span class="sd">    quantized model. It is placed where the OutputQuantizer will be inserted (end of blocks) and</span>
-<span class="sd">    accumulates the observed maximum values (with momentum) for input in the float model.</span>
+<span class="sd">    This layer quantizes input tensors to a q-tensor representation using a specified bitwidth,</span>
+<span class="sd">    supporting signed and axis quantization.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        axis (str): the quantization range is a scalar (&#39;per-tensor&#39;) or a vector</span>
+<span class="sd">        bitwidth (int, optional): the quantization bitwidth. Defaults to 8.</span>
+<span class="sd">        signed (bool, optional): whether the quantizer expects signed values or unsigned.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        axis (str, optional): the quantization range is a scalar (&#39;per-tensor&#39;) or a vector</span>
 <span class="sd">            corresponding to the last axis (&#39;per-axis&#39;). Defaults to &#39;per-tensor&#39;.</span>
-<span class="sd">        momentum (float): the momentum for the moving average. Defaults to 0.9.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; quantizer = InputQuantizer(bitwidth=8, signed=True)</span>
+<span class="sd">        &gt;&gt;&gt; quantized = quantizer(tf.constant([[1.0, -2.0], [3.0, 4.0]]))</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arg_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;axis&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span> <span class="s2">&quot;per-axis&quot;</span><span class="p">]}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;per-tensor&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">momentum</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_decay</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">convert_to_tensor</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">momentum</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;decay&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span> <span class="o">=</span> <span class="n">bitwidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="o">=</span> <span class="n">signed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">()</span>
         <span class="n">check_arg_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the layer.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value_bits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            input_shape (list): the shape of input tensor.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InputQuantizer.build">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
-        <span class="c1"># Convert axis to a list of int</span>
+        <span class="c1"># Convert axis to a list of int.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;per-axis&quot;</span><span class="p">:</span>
             <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ndims</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;OutputObserver cannot quantize per-axis tensors &quot;</span>
-                                 <span class="s2">&quot; with 2 dimensions or less.&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; (InputQuantizer) cannot quantize per-axis &quot;</span>
+                                 <span class="s2">&quot;tensors with 2 dimensions or less.&quot;</span><span class="p">)</span>
+            <span class="n">range_axis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">range_axis</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># Declares the constant/vector that will store the maximum values of the input.</span>
+        <span class="c1"># Declares the constant/vector that will store the maximum values and zero point.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;range_min&quot;</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">range_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+            <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">,</span>
+            <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">,</span>
+            <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableAggregation</span><span class="o">.</span><span class="n">MEAN</span><span class="p">,</span>
+            <span class="n">experimental_autocast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span>
-            <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">range_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(),</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
             <span class="n">initializer</span><span class="o">=</span><span class="s2">&quot;ones&quot;</span><span class="p">,</span>
             <span class="n">synchronization</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableSynchronization</span><span class="o">.</span><span class="n">ON_READ</span><span class="p">,</span>
             <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">aggregation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">VariableAggregation</span><span class="o">.</span><span class="n">MEAN</span><span class="p">,</span>
             <span class="n">experimental_autocast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="InputQuantizer.call">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer.call">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Observe inputs and update the maximum value with momentum.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Quantize the inputs according to the quantizer configuration.</span>
+
+<span class="sd">        This method calculates the scale and zero point from the calibration ranges provided</span>
+<span class="sd">        to project the input to integer values.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            inputs (tf.Tensor): the inputs tensor.</span>
+<span class="sd">            inputs (tf.Tensor): the input tensor to be quantized.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            tf.Tensor: unchanged inputs</span>
+<span class="sd">            QFloat: the quantized tensor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Compute the new range_max from inputs</span>
-        <span class="n">range_max</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only accepts </span><span class="si">{</span><span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="si">}</span><span class="s2"> inputs. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Receives </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="si">}</span><span class="s2"> inputs.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> only accepts float inputs. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Receives </span><span class="si">{</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> inputs.&quot;</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
-        <span class="c1"># If range_max was never updated set their newly computed values otherwise update with</span>
-        <span class="c1"># moving average algorithm</span>
-        <span class="k">if</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_all</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">1.</span><span class="p">))):</span>
-            <span class="n">new_range_max</span> <span class="o">=</span> <span class="n">range_max</span>
+        <span class="c1"># Compute range/zero_point.</span>
+        <span class="n">assert_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="p">,</span>
+                          <span class="n">message</span><span class="o">=</span><span class="s2">&quot;range_max must be higher or equal than range_min.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">:</span>
+            <span class="c1"># When signed is true, zero point is not required.</span>
+            <span class="n">range_abs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_min</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># The new value is just the multiplication by decay</span>
-            <span class="n">old_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span>
-            <span class="n">update_delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_value</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">range_max</span><span class="p">,</span> <span class="n">old_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decay</span>
-            <span class="n">new_range_max</span> <span class="o">=</span> <span class="n">old_value</span> <span class="o">-</span> <span class="n">update_delta</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">new_range_max</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">inputs</span>
+            <span class="c1"># We cannot handle negative zero point (HW constraint).</span>
+            <span class="c1"># That is why we reject positive range_min.</span>
+            <span class="c1"># In other words, a positive min_range refers to inputs that do not require</span>
+            <span class="c1"># a zero point, since quantization already produces unsigned values.</span>
+            <span class="n">assert_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_min</span><span class="p">),</span>
+                              <span class="n">message</span><span class="o">=</span><span class="s2">&quot;range_min &gt; 0 is not allowed (HW constraint).&quot;</span><span class="p">)</span>
+            <span class="n">range_abs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_min</span>
+            <span class="n">range_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range_min</span>
 
+            <span class="c1"># Build recorder object for zero point.</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zero_points</span> <span class="o">=</span> <span class="n">QFloatRecorder</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;zero_point&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Compute the frac_bits to quantize the inputs.</span>
+        <span class="n">frac_bits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stop_gradient</span><span class="p">(</span><span class="n">FixedPoint</span><span class="o">.</span><span class="n">max_frac_bits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">range_abs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">)</span>
+        <span class="c1"># Quantize the inputs.</span>
+        <span class="n">q_inputs</span> <span class="o">=</span> <span class="n">FixedPoint</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">)</span>
+        <span class="c1"># Change output signature depending on signed parameter.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">:</span>
+            <span class="n">q_inputs</span> <span class="o">=</span> <span class="n">QFloat</span><span class="p">(</span><span class="n">q_inputs</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="c1"># When the output is unsigned, a zero point is needed to shift the range</span>
+            <span class="c1"># to an entirely positive one.</span>
+            <span class="n">q_zero_points</span> <span class="o">=</span> <span class="n">QFloat</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="o">-</span><span class="n">range_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_bits</span><span class="p">,</span> <span class="n">q_inputs</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span> <span class="n">frac_bits</span><span class="p">)</span>
+            <span class="n">q_inputs</span> <span class="o">=</span> <span class="n">q_inputs</span> <span class="o">+</span> <span class="n">q_zero_points</span>
+            <span class="c1"># Record zero point.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_points</span><span class="p">(</span><span class="n">q_zero_points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">q_inputs</span></div>
+
+
+<div class="viewcode-block" id="InputQuantizer.get_config">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer.get_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the config of the layer.</span>
 
@@ -687,8 +739,82 @@
 <span class="sd">            dict: the config of the layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;axis&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="s2">&quot;momentum&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">})</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;bitwidth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitwidth</span><span class="p">})</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;signed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">})</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;axis&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">config</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Dequantizer">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer">[docs]</a>
+<span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dequantizer</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Layer that allows to dequantize its inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scales</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">frac_bits</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_build</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">record_fb</span> <span class="o">=</span> <span class="n">record_scale</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># from tf_keras documentation, any variable creation taking place</span>
+            <span class="c1"># in call should be wrapped with tf.init_scope</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QTensor</span><span class="p">):</span>
+                    <span class="n">record_fb</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/record_fb&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">):</span>
+                    <span class="n">record_scale</span> <span class="o">=</span> <span class="n">TensorRecorder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/record_scale&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">record_fb</span><span class="p">,</span> <span class="n">record_scale</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Nothing to do</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="c1"># Manage single inputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">_build</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">init_scope</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="n">frac_bits</span><span class="p">,</span> <span class="n">scales</span> <span class="o">=</span> <span class="n">_build</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frac_bits</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Dequantizer.call">
+<a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer.call">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert QTensor inputs to float.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (tf.Tensor or :obj:`QTensor`): the inputs tensor(s).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tf.Tensor: the dequantized tensor(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">dequantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">frac_bits_recorder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scales_recorder</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QTensor</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">frac_bits_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">frac_bits_recorder</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">frac_bits</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">QFloat</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">scales_recorder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">scales_recorder</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">to_float</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">x</span>
+
+        <span class="c1"># Build records</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_records</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="c1"># Apply dequantizer</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">dequantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fb</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">fb</span><span class="p">,</span> <span class="n">scales</span> <span class="ow">in</span>
+                    <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">dequantize</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_bits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 

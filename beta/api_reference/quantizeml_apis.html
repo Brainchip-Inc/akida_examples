@@ -253,7 +253,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dropout">Dropout</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#quantizers">Quantizers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#recording">Recording</a></li>
 </ul>
@@ -274,7 +274,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#onnx-support">ONNX support</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id2">Layers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#custom-patterns">Custom patterns</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#model-i-o">Model I/O</a><ul>
@@ -440,12 +439,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#download-and-export">3. Download and export</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#quantize">4. Quantize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_2_off_the_shelf_quantization.html#convert-to-akida">5. Convert to Akida</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html">Advanced ONNX models quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#get-model-and-data">1. Get model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#quantize">2. Quantize</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../examples/quantization/plot_3_custom_patterns.html#conversion">3. Conversion</a></li>
 </ul>
 </li>
 </ul>
@@ -843,12 +836,8 @@ and weights.</p>
 <p>We only support a tuple of two inputs with the same shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <cite>True</cite>, compute the average across all inputs.
-Defaults to <cite>False</cite>.</p></li>
-<li><p><strong>activation</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, apply an activation function after
-the addition. Defaults to <cite>False</cite>.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – if <cite>True</cite>, compute the average across all inputs.
+Defaults to <cite>False</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -924,186 +913,14 @@ an 8-bit per-tensor QFloat with the specified scale.</p>
 </dd></dl>
 
 </section>
-<section id="quantizers">
-<h3>Quantizers<a class="headerlink" href="#quantizers" title="Link to this heading"></a></h3>
+<section id="quantizer-dequantizer">
+<h3>Quantizer/Dequantizer<a class="headerlink" href="#quantizer-dequantizer" title="Link to this heading"></a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="quantizeml.layers.Quantizer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">Quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/quantizers.html#Quantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.Quantizer" title="Link to this definition"></a></dt>
-<dd><p>The base class for all quantizers.</p>
-<p>The bitwidth defines the number of quantization levels on which the
-values will be quantized.
-For a quantizer that accepts unsigned values, the maximum quantization
-level is <span class="math notranslate nohighlight">\(2 ^ {bitwidth} - 1\)</span>.
-For a quantizer that accepts signed values, we lose one bit of precision to
-store the sign.
-When the quantizer is signed, the quantization interval is asymmetric around
-zero (i.e range: <span class="math notranslate nohighlight">\([- 2 ^ {bitwidth - 1}, 2 ^ {bitwidth - 1} - 1]\)</span>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bitwidth</strong> (<em>int</em>) – the quantization bitwidth.</p></li>
-<li><p><strong>signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the quantizer expects signed values or unsigned.
-Defaults to True.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="quantizeml.layers.WeightQuantizer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">WeightQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/weight_quantizer.html#WeightQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.WeightQuantizer" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#quantizeml.layers.Quantizer" title="quantizeml.layers.quantizers.quantizers.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-<p>A uniform quantizer that converts a float Tensor to a QFloat representation.</p>
-<p>In order, the WeightQuantizer:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>evaluates the scales required to align the values on optimal ranges for FixedPoint
-quantization,</p></li>
-<li><p>quantizes the rescaled Tensor as a FixedPoint and returns a QFloat.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bitwidth</strong> (<em>int</em><em>, </em><em>optional</em>) – the quantization bitwidth, defaults to 4.</p></li>
-<li><p><strong>signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the quantizer expects signed values or unsigned.
-Defaults to True.</p></li>
-<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – the quantization range is a scalar (None) or a vector corresponding to
-the given axis. Defaults to -1.</p></li>
-<li><p><strong>fp_quantizer</strong> (<em>bool</em><em>, </em><em>optional</em>) – True to enable FixedPoint quantization, QFloat otherwise.
-Defaults to False.</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Methods:</strong></p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.WeightQuantizer.build" title="quantizeml.layers.WeightQuantizer.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>(input_shape)</p></td>
-<td><p>Build the layer.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.layers.WeightQuantizer.call" title="quantizeml.layers.WeightQuantizer.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
-<td><p>Quantize the float inputs</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.WeightQuantizer.get_config" title="quantizeml.layers.WeightQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
-<td><p>Get the config of the layer.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.WeightQuantizer.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/weight_quantizer.html#WeightQuantizer.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.WeightQuantizer.build" title="Link to this definition"></a></dt>
-<dd><p>Build the layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>input_shape</strong> (<em>list</em>) – the shape of input tensor.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.WeightQuantizer.call">
-<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/weight_quantizer.html#WeightQuantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.WeightQuantizer.call" title="Link to this definition"></a></dt>
-<dd><p>Quantize the float inputs</p>
-<p>The quantization is done in two steps:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Compute the quantization ranges,</p></li>
-<li><p>Quantize the inputs.</p></li>
-</ol>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>tf.Tensor</em>) – the inputs tensor.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the quantized tensor.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">QFloat</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.WeightQuantizer.get_config">
-<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/weight_quantizer.html#WeightQuantizer.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.WeightQuantizer.get_config" title="Link to this definition"></a></dt>
-<dd><p>Get the config of the layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the config of the layer.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="quantizeml.layers.AlignedWeightQuantizer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">AlignedWeightQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/aligned_weight_quantizer.html#AlignedWeightQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.AlignedWeightQuantizer" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#quantizeml.layers.Quantizer" title="quantizeml.layers.quantizers.quantizers.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-<p>A uniform quantizer that converts a float Tensor to a QFloat representation.</p>
-<p>Unlike its sibling the WeightQuantizer, it does not evaluate the fractional bits and scales of
-the resulting QFloat, but instead aligns them on those of another QFloat input.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bitwidth</strong> (<em>int</em><em>, </em><em>optional</em>) – the quantization bitwidth. Defaults to 8.</p></li>
-<li><p><strong>signed</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether the quantizer expects signed values or unsigned.
-Defaults to True.</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Methods:</strong></p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.AlignedWeightQuantizer.call" title="quantizeml.layers.AlignedWeightQuantizer.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs, other)</p></td>
-<td><p>Quantize the float inputs, aligned on another QFloat</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.AlignedWeightQuantizer.call">
-<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/aligned_weight_quantizer.html#AlignedWeightQuantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.AlignedWeightQuantizer.call" title="Link to this definition"></a></dt>
-<dd><p>Quantize the float inputs, aligned on another QFloat</p>
-<p>The quantization is done in several steps:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Compute the quantization ranges,</p></li>
-<li><p>Evaluate the maximum fractional bits,</p></li>
-<li><p>Quantize the inputs as a QFloat,</p></li>
-<li><p>Align the QFloat fractional bits on the other.</p></li>
-</ol>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – the inputs tensor.</p></li>
-<li><p><strong>other</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">QFloat</span></code>) – a tensor to align on.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>a quantized tensor with the same scales and frac_bits as other.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">QFloat</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="quantizeml.layers.OutputQuantizer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">OutputQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/output_quantizer.html#OutputQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputQuantizer" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#quantizeml.layers.Quantizer" title="quantizeml.layers.quantizers.quantizers.Quantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quantizer</span></code></a></p>
-<p>A uniform FixedPoint quantizer that selects the optimal number of fractional bits for the
-range of its inputs and updates them accordingly.</p>
-<p>The typical use case is to decrease the bitwidth of the result of a quantized layer operation to
-avoid a saturation in downstream operations.</p>
-<p>If the input is a QFloat, it is converted to a FixedPoint before updating its bitwidth.</p>
+<dt class="sig sig-object py" id="quantizeml.layers.InputQuantizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">InputQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#InputQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.InputQuantizer" title="Link to this definition"></a></dt>
+<dd><p>Quantizer layer for input tensors.</p>
+<p>This layer quantizes input tensors to a q-tensor representation using a specified bitwidth,
+supporting signed and axis quantization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1112,86 +929,69 @@ avoid a saturation in downstream operations.</p>
 Defaults to True.</p></li>
 <li><p><strong>axis</strong> (<em>str</em><em>, </em><em>optional</em>) – the quantization range is a scalar (‘per-tensor’) or a vector
 corresponding to the last axis (‘per-axis’). Defaults to ‘per-tensor’.</p></li>
-<li><p><strong>scale_bits</strong> – (int, optional): the bitwidth to use when quantizing output scales.
-Defaults to 8.</p></li>
-<li><p><strong>buffer_bitwidth</strong> – (int, optional): buffer bitwidth value. Defaults to 32.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">quantizer</span> <span class="o">=</span> <span class="n">InputQuantizer</span><span class="p">(</span><span class="n">bitwidth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quantized</span> <span class="o">=</span> <span class="n">quantizer</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]]))</span>
+</pre></div>
+</div>
 <p><strong>Methods:</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.OutputQuantizer.build" title="quantizeml.layers.OutputQuantizer.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>(input_shape)</p></td>
-<td><p>Build the layer.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.InputQuantizer.build" title="quantizeml.layers.InputQuantizer.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>(input_shape)</p></td>
+<td><p>Creates the variables of the layer (for subclass implementers).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.layers.OutputQuantizer.call" title="quantizeml.layers.OutputQuantizer.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
-<td><p>Quantize the QTensor inputs to a lower bitwidth.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#quantizeml.layers.InputQuantizer.call" title="quantizeml.layers.InputQuantizer.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(inputs)</p></td>
+<td><p>Quantize the inputs according to the quantizer configuration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.OutputQuantizer.get_config" title="quantizeml.layers.OutputQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.InputQuantizer.get_config" title="quantizeml.layers.InputQuantizer.get_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code></a>()</p></td>
 <td><p>Get the config of the layer.</p></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Attributes:</strong></p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#quantizeml.layers.OutputQuantizer.frac_bits" title="quantizeml.layers.OutputQuantizer.frac_bits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frac_bits</span></code></a></p></td>
-<td><p>Compute and return the number of fractional bits for this OutputQuantizer.</p></td>
-</tr>
-</tbody>
-</table>
 <dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.OutputQuantizer.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/output_quantizer.html#OutputQuantizer.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputQuantizer.build" title="Link to this definition"></a></dt>
-<dd><p>Build the layer.</p>
+<dt class="sig sig-object py" id="quantizeml.layers.InputQuantizer.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#InputQuantizer.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.InputQuantizer.build" title="Link to this definition"></a></dt>
+<dd><p>Creates the variables of the layer (for subclass implementers).</p>
+<p>This is a method that implementers of subclasses of <cite>Layer</cite> or <cite>Model</cite>
+can override if they need a state-creation step in-between
+layer instantiation and layer call. It is invoked automatically before
+the first execution of <cite>call()</cite>.</p>
+<p>This is typically used to create the weights of <cite>Layer</cite> subclasses
+(at the discretion of the subclass implementer).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>input_shape</strong> (<em>list</em>) – the shape of input tensor.</p>
+<dd class="field-odd"><p><strong>input_shape</strong> – Instance of <cite>TensorShape</cite>, or list of instances of
+<cite>TensorShape</cite> if the layer expects a list of inputs
+(one instance per input).</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.OutputQuantizer.call">
-<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/output_quantizer.html#OutputQuantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputQuantizer.call" title="Link to this definition"></a></dt>
-<dd><p>Quantize the QTensor inputs to a lower bitwidth.</p>
-<p>The quantization happens with the following steps:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>Evaluate the nearest power(s) of two containing the quantization range(s)</p></li>
-<li><p>Quantize the inputs.</p></li>
-</ol>
-</div></blockquote>
+<dt class="sig sig-object py" id="quantizeml.layers.InputQuantizer.call">
+<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#InputQuantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.InputQuantizer.call" title="Link to this definition"></a></dt>
+<dd><p>Quantize the inputs according to the quantizer configuration.</p>
+<p>This method calculates the scale and zero point from the calibration ranges provided
+to project the input to integer values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">QTensor</span></code>) – the inputs tensor.</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>tf.Tensor</em>) – the input tensor to be quantized.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the quantized tensor.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FixedPoint</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="quantizeml.layers.OutputQuantizer.frac_bits">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frac_bits</span></span><a class="headerlink" href="#quantizeml.layers.OutputQuantizer.frac_bits" title="Link to this definition"></a></dt>
-<dd><p>Compute and return the number of fractional bits for this OutputQuantizer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>an integer tensor of fractional bits</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tf.Tensor</p>
+<dd class="field-odd"><p><a class="reference internal" href="#quantizeml.tensors.QFloat" title="quantizeml.tensors.QFloat">QFloat</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="quantizeml.layers.OutputQuantizer.get_config">
-<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/output_quantizer.html#OutputQuantizer.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputQuantizer.get_config" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="quantizeml.layers.InputQuantizer.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#InputQuantizer.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.InputQuantizer.get_config" title="Link to this definition"></a></dt>
 <dd><p>Get the config of the layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1207,9 +1007,8 @@ Defaults to 8.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.layers.Dequantizer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">Dequantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/quantizers.html#Dequantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.Dequantizer" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></p>
-<p>Layer that allows to dequantize its inputs.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">Dequantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#Dequantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.Dequantizer" title="Link to this definition"></a></dt>
+<dd><p>Layer that allows to dequantize its inputs.</p>
 <p><strong>Methods:</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -1220,7 +1019,7 @@ Defaults to 8.</p></li>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="quantizeml.layers.Dequantizer.call">
-<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizers/quantizers.html#Dequantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.Dequantizer.call" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/quantizer_layers.html#Dequantizer.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.Dequantizer.call" title="Link to this definition"></a></dt>
 <dd><p>Convert QTensor inputs to float.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1242,7 +1041,7 @@ Defaults to 8.</p></li>
 <h3>Calibration<a class="headerlink" href="#calibration" title="Link to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.layers.OutputObserver">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">OutputObserver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/output_observer.html#OutputObserver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputObserver" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.layers.</span></span><span class="sig-name descname"><span class="pre">OutputObserver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/layers/observer.html#OutputObserver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.layers.OutputObserver" title="Link to this definition"></a></dt>
 <dd><p>Calibration layer.</p>
 <p>This layer is used to compute the future <cite>range_max</cite> of the equivalent OutputQuantizer in the
 quantized model. It is placed where the OutputQuantizer will be inserted (end of blocks) and
@@ -1250,9 +1049,9 @@ accumulates the observed maximum values (with momentum) for input in the float m
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>axis</strong> (<em>str</em>) – the quantization range is a scalar (‘per-tensor’) or a vector
+<li><p><strong>axis</strong> (<em>str</em><em>, </em><em>optional</em>) – the quantization range is a scalar (‘per-tensor’) or a vector
 corresponding to the last axis (‘per-axis’). Defaults to ‘per-tensor’.</p></li>
-<li><p><strong>momentum</strong> (<em>float</em>) – the momentum for the moving average. Defaults to 0.9.</p></li>
+<li><p><strong>momentum</strong> (<em>float</em><em>, </em><em>optional</em>) – the momentum for the moving average. Defaults to 0.9.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2403,7 +2202,7 @@ Defaults to False.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedDepthwise2D">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/depthwise2d.html#QuantizedDepthwise2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2D" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedDepthwise2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_pads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/depthwise2d.html#QuantizedDepthwise2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedDepthwise2D" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of Conv() + MaxPool() + ReLU() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2504,14 +2303,11 @@ Defaults to False.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="quantizeml.onnx_support.layers.QuantizedAdd">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.layers.</span></span><span class="sig-name descname"><span class="pre">QuantizedAdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/layers/multi_inbounds.html#QuantizedAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.layers.QuantizedAdd" title="Link to this definition"></a></dt>
 <dd><p>Intermediate representation of Add() as an exportable node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>activation</strong> (<em>str</em><em>, </em><em>optional</em>) – activation type to be applied. Defaults to “”.</p></li>
-<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – the node name. Defaults to ‘’.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2556,35 +2352,18 @@ Defaults to None.</p></li>
 </dd></dl>
 
 </section>
-<section id="custom-patterns">
-<h3>Custom patterns<a class="headerlink" href="#custom-patterns" title="Link to this heading"></a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="quantizeml.onnx_support.quantization.custom_pattern_scope">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.onnx_support.quantization.</span></span><span class="sig-name descname"><span class="pre">custom_pattern_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_patterns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/onnx_support/quantization/register_patterns.html#custom_pattern_scope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.onnx_support.quantization.custom_pattern_scope" title="Link to this definition"></a></dt>
-<dd><p>Register a custom pattern in the context to be used at quantization time.</p>
-<p>A pattern is understood as a sequence of continuous operations in the graph,
-whose representation can converge in an <code class="docutils literal notranslate"><span class="pre">OnnxLayer</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_patterns</strong> (<em>dict</em>) – a list of sequence of nodes (keys) and their mapper function (values).</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 </section>
 <section id="model-i-o">
 <h2>Model I/O<a class="headerlink" href="#model-i-o" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="quantizeml.load_model">
-<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.load_model" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">quantizeml.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/quantizeml/model_io.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#quantizeml.load_model" title="Link to this definition"></a></dt>
 <dd><p>Loads an Onnx or Keras model. An error is raised if the provided model extension is not
 supported.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_path</strong> (<em>str</em>) – path of the model to load.</p></li>
-<li><p><strong>custom_layers</strong> (<em>dict</em><em>, </em><em>optional</em>) – custom layers to add to the Keras model. Defaults to None.</p></li>
 <li><p><strong>compile_model</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to compile the Keras model. Defaults to True.</p></li>
 </ul>
 </dd>

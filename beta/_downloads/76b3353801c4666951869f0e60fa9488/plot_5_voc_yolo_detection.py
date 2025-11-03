@@ -137,10 +137,16 @@ def load_tf_dataset(tf_record_file_path):
 
         return example
 
+    def cast_data(example):
+        example['image'] = tf.cast(example['image'], tf.uint8)
+        example['objects']['label'] = tf.cast(example['objects']['label'], tf.int32)
+        example['objects']['bbox'] = tf.cast(example['objects']['bbox'], tf.float32)
+        return example
+
     # Create a TFRecordDataset
     dataset = tf.data.TFRecordDataset(tfrecord_files)
     len_dataset = _count_tfrecord_examples(dataset)
-    parsed_dataset = dataset.map(_parse_tfrecord_fn)
+    parsed_dataset = dataset.map(_parse_tfrecord_fn).map(cast_data)
 
     return parsed_dataset, len_dataset
 
