@@ -315,8 +315,8 @@ assert accuracy > 0.96
 
 # Test a single example
 sample_image = 0
-image = x_test[sample_image]
-outputs = model_akida.predict(image.reshape(1, 1, 28, 28))
+image = np.expand_dims(x_test[sample_image], axis=0)
+outputs = model_akida.predict(image)
 
 plt.imshow(x_test[sample_image].reshape((28, 28)), cmap="Greys")
 print('Input Label:', y_test[sample_image].item())
