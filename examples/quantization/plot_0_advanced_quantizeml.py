@@ -274,33 +274,34 @@ print(json.dumps(new_config, indent=4))
 # floating-point inputs. In an embedded software and deployment context, floating-point might
 # however not be handled. That is the case for Akida hardware that only accepts integer inputs.
 #
-# To make MetaTF adoption easier, QuantizeML provides an `InputQuantizer
+# QuantizeML provides an `InputQuantizer
 # <../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer>`__ layer that can be
 # added at the model input in order to convert floating-point inputs to integer inputs expected by
 # Akida. The InputQuantizer layer performs input quantization by applying a scale and an offset
-# to the inputs. Those values are computed during calibration by observing the input samples
+# to the inputs. These values are computed during calibration by observing the input samples
 # statistics and the quantization range is determined by the quantization dtype given to the
 # quantization parameters, see `QuantizationParams.input_dtype
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.QuantizationParams>`__.
-# Because Akida only supports a channel last data format, the InputQuantizer layer can also perform
-# data format conversion from channel first to channel last.
+# Because Akida only supports a channel last data format, the InputQuantizer layer can also convert
+# data format from channel first to channel last. This only applies to models coming from PyTorch
+# through ONNX.
 #
 # The InputQuantizer layer added during quantization is later converted to an `Akida.Quantizer
 # <../../api_reference/akida_apis.html#akida.Quantizer>`__ layer.
 #
-# Now, while this allows to quickly prototype models that will be deployed on Akida hardware, it is
+# While this allows to quickly prototype models that will be deployed on Akida hardware, it is
 # often preferable to handle input quantization and data format conversion natively to prevent the
-# extra scaling, offset and transpose.
+# extra scaling, offset and transpose. It is also key to train a model with the same data type as
+# the target application expects.
+#
+#
+# 3.1. InputQuantizer for floating-point inputs
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # To illustrate this, let's consider image classification models. While usually trained with float32
 # data, for deployment, sensors will provide unsigned 8-bit integer images in a channel last format.
-# In that case, it is better to define the model with a typed uint8 input, quantize with a uint8
+# In that case, it is better to define the model with a uint8 input type, quantize with a uint8
 # dtype and avoid adding an InputQuantizer layer altogether.
-#
-# The following code snippets illustrates both approches.
-#
-# 3.1. InputQuantizer for float32 to uint8
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # Define an example model with few layers that could be used for image classification
 input = keras.layers.Input((28, 28, 3))
@@ -318,7 +319,8 @@ model = keras.Model(input, x)
 # Define QuantizationParams with explicit dtype uint8 (which is the default)
 qparams = QuantizationParams(input_dtype='uint8')
 
-# Define random calibration samples in range [0, 255] as float32
+# Define random calibration samples in range [0, 255] as float32 (it could be any range but this is
+# kept simple for the sake of the example)
 import numpy as np
 
 calibration_samples = np.random.randint(0, 256, size=(256, 28, 28, 3)).astype(np.float32)
@@ -328,21 +330,22 @@ quantized_model = quantize(model, qparams=qparams, num_samples=256,
                            samples=calibration_samples, batch_size=64)
 
 ######################################################################
-# As the model input is not typed, an InputQuantizer layer has been added in second position:
+# As the model input is not typed (defaulting to float32), an InputQuantizer layer has been added in
+# second position:
 
 quantized_model.summary()
 
 ######################################################################
-# Let's take a look at the Inputquantizer layer
+# Let's take a look at the InputQuantizer layer
 
 ######################################################################
 from quantizeml.models import record_quantization_variables
 
 
 def print_input_quantizer_params(q_model):
-    # Record the variable to display them below.
+    # Record variables to display them below.
     # Note this is only needed for tutorial purposes and handled automatically during standard
-    # conversionp process.
+    # conversion process.
     record_quantization_variables(q_model)
 
     print('InputQuantizer parameters computed during calibration:')
@@ -357,16 +360,17 @@ print_input_quantizer_params(quantized_model)
 
 ######################################################################
 # Since inputs were created in the [0, 255] range, the InputQuantizer layer has learned to
-# quantize inputs to uint8 with a scale or 1 and no offset as expected.
+# quantize inputs to uint8 with a scale of 1 and no offset as expected.
 #
-# 3.2. Preventing the InputQuantizer
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# Now define a model with uint8 typed input to avoid adding an InputQuantizer layer:
 
-typed_input = keras.layers.Input((28, 28, 3), dtype=tf.uint8)
-y = keras.layers.Rescaling(scale=1. / 255, name="rescale")(typed_input)
-y = keras.layers.Conv2D(16, 3, strides=2, padding="same", name="input_conv")(y)
+######################################################################
+# 3.2. Floating-point data and conversion to Akida
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Let's go back to a case where the model input is float32 and we want to quantize to int8.
+
+float_input = keras.layers.Input((10, 25, 2))
+y = keras.layers.Conv2D(16, 3, strides=2, padding="same", name="input_conv")(float_input)
 y = keras.layers.ReLU(name="relu_0")(y)
 y = keras.layers.DepthwiseConv2D(3, strides=2, padding="same", name="dw_conv")(y)
 y = keras.layers.Conv2D(32, 1, name="pw_conv")(y)
@@ -374,42 +378,16 @@ y = keras.layers.ReLU(name="relu_1")(y)
 y = keras.layers.Flatten()(y)
 y = keras.layers.Dense(units=10, name="dense")(y)
 
-model = keras.Model(typed_input, y)
+model = keras.Model(float_input, y)
 
-quantized_model = quantize(model, qparams=qparams, num_samples=256,
-                           samples=calibration_samples, batch_size=64)
-
-quantized_model.summary()
-
-######################################################################
-# The model does not contain any InputQuantizer layer: model input is typed to uint8 and
-# quantization is typed to uint8 as well.
-
-######################################################################
-# 3.3. Int8 data and conversion to Akida
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# Now let's go back to a case where the model input is float32 and we want to quantize to int8.
-
-float_input = keras.layers.Input((10, 25, 2))
-z = keras.layers.Conv2D(16, 3, strides=2, padding="same", name="input_conv")(float_input)
-z = keras.layers.ReLU(name="relu_0")(z)
-z = keras.layers.DepthwiseConv2D(3, strides=2, padding="same", name="dw_conv")(z)
-z = keras.layers.Conv2D(32, 1, name="pw_conv")(z)
-z = keras.layers.ReLU(name="relu_1")(z)
-z = keras.layers.Flatten()(z)
-z = keras.layers.Dense(units=10, name="dense")(z)
-
-model = keras.Model(float_input, z)
-
-# Explicitly set input dtype to int8 and recompute calibration samples in a larger range,
-# [-300, 450] as an example
+# Explicitly set input dtype to int8 and recompute calibration samples in the [-1, 1] range as an
+# example.
 qparams = QuantizationParams(input_dtype='int8')
-calibration_samples = np.random.randint(-300, 450, size=(256, 10, 25, 2)).astype(np.float32)
+calibration_samples_int8 = np.random.uniform(-1.0, 1.0, size=(256, 10, 25, 2)).astype(np.float32)
 
 # Quantize the model
 quantized_model = quantize(model, qparams=qparams, num_samples=256,
-                           samples=calibration_samples, batch_size=64)
+                           samples=calibration_samples_int8, batch_size=64)
 
 ######################################################################
 # Take a look at the InputQuantizer:
@@ -427,5 +405,33 @@ akida_model = convert(quantized_model)
 akida_model.summary()
 
 ######################################################################
-# The model can now be deployed on Akida hardware, with the extra scaling and offset natively
+# The model can be deployed on Akida hardware, with the extra scaling and offset natively
 # handled.
+#
+# 3.3. Preventing the InputQuantizer
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Now define a model with uint8 typed input to avoid adding an InputQuantizer layer:
+
+typed_input = keras.layers.Input((28, 28, 3), dtype=tf.uint8)
+z = keras.layers.Rescaling(scale=1. / 255, name="rescale")(typed_input)
+z = keras.layers.Conv2D(16, 3, strides=2, padding="same", name="input_conv")(z)
+z = keras.layers.ReLU(name="relu_0")(z)
+z = keras.layers.DepthwiseConv2D(3, strides=2, padding="same", name="dw_conv")(z)
+z = keras.layers.Conv2D(32, 1, name="pw_conv")(z)
+z = keras.layers.ReLU(name="relu_1")(z)
+z = keras.layers.Flatten()(z)
+z = keras.layers.Dense(units=10, name="dense")(z)
+
+model = keras.Model(typed_input, z)
+
+quantized_model = quantize(model, num_samples=256, samples=calibration_samples, batch_size=64)
+
+quantized_model.summary()
+
+######################################################################
+# The model does not contain any InputQuantizer layer: model input is typed to uint8 and
+# quantization is typed to uint8 as well. Quantization algorithm acknowledges that inputs are
+# already in the right format, so it does not need to quantize them.
+# Conversion to Akida model will thus not add any Akida.Quantizer layer at the model input, allowing
+# an efficient deployment.
