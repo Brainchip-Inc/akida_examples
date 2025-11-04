@@ -504,19 +504,19 @@ following learning parameters that can be specified when compiling a layer:
   equal size, one for each input data class. When an input packet is sent with a
   label included, only the neurons corresponding to that input class are allowed
   to learn.
-* [optional] ``initial_plasticity``: floating point value, range 0–1 inclusive
+* [optional] ``initial_plasticity``: floating-point value, range 0–1 inclusive
   (defaults to 1). It defines the initial plasticity of each neuron’s
   connections or how easily the weights will change when learning occurs;
   similar in some ways to a learning rate. Typically, this can be set to 1,
   especially if the model is initialized with random weights. Plasticity can
   only decrease over time, never increase; if set to 0 learning will never occur
   in the model.
-* [optional] ``min_plasticity``: floating point value, range 0–1 inclusive
+* [optional] ``min_plasticity``: floating-point value, range 0–1 inclusive
   (defaults to 0.1). It defines the minimum level to which plasticity will decay.
-* [optional] ``plasticity_decay``: floating point value, range 0–1 inclusive
+* [optional] ``plasticity_decay``: floating-point value, range 0–1 inclusive
   (defaults to 0.25). It defines the decay of plasticity with each learning
   step, relative to the ``initial_plasticity``.
-* [optional] ``learning_competition``: floating point value, range 0–1 inclusive
+* [optional] ``learning_competition``: floating-point value, range 0–1 inclusive
   (defaults to 0). It controls competition between neurons. This is a rather
   subtle parameter since there is always substantial competition in learning
   between neurons. This parameter controls the competition from neurons that

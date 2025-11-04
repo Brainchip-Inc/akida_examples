@@ -11,7 +11,7 @@ Off-the-shelf models quantization
   the `Hugging Face Hub <https://huggingface.co/docs/hub/index>`__.
 
 .. Note::
-   | Off-the-shelf CNN models refer to already trained floating point models.
+   | Off-the-shelf CNN models refer to already trained floating-point models.
    | Their training recipe and framework have no importance as long as they can be exported
      to `ONNX <https://onnx.ai>`__.
    | Note however that this pathway offers slightly less flexibility than our default,
@@ -148,14 +148,14 @@ def evaluate_onnx_model(model):
 
 
 correctly_classified_floating = evaluate_onnx_model(model_onnx)
-print(f'Floating point model accuracy: {correctly_classified_floating}/{num_images}.')
+print(f'Floating-point model accuracy: {correctly_classified_floating}/{num_images}.')
 
 
 ######################################################################
 # 4. Quantize
 # ~~~~~~~~~~~
 #
-# | Akida processes integer activations and weights. Therefore, the floating point model
+# | Akida processes integer activations and weights. Therefore, the floating-point model
 #   must be quantized in preparation to run on an Akida accelerator.
 # | `QuantizeML quantize() <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 #   function recognizes `ModelProto <https://onnx.ai/onnx/api/classes.html#modelproto>`__ objects

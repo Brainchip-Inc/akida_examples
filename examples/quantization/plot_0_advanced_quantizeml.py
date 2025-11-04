@@ -271,12 +271,12 @@ print(json.dumps(new_config, indent=4))
 # -----------------------
 #
 # In standard machine learning frameworks such as TF-Keras or PyTorch, models usually expect
-# floating point inputs. In an embedded software and deployment context, floating point might
+# floating-point inputs. In an embedded software and deployment context, floating-point might
 # however not be handled. That is the case for Akida hardware that only accepts integer inputs.
 #
 # To make MetaTF adoption easier, QuantizeML provides an `InputQuantizer
 # <../../api_reference/quantizeml_apis.html#quantizeml.layers.InputQuantizer>`__ layer that can be
-# added at the model input in order to convert floating point inputs to integer inputs expected by
+# added at the model input in order to convert floating-point inputs to integer inputs expected by
 # Akida. The InputQuantizer layer performs input quantization by applying a scale and an offset
 # to the inputs. Those values are computed during calibration by observing the input samples
 # statistics and the quantization range is determined by the quantization dtype given to the

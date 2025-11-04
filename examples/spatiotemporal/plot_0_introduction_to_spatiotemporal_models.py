@@ -203,8 +203,8 @@ print(f"classes available are : {class_names}")
 # classify each video frame.
 #
 # Since the training requires a few GPU hours to complete, we will load a pre-trained model for
-# inference. Pre-trained models are available either in floating point or quantized version.
-# First, we'll look at the floating point model, available using the following apis. The evaluation
+# inference. Pre-trained models are available either in floating-point or quantized version.
+# First, we'll look at the floating-point model, available using the following apis. The evaluation
 # tool is also available to rapidly test the performance on the validation dataset.
 #
 # .. Note: the accuracy here is low because it is computed weighing each time point equally, i.e.
