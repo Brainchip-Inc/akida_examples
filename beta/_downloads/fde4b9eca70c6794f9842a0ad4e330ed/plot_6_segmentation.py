@@ -7,9 +7,9 @@ illustrated through person segmentation using the `Portrait128 dataset
 <https://github.com/anilsathyan7/Portrait-Segmentation>`__.
 
 Using pre-trained models for quick runtime, this example shows the evolution of
-model performance for a trained TF-Keras floating point model, a TF-Keras quantized and
+model performance for a trained TF-Keras floating-point model, a TF-Keras quantized and
 Quantization Aware Trained (QAT) model, and an Akida-converted model. Notice that
-the performance of the original TF-Keras floating point model is maintained throughout
+the performance of the original TF-Keras floating-point model is maintained throughout
 the model conversion flow.
 """
 
@@ -59,7 +59,7 @@ plt.show()
 # The model used in this example is AkidaUNet. It has an AkidaNet (0.5) backbone to extract
 # features combined with a succession of `separable transposed convolutional
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
-# blocks to build an image segmentation map. A pre-trained floating point TF-Keras model is
+# blocks to build an image segmentation map. A pre-trained floating-point TF-Keras model is
 # downloaded to save training time.
 #
 # .. note::
@@ -130,7 +130,7 @@ print(f"TF-Keras quantized binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2
 #
 # Finally, the quantized TF-Keras model from the previous step is converted into an Akida
 # model and its performance is evaluated. Note that the original performance of the TF-Keras
-# floating point model is maintained throughout the conversion process in this example.
+# floating-point model is maintained throughout the conversion process in this example.
 #
 
 from cnn2snn import convert
@@ -176,7 +176,7 @@ assert binary_iou > 0.9
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # For visualization of the person segmentation performed by the Akida model, display a
-# single image along with the segmentation produced by the original floating point model
+# single image along with the segmentation produced by the original floating-point model
 # and the ground truth segmentation.
 #
 

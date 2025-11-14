@@ -3,9 +3,9 @@ Global Akida workflow
 =====================
 
 Using the MNIST dataset, this example shows the definition and training of a TF-Keras
-floating point model, its quantization to 8-bit with the help of calibration,
+floating-point model, its quantization to 8-bit with the help of calibration,
 its quantization to 4-bit using QAT and its conversion to Akida.
-Notice that the performance of the original TF-Keras floating point model is maintained
+Notice that the performance of the original TF-Keras floating-point model is maintained
 throughout the Akida flow.
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
 
@@ -119,11 +119,11 @@ print('Test accuracy:', score[1])
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # An Akida accelerator processes 8 or 4-bit integer activations and weights. Therefore,
-# the floating point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
+# the floating-point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function can be used to quantize a TF-Keras model for Akida. For this step in this example, an
-# “8/8/8” quantization scheme will be applied to the floating point TF-Keras model to produce 8-bit
+# “8/8/8” quantization scheme will be applied to the floating-point TF-Keras model to produce 8-bit
 # weights in the first layer, 8-bit weights in all other layers, and 8-bit activations.
 #
 # The quantization process results in a TF-Keras model with custom `QuantizeML quantized layers
@@ -198,7 +198,7 @@ print('Test accuracy after calibration:', compile_evaluate(model_quantized))
 # 2.3. 4-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The accuracy of the 8/8/8 quantized model is equal to that of the Keras floating point
+# The accuracy of the 8/8/8 quantized model is equal to that of the Keras floating-point
 # model. In some cases, a smaller memory size for the model is required. This can be
 # accomplished through quantization of the model to smaller bitwidths.
 #
