@@ -135,7 +135,8 @@ ultimate_replacements = {
 linkcheck_ignore = [
     "./.*", "../.*",
     "https://machinelearningmastery.com/object-recognition-with-deep-learning/",
-    "https://www.sciencedirect.com/science/article/pii/S0893608018300108"
+    "https://www.sciencedirect.com/science/article/pii/S0893608018300108",
+    "https://medium.com/.*"
 ]
 
 # Ignore some anchors on github pages because checklink cannot resolve them
