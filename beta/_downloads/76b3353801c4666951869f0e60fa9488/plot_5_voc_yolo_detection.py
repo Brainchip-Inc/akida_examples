@@ -53,9 +53,7 @@ tackle this object detection problem.
 # does not actually predict the actual bounding boxes but offsets from anchors
 # boxes which are templates (width/height ratio) computed by clustering the
 # dimensions of the ground truth boxes from the training dataset. The anchors
-# then represent the average shape and size of the objects to detect. More
-# details on the anchors boxes concept are given in `this blog article
-# <https://medium.com/@andersasac/anchor-boxes-the-key-to-quality-object-detection-ddf9d612d4f9>`_.
+# then represent the average shape and size of the objects to detect.
 #
 # Additional information about YOLO can be found on the `Darknet website
 # <https://pjreddie.com/darknet/yolov2/>`_ and source code for the preprocessing
