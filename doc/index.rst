@@ -13,7 +13,7 @@ Overview
    Examples <./examples/index.rst>
    Model zoo performance <./model_zoo_performance.rst>
    Changelog <./changelog.rst>
-   Support <https://support.brainchip.com/portal/home>
+   Support <https://developer.brainchip.com/support/>
    ./license.rst
 
 
