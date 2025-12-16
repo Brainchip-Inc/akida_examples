@@ -9,8 +9,8 @@ Model zoo performance
 | This page lists the performance of all models from the zoo reported for both Akida 1.0 and Akida 2.0. Please
   refer to:
 
-* `Akida 1.0 models`_ for models targetting the Akida Neuromorphic Processor IP 1.0 and the AKD1000 reference SoC,
-* `Akida 2.0 models`_ for models targetting the Akida Neuromorphic Processor IP 2.0,
+* `Akida 1.0 models`_ for models targeting the Akida Neuromorphic Processor IP 1.0 and the AKD1000 reference SoC,
+* `Akida 2.0 models`_ for models targeting the Akida Neuromorphic Processor IP 2.0,
 * `Upgrading to Akida 2.0 tutorial <./examples/quantization/plot_1_upgrading_to_2.0.html>`_ to understand the
   architectural differences between 1.0 and 2.0 models and their respective workflows.
 
@@ -41,10 +41,10 @@ For 1.0 models, 4-bit accuracy is provided and is always obtained through a QAT 
     other layers and 4-bit activations.
 
 .. note::
-    The NPs column provides the minimal number of neural processors required for the model excecution
+    The NPs column provides the minimal number of neural processors required for the model execution
     on the Akida IP. The numbers given are the result of the
     `map <./api_reference/akida_apis.html#akida.Model.map>`_ operation using the
-    `Minimal MapMode <./api_reference/akida_apis.html#akida.MapMode>`_ targetting AKD1000 reference SoC.
+    `Minimal MapMode <./api_reference/akida_apis.html#akida.MapMode>`_ targeting AKD1000 reference SoC.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,7 +257,7 @@ Classification
 Akida 2.0 models
 ----------------
 
-For 2.0 models, both 8-bit PTQ and 4-bit QAT numbers are given. When not explicitely stated 8-bit PTQ
+For 2.0 models, both 8-bit PTQ and 4-bit QAT numbers are given. When not explicitly stated 8-bit PTQ
 accuracy is given as is (ie no further tuning/training, only quantization and calibration). The 4-bit
 QAT is the same as for 1.0.
 

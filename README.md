@@ -63,7 +63,7 @@ autopep8 --ignore E402,E501 --in-place --recursive examples/
 
 ## Link check
 
-Leveraging sphinx built-in link checker. Note that links to internal components must be explicitely
+Leveraging sphinx built-in link checker. Note that links to internal components must be explicitly
 relative and will be ignored by the tool (it cannot check relative links).
 
 ```

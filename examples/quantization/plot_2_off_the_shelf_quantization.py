@@ -112,7 +112,7 @@ x_test = np.transpose(x_test, (0, 3, 1, 2))
 import onnx
 from optimum.exporters.onnx import main_export
 
-# Download and convert MobiletNet V2 to ONNX
+# Download and convert MobileNet V2 to ONNX
 main_export(model_name_or_path="google/mobilenet_v2_1.0_224",
             task="image-classification",
             output="./")

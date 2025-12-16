@@ -91,7 +91,7 @@ Here's an example for 4-bit quantization (with first layer weights set to 8-bit)
     from quantizeml.models import QuantizationParams
     qparams4 = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
-Note that quantizating the first weights to 8-bit helps preserving accuracy.
+Note that quantizing the first weights to 8-bit helps preserving accuracy.
 
 QuantizeML uses a uniform quantization scheme centered on zero. During quantization, the floating
 point values are mapped to a given bitwidth quantization space of the form:
@@ -165,7 +165,7 @@ QAT.
 Compatibility constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The tookit supports a wide range of layers (see the
+The toolkit supports a wide range of layers (see the
 `supported type section <./quantizeml.html#supported-layer-types>`__). When hitting a non-compatible
 layer, QuantizeML will simply stop the quantization before this layer and add a
 `Dequantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer>`__ before it so
@@ -395,10 +395,10 @@ and groups=input_channels.
 Analysis module
 ---------------
 
-The QuantizeML toolit comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
+The QuantizeML toolkit comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
 submodule that provides tools to better analyze the impact of quantization on a model. Quantization
 errors and minimal accuracy drops are an expected behavior going from float to integer (8-bit).
-While no simple and generic solution can be provided to solve larger accuracy issues, the analyis
+While no simple and generic solution can be provided to solve larger accuracy issues, the analysis
 tool can help pinpoint faulty layers or kernels that might be poorly quantized and thus harm
 accuracy. Once the culprit is found, adding regularization or training constraints can help tackle
 the issue, quantizing per-tensor or per-axis can also help.
