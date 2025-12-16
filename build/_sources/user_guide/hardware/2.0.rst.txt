@@ -1,0 +1,229 @@
+Akida 2.0 capabilities
+======================
+
+.. note::
+       These details are relevant to Akida 2.0 IP-based solutions.
+
+For compatibility with multiple possible hardware backends downstream, CNN2SNN and
+the Akida simulator impose few constraints on layer dimensions. However, hardware
+does have limits in this respect, which will be checked at the stage of mapping a
+model to a specific device (real or virtual). This page details the limits for the
+Akida 2.0 IP.
+
+Please refer to `Akida V2 layers <../../api_reference/akida_apis.html#akida-v2-layers>`__
+for layers description.
+
+.. note::
+      Akida 2.0 supports using a Lookup Table (LUT) for activation functions other
+      than ReLU for InputConv2D, Conv2D, DepthwiseConv2D, Conv2DTranspose and
+      DepthwiseConv2DTranspose layers. However, Max Pooling is not compatible when
+      LUT-based activations are used.
+
+.. tab-set::
+
+    .. tab-item:: InputConv2D
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +---------+----------+------------+
+            |**Width**|**Height**|**Channels**|
+            +---------+----------+------------+
+            |>=5      |[5:384]   |1, 3        |
+            +---------+----------+------------+
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` Input shape is (Width, Height, Channels).
+
+        .. card::
+
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------------+-----------------+-----------+
+            |**Kernel Size**|**Stride**       |**Type**   |
+            +---------------+-----------------+-----------+
+            |3×3            |1, 2, 3          |Same, Valid|
+            +---------------+-----------------+-----------+
+            |4×4            |1, 2, 3, 4       |Same, Valid|
+            +---------------+-----------------+-----------+
+            |5×5            |1, 2, 3, 4, 5    |Same, Valid|
+            +---------------+-----------------+-----------+
+            |7×7            |1, 2, 3, 4, 5, 6 |Same, Valid|
+            +---------------+-----------------+-----------+
+            +++++++++
+            | :octicon:`report;1em;sd-text-warning` 512 filters max.
+            | :octicon:`report;1em;sd-text-warning` Dilated (atrous) and grouped convolutions are not
+              supported.
+
+        .. card::
+
+            **Max Pooling size**
+            ^^^^^^^^^^^^^^^^^^^^
+            (size, stride) supported combinations: (2, 2), (3, 2).
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------+------------+--------------+
+            |**Input**|**Weights** |**Activation**|
+            +---------+------------+--------------+
+            |8        | 8          |4, 8          |
+            +---------+------------+--------------+
+
+
+    .. tab-item:: Conv2D/DepthwiseConv2D
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +----------+---------+------------+
+            |**Height**|**Width**|**Channels**|
+            +----------+---------+------------+
+            |<=4096    |<=4096   |<=2048      |
+            +----------+---------+------------+
+
+        .. card::
+
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +------------------+----------+--------+
+            |**Kernel Size**   |**Stride**|**Type**|
+            +------------------+----------+--------+
+            |1×1, 3×3, 5×5, 7×7|1, 2      |Same    |
+            +------------------+----------+--------+
+            ++++++++
+            | :octicon:`report;1em;sd-text-warning` 1×1 kernel is only available for Conv2D.
+            | :octicon:`report;1em;sd-text-warning` Stride 2 is only supported with 3×3 kernels.
+            | :octicon:`report;1em;sd-text-warning` Dilated (atrous) and grouped convolutions are
+              not supported (except for depthwise convolution where groups=channels).
+
+        .. card::
+
+            **Max Pooling parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +--------+----------+
+            |**Size**|**Stride**|
+            +--------+----------+
+            |2×2     |1, 2      |
+            +--------+----------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` Pooling stride cannot be greater than pooling size,
+            layer with max pooling must be followed by another `Conv2D
+            <../../api_reference/akida_apis.html#akida.Conv2D>`__ or `DepthwiseConv2D
+            <../../api_reference/akida_apis.html#akida.DepthwiseConv2D>`__ layer.
+
+        .. card::
+
+            **Global Average Pooling**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +----------+-------+
+            |**Height**|**HxW**|
+            +----------+-------+
+            |<=64      |<=144  |
+            +----------+-------+
+            ++++++++
+            :octicon:`report;1em;sd-text-warning` The output of the convolution must have at least 1 rows.
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-----------+-----------+--------------+
+            |**Input**  |**Weights**|**Activation**|
+            +-----------+-----------+--------------+
+            |4, 8       |4, 8       |4, 8          |
+            +-----------+-----------+--------------+
+
+
+    .. tab-item:: Conv2DTranspose/DepthwiseConv2DTranspose
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +----------+---------+------------+
+            |**Height**|**Width**|**Channels**|
+            +----------+---------+------------+
+            |<=4096    |<=4096   |<=2048      |
+            +----------+---------+------------+
+
+        .. card::
+
+            **Convolution parameters**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+            +---------------+----------+--------+
+            |**Kernel Size**|**Stride**|**Type**|
+            +---------------+----------+--------+
+            |3×3, 4×4       |2         |Same    |
+            +---------------+----------+--------+
+            +++++++++
+            :octicon:`report;1em;sd-text-warning` Dilated (atrous) and grouped convolutions are
+            not supported (except for depthwise convolution where groups=channels).
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-----------+-----------+--------------+
+            |**Input**  |**Weights**|**Activation**|
+            +-----------+-----------+--------------+
+            |8          |8          |8             |
+            +-----------+-----------+--------------+
+
+
+    .. tab-item:: Dense1D
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +----------+---------+---------+
+            |**Height**|**Width**|**HxWxC**|
+            +----------+---------+---------+
+            |1         |1        |<=2048   |
+            +----------+---------+---------+
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-----------+-----------+--------------+
+            |**Input**  |**Weights**|**Activation**|
+            +-----------+-----------+--------------+
+            |4, 8       |4, 8       |4, 8          |
+            +-----------+-----------+--------------+
+
+
+    .. tab-item:: BufferTempConv/DepthwiseBufferTempConv
+
+        .. card::
+
+            **Input dimensions**
+            ^^^^^^^^^^^^^^^^^^^^
+            +----------+---------+------------+
+            |**Height**|**Width**|**Channels**|
+            +----------+---------+------------+
+            |<=4096    |<=4096   |<=2048      |
+            +----------+---------+------------+
+
+        .. card::
+
+            **Parameters**
+            ^^^^^^^^^^^^^^
+            +-------------+-----------+
+            |**FIFO size**|**Filters**|
+            +-------------+-----------+
+            |[2:10]       |<=2048     |
+            +-------------+-----------+
+
+        .. card::
+
+            **Quantization bitwidth**
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+            +-----------+-----------+--------------+
+            |**Input**  |**Weights**|**Activation**|
+            +-----------+-----------+--------------+
+            |8          |8          |8             |
+            +-----------+-----------+--------------+
