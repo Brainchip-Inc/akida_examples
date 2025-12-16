@@ -303,7 +303,7 @@ print(json.dumps(new_config, indent=4))
 # In that case, it is better to define the model with a uint8 input type (passing the right dtype to
 # the Input layer), quantize with a uint8 dtype and avoid adding an InputQuantizer layer altogether.
 #
-# Let's first look at what happens without explicitely setting the Input dtype.
+# Let's first look at what happens without explicitly setting the Input dtype.
 
 # Define an example model with few layers that could be used for image classification
 input = keras.layers.Input((28, 28, 3))
@@ -414,7 +414,7 @@ akida_model.summary()
 # 3.3. Preventing the InputQuantizer
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# When using images, it makes more sense to avoid the unecessary Inputquantizer layer (as we saw
+# When using images, it makes more sense to avoid the unnecessary InputQuantizer layer (as we saw
 # above). Here, we will show you how to define a model with uint8 typed input to avoid adding this
 # extra layer. Notice in the Input layer below the added dtype.
 

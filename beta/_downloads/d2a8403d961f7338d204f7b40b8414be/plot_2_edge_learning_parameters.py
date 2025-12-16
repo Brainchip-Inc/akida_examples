@@ -100,7 +100,7 @@ model_ak.summary()
 #
 # To reduce computing time, using only a subset of the whole dataset may be
 # sufficient to get an estimation of the number of spikes. We then set the
-# number of weights to a value sligthly higher than the median of the number of
+# number of weights to a value slightly higher than the median of the number of
 # spikes: we generally choose 1.2 x median of number of spikes, which seems to
 # give good results.
 #
