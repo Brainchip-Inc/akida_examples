@@ -143,7 +143,7 @@ linkcheck_ignore = [
 linkcheck_anchors_ignore = ["model", "confusion-matrix", "how-does-this-model-work"]
 
 # Timeout for link checking in seconds
-linkcheck_timeout = 20
+linkcheck_timeout = 60
 
 
 def setup(app):
