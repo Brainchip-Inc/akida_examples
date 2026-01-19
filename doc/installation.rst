@@ -17,6 +17,7 @@ Supported configurations
     * Any Linux variant compatible with `manylinux 2.28 <https://github.com/pypa/manylinux>`_ (Ubuntu 22.04, Ubuntu 24.04, ...)
 * **Python versions:** 3.10 to 3.12
 * **TF-Keras versions:** 2.19
+* **pytorch version:** While not an explicit MetaTF/ONNX requirement, Pytorch versions >= 2.6 are supported. GPU support and Tensorflow dependency management are left to the user discretion.
 
 .. warning::
     Using Windows, the latest Visual C++ redistributable package is required.
