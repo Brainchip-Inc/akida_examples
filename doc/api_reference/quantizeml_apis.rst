@@ -64,6 +64,18 @@ QuantizeML API
     -------
     .. autoclass:: quantizeml.layers.QuantizedDropout
 
+    Pico
+    ----
+    .. autoclass:: quantizeml.layers.StatefulRecurrent
+    .. autoclass:: quantizeml.layers.QuantizedStatefulRecurrent
+    .. autoclass:: quantizeml.layers.StatefulProjection
+    .. autoclass:: quantizeml.layers.QuantizedStatefulProjection
+    .. autoclass:: quantizeml.layers.PicoPostProcessing
+    .. autoclass:: quantizeml.layers.QuantizedPicoPostProcessing
+    .. autofunction:: quantizeml.layers.reset_states
+    .. autofunction:: quantizeml.layers.update_batch_size
+
+
     Quantizer/Dequantizer
     ---------------------
     .. autoclass:: quantizeml.layers.InputQuantizer

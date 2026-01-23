@@ -28,6 +28,10 @@ Akida models API
     .. autofunction:: akida_models.layer_blocks.conv3d_block
     .. autofunction:: akida_models.layer_blocks.spatiotemporal_block
 
+    Kernelized block
+    ----------------
+    .. autofunction:: akida_models.layer_blocks.kernelized_block
+
     Helpers
     =======
 
@@ -231,3 +235,10 @@ Akida models API
     .. autofunction:: akida_models.tenn_spatiotemporal_eye_pretrained
     .. autofunction:: akida_models.tenn_spatiotemporal_jester
     .. autofunction:: akida_models.tenn_spatiotemporal_jester_pretrained
+
+    Recurrent TENNs
+    ---------------
+    .. autofunction:: akida_models.tenn_recurrent_sc10
+    .. autofunction:: akida_models.tenn_recurrent_sc10_pretrained
+    .. autofunction:: akida_models.tenn_recurrent_ad
+    .. autofunction:: akida_models.tenn_recurrent.convert_to_stateful

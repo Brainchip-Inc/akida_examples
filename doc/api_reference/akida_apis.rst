@@ -69,6 +69,13 @@ Akida runtime API
     .. autoclass:: Dequantizer
         :members:
 
+    Akida Pico layers
+    -----------------
+    .. autoclass:: StatefulRecurrent
+        :members:
+    .. autoclass:: PicoPostProcessing
+        :members:
+
     Layer parameters
     ================
 
@@ -126,6 +133,7 @@ Akida runtime API
     .. autofunction:: TwoNodesIPv1
     .. autofunction:: TwoNodesIPv2
     .. autofunction:: SixNodesIPv2
+    .. autofunction:: PicoIP
     .. autofunction:: create_device
     .. autofunction:: compute_minimal_memory
     .. autofunction:: compute_min_device
