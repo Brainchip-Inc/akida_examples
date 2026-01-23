@@ -89,6 +89,8 @@ Current available models for creation are:
  * tenn_spatiotemporal_dvs128
  * tenn_spatiotemporal_eye
  * tenn_spatiotemporal_jester
+ * tenn_recurrent_sc10
+ * tenn_recurrent_ad
 
 Command-line interface for model training
 -----------------------------------------
@@ -174,6 +176,8 @@ Current training pipelines available are:
 * tenn_dvs128_train
 * tenn_eye_train
 * tenn_jester_train
+* tenn_sc10_train
+* tenn_ad_train
 
 Command-line interface for model evaluation
 -------------------------------------------
@@ -279,6 +283,7 @@ The layer block functions provided are:
 * `sepconv_transpose_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.sepconv_transpose_block>`__
 * `yolo_head_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.yolo_head_block>`__
 * `spatiotemporal_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.spatiotemporal_block>`__
+* `kernelized_block <../api_reference/akida_models_apis.html#akida_models.layer_blocks.kernelized_block>`__
 
 Most of the parameters for these blocks are identical to those passed to the
 corresponding inner processing layers, such as strides and bias. The detailed API is given in the
