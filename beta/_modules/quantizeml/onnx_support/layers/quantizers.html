@@ -168,6 +168,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#common-layer">Common layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-v1-layers">Akida V1 layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-v2-layers">Akida V2 layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-pico-layers">Akida Pico layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
@@ -249,6 +250,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pico">Pico</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
@@ -291,6 +293,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#transposed-blocks">Transposed blocks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#detection-block">Detection block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#spatiotemporal-blocks">Spatiotemporal blocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#kernelized-block">Kernelized block</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
@@ -331,6 +334,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#centernet">CenterNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akidaunet">AkidaUNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#spatiotemporal-tenns">Spatiotemporal TENNs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#recurrent-tenns">Recurrent TENNs</a></li>
 </ul>
 </li>
 </ul>
@@ -597,15 +601,16 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">onnxruntime.quantization.calibrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorData</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">...models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_quantization_params</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">array_to_tp</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">,</span> <span class="n">has_field</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">array_to_tp</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">has_field</span><span class="p">,</span>
                            <span class="n">to_field</span><span class="p">,</span> <span class="n">value_info_to_tensor_shape</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_zp_scale</span><span class="p">,</span> <span class="n">round_to_nearest_pow2</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">OnnxLayer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.layer_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_node_has_one_initializer</span><span class="p">,</span> <span class="n">check_node_link_to_input</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layer_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_node_link_to_input</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_input_quantizer</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
-    <span class="n">check_node_link_to_input</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">check_node_link_to_input</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">cast_node</span> <span class="o">:=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;Cast&quot;</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">get_field</span><span class="p">(</span><span class="n">cast_node</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">TensorProto</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s2">&quot;Cast node dtype must be float32&quot;</span>
@@ -622,46 +627,14 @@
                                      <span class="n">input_signed</span><span class="o">=</span><span class="n">input_signed</span><span class="p">,</span>
                                      <span class="n">perm</span><span class="o">=</span><span class="n">perm</span><span class="p">)</span>
 
-    <span class="c1"># Sets rescaling weights</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">mul_node</span> <span class="o">:=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;Mul&quot;</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">check_node_has_one_initializer</span><span class="p">(</span><span class="n">mul_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-        <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;input_scale&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">mul_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">add_node</span> <span class="o">:=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;Add&quot;</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">check_node_has_one_initializer</span><span class="p">(</span><span class="n">add_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-        <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;offset&quot;</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">add_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">))</span>
-
     <span class="c1"># Set calibration ranges</span>
-    <span class="n">out_ranges</span> <span class="o">=</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;range_min&quot;</span><span class="p">,</span> <span class="n">out_ranges</span><span class="o">.</span><span class="n">lowest</span><span class="p">)</span>
-    <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="n">out_ranges</span><span class="o">.</span><span class="n">highest</span><span class="p">)</span>
+    <span class="c1"># The range key is the output of the last node (&quot;Cast&quot; or &quot;Transpose&quot;) if nodes is not empty,</span>
+    <span class="c1"># otherwise it is the name of the graph input.</span>
+    <span class="n">range_key</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">nodes</span> <span class="k">else</span> <span class="n">graph</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="n">tensor_ranges</span><span class="p">[</span><span class="n">range_key</span><span class="p">]</span>
+    <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;range_min&quot;</span><span class="p">,</span> <span class="n">ranges</span><span class="o">.</span><span class="n">lowest</span><span class="p">)</span>
+    <span class="n">input_quantizer</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="n">ranges</span><span class="o">.</span><span class="n">highest</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">input_quantizer</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_compute_quantization_parameters</span><span class="p">(</span><span class="n">r_scale</span><span class="p">,</span> <span class="n">r_offset</span><span class="p">,</span> <span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">signed</span><span class="p">):</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">TensorData</span><span class="p">)</span>
-    <span class="c1"># Computing the ranges before the Rescale node (e.g. the model inputs)</span>
-
-    <span class="n">in_tensor_range</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span> <span class="o">-</span> <span class="n">r_offset</span><span class="p">)</span> <span class="o">/</span> <span class="n">r_scale</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out_tensor_range</span><span class="o">.</span><span class="n">range_value</span><span class="p">]</span>
-    <span class="n">in_tensor_range</span> <span class="o">=</span> <span class="n">TensorData</span><span class="p">(</span><span class="n">lowest</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="o">*</span><span class="n">in_tensor_range</span><span class="p">),</span>
-                                 <span class="n">highest</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="o">*</span><span class="n">in_tensor_range</span><span class="p">))</span>
-
-    <span class="c1"># Compute scale and zero point to quantize the inputs</span>
-    <span class="n">input_scale</span><span class="p">,</span> <span class="n">input_zp</span> <span class="o">=</span> <span class="n">input_zp_scale</span><span class="p">(</span><span class="n">in_tensor_range</span><span class="p">,</span> <span class="n">allow_zp</span><span class="o">=</span><span class="ow">not</span> <span class="n">signed</span><span class="p">)</span>
-
-    <span class="c1"># Compute scale and output to dequantize the outputs</span>
-    <span class="n">output_scale</span><span class="p">,</span> <span class="n">output_zp</span> <span class="o">=</span> <span class="n">input_zp_scale</span><span class="p">(</span><span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">allow_zp</span><span class="o">=</span><span class="ow">not</span> <span class="n">signed</span><span class="p">)</span>
-
-    <span class="c1"># Check constraints</span>
-    <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Impossible to quantize inputs when folding rescale: &quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">signed</span><span class="p">:</span>
-        <span class="c1"># Compare if rescale is valid</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">input_scale</span> <span class="o">/</span> <span class="n">output_scale</span><span class="p">,</span>
-                                   <span class="n">r_scale</span><span class="p">,</span>
-                                   <span class="n">atol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-                                   <span class="n">err_msg</span><span class="o">=</span><span class="n">err_msg</span> <span class="o">+</span> <span class="s2">&quot;input/output scales ratio is not valid.&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">r_offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">err_msg</span> <span class="o">+</span> <span class="s2">&quot;offset must be zero when input is signed.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">input_scale</span><span class="p">,</span> <span class="n">input_zp</span><span class="p">),</span> <span class="p">(</span><span class="n">output_scale</span><span class="p">,</span> <span class="n">output_zp</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="InputQuantizer">
@@ -683,8 +656,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_input</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_tp</span><span class="p">]</span>
 
         <span class="c1"># Declare weights</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;input_scale&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;offset&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;range_min&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 
@@ -695,10 +666,6 @@
         <span class="c1"># Add/initialize weights</span>
         <span class="n">zp_dtype</span> <span class="o">=</span> <span class="s2">&quot;int8&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_signed</span> <span class="k">else</span> <span class="s2">&quot;uint8&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;zero_point&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">zp_dtype</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;input_scale&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;input_scale&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;offset&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span>
 
         <span class="c1"># Update perm attribute</span>
         <span class="n">input_ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -712,45 +679,29 @@
         <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">perm</span><span class="p">)</span>
         <span class="n">output_ts</span> <span class="o">=</span> <span class="n">TENSOR_SHAPE</span><span class="p">(</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">zp_dtype</span><span class="p">))</span>
 
-        <span class="c1"># Assert wrong weights format</span>
-        <span class="n">first_channel_expected_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">input_ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;input_scale&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;input_scale&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">first_channel_expected_shape</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported &#39;input_scale&#39; in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_name</span><span class="si">}</span><span class="s2">): &quot;</span>
-                             <span class="s2">&quot;it must be brodcastable in the channels dimension.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">first_channel_expected_shape</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported &#39;offset&#39; in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_name</span><span class="si">}</span><span class="s2">): &quot;</span>
-                             <span class="s2">&quot;it must be brodcastable in the channels dimension.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output_ts</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__quantize__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_fp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="c1"># Calibration was done by axis=1. Therefore we can squeeze dimension in mean/offset</span>
-        <span class="n">rescale_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;input_scale&quot;</span><span class="p">])</span>
-        <span class="n">rescale_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">])</span>
-
         <span class="c1"># Computing quantization parameters</span>
         <span class="n">out_tensor_range</span> <span class="o">=</span> <span class="n">TensorData</span><span class="p">(</span><span class="n">lowest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;range_min&quot;</span><span class="p">],</span>
                                       <span class="n">highest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;range_max&quot;</span><span class="p">])</span>
-        <span class="n">input_scale_zp</span><span class="p">,</span> <span class="n">output_scale_zp</span> <span class="o">=</span> <span class="n">_compute_quantization_parameters</span><span class="p">(</span><span class="n">rescale_scale</span><span class="p">,</span>
-                                                                           <span class="n">rescale_offset</span><span class="p">,</span>
-                                                                           <span class="n">out_tensor_range</span><span class="p">,</span>
-                                                                           <span class="bp">self</span><span class="o">.</span><span class="n">input_signed</span><span class="p">)</span>
+
+        <span class="c1"># Compute output scale</span>
+        <span class="n">input_scale</span><span class="p">,</span> <span class="n">input_zp</span> <span class="o">=</span> <span class="n">input_zp_scale</span><span class="p">(</span><span class="n">out_tensor_range</span><span class="p">,</span> <span class="n">allow_zp</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_signed</span><span class="p">)</span>
 
         <span class="c1"># Scale to set in weights is the reciprocal of ONNX calibrated one.</span>
-        <span class="n">input_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">input_scale_zp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-
-        <span class="c1"># Compute weights to serialize</span>
-        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">:</span> <span class="n">input_scale</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_zp&quot;</span><span class="p">:</span> <span class="n">input_scale_zp</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">input_scale</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
         <span class="c1"># Save zero point (used by next layer)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;zero_point&quot;</span><span class="p">,</span> <span class="n">output_scale_zp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;zero_point&quot;</span><span class="p">,</span> <span class="n">input_zp</span><span class="p">)</span>
 
-        <span class="n">output_scale</span> <span class="o">=</span> <span class="n">output_scale_zp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Compute weights to serialize</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_zp&quot;</span><span class="p">:</span> <span class="n">input_zp</span><span class="p">}</span>
+
         <span class="k">if</span> <span class="n">force_fp</span><span class="p">:</span>
-            <span class="n">output_scale</span> <span class="o">=</span> <span class="n">round_to_nearest_pow2</span><span class="p">(</span><span class="n">output_scale</span><span class="p">)</span>
+            <span class="n">input_scale</span> <span class="o">=</span> <span class="n">round_to_nearest_pow2</span><span class="p">(</span><span class="n">input_scale</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">output_scale</span>
+        <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">input_scale</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_subgraph</span><span class="p">(</span><span class="n">op_type</span><span class="p">):</span>
@@ -860,7 +811,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, BrainChip Holdings Ltd. All Rights Reserved.</p>
+    <p>&#169; Copyright 2026, BrainChip Holdings Ltd. All Rights Reserved.</p>
   </div>
 
    

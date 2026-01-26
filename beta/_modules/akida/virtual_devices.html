@@ -168,6 +168,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#common-layer">Common layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida-v1-layers">Akida V1 layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida-v2-layers">Akida V2 layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_apis.html#akida-pico-layers">Akida Pico layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
@@ -249,6 +250,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#pico">Pico</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
@@ -291,6 +293,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#transposed-blocks">Transposed blocks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#detection-block">Detection block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#spatiotemporal-blocks">Spatiotemporal blocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#kernelized-block">Kernelized block</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
@@ -331,6 +334,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#centernet">CenterNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#akidaunet">AkidaUNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#spatiotemporal-tenns">Spatiotemporal TENNs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api_reference/akida_models_apis.html#recurrent-tenns">Recurrent TENNs</a></li>
 </ul>
 </li>
 </ul>
@@ -574,8 +578,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">namedtuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">sqrt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">NP</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span>
-                   <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Model</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">NP</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">FPGA_v2</span><span class="p">,</span> <span class="n">Pico_FPGA</span><span class="p">,</span> <span class="n">IpVersion</span><span class="p">,</span> <span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span>
+                   <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">LayerType</span><span class="p">,</span> <span class="n">Model</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.mapping</span><span class="w"> </span><span class="kn">import</span> <span class="n">MapMode</span>
 
 
@@ -837,6 +841,24 @@
 
 
 
+<div class="viewcode-block" id="PicoIP">
+<a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.PicoIP">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">PicoIP</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a Pico virtual device for Pico FPGA.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :obj:`Device`: a virtual device.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dma_event</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">dma_conf</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nps</span> <span class="o">=</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">{</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">TNP_R</span><span class="p">},</span> <span class="kc">False</span><span class="p">)]</span>
+
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">,</span> <span class="n">dma_event</span><span class="p">,</span> <span class="n">dma_conf</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Device</span><span class="p">(</span><span class="n">Pico_FPGA</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="create_device">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.create_device">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">create_device</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span>
@@ -914,7 +936,7 @@
         <span class="k">if</span> <span class="n">num_skip_dma_channel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">skip_dmas</span>
 
-        <span class="c1"># Distribute Skip DMAs accross columns as much as possible</span>
+        <span class="c1"># Distribute Skip DMAs across columns as much as possible</span>
         <span class="c1"># When the number of Skip DMAs exceeds the number of columns used by nps, we increase</span>
         <span class="c1"># the number of columns.</span>
         <span class="n">current_max_skip_dma_channels</span> <span class="o">=</span> <span class="n">num_cols</span> <span class="o">*</span> <span class="n">MAX_SKIP_DMA_CHANNELS_PER_COL</span>
@@ -1072,7 +1094,7 @@
             <span class="n">inbounds</span> <span class="o">=</span> <span class="n">new_inbounds</span>
 
         <span class="c1"># Yield the pair (inbound, target_layer) if both have been mapped</span>
-        <span class="c1"># Or if taget_layer is mapped and the inbound is an InputData layer.</span>
+        <span class="c1"># Or if target_layer is mapped and the inbound is an InputData layer.</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inbounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">t_layer</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">layer_type</span> <span class="o">==</span> <span class="n">LayerType</span><span class="o">.</span><span class="n">InputData</span> <span class="ow">or</span> \
                     <span class="n">inbounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1141,33 +1163,52 @@
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">total_fnps</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_params_with_hwpr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+    <span class="n">initial_skip_dma_channels</span> <span class="o">=</span> <span class="n">_get_initial_skip_dma_channels</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="n">num_fnp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">layer_seq</span> <span class="ow">in</span> <span class="n">_model_generator</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+        <span class="c1"># Compute the number of CNP/FNP needed to map the model in multiple passes,</span>
+        <span class="c1"># as the larger sum of 2 consecutive layers.</span>
+        <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
+        <span class="n">num_fnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_fnp</span><span class="p">,</span> <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">:</span> <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="s2">&quot;num_fnp&quot;</span><span class="p">:</span> <span class="n">num_fnp</span><span class="p">})</span>
+    <span class="c1"># To compute the minimum number of skip DMA channels needed when partial reconfiguration</span>
+    <span class="c1"># is allowed, we iterate the device until we find a valid one.</span>
+    <span class="n">num_skip_dma_channel</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">num_skip_dma_channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">initial_skip_dma_channels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="n">num_skip_dma_channel</span><span class="o">=</span><span class="n">num_skip_dma_channel</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">MapMode</span><span class="o">.</span><span class="n">Minimal</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">continue</span>
+    <span class="k">return</span> <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">,</span> <span class="n">num_skip_dma_channel</span>
+
+
 <div class="viewcode-block" id="compute_min_device">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_min_device">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_min_device</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
                        <span class="n">enable_hwpr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                        <span class="n">sram_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">minimal_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                       <span class="n">initial_num_nodes</span><span class="o">=</span><span class="mi">36</span><span class="p">):</span>
+                       <span class="n">minimal_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds the Akida virtual device that can fit the model entirely</span>
 <span class="sd">    with or without reconfiguration.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (akida.Model): the model used to determine the device.</span>
-<span class="sd">        enable_hwpr (bool, optional): if True, the device is computed assuming</span>
-<span class="sd">            partial reconfiguration. Defaults to False.</span>
+<span class="sd">        enable_hwpr (bool, optional): if True, the device is computed leveraging partial</span>
+<span class="sd">            reconfiguration as much as possible. Defaults to False.</span>
 <span class="sd">        sram_size (NP.SramSize, optional): Size of shared SRAM available inside the mesh.</span>
 <span class="sd">            Ignored when `minimal_memory` is True. Defaults to None.</span>
 <span class="sd">        minimal_memory (bool, optional): if True, computes and sets the minimal required</span>
 <span class="sd">            inputs and weights memory for the device. Defaults to False.</span>
-<span class="sd">        initial_num_nodes (int, optional): the initial number of nodes with which to compute</span>
-<span class="sd">            the base device. Defaults to 36.</span>
-
 <span class="sd">    Returns:</span>
 <span class="sd">        akida.Device: the computed device</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected model to be an </span><span class="si">{</span><span class="n">Model</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="n">NUM_NPS_PER_NODE</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">INITIAL_NUM_NODES</span> <span class="o">=</span> <span class="mi">256</span>
     <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">!=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only IpVersion.v2 models are supported. &quot;</span>
                          <span class="sa">f</span><span class="s2">&quot;Current model version=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">ip_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1180,10 +1221,10 @@
               <span class="s2">&quot;num_fnp&quot;</span><span class="p">:</span> <span class="n">_get_initial_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
               <span class="s2">&quot;sram_size&quot;</span><span class="p">:</span> <span class="n">sram_size</span><span class="p">}</span>
 
-    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NUM_NPS_PER_NODE</span> <span class="o">*</span> <span class="n">initial_num_nodes</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NUM_NPS_PER_NODE</span> <span class="o">*</span> <span class="n">INITIAL_NUM_NODES</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Impossible to compute base device: &quot;</span>
-                         <span class="sa">f</span><span class="s2">&quot;the number of initial nodes (</span><span class="si">{</span><span class="n">initial_num_nodes</span><span class="si">}</span><span class="s2">) is not enough.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Impossible to compute base device: This model requires more than  &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;the maximum nodes permitted (</span><span class="si">{</span><span class="n">INITIAL_NUM_NODES</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># Map model with the default parameters.</span>
@@ -1192,23 +1233,11 @@
     <span class="c1"># Now that the model has been mapped onto the base device,</span>
     <span class="c1"># we can compute the parameters to build the required device.</span>
     <span class="k">if</span> <span class="n">enable_hwpr</span><span class="p">:</span>
-        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">layer_seq</span> <span class="ow">in</span> <span class="n">_model_generator</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
-            <span class="c1"># Compute the number of CNP/FNP needed to map the model in multiple passes,</span>
-            <span class="c1"># as the larger sum of 2 consecutive layers.</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">],</span>
-                                        <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">],</span> <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">layer_seq</span><span class="p">))</span>
-        <span class="c1"># To compute the minimum number of skip DMA channels needed when partial reconfiguration</span>
-        <span class="c1"># is allowed, we iterate the device until we find a valid one.</span>
-        <span class="k">for</span> <span class="n">num_skip_dma_channel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="n">num_skip_dma_channel</span><span class="o">=</span><span class="n">num_skip_dma_channel</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
-                <span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">MapMode</span><span class="o">.</span><span class="n">Minimal</span><span class="p">,</span> <span class="n">hw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_skip_dma_channel</span>
-                <span class="k">break</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="k">continue</span>
+        <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">,</span> <span class="n">num_skip_dma_channel</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_compute_params_with_hwpr</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_cnp_tnp</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_fnp</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_skip_dma_channel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_skip_dma_channel</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -1237,13 +1266,15 @@
 
 <div class="viewcode-block" id="compute_common_device">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_common_device">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute_common_device</span><span class="p">(</span><span class="n">ak_models</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_common_device</span><span class="p">(</span><span class="n">ak_models</span><span class="p">,</span> <span class="n">enable_hwpr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes a common Akida device that can run all the given models.</span>
 <span class="sd">    Ensures all models were mapped.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        ak_models (List[akida.Model]): A list of Akida models whose hardware</span>
 <span class="sd">            requirements will be combined.</span>
+<span class="sd">        enable_hwpr (bool, optional): if True, the device is computed leveraging partial</span>
+<span class="sd">            reconfiguration as much as possible. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        akida.Device: A new device that can map all the given models.</span>
@@ -1267,14 +1298,24 @@
 
     <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">:</span>
         <span class="c1"># Update params</span>
-        <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">pass_</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">passes</span><span class="p">:</span>
-                <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span>
-                                      <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
-                <span class="n">max_num_fnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_fnp</span><span class="p">,</span>
-                                  <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
-                <span class="n">max_num_skip_dma_channel</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_skip_dma_channel</span><span class="p">,</span>
-                                               <span class="n">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">enable_hwpr</span><span class="p">:</span>
+            <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">,</span> <span class="n">num_skip_dma_channel</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">_compute_params_with_hwpr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                          <span class="n">sram_size</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="p">,</span>
+                                          <span class="n">include_hrc</span><span class="o">=</span><span class="n">include_hrc</span><span class="p">))</span>
+            <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span> <span class="n">num_cnp_tnp</span><span class="p">)</span>
+            <span class="n">max_num_fnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_fnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">)</span>
+            <span class="n">max_num_skip_dma_channel</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_skip_dma_channel</span><span class="p">,</span>
+                                           <span class="n">num_skip_dma_channel</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sequence</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">pass_</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">passes</span><span class="p">:</span>
+                    <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span>
+                                          <span class="n">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+                    <span class="n">max_num_fnp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_fnp</span><span class="p">,</span>
+                                      <span class="n">_compute_number_of_fnp</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
+                    <span class="n">max_num_skip_dma_channel</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_skip_dma_channel</span><span class="p">,</span>
+                                                   <span class="n">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
 
         <span class="c1"># Update Sram size</span>
         <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sram_size</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">,</span>
@@ -1295,7 +1336,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, BrainChip Holdings Ltd. All Rights Reserved.</p>
+    <p>&#169; Copyright 2026, BrainChip Holdings Ltd. All Rights Reserved.</p>
   </div>
 
    

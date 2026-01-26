@@ -168,6 +168,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#common-layer">Common layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-v1-layers">Akida V1 layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-v2-layers">Akida V2 layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_apis.html#akida-pico-layers">Akida Pico layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_apis.html#layer-parameters">Layer parameters</a><ul>
@@ -249,6 +250,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#pico">Pico</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/quantizeml_apis.html#recording">Recording</a></li>
@@ -291,6 +293,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#transposed-blocks">Transposed blocks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#detection-block">Detection block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#spatiotemporal-blocks">Spatiotemporal blocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#kernelized-block">Kernelized block</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#helpers">Helpers</a><ul>
@@ -331,6 +334,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#centernet">CenterNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#akidaunet">AkidaUNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#spatiotemporal-tenns">Spatiotemporal TENNs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api_reference/akida_models_apis.html#recurrent-tenns">Recurrent TENNs</a></li>
 </ul>
 </li>
 </ul>
@@ -600,13 +604,28 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.compute_shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_onnx_conv_output</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.set_weights</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_weights_on_qnode</span><span class="p">,</span> <span class="n">set_max_value_on_qnode</span><span class="p">,</span> <span class="n">set_range_max_on_qnode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..graph_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">TENSOR_SHAPE</span><span class="p">,</span> <span class="n">get_field</span><span class="p">,</span> <span class="n">get_node</span><span class="p">,</span> <span class="n">get_activation</span><span class="p">,</span>
-                           <span class="n">get_tensor_shape</span><span class="p">,</span> <span class="n">check_node_attributes</span><span class="p">)</span>
+                           <span class="n">get_tensor_shape</span><span class="p">,</span> <span class="n">check_node_attributes</span><span class="p">,</span> <span class="n">get_variable</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..quantization.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">quantize_to_qfloat</span><span class="p">,</span> <span class="n">aligned_quantize</span><span class="p">,</span> <span class="n">fold_zero_point</span><span class="p">,</span> <span class="n">align_to</span><span class="p">,</span>
                                  <span class="n">downscale</span><span class="p">,</span> <span class="n">compute_lut_values</span><span class="p">,</span> <span class="n">dequantize</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_qconv</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">tensor_ranges</span><span class="p">):</span>
+    <span class="c1"># Resolve Conv and optional Pad</span>
     <span class="n">conv_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pad_node</span> <span class="o">=</span> <span class="n">get_node</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s2">&quot;BRNPad&quot;</span><span class="p">)</span>
+
+    <span class="n">pads</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">padding_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">pad_node</span><span class="p">:</span>
+        <span class="n">conv_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">padding_value</span> <span class="o">=</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">pad_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+        <span class="n">pads</span> <span class="o">=</span> <span class="n">get_variable</span><span class="p">(</span><span class="n">pad_node</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pads_attr</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pads_attr</span><span class="p">:</span>
+            <span class="n">pads</span> <span class="o">=</span> <span class="n">transform_pads_into_array</span><span class="p">(</span><span class="n">pads_attr</span><span class="p">)</span>
+
     <span class="k">assert</span> <span class="n">conv_node</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s1">&#39;Conv&#39;</span>
 
     <span class="c1"># Check supported attributes</span>
@@ -644,9 +663,12 @@
 
     <span class="c1"># Sets the weights to configure the operation chain</span>
     <span class="n">set_weights_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">conv_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
-    <span class="n">pads</span> <span class="o">=</span> <span class="n">get_field</span><span class="p">(</span><span class="n">conv_node</span><span class="p">,</span> <span class="s1">&#39;pads&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pads</span><span class="p">:</span>
-        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">transform_pads_into_array</span><span class="p">(</span><span class="n">pads</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">pad_node</span><span class="p">:</span>
+        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;padding_value&quot;</span><span class="p">,</span> <span class="n">padding_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">qconv</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">pads</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">act_node</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;Clip&quot;</span><span class="p">:</span>
         <span class="n">set_max_value_on_qnode</span><span class="p">(</span><span class="n">qconv</span><span class="p">,</span> <span class="n">act_node</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
 
@@ -710,6 +732,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;bias&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;max_value&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;padding_value&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_weight</span><span class="p">(</span><span class="s2">&quot;act_range_max&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 
@@ -730,6 +753,9 @@
         <span class="c1"># Initialize weights</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;pads&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;pads&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kernel_shape</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;padding_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_weight</span><span class="p">(</span><span class="s2">&quot;padding_value&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kernel_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span>
 
         <span class="c1"># Compute output shape</span>
         <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="n">compute_onnx_conv_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -754,11 +780,15 @@
         <span class="n">weights_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;bias&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;InputConv&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
-            <span class="c1"># If calibration was done per tensor, repeat zero point over each channel</span>
             <span class="n">zero_point</span> <span class="o">=</span> <span class="n">qinput</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;zero_point&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">zero_point</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">zero_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">zero_point</span><span class="p">,</span> <span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;Xpad&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_point</span>
+
+            <span class="c1"># Quantize padding value</span>
+            <span class="n">qpad_value</span> <span class="o">=</span> <span class="n">aligned_quantize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;padding_value&quot;</span><span class="p">],</span>
+                                          <span class="n">qinput</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">],</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">weights_dict</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;Xpad&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero_point</span> <span class="o">+</span> <span class="n">qpad_value</span>
+
             <span class="c1"># Fold zero point in bias</span>
             <span class="c1"># Note: Dequantize kernel instead to use the float to reduce quantization error</span>
             <span class="n">kernel</span> <span class="o">=</span> <span class="n">dequantize</span><span class="p">(</span><span class="n">qweights</span><span class="p">,</span> <span class="n">i_scale</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -800,7 +830,7 @@
         <span class="n">weights_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">),</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span>
                              <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;S_out&quot;</span><span class="p">:</span> <span class="n">align_to</span><span class="p">(</span><span class="n">s_out</span><span class="p">,</span> <span class="n">qweights</span><span class="o">.</span><span class="n">ndim</span><span class="p">)})</span>
 
-        <span class="c1"># Return quantized weights and ouput scale</span>
+        <span class="c1"># Return quantized weights and output scale</span>
         <span class="k">return</span> <span class="n">weights_dict</span><span class="p">,</span> <span class="n">ocalib_scale</span>
 
     <span class="nd">@staticmethod</span>
@@ -828,7 +858,7 @@
         <span class="c1"># LUT (optional)</span>
         <span class="k">if</span> <span class="s2">&quot;LUT&quot;</span> <span class="ow">in</span> <span class="n">op_type</span><span class="p">:</span>
             <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span>
-            <span class="c1"># Intermedial downscale</span>
+            <span class="c1"># Intermediate downscale</span>
             <span class="n">nodes</span> <span class="o">+=</span> <span class="n">get_scale_out_ops</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;Ys&quot;</span><span class="p">,</span> <span class="n">scale_name</span><span class="o">=</span><span class="s2">&quot;ActScale&quot;</span><span class="p">,</span>
                                        <span class="n">shift_name</span><span class="o">=</span><span class="s2">&quot;ActShift&quot;</span><span class="p">,</span> <span class="n">bitwidth</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
             <span class="c1"># Main operation</span>
@@ -861,7 +891,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, BrainChip Holdings Ltd. All Rights Reserved.</p>
+    <p>&#169; Copyright 2026, BrainChip Holdings Ltd. All Rights Reserved.</p>
   </div>
 
    
