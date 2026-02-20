@@ -171,6 +171,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#common-layer">Common layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#akida-v1-layers">Akida V1 layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#akida-v2-layers">Akida V2 layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#akida-pico-layers">Akida Pico layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#layer-parameters">Layer parameters</a><ul>
@@ -252,6 +253,7 @@
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#pico">Pico</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#recording">Recording</a></li>
@@ -294,6 +296,7 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#transposed-blocks">Transposed blocks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#detection-block">Detection block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#spatiotemporal-blocks">Spatiotemporal blocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#kernelized-block">Kernelized block</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_models_apis.html#helpers">Helpers</a><ul>
@@ -334,6 +337,7 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#centernet">CenterNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#akidaunet">AkidaUNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#spatiotemporal-tenns">Spatiotemporal TENNs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_models_apis.html#recurrent-tenns">Recurrent TENNs</a></li>
 </ul>
 </li>
 </ul>
@@ -2227,6 +2231,95 @@ sign.</p>
 </dd></dl>
 
 </section>
+<section id="akida-pico-layers">
+<h3>Akida Pico layers<a class="headerlink" href="#akida-pico-layers" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="akida.StatefulRecurrent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">StatefulRecurrent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stateful_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsample=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation=&lt;ActivationType.ReLU:</span> <span class="pre">1&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_bits=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_bits=28</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_op_buffer_bits=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_state_bits=16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/stateful_recurrent.html#StatefulRecurrent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.StatefulRecurrent" title="Link to this definition"></a></dt>
+<dd><p>This represents the Akida StatefulRecurrent layer.</p>
+<p>To store the previous state of the layer, this time dependent layer has an internal state
+variable that is updated at each run.</p>
+<p>This main layer operation is preceded by a matmul (input) projection and followed by another
+matmul (output) projection followed by a bias addition.</p>
+<p>Optional timesteps subsampling can be done before output projection. Subsampling drops
+timesteps from the (T, C) tensors.</p>
+<p>The StatefulRecurrent layer operations can be described as follows:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Input</span> <span class="n">shift</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">&lt;&lt;</span> <span class="n">input_shift</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Input</span> <span class="n">projection</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">input_proj</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">new_state</span> <span class="o">=</span> <span class="n">scale_out</span><span class="p">(</span><span class="n">input_proj</span><span class="p">,</span> <span class="n">new_state_shift</span><span class="p">,</span> <span class="n">new_state_scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Stateful</span> <span class="n">recurrent</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output_state_real</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">timesteps</span><span class="p">,</span> <span class="n">new_state</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">foreach</span> <span class="n">timestep</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">updated_real</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="n">state_real</span><span class="p">,</span> <span class="n">A_real</span><span class="p">)</span> <span class="o">-</span> <span class="n">multiply</span><span class="p">(</span><span class="n">state_imag</span><span class="p">,</span> <span class="n">A_imag</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">updated_real</span> <span class="o">+=</span> <span class="n">new_state</span><span class="p">[</span><span class="n">timestep</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">updated_imag</span> <span class="o">=</span> <span class="n">multiply</span><span class="p">(</span><span class="n">state_real</span><span class="p">,</span> <span class="n">A_imag</span><span class="p">)</span> <span class="o">+</span> <span class="n">multiply</span><span class="p">(</span><span class="n">state_imag</span><span class="p">,</span> <span class="n">A_real</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">state_real</span> <span class="o">=</span> <span class="n">updated_real</span> <span class="o">&gt;&gt;</span> <span class="n">shift_out</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">state_imag</span> <span class="o">=</span> <span class="n">updated_imag</span> <span class="o">&gt;&gt;</span> <span class="n">shift_out</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">output_state_real</span><span class="p">[</span><span class="n">timestep</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_real</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subsampling</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">output_state_real</span><span class="p">[:,</span> <span class="p">(</span><span class="n">subsample</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)::</span><span class="n">subsample</span><span class="p">,</span> <span class="p">:]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Output</span> <span class="n">projection</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output_proj</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span> <span class="o">&lt;&lt;</span> <span class="n">bias_shift</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">output_proj</span> <span class="o">+</span> <span class="n">bias</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Activation</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">scale_out</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">output_proj_shift</span><span class="p">,</span> <span class="n">output_proj_scale</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that output values will be saturated on the range that can be represented
+with output_bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stateful_channels</strong> (<em>int</em>) – the size of the internal state and also the number of output
+channels for the input projection.</p></li>
+<li><p><strong>output_channels</strong> (<em>int</em>) – number of output channels.</p></li>
+<li><p><strong>subsample</strong> (<em>int</em><em>, </em><em>optional</em>) – subsampling value that defines rate at which outputs are
+produced. Defaults to 1.</p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#akida.ActivationType" title="akida.ActivationType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ActivationType</span></code></a>, optional) – activation type. Defaults to
+<cite>ActivationType.ReLU</cite>.</p></li>
+<li><p><strong>output_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – output bitwidth. Defaults to 8.</p></li>
+<li><p><strong>buffer_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – buffer bitwidth for input and output projection operations.
+Defaults to 28.</p></li>
+<li><p><strong>post_op_buffer_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – internal bitwidth for stateful and post operations.
+Defaults to 32.</p></li>
+<li><p><strong>internal_state_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – internal state bitwidth. Defaults to 16.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer. Defaults to empty string.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="akida.PicoPostProcessing">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">PicoPostProcessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/layers/pico_post_processing.html#PicoPostProcessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.PicoPostProcessing" title="Link to this definition"></a></dt>
+<dd><p>Implementation of post-processing layer for Akida neural processing units.</p>
+<p>This layer implements of the PicoPostProcessing operation, which computes mean absolute
+difference between predictions and targets, then applies binarization using a threshold.</p>
+<p>The layer performs:</p>
+<ol class="arabic simple" start="0">
+<li><p>Downscale y_pred towards y_true bitwidth and scale</p></li>
+<li><p>Mean absolute difference: mean(abs(y_pred - y_true), axis)</p></li>
+<li><p>Binarization: output = 1.0 if difference &gt;= threshold else 0.0</p></li>
+</ol>
+<p>This is commonly used for lightweight evaluation tasks such as anomaly detection
+or pass/fail classification where continuous error metrics are converted to
+binary decisions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buffer_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – number of bits for internal buffer computations.
+Defaults to 44 for high precision intermediate calculations.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name of the layer. Defaults to empty string.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 <section id="layer-parameters">
 <h2>Layer parameters<a class="headerlink" href="#layer-parameters" title="Link to this heading"></a></h2>
@@ -2250,7 +2343,6 @@ sign.</p>
 <p>InputConv2D</p>
 <p>DepthwiseConv2D</p>
 <p>Conv2DTranspose</p>
-<p>ExtractToken</p>
 <p>Dequantizer</p>
 <p>DepthwiseConv2DTranspose</p>
 <p>BufferTempConv</p>
@@ -2258,6 +2350,7 @@ sign.</p>
 <p>StatefulRecurrent</p>
 <p>Dense1D</p>
 <p>Quantizer</p>
+<p>PicoPostProcessing</p>
 </div></blockquote>
 </dd></dl>
 
@@ -2617,15 +2710,30 @@ NSoC.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="akida.PicoIP">
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">PicoIP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#PicoIP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.PicoIP" title="Link to this definition"></a></dt>
+<dd><p>Returns a Pico virtual device for Pico FPGA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a virtual device.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#akida.Device" title="akida.Device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Device</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="akida.create_device">
 <span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">create_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_cnp_tnp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fnp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_skip_dma_channel=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_hrc=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sram_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hw_version=BC.A2.001.000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#create_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.create_device" title="Link to this definition"></a></dt>
 <dd><p>Creates an Akida device with the specified hardware components.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_cnp_tnp</strong> (<em>int</em>) – Number of CNP and TNP_B units (TNP_B is only available on 2.x devices).</p></li>
+<li><p><strong>num_cnp_tnp</strong> (<em>int</em>) – Number of CNP and TNP units. (TNP is available on 2.x and Pico devices.
+Ignored on Pico devices; treated as 1.)</p></li>
 <li><p><strong>num_fnp</strong> (<em>int</em>) – Number of FNP units to include. An FNP2 with external memory is added first,
-followed by FNP3 units.</p></li>
+followed by FNP3 units. (Ignored on Pico devices; treated as 0.)</p></li>
 <li><p><strong>num_skip_dma_channel</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of skip DMA channels (only applicable for
 2.x devices). Defaults to 0.</p></li>
 <li><p><strong>include_hrc</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include the HRC. Defaults to True.</p></li>
@@ -2648,37 +2756,37 @@ mesh for each two NPs. Defaults to None.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="akida.compute_minimal_memory">
 <span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_minimal_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_minimal_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_minimal_memory" title="Link to this definition"></a></dt>
-<dd><p>Compute the minimal memory required for inputs and weights on the device.</p>
+<dd><p>Compute the minimal memory required on the device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a>) – an Akida model.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>minimal input_buffer memory and minimal weight memory in bytes.</p>
+<dd class="field-even"><p>minimal input_buffer memory, weight memory in bytes,
+stsram_32b_size, fsram_64b_size, tsram_51b_size, evsram_32b_size. The last four integer
+values are Pico-specific.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, int</p>
+<dd class="field-odd"><p>int, int, int, int, int, int</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="akida.compute_min_device">
-<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_min_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_hwpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sram_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimal_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_num_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">36</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_min_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_min_device" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_min_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_hwpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sram_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimal_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_min_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_min_device" title="Link to this definition"></a></dt>
 <dd><p>Builds the Akida virtual device that can fit the model entirely
 with or without reconfiguration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a>) – the model used to determine the device.</p></li>
-<li><p><strong>enable_hwpr</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the device is computed assuming
-partial reconfiguration. Defaults to False.</p></li>
+<li><p><strong>enable_hwpr</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the device is computed leveraging partial
+reconfiguration as much as possible. Defaults to False. (Ignore for Pico devices)</p></li>
 <li><p><strong>sram_size</strong> (<a class="reference internal" href="#akida.NP.SramSize" title="akida.NP.SramSize"><em>NP.SramSize</em></a><em>, </em><em>optional</em>) – Size of shared SRAM available inside the mesh.
 Ignored when <cite>minimal_memory</cite> is True. Defaults to None.</p></li>
 <li><p><strong>minimal_memory</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, computes and sets the minimal required
 inputs and weights memory for the device. Defaults to False.</p></li>
-<li><p><strong>initial_num_nodes</strong> (<em>int</em><em>, </em><em>optional</em>) – the initial number of nodes with which to compute
-the base device. Defaults to 36.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2692,13 +2800,17 @@ the base device. Defaults to 36.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="akida.compute_common_device">
-<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_common_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ak_models</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_common_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_common_device" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">akida.</span></span><span class="sig-name descname"><span class="pre">compute_common_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ak_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_hwpr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida/virtual_devices.html#compute_common_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida.compute_common_device" title="Link to this definition"></a></dt>
 <dd><p>Computes a common Akida device that can run all the given models.
 Ensures all models were mapped.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ak_models</strong> (<em>List</em><em>[</em><a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a><em>]</em>) – A list of Akida models whose hardware
-requirements will be combined.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ak_models</strong> (<em>List</em><em>[</em><a class="reference internal" href="#akida.Model" title="akida.Model"><em>akida.Model</em></a><em>]</em>) – A list of Akida models whose hardware
+requirements will be combined.</p></li>
+<li><p><strong>enable_hwpr</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the device is computed leveraging partial
+reconfiguration as much as possible. Defaults to False. (Ignore for Pico devices)</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new device that can map all the given models.</p>
@@ -3325,11 +3437,23 @@ All sizes are in bytes.</p>
 <p><strong>Attributes:</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.external_size" title="akida.NP.MemoryInfo.external_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">external_size</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.evsram_32b_size" title="akida.NP.MemoryInfo.evsram_32b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evsram_32b_size</span></code></a></p></td>
+<td><p>Evsram Pico memory size.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.external_size" title="akida.NP.MemoryInfo.external_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">external_size</span></code></a></p></td>
 <td><p>External memory size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.fsram_64b_size" title="akida.NP.MemoryInfo.fsram_64b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fsram_64b_size</span></code></a></p></td>
+<td><p>Fsram Pico memory size.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.input_size" title="akida.NP.MemoryInfo.input_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_size</span></code></a></p></td>
 <td><p>Input memory size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.stsram_32b_size" title="akida.NP.MemoryInfo.stsram_32b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stsram_32b_size</span></code></a></p></td>
+<td><p>Stsram size for Pico.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.tsram_51b_size" title="akida.NP.MemoryInfo.tsram_51b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsram_51b_size</span></code></a></p></td>
+<td><p>Tsram Pico memory size.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.MemoryInfo.weight_size" title="akida.NP.MemoryInfo.weight_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weight_size</span></code></a></p></td>
 <td><p>Weight memory size.</p></td>
@@ -3337,15 +3461,39 @@ All sizes are in bytes.</p>
 </tbody>
 </table>
 <dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.MemoryInfo.evsram_32b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evsram_32b_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.evsram_32b_size" title="Link to this definition"></a></dt>
+<dd><p>Evsram Pico memory size. (Number of 32-bits words)</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="akida.NP.MemoryInfo.external_size">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">external_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.external_size" title="Link to this definition"></a></dt>
 <dd><p>External memory size. (Bytes)</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.MemoryInfo.fsram_64b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fsram_64b_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.fsram_64b_size" title="Link to this definition"></a></dt>
+<dd><p>Fsram Pico memory size. (Number of 64-bits words)</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="akida.NP.MemoryInfo.input_size">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.input_size" title="Link to this definition"></a></dt>
 <dd><p>Input memory size. (Bytes)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.MemoryInfo.stsram_32b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stsram_32b_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.stsram_32b_size" title="Link to this definition"></a></dt>
+<dd><p>Stsram size for Pico. (Number of 32-bits words)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.MemoryInfo.tsram_51b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tsram_51b_size</span></span><a class="headerlink" href="#akida.NP.MemoryInfo.tsram_51b_size" title="Link to this definition"></a></dt>
+<dd><p>Tsram Pico memory size. (Number of 51-bits words)</p>
 </dd></dl>
 
 <dl class="py property">
@@ -3437,8 +3585,20 @@ All sizes are in bytes.</p>
 <p><strong>Attributes:</strong></p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.SramSize.evsram_32b_size" title="akida.NP.SramSize.evsram_32b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evsram_32b_size</span></code></a></p></td>
+<td><p>Size of EVSRAM in 32-bit words (Pico only).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.SramSize.fsram_64b_size" title="akida.NP.SramSize.fsram_64b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fsram_64b_size</span></code></a></p></td>
+<td><p>Size of FSRAM in 64-bit words (Pico only).</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.SramSize.input_bytes" title="akida.NP.SramSize.input_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_bytes</span></code></a></p></td>
 <td><p>Size of shared input packet SRAM available inside the mesh for each two NPs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.SramSize.stsram_32b_size" title="akida.NP.SramSize.stsram_32b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stsram_32b_size</span></code></a></p></td>
+<td><p>Size of STSRAM in 32-bit words (Pico only).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#akida.NP.SramSize.tsram_51b_size" title="akida.NP.SramSize.tsram_51b_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsram_51b_size</span></code></a></p></td>
+<td><p>Size of TSRAM in 51-bit words (Pico only).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.NP.SramSize.weight_bytes" title="akida.NP.SramSize.weight_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weight_bytes</span></code></a></p></td>
 <td><p>Size of shared filter SRAM available inside the mesh for each two NPs.</p></td>
@@ -3446,9 +3606,33 @@ All sizes are in bytes.</p>
 </tbody>
 </table>
 <dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.SramSize.evsram_32b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evsram_32b_size</span></span><a class="headerlink" href="#akida.NP.SramSize.evsram_32b_size" title="Link to this definition"></a></dt>
+<dd><p>Size of EVSRAM in 32-bit words (Pico only).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.SramSize.fsram_64b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fsram_64b_size</span></span><a class="headerlink" href="#akida.NP.SramSize.fsram_64b_size" title="Link to this definition"></a></dt>
+<dd><p>Size of FSRAM in 64-bit words (Pico only).</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="akida.NP.SramSize.input_bytes">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_bytes</span></span><a class="headerlink" href="#akida.NP.SramSize.input_bytes" title="Link to this definition"></a></dt>
 <dd><p>Size of shared input packet SRAM available inside the mesh for each two NPs. (Bytes).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.SramSize.stsram_32b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stsram_32b_size</span></span><a class="headerlink" href="#akida.NP.SramSize.stsram_32b_size" title="Link to this definition"></a></dt>
+<dd><p>Size of STSRAM in 32-bit words (Pico only).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="akida.NP.SramSize.tsram_51b_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tsram_51b_size</span></span><a class="headerlink" href="#akida.NP.SramSize.tsram_51b_size" title="Link to this definition"></a></dt>
+<dd><p>Size of TSRAM in 51-bit words (Pico only).</p>
 </dd></dl>
 
 <dl class="py property">
@@ -3471,33 +3655,33 @@ All sizes are in bytes.</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapMode.AllNps" title="akida.MapMode.AllNps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AllNps</span></code></a></p></td>
-<td><p>Maximize HW ressources (number of NPs used) with minimum HW passes.</p></td>
+<td><p>Maximize HW resources (number of NPs used) with minimum HW passes.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#akida.MapMode.HwPr" title="akida.MapMode.HwPr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HwPr</span></code></a></p></td>
-<td><p>Maximize HW ressources (number of NPs used) with maximum HW passes.</p></td>
+<td><p>Maximize HW resources (number of NPs used) with maximum HW passes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#akida.MapMode.Minimal" title="akida.MapMode.Minimal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Minimal</span></code></a></p></td>
-<td><p>Minimize HW ressources</p></td>
+<td><p>Minimize HW resources</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="akida.MapMode.AllNps">
 <span class="sig-name descname"><span class="pre">AllNps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#akida.MapMode.AllNps" title="Link to this definition"></a></dt>
-<dd><p>Maximize HW ressources (number of NPs used) with minimum HW passes.</p>
+<dd><p>Maximize HW resources (number of NPs used) with minimum HW passes.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="akida.MapMode.HwPr">
 <span class="sig-name descname"><span class="pre">HwPr</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#akida.MapMode.HwPr" title="Link to this definition"></a></dt>
-<dd><p>Maximize HW ressources (number of NPs used) with maximum HW passes.
+<dd><p>Maximize HW resources (number of NPs used) with maximum HW passes.
 This mode provides the potential for higher-performances</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="akida.MapMode.Minimal">
 <span class="sig-name descname"><span class="pre">Minimal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#akida.MapMode.Minimal" title="Link to this definition"></a></dt>
-<dd><p>Minimize HW ressources</p>
+<dd><p>Minimize HW resources</p>
 </dd></dl>
 
 </dd></dl>
@@ -3673,7 +3857,7 @@ This mode provides the potential for higher-performances</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, BrainChip Holdings Ltd. All Rights Reserved.</p>
+    <p>&#169; Copyright 2026, BrainChip Holdings Ltd. All Rights Reserved.</p>
   </div>
 
    

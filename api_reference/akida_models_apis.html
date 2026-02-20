@@ -171,6 +171,7 @@
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#common-layer">Common layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida-v1-layers">Akida V1 layers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida-v2-layers">Akida V2 layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="akida_apis.html#akida-pico-layers">Akida Pico layers</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="akida_apis.html#layer-parameters">Layer parameters</a><ul>
@@ -252,6 +253,7 @@
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#pooling">Pooling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#rescaling">Rescaling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#pico">Pico</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#quantizer-dequantizer">Quantizer/Dequantizer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#calibration">Calibration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="quantizeml_apis.html#recording">Recording</a></li>
@@ -294,6 +296,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#transposed-blocks">Transposed blocks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#detection-block">Detection block</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#spatiotemporal-blocks">Spatiotemporal blocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kernelized-block">Kernelized block</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#helpers">Helpers</a><ul>
@@ -334,6 +337,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#centernet">CenterNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#akidaunet">AkidaUNet</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#spatiotemporal-tenns">Spatiotemporal TENNs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#recurrent-tenns">Recurrent TENNs</a></li>
 </ul>
 </li>
 </ul>
@@ -882,6 +886,38 @@ Defaults to None.</p></li>
 </dd></dl>
 
 </section>
+<section id="kernelized-block">
+<h3>Kernelized block<a class="headerlink" href="#kernelized-block" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.layer_blocks.kernelized_block">
+<span class="sig-prename descclassname"><span class="pre">akida_models.layer_blocks.</span></span><span class="sig-name descname"><span class="pre">kernelized_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_batchnorm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relu_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ReLU'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/layer_blocks.html#kernelized_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.layer_blocks.kernelized_block" title="Link to this definition"></a></dt>
+<dd><p>Adds a Kernelized custom layer with optional layers in the following order:
+stride, batch normalization, activation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor of shape <cite>(rows, cols, channels)</cite></p></li>
+<li><p><strong>num_coeffs</strong> (<em>int</em>) – number of embedding coefficients</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – number of output channels</p></li>
+<li><p><strong>subsampling</strong> (<em>int</em><em>, </em><em>optional</em>) – factor by which to downsample the timesteps dimensions.
+If ‘None’, no subsampling will be added. Defaults to None.</p></li>
+<li><p><strong>add_batchnorm</strong> (<em>bool</em><em>, </em><em>optional</em>) – add a BatchNormalization layer. Defaults to False.</p></li>
+<li><p><strong>relu_activation</strong> (<em>str</em><em>, </em><em>optional</em>) – the ReLU activation to add to the layer in the form ‘ReLUx’
+where ‘x’ is the max_value to use. Set to False to disable activation. Defaults to
+‘ReLU’.</p></li>
+<li><p><strong>**kwargs</strong> – arguments passed to the Kernelized layer, such as repeat, speed, speed_range.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>output tensor of conv2D block.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 <section id="helpers">
 <h2>Helpers<a class="headerlink" href="#helpers" title="Link to this heading"></a></h2>
@@ -909,7 +945,7 @@ trained yet.</p>
 added.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the same model with BatchNormalisation layers updated.</p>
+<dd class="field-even"><p>the same model with BatchNormalization layers updated.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>keras.Model</p>
@@ -1164,7 +1200,7 @@ With Akida v2, sepconv are unfused, the ReLU max value is “relu_v2” and the 
 of the block with GAP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>relu_v2</strong> (<em>str</em><em>, </em><em>optional</em>) – ReLUx string when targetting V2. Defaults to ReLU3.75.</p>
+<dd class="field-odd"><p><strong>relu_v2</strong> (<em>str</em><em>, </em><em>optional</em>) – ReLUx string when targeting V2. Defaults to ReLU3.75.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>fused, post_relu_gap, relu_activation</p>
@@ -1955,7 +1991,7 @@ convention, the scale factor is a number used as a divisor.</p></li>
 <dt class="sig sig-object py" id="akida_models.yolo_widerface_pretrained">
 <span class="sig-prename descclassname"><span class="pre">akida_models.</span></span><span class="sig-name descname"><span class="pre">yolo_widerface_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/detection/model_yolo.html#yolo_widerface_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.yolo_widerface_pretrained" title="Link to this definition"></a></dt>
 <dd><p>Helper method to retrieve a <cite>yolo_base</cite> model that was trained on WiderFace
-dataset and the anchors that are needed to interpet the model output.</p>
+dataset and the anchors that are needed to interpret the model output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1978,7 +2014,7 @@ quantized or not. Defaults to True.</p></li>
 <span class="sig-prename descclassname"><span class="pre">akida_models.</span></span><span class="sig-name descname"><span class="pre">yolo_voc_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/detection/model_yolo.html#yolo_voc_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.yolo_voc_pretrained" title="Link to this definition"></a></dt>
 <dd><p>Helper method to retrieve a <cite>yolo_base</cite> model that was trained on PASCAL
 VOC2012 dataset for ‘person’ and ‘car’ classes only, and the anchors that
-are needed to interpet the model output.</p>
+are needed to interpret the model output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2299,7 +2335,7 @@ original image dimensions, each defined by the coordinates [y1, x1, y2, x2].</p>
 <li><p><strong>anchors</strong> (<em>list</em>) – list of anchors boxes</p></li>
 <li><p><strong>nb_classes</strong> (<em>int</em>) – number of classes</p></li>
 <li><p><strong>obj_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – confidence threshold for a box. Defaults to 0.5.</p></li>
-<li><p><strong>nms_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – non-maximal supression threshold. Defaults to 0.5.</p></li>
+<li><p><strong>nms_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – non-maximal suppression threshold. Defaults to 0.5.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2477,7 +2513,7 @@ using <cite>preprocess_widerface.py</cite> module</p></li>
 <li><p><strong>period</strong> (<em>int</em><em>, </em><em>optional</em>) – periodicity the precision is printed,
 defaults to once per epoch. Defaults to 1.</p></li>
 <li><p><strong>obj_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – confidence threshold for a box. Defaults to 0.5.</p></li>
-<li><p><strong>nms_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – non-maximal supression threshold. Defaults to 0.5.</p></li>
+<li><p><strong>nms_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – non-maximal suppression threshold. Defaults to 0.5.</p></li>
 <li><p><strong>max_box_per_image</strong> (<em>int</em><em>, </em><em>optional</em>) – maximum number of detections per
 image, Defaults to 10.</p></li>
 <li><p><strong>preserve_aspect_ratio</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether aspect ratio is preserved
@@ -2510,7 +2546,7 @@ Defaults to <code class="xref py py-func docutils literal notranslate"><span cla
 thresholds from 0.5 to 0.95 with a step size of 0.05</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>a dictionnary containing mAP for each threshold and a dictionnary of label
+<dd class="field-odd"><p>a dictionary containing mAP for each threshold and a dictionary of label
 containing mAP for each class.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3159,6 +3195,73 @@ quantized or not. Defaults to True.</p>
 </dd></dl>
 
 </section>
+<section id="recurrent-tenns">
+<h3>Recurrent TENNs<a class="headerlink" href="#recurrent-tenns" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.tenn_recurrent_sc10">
+<span class="sig-prename descclassname"><span class="pre">akida_models.</span></span><span class="sig-name descname"><span class="pre">tenn_recurrent_sc10</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(16384,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(32768,</span> <span class="pre">0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/tenn_recurrent/model_tenn_recurrent.html#tenn_recurrent_sc10"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.tenn_recurrent_sc10" title="Link to this definition"></a></dt>
+<dd><p>Instantiates a TENN recurrent architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>tuple</em><em>, </em><em>optional</em>) – the input shape. Defaults to (16384, 1).</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em><em>, </em><em>optional</em>) – number of classes. Defaults to 10.</p></li>
+<li><p><strong>input_scaling</strong> (<em>tuple</em><em>, </em><em>optional</em>) – scale factor set to the max value of a 16bits unsigned
+inputs and offset set to 0. Note that following Akida convention, the scale factor
+is a number used as a divisor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a TENN recurrent model for SC10</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.tenn_recurrent_sc10_pretrained">
+<span class="sig-prename descclassname"><span class="pre">akida_models.</span></span><span class="sig-name descname"><span class="pre">tenn_recurrent_sc10_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/tenn_recurrent/model_tenn_recurrent.html#tenn_recurrent_sc10_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.tenn_recurrent_sc10_pretrained" title="Link to this definition"></a></dt>
+<dd><p>Helper method to retrieve an <cite>tenn_recurrent_sc10</cite> model that was trained on SC10 dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>quantized</strong> (<em>bool</em><em>, </em><em>optional</em>) – a boolean indicating whether the model should be loaded
+quantized or not. Defaults to True.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a Keras Model instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>keras.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="akida_models.tenn_recurrent.convert_to_stateful">
+<span class="sig-prename descclassname"><span class="pre">akida_models.tenn_recurrent.</span></span><span class="sig-name descname"><span class="pre">convert_to_stateful</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timesteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/akida_models/tenn_recurrent/convert_recurrent.html#convert_to_stateful"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#akida_models.tenn_recurrent.convert_to_stateful" title="Link to this definition"></a></dt>
+<dd><p>Converts the given Kernelized based model to a StatefulRecurrent based model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em>) – the source model</p></li>
+<li><p><strong>timesteps</strong> (<em>int</em><em>, </em><em>optional</em>) – number of timesteps. Defaults to 1.</p></li>
+<li><p><strong>threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – add a PicoPostProcessing layer with a threshold to compare
+the input with the reconstructed output. Useful in anomaly detection tasks.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>stateful model</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>keras model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 </section>
 
@@ -3173,7 +3276,7 @@ quantized or not. Defaults to True.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, BrainChip Holdings Ltd. All Rights Reserved.</p>
+    <p>&#169; Copyright 2026, BrainChip Holdings Ltd. All Rights Reserved.</p>
   </div>
 
    
