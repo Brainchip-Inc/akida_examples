@@ -588,18 +588,13 @@
 <span class="sd">    This main layer operation is preceded by a matmul (input) projection and followed by another</span>
 <span class="sd">    matmul (output) projection followed by a bias addition.</span>
 
-<span class="sd">    Optional shaping operations: a downshape can be done before the input projection, a timesteps</span>
-<span class="sd">    subsampling can be done before output projection and an upshape can be done after the output</span>
-<span class="sd">    projection. Subsampling drops timesteps from the (T, C) tensors while upshaping and downshaping</span>
-<span class="sd">    are reshaping operations that change the shape of the output tensor by applying a factor to</span>
-<span class="sd">    the timesteps and channels.</span>
+<span class="sd">    Optional timesteps subsampling can be done before output projection. Subsampling drops</span>
+<span class="sd">    timesteps from the (T, C) tensors.</span>
 
 <span class="sd">    The StatefulRecurrent layer operations can be described as follows:</span>
 
 <span class="sd">        &gt;&gt;&gt; Input shift:</span>
 <span class="sd">        &gt;&gt;&gt;     inputs = inputs &lt;&lt; input_shift</span>
-<span class="sd">        &gt;&gt;&gt; Downshape:</span>
-<span class="sd">        &gt;&gt;&gt;     inputs = reshape(inputs, [timestep / downshape, downshape * channels])</span>
 <span class="sd">        &gt;&gt;&gt; Input projection:</span>
 <span class="sd">        &gt;&gt;&gt;     input_proj = matmul(inputs, B)</span>
 <span class="sd">        &gt;&gt;&gt;     new_state = scale_out(input_proj, new_state_shift, new_state_scale)</span>
@@ -618,8 +613,6 @@
 <span class="sd">        &gt;&gt;&gt;     output_proj = matmul(outputs, C)</span>
 <span class="sd">        &gt;&gt;&gt;     bias = bias &lt;&lt; bias_shift</span>
 <span class="sd">        &gt;&gt;&gt;     output = output_proj + bias</span>
-<span class="sd">        &gt;&gt;&gt; Upshape:</span>
-<span class="sd">        &gt;&gt;&gt;     output = reshape(output, [timestep * upshape, channels / upshape])</span>
 <span class="sd">        &gt;&gt;&gt; Activation:</span>
 <span class="sd">        &gt;&gt;&gt;     output = relu(output)</span>
 <span class="sd">        &gt;&gt;&gt;     output = scale_out(output, output_proj_shift, output_proj_scale)</span>
@@ -633,10 +626,6 @@
 <span class="sd">        output_channels (int): number of output channels.</span>
 <span class="sd">        subsample (int, optional): subsampling value that defines rate at which outputs are</span>
 <span class="sd">            produced. Defaults to 1.</span>
-<span class="sd">        downshape (int, optional): value by which time steps are divided and channels are</span>
-<span class="sd">            multiplied before input projection. Defaults to 1.</span>
-<span class="sd">        upshape (int, optional): value by which time steps are multiplied and channels are divided.</span>
-<span class="sd">            after output projection. Defaults to 1.</span>
 <span class="sd">        activation (:obj:`ActivationType`, optional): activation type. Defaults to</span>
 <span class="sd">            `ActivationType.ReLU`.</span>
 <span class="sd">        output_bits (int, optional): output bitwidth. Defaults to 8.</span>
@@ -653,8 +642,6 @@
                  <span class="n">stateful_channels</span><span class="p">,</span>
                  <span class="n">output_channels</span><span class="p">,</span>
                  <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">downshape</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">upshape</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">activation</span><span class="o">=</span><span class="n">ActivationType</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span>
                  <span class="n">output_bits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                  <span class="n">buffer_bits</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
@@ -667,8 +654,6 @@
                     <span class="s2">&quot;stateful_channels&quot;</span><span class="p">:</span> <span class="n">stateful_channels</span><span class="p">,</span>
                     <span class="s2">&quot;output_channels&quot;</span><span class="p">:</span> <span class="n">output_channels</span><span class="p">,</span>
                     <span class="s2">&quot;subsample&quot;</span><span class="p">:</span> <span class="n">subsample</span><span class="p">,</span>
-                    <span class="s2">&quot;downshape&quot;</span><span class="p">:</span> <span class="n">downshape</span><span class="p">,</span>
-                    <span class="s2">&quot;upshape&quot;</span><span class="p">:</span> <span class="n">upshape</span><span class="p">,</span>
                     <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">activation</span><span class="p">,</span>
                     <span class="s2">&quot;output_bits&quot;</span><span class="p">:</span> <span class="n">output_bits</span><span class="p">,</span>
                     <span class="s2">&quot;post_op_buffer_bits&quot;</span><span class="p">:</span> <span class="n">post_op_buffer_bits</span><span class="p">,</span>

@@ -604,16 +604,15 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.saving</span><span class="w"> </span><span class="kn">import</span> <span class="n">serialize_keras_object</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">get_layers_by_type</span><span class="p">,</span> <span class="n">get_layer_index</span><span class="p">,</span>
-                                                           <span class="n">get_layers</span><span class="p">,</span> <span class="n">update_inbound</span><span class="p">,</span>
-                                                           <span class="n">inbound_node_generator</span><span class="p">)</span>
+                                                           <span class="n">inbound_node_generator</span><span class="p">,</span> <span class="n">get_layers</span><span class="p">,</span>
+                                                           <span class="n">update_inbound</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models.transforms.insert_layer</span><span class="w"> </span><span class="kn">import</span> <span class="n">insert_in_config</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.models.transforms.transforms_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_layers_pairs</span><span class="p">,</span> <span class="n">invert_layer_pairs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">quantizeml.layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">StatefulRecurrent</span><span class="p">,</span> <span class="n">ExtractToken</span><span class="p">,</span> <span class="n">StatefulProjection</span><span class="p">,</span>
                                <span class="n">PicoPostProcessing</span><span class="p">)</span>
 
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">..custom_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Kernelized</span><span class="p">,</span> <span class="n">Stride</span><span class="p">,</span> <span class="n">DownShaper</span><span class="p">,</span> <span class="n">UpShaper</span><span class="p">,</span> <span class="n">zoh_discretize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..custom_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Kernelized</span><span class="p">,</span> <span class="n">Stride</span><span class="p">,</span> <span class="n">zoh_discretize</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_clean_build_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
@@ -720,80 +719,6 @@
         <span class="n">kernelized_to_dense</span><span class="p">[</span><span class="n">kernelized</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_proj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">output_proj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">kernelized_to_dense</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_fold_downshapers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Folds the DownShaper layers into the following StatefulProjection layer when possible.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (keras.Model): original model</span>
-<span class="sd">        config (dict): model config being updated</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Retrieve DownShaper &gt; StatefulProjection pairs</span>
-    <span class="n">map_shaper_to_statefulproj</span> <span class="o">=</span> <span class="n">find_layers_pairs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">DownShaper</span><span class="p">,</span> <span class="n">StatefulProjection</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">shaper</span><span class="p">,</span> <span class="n">proj</span> <span class="ow">in</span> <span class="n">map_shaper_to_statefulproj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">shaper_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">shaper</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">proj_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">proj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="c1"># For sequential model, the &#39;DownShaper&#39; layers will simply be removed in the following step</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
-            <span class="c1"># tfmot code: &#39;inbound_nodes&#39; is a nested list where first element is the inbound</span>
-            <span class="c1"># layername, e.g: [[[&#39;conv1&#39;, 0, 0, {} ]]]</span>
-            <span class="n">updated_inbound</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">shaper_index</span><span class="p">][</span><span class="s1">&#39;inbound_nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-
-            <span class="c1"># Update StatefulProjection inbounds: after folding, their new inbound are the Shaper</span>
-            <span class="c1"># inbounds</span>
-            <span class="n">update_inbound</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">proj_index</span><span class="p">],</span> <span class="n">shaper</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">updated_inbound</span><span class="p">)</span>
-
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">proj_index</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;downshape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shaper</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="n">_remove_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">map_shaper_to_statefulproj</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_fold_upshapers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Folds the UpShaper layers into the previous StatefulProjection layer when possible.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (keras.Model): original model</span>
-<span class="sd">        config (dict): model config being updated</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Retrieve StatefulProjection &gt; UpShaper pairs</span>
-    <span class="n">map_statefulproj_to_shaper</span> <span class="o">=</span> <span class="n">find_layers_pairs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulProjection</span><span class="p">,</span> <span class="n">UpShaper</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">proj</span><span class="p">,</span> <span class="n">shaper</span> <span class="ow">in</span> <span class="n">map_statefulproj_to_shaper</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># For sequential model, the &#39;UpShaper&#39; layers will simply be removed in the following step</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">):</span>
-            <span class="c1"># Update UpShaper outbounds: after folding, their new inbound is the StatefulProjection</span>
-            <span class="k">for</span> <span class="n">outbound</span> <span class="ow">in</span> <span class="n">_find_outbounds</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">shaper</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
-                <span class="n">outbound_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">outbound</span><span class="p">)</span>
-                <span class="n">update_inbound</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">outbound_index</span><span class="p">],</span> <span class="n">shaper</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">proj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="n">proj_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">proj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">proj_index</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;upshape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shaper</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="n">_remove_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">map_statefulproj_to_shaper</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_replace_shapers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Replaces DownShaper and UpShaper layers with standard Reshape layers</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model (keras.Model): original model</span>
-<span class="sd">        config (dict): model config being updated</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Retrieve DownShaper and UpShaper layers</span>
-    <span class="n">shapers</span> <span class="o">=</span> <span class="n">get_layers_by_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">DownShaper</span><span class="p">,</span> <span class="n">UpShaper</span><span class="p">))</span>
-
-    <span class="k">for</span> <span class="n">shaper</span> <span class="ow">in</span> <span class="n">shapers</span><span class="p">:</span>
-        <span class="n">shaper_index</span> <span class="o">=</span> <span class="n">get_layer_index</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">],</span> <span class="n">shaper</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">shaper_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;layers&#39;</span><span class="p">][</span><span class="n">shaper_index</span><span class="p">]</span>
-
-        <span class="c1"># Update layer type and parameters</span>
-        <span class="n">shaper_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;target_shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shaper</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="n">shaper_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ratio&#39;</span><span class="p">)</span>
-        <span class="n">new_config</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Reshape</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">shaper_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">])</span>
-        <span class="n">shaper_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">serialize_keras_object</span><span class="p">(</span><span class="n">new_config</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_remove_non_recurrent</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
@@ -916,23 +841,11 @@
 
     <span class="c1"># Apply sanitize to fold BN and get a &#39;clean&#39; architecture</span>
     <span class="n">sanitized_model</span> <span class="o">=</span> <span class="n">sanitize</span><span class="p">(</span><span class="n">intermediate_model</span><span class="p">)</span>
-
-    <span class="c1"># Invert ReLU &gt; UpShaper to ease folding</span>
-    <span class="n">map_relu_up</span> <span class="o">=</span> <span class="n">find_layers_pairs</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">,</span> <span class="n">layers</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span> <span class="n">UpShaper</span><span class="p">)</span>
-    <span class="n">sanitized_model</span> <span class="o">=</span> <span class="n">invert_layer_pairs</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">,</span> <span class="n">map_relu_up</span><span class="p">)</span>
-
-    <span class="c1"># Fold DownShapers and Upshapers into the following or previous StatefulProjection layer</span>
     <span class="n">sanitized_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sanitized_model</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
-    <span class="n">_fold_downshapers</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">,</span> <span class="n">sanitized_config</span><span class="p">)</span>
-    <span class="n">_fold_upshapers</span><span class="p">(</span><span class="n">sanitized_model</span><span class="p">,</span> <span class="n">sanitized_config</span><span class="p">)</span>
 
-    <span class="c1"># Replace remaining DownShaper and UpShaper with standard Reshape. This is done as a final</span>
-    <span class="c1"># step after rebuilding the model to update the target shapes to set.</span>
-    <span class="n">intermediate_model</span> <span class="o">=</span> <span class="n">sanitized_model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">sanitized_config</span><span class="p">)</span>
-    <span class="n">intermediate_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">intermediate_model</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
-    <span class="n">_replace_shapers</span><span class="p">(</span><span class="n">intermediate_model</span><span class="p">,</span> <span class="n">intermediate_config</span><span class="p">)</span>
-    <span class="n">_clean_build_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">stateful_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">intermediate_config</span><span class="p">)</span>
+    <span class="c1"># Rebuild stateful model from sanitized config</span>
+    <span class="n">_clean_build_config</span><span class="p">(</span><span class="n">sanitized_config</span><span class="p">)</span>
+    <span class="n">stateful_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">sanitized_config</span><span class="p">)</span>
 
     <span class="c1"># Set back weights</span>
     <span class="n">stateful_model</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">sanitized_model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">())</span>

@@ -594,7 +594,7 @@
 <span class="sd">TENN recurrent architecture definition.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tenn_recurrent_sc10&quot;</span><span class="p">,</span> <span class="s2">&quot;tenn_recurrent_sc10_pretrained&quot;</span><span class="p">,</span> <span class="s2">&quot;tenn_recurrent_ad&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tenn_recurrent_sc10&quot;</span><span class="p">,</span> <span class="s2">&quot;tenn_recurrent_sc10_pretrained&quot;</span><span class="p">]</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
@@ -648,43 +648,6 @@
 
 
 
-<div class="viewcode-block" id="tenn_recurrent_ad">
-<a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.tenn_recurrent_ad">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tenn_recurrent_ad</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A very small SSM model developed for the TSB-UAD anomaly detection benchmark.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple, optional): input shape. Defaults to (128, 1).</span>
-<span class="sd">        channels (list, optional): list of channels size in increasing order. Allows to define the</span>
-<span class="sd">            encoder part of the network and to set its depth. Defaults to [32, 16, 32].</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        keras.Model: a TENN recurrent model for SC10.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Architecture parameters.</span>
-    <span class="n">in_channel</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">num_coeffs</span> <span class="o">=</span> <span class="mi">32</span>
-
-    <span class="c1"># Main network stack.</span>
-    <span class="n">inp</span> <span class="o">=</span> <span class="n">x</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int16&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">Rescaling</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">2.</span><span class="o">**</span><span class="mi">15</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">out_ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channels</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">kernelized_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_coeffs</span><span class="p">,</span>
-                             <span class="n">channel</span><span class="o">=</span><span class="n">out_ch</span><span class="p">,</span>
-                             <span class="n">add_batchnorm</span><span class="o">=</span><span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                             <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
-                             <span class="n">force_full_conv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;ssm_layer_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">kernelized_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_coeffs</span><span class="p">,</span>
-                         <span class="n">channel</span><span class="o">=</span><span class="n">in_channel</span><span class="p">,</span>
-                         <span class="n">add_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">relu_activation</span><span class="o">=</span><span class="s1">&#39;ReLU&#39;</span><span class="p">,</span>
-                         <span class="n">force_full_conv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;proj_ssm&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tenn_recurrent_ad&quot;</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="tenn_recurrent_sc10_pretrained">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.tenn_recurrent_sc10_pretrained">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">tenn_recurrent_sc10_pretrained</span><span class="p">(</span><span class="n">quantized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -699,10 +662,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_recurrent_sc10_stateful_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;6de0143e8b1a500eec4058499d48f3798ad0022ca3e5b938e64b15226927a573&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fcc7f3f9f626c1be5c0a05e7c34531db8c36ed4816be6e9521e36fd7245c40fa&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_recurrent_sc10_stateful.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;8c6594fe25011ba4345d363a77cd154fb6ca6b3f0349fa10a00a94abb37a837a&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fe8459926fe2270369dd25f32cae982dff9d4488176d9444db8f27995094187e&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_recurrent&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>

@@ -871,9 +871,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates an Akida device with the specified hardware components.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        num_cnp_tnp (int): Number of CNP and TNP_B units (TNP_B is only available on 2.x devices).</span>
+<span class="sd">        num_cnp_tnp (int): Number of CNP and TNP units. (TNP is available on 2.x and Pico devices.</span>
+<span class="sd">            Ignored on Pico devices; treated as 1.)</span>
 <span class="sd">        num_fnp (int): Number of FNP units to include. An FNP2 with external memory is added first,</span>
-<span class="sd">            followed by FNP3 units.</span>
+<span class="sd">            followed by FNP3 units. (Ignored on Pico devices; treated as 0.)</span>
 <span class="sd">        num_skip_dma_channel (int, optional): Number of skip DMA channels (only applicable for</span>
 <span class="sd">            2.x devices). Defaults to 0.</span>
 <span class="sd">        include_hrc (bool, optional): Whether to include the HRC. Defaults to True.</span>
@@ -901,6 +902,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_supported_hw_version</span><span class="p">(</span><span class="n">ip_version</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">FPGA_v2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Pico_FPGA</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">NSoC_v1</span><span class="p">,</span> <span class="n">NSoC_v2</span><span class="p">,</span> <span class="n">TwoNodesIP_v1</span><span class="p">,</span> <span class="n">AKD1500_v1</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_total_nps</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">):</span>
@@ -958,8 +961,15 @@
         <span class="k">return</span> <span class="n">skip_dmas</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_nps</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">,</span> <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">Pico_FPGA</span><span class="p">:</span>
+            <span class="c1"># There is no mesh on Pico devices</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">TNP_R</span><span class="p">],</span> <span class="kc">False</span><span class="p">)]</span>
+
         <span class="c1"># Construct NP types</span>
-        <span class="n">cnp_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">]</span>
+        <span class="n">cnp_tnp_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">CNP2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">FPGA_v2</span><span class="p">:</span>
+            <span class="n">cnp_tnp_types</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">)</span>
+
         <span class="n">fnp_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">FNP2</span><span class="p">]</span>
         <span class="c1"># If a device with only 1 FNP is requested, the corresponding NP will only</span>
         <span class="c1"># have FNP installed.</span>
@@ -968,9 +978,6 @@
             <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">FPGA_v2</span><span class="p">:</span>
                 <span class="n">fnp_types</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">FPGA_v2</span><span class="p">:</span>
-            <span class="n">cnp_types</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">)</span>
-
         <span class="n">nps</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># Starting from row 2</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_rows</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
@@ -978,7 +985,7 @@
                 <span class="c1"># Now loop over nps</span>
                 <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">NUM_NPS_PER_NODE</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">num_cnp_tnp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="nb">id</span><span class="p">),</span> <span class="n">cnp_types</span><span class="p">,</span> <span class="n">has_lut</span><span class="p">))</span>
+                        <span class="n">nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="nb">id</span><span class="p">),</span> <span class="n">cnp_tnp_types</span><span class="p">,</span> <span class="n">has_lut</span><span class="p">))</span>
                         <span class="n">num_cnp_tnp</span> <span class="o">-=</span> <span class="mi">1</span>
                     <span class="k">elif</span> <span class="n">num_fnp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="n">nps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="nb">id</span><span class="p">),</span> <span class="n">fnp_types</span><span class="p">,</span> <span class="n">has_lut</span><span class="p">))</span>
@@ -994,14 +1001,21 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid HW version &#39;</span><span class="si">{</span><span class="n">hw_version</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
                          <span class="sa">f</span><span class="s2">&quot;Expected one of: </span><span class="si">{</span><span class="n">supported_hw_version</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Compute total nps and construct the optimal grid for NPs</span>
-    <span class="c1"># The mesh should be as square as possible</span>
-    <span class="n">total_nps</span><span class="p">,</span> <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="n">_compute_total_nps</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">)</span>
-    <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span> <span class="o">=</span> <span class="n">_compute_optimal_nps_grid_shape</span><span class="p">(</span><span class="n">total_nps</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">total_nps</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_hrc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;It is not possible to create a completely empty device. &quot;</span>
-                         <span class="sa">f</span><span class="s2">&quot;num_cnp_tnp + num_fnp (</span><span class="si">{</span><span class="n">total_nps</span><span class="si">}</span><span class="s2">) must be greater than zero or &quot;</span>
-                         <span class="s2">&quot;HRC must be included).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hw_version</span> <span class="o">==</span> <span class="n">Pico_FPGA</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_cnp_tnp</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">num_fnp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Pico device supports only 1 TNP-R.&quot;</span><span class="p">)</span>
+            <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">num_fnp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">total_nps</span> <span class="o">=</span> <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="n">num_rows</span> <span class="o">=</span> <span class="n">num_cols</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Compute total nps and construct the optimal grid for NPs</span>
+        <span class="c1"># The mesh should be as square as possible</span>
+        <span class="n">total_nps</span><span class="p">,</span> <span class="n">num_cnp_tnp</span> <span class="o">=</span> <span class="n">_compute_total_nps</span><span class="p">(</span><span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">)</span>
+        <span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span> <span class="o">=</span> <span class="n">_compute_optimal_nps_grid_shape</span><span class="p">(</span><span class="n">total_nps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">total_nps</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_hrc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;It is not possible to create a completely empty device. &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;num_cnp_tnp + num_fnp (</span><span class="si">{</span><span class="n">total_nps</span><span class="si">}</span><span class="s2">) must be greater than zero or &quot;</span>
+                             <span class="s2">&quot;HRC must be included).&quot;</span><span class="p">)</span>
 
     <span class="c1"># Make DMA event and conf</span>
     <span class="n">dma_event</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Ident</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -1015,7 +1029,12 @@
 
     <span class="c1"># Default SRAM size if not specified</span>
     <span class="k">if</span> <span class="n">sram_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v2</span> <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span> <span class="k">else</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v1</span>
+        <span class="k">if</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+            <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_pico</span>
+        <span class="k">elif</span> <span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
+            <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize_v1</span>
 
     <span class="c1"># Make the mesh</span>
     <span class="n">hrc</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">Info</span><span class="o">.</span><span class="n">hrc</span><span class="p">(</span><span class="n">has_lut</span><span class="p">)</span> <span class="k">if</span> <span class="n">include_hrc</span> <span class="k">else</span> <span class="kc">None</span>
@@ -1028,19 +1047,25 @@
 <div class="viewcode-block" id="compute_minimal_memory">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_minimal_memory">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the minimal memory required for inputs and weights on the device.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the minimal memory required on the device.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model (akida.Model): an Akida model.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        int, int: minimal input_buffer memory and minimal weight memory in bytes.</span>
+<span class="sd">        int, int, int, int, int, int: minimal input_buffer memory, weight memory in bytes,</span>
+<span class="sd">        stsram_32b_size, fsram_64b_size, tsram_51b_size, evsram_32b_size. The last four integer</span>
+<span class="sd">        values are Pico-specific.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Check that model is mapped</span>
     <span class="k">assert</span> <span class="nb">any</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">sequences</span><span class="p">]),</span> <span class="s2">&quot;Model needs to be mapped&quot;</span>
 
-    <span class="n">minimal_input_buffer_memory</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">minimal_weight_memory</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_input_buffer_memory</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_weight_memory</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_stsram_32b_size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_fsram_64b_size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_tsram_51b_size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_evsram_32b_size</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">mapping</span><span class="p">:</span>
@@ -1056,10 +1081,16 @@
                 <span class="c1"># Compute weight size and convert back to bytes by multiplying by 4</span>
                 <span class="n">np_weight_size</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="mi">50</span> <span class="o">*</span> <span class="n">np_weight_size</span> <span class="o">/</span> <span class="mi">48</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span>
 
-            <span class="n">minimal_input_buffer_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minimal_input_buffer_memory</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
-            <span class="n">minimal_weight_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minimal_weight_memory</span><span class="p">,</span> <span class="n">np_weight_size</span><span class="p">)</span>
+            <span class="n">max_input_buffer_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_input_buffer_memory</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+            <span class="n">max_weight_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_weight_memory</span><span class="p">,</span> <span class="n">np_weight_size</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">minimal_input_buffer_memory</span><span class="p">,</span> <span class="n">minimal_weight_memory</span></div>
+            <span class="n">max_stsram_32b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_stsram_32b_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">stsram_32b_size</span><span class="p">)</span>
+            <span class="n">max_fsram_64b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_fsram_64b_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">fsram_64b_size</span><span class="p">)</span>
+            <span class="n">max_tsram_51b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_tsram_51b_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">tsram_51b_size</span><span class="p">)</span>
+            <span class="n">max_evsram_32b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_evsram_32b_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mem_info</span><span class="o">.</span><span class="n">evsram_32b_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">max_input_buffer_memory</span><span class="p">,</span> <span class="n">max_weight_memory</span><span class="p">,</span> <span class="n">max_stsram_32b_size</span><span class="p">,</span> <span class="n">max_fsram_64b_size</span><span class="p">,</span> \
+        <span class="n">max_tsram_51b_size</span><span class="p">,</span> <span class="n">max_evsram_32b_size</span></div>
 
 
 
@@ -1150,8 +1181,8 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_number_of_cnp_tnp</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">):</span>
-    <span class="c1"># Compute the number of CNP/TNP-B.</span>
-    <span class="n">CNP_TNP_B_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">CNP2</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">)</span>
+    <span class="c1"># Compute the number of CNP/TNP.</span>
+    <span class="n">CNP_TNP_B_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">NP</span><span class="o">.</span><span class="n">CNP1</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">CNP2</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">TNP_B</span><span class="p">,</span> <span class="n">NP</span><span class="o">.</span><span class="n">TNP_R</span><span class="p">)</span>
     <span class="n">total_cnps</span> <span class="o">=</span> <span class="n">_get_np_components</span><span class="p">(</span><span class="n">model_or_pass</span><span class="p">,</span> <span class="n">CNP_TNP_B_TYPES</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">total_cnps</span><span class="p">)</span>
 
@@ -1185,6 +1216,18 @@
     <span class="k">return</span> <span class="n">num_cnp_tnp</span><span class="p">,</span> <span class="n">num_fnp</span><span class="p">,</span> <span class="n">num_skip_dma_channel</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_to_max</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="c1"># Update `dst` in place by taking the maximum value of each SRAM field</span>
+    <span class="c1"># between `dst` and `other`.</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">input_bytes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">weight_bytes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">stsram_32b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">stsram_32b_size</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">stsram_32b_size</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">fsram_64b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">fsram_64b_size</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">fsram_64b_size</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">tsram_51b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">tsram_51b_size</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">tsram_51b_size</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">evsram_32b_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">evsram_32b_size</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">evsram_32b_size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span>
+
+
 <div class="viewcode-block" id="compute_min_device">
 <a class="viewcode-back" href="../../api_reference/akida_apis.html#akida.compute_min_device">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_min_device</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -1197,20 +1240,25 @@
 <span class="sd">    Args:</span>
 <span class="sd">        model (akida.Model): the model used to determine the device.</span>
 <span class="sd">        enable_hwpr (bool, optional): if True, the device is computed leveraging partial</span>
-<span class="sd">            reconfiguration as much as possible. Defaults to False.</span>
+<span class="sd">            reconfiguration as much as possible. Defaults to False. (Ignore for Pico devices)</span>
 <span class="sd">        sram_size (NP.SramSize, optional): Size of shared SRAM available inside the mesh.</span>
 <span class="sd">            Ignored when `minimal_memory` is True. Defaults to None.</span>
 <span class="sd">        minimal_memory (bool, optional): if True, computes and sets the minimal required</span>
 <span class="sd">            inputs and weights memory for the device. Defaults to False.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        akida.Device: the computed device</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected model to be an </span><span class="si">{</span><span class="n">Model</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="c1"># Partial reconfiguration is not supported for Pico devices.</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+        <span class="n">enable_hwpr</span> <span class="o">=</span> <span class="kc">False</span>
+
     <span class="n">NUM_NPS_PER_NODE</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">INITIAL_NUM_NODES</span> <span class="o">=</span> <span class="mi">256</span>
-    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">!=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only IpVersion.v2 models are supported. &quot;</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">!=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">v2</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">!=</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only IpVersion.v2 and IpVersion.pico models are supported. &quot;</span>
                          <span class="sa">f</span><span class="s2">&quot;Current model version=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">ip_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create a copy of the model to avoid modifying the original one.</span>
@@ -1221,10 +1269,15 @@
               <span class="s2">&quot;num_fnp&quot;</span><span class="p">:</span> <span class="n">_get_initial_number_of_fnp</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
               <span class="s2">&quot;sram_size&quot;</span><span class="p">:</span> <span class="n">sram_size</span><span class="p">}</span>
 
-    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NUM_NPS_PER_NODE</span> <span class="o">*</span> <span class="n">INITIAL_NUM_NODES</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Impossible to compute base device: This model requires more than  &quot;</span>
-                         <span class="sa">f</span><span class="s2">&quot;the maximum nodes permitted (</span><span class="si">{</span><span class="n">INITIAL_NUM_NODES</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Pico device has only 1 TNP</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NUM_NPS_PER_NODE</span> <span class="o">*</span> <span class="n">INITIAL_NUM_NODES</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_fnp&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_cnp_tnp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Impossible to compute base device: &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;the number of initial nodes (</span><span class="si">{</span><span class="n">INITIAL_NUM_NODES</span><span class="si">}</span><span class="s2">) is not enough.&quot;</span><span class="p">)</span>
+    <span class="c1"># Specify HW version from model</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;hw_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pico_FPGA</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span> <span class="k">else</span> <span class="n">FPGA_v2</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># Map model with the default parameters.</span>
@@ -1249,7 +1302,9 @@
                 <span class="s2">&quot;The &#39;sram_size&#39; argument will be ignored because &#39;minimal_memory&#39; is set to True. &quot;</span>
                 <span class="s2">&quot;The required memory will be computed automatically. Continuing execution&quot;</span>
             <span class="p">)</span>
-        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sram_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="o">*</span><span class="n">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
+        <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="o">*</span><span class="n">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">)[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">sram_size_pico</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="o">*</span><span class="n">compute_minimal_memory</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sram_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_update_to_max</span><span class="p">(</span><span class="n">sram_size</span><span class="p">,</span> <span class="n">sram_size_pico</span><span class="p">)</span>
 
     <span class="c1"># Create a virtual device with the requirements.</span>
     <span class="n">device</span> <span class="o">=</span> <span class="n">create_device</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
@@ -1274,7 +1329,7 @@
 <span class="sd">        ak_models (List[akida.Model]): A list of Akida models whose hardware</span>
 <span class="sd">            requirements will be combined.</span>
 <span class="sd">        enable_hwpr (bool, optional): if True, the device is computed leveraging partial</span>
-<span class="sd">            reconfiguration as much as possible. Defaults to False.</span>
+<span class="sd">            reconfiguration as much as possible. Defaults to False. (Ignore for Pico devices)</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        akida.Device: A new device that can map all the given models.</span>
@@ -1285,10 +1340,12 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Devices cannot be computed for models of type </span><span class="si">{</span><span class="n">wrong_model_types</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All models must be mapped on a device.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># For safety, check that all models devices have the same version</span>
-    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">ak_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">),</span> \
-        <span class="s2">&quot;Models devices have different versions.&quot;</span>
+    <span class="c1"># Check that all models devices have the same version</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">ak_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Models devices have different versions.&quot;</span><span class="p">)</span>
+    <span class="c1"># Partial reconfiguration is not supported for Pico devices.</span>
+    <span class="k">if</span> <span class="n">ak_models</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ip_version</span> <span class="o">==</span> <span class="n">IpVersion</span><span class="o">.</span><span class="n">pico</span><span class="p">:</span>
+        <span class="n">enable_hwpr</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">include_hrc</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">hrc</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">ak_models</span><span class="p">)</span>
     <span class="n">max_num_cnp_tnp</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1318,10 +1375,7 @@
                                                    <span class="n">_compute_skip_dma_channels</span><span class="p">(</span><span class="n">pass_</span><span class="p">))</span>
 
         <span class="c1"># Update Sram size</span>
-        <span class="n">sram_size</span> <span class="o">=</span> <span class="n">NP</span><span class="o">.</span><span class="n">SramSize</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sram_size</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">,</span>
-                                    <span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="o">.</span><span class="n">input_bytes</span><span class="p">),</span>
-                                <span class="nb">max</span><span class="p">(</span><span class="n">sram_size</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">,</span>
-                                    <span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="o">.</span><span class="n">weight_bytes</span><span class="p">))</span>
+        <span class="n">_update_to_max</span><span class="p">(</span><span class="n">sram_size</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">np_sram_size</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">create_device</span><span class="p">(</span><span class="n">max_num_cnp_tnp</span><span class="p">,</span> <span class="n">max_num_fnp</span><span class="p">,</span>
                          <span class="n">max_num_skip_dma_channel</span><span class="p">,</span> <span class="n">include_hrc</span><span class="p">,</span>

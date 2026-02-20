@@ -876,48 +876,21 @@
 <a class="viewcode-back" href="../../../api_reference/quantizeml_apis.html#quantizeml.layers.StatefulProjection">[docs]</a>
 <span class="nd">@keras</span><span class="o">.</span><span class="n">saving</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">()</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">StatefulProjection</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Same as a Dense layer but with optional reshaping operation.</span>
-
-<span class="sd">    Reshaping can happen both on the inputs and the outputs.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Same as a Dense layer but with optional subsampling.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        downshape (tuple, optional): target shape for downshape operation that happens before the</span>
-<span class="sd">            dense. Defaults to None.</span>
-<span class="sd">        upshape (tuple, optional): target shape for upshape operation that happens after the dense.</span>
-<span class="sd">            Defaults to None.</span>
+<span class="sd">        subsample (int, optional): subsampling factor applied to the timesteps. Defaults to 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">downshape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upshape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">downshape</span><span class="p">)</span> <span class="k">if</span> <span class="n">downshape</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">upshape</span><span class="p">)</span> <span class="k">if</span> <span class="n">upshape</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">=</span> <span class="n">subsample</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># When downshape is enabled, build the layer with the target shape so that variables</span>
-                <span class="c1"># are build properly</span>
-                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">downshape</span><span class="p">)</span>
-                <span class="c1"># Edit the input_spec so that from a graph point of view, this layer sees the</span>
-                <span class="c1"># original input shape</span>
-                <span class="n">last_dim</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">InputSpec</span><span class="p">(</span><span class="n">min_ndim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">{</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">last_dim</span><span class="p">})</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_input_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># If the layer has been built, return the actual input shape</span>
-            <span class="c1"># instead of the downshape so that when building from config, the</span>
-            <span class="c1"># correct input shape is used</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;input_shape&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">}</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="c1"># Apply the optional input downshape</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span><span class="p">)</span>
-
         <span class="c1"># Apply the optional subsampling</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> \
@@ -927,16 +900,10 @@
 
         <span class="c1"># Standard Dense operation</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-        <span class="c1"># Apply the optional output upshape</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">outputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;downshape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;upshape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;subsample&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span>
         <span class="k">return</span> <span class="n">config</span></div>
 
@@ -956,19 +923,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_bitwidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s1">&#39;buffer_bitwidth&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
 
-        <span class="c1"># Weight quantizer must be per-tensor to allow upshaping, override it when necessary</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s2">&quot;weight_quantizer&quot;</span><span class="p">][</span><span class="s2">&quot;axis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">weight_quantizer_cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quant_config</span><span class="p">[</span><span class="s2">&quot;weight_quantizer&quot;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">weight_quantizer</span> <span class="o">=</span> <span class="n">WeightQuantizer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;weight_quantizer&quot;</span><span class="p">,</span>
-                                                    <span class="o">**</span><span class="n">weight_quantizer_cfg</span><span class="p">)</span>
-
     <span class="nd">@tensor_inputs</span><span class="p">([</span><span class="n">QTensor</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span>
     <span class="nd">@rescale_outputs</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">downshape</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsample</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> \
                 <span class="sa">f</span><span class="s2">&quot;Number of timesteps: </span><span class="si">{</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> must be a multiple of subsample &quot;</span> \
@@ -985,8 +942,6 @@
             <span class="n">bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_quantizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">outputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">outputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upshape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span></div>
 
 
