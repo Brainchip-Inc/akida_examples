@@ -240,5 +240,4 @@ Akida models API
     ---------------
     .. autofunction:: akida_models.tenn_recurrent_sc10
     .. autofunction:: akida_models.tenn_recurrent_sc10_pretrained
-    .. autofunction:: akida_models.tenn_recurrent_ad
     .. autofunction:: akida_models.tenn_recurrent.convert_to_stateful

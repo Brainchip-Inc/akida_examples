@@ -90,7 +90,6 @@ Current available models for creation are:
  * tenn_spatiotemporal_eye
  * tenn_spatiotemporal_jester
  * tenn_recurrent_sc10
- * tenn_recurrent_ad
 
 Command-line interface for model training
 -----------------------------------------
