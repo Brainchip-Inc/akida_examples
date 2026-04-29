@@ -240,4 +240,6 @@ Akida models API
     ---------------
     .. autofunction:: akida_models.tenn_recurrent_sc12
     .. autofunction:: akida_models.tenn_recurrent_sc12_pretrained
+    .. autofunction:: akida_models.tenn_recurrent_uored
+    .. autofunction:: akida_models.tenn_recurrent_uored_pretrained
     .. autofunction:: akida_models.tenn_recurrent.convert_to_stateful
