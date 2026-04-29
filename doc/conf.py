@@ -101,9 +101,6 @@ html_css_files = [
     'custom.css',
 ]
 
-# Add Leadlander tag for activity tracking
-html_js_files = ['leadlander_tag.js']
-
 # -- Exported variables -----------------------------------------------------
 from importlib.metadata import version as importlib_version
 
