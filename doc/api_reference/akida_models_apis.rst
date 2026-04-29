@@ -238,6 +238,6 @@ Akida models API
 
     Recurrent TENNs
     ---------------
-    .. autofunction:: akida_models.tenn_recurrent_sc10
-    .. autofunction:: akida_models.tenn_recurrent_sc10_pretrained
+    .. autofunction:: akida_models.tenn_recurrent_sc12
+    .. autofunction:: akida_models.tenn_recurrent_sc12_pretrained
     .. autofunction:: akida_models.tenn_recurrent.convert_to_stateful

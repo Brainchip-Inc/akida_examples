@@ -89,7 +89,7 @@ Current available models for creation are:
  * tenn_spatiotemporal_dvs128
  * tenn_spatiotemporal_eye
  * tenn_spatiotemporal_jester
- * tenn_recurrent_sc10
+ * tenn_recurrent_sc12
 
 Command-line interface for model training
 -----------------------------------------
@@ -175,7 +175,7 @@ Current training pipelines available are:
 * tenn_dvs128_train
 * tenn_eye_train
 * tenn_jester_train
-* tenn_sc10_train
+* tenn_sc12_train
 * tenn_ad_train
 
 Command-line interface for model evaluation
