@@ -77,9 +77,7 @@ html_theme_options = {
     'logo_only': True,
     'collapse_navigation': False,
     'style_nav_header_background': '#000000',
-    "analytics": {
-        "google_analytics_id": "G-T6Y7X9D33L",
-    }
+    "analytics_id": "G-T6Y7X9D33L",
 }
 
 # Hide undesired components
