@@ -97,6 +97,9 @@ suppress_warnings = ['app.add_directive', 'config.cache']
 # This folder is copied to the documentation's HTML output
 html_static_path = ['_static']
 
+# Custom templates folder (used for GTM injection)
+templates_path = ['_templates']
+
 # Add a custom css file to remove rtd theme page width limit
 html_css_files = [
     'custom.css',
