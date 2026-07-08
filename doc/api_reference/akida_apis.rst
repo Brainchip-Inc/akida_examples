@@ -133,6 +133,8 @@ Akida runtime API
     .. autofunction:: TwoNodesIPv1
     .. autofunction:: TwoNodesIPv2
     .. autofunction:: SixNodesIPv2
+    .. autofunction:: FourNodesIPv2
+    .. autofunction:: TwelveNodesIPv2
     .. autofunction:: PicoIP
     .. autofunction:: create_device
     .. autofunction:: compute_minimal_memory
