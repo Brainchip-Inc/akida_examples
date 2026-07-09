@@ -605,6 +605,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tenn_recurrent_sc12&quot;</span><span class="p">,</span> <span class="s2">&quot;tenn_recurrent_sc12_pretrained&quot;</span><span class="p">,</span>
            <span class="s2">&quot;tenn_recurrent_uored&quot;</span><span class="p">,</span> <span class="s2">&quot;tenn_recurrent_uored_pretrained&quot;</span><span class="p">]</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tf_keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">GlobalAveragePooling1D</span><span class="p">,</span> <span class="n">SpatialDropout1D</span><span class="p">,</span> <span class="n">Rescaling</span>
@@ -659,13 +660,13 @@
 
 <div class="viewcode-block" id="tenn_recurrent_uored">
 <a class="viewcode-back" href="../../../api_reference/akida_models_apis.html#akida_models.tenn_recurrent_uored">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tenn_recurrent_uored</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tenn_recurrent_uored</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">8192</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">input_scaling</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Instantiates a TENN recurrent architecture for UORED-VAFCLS bearing fault classification.</span>
 
 <span class="sd">    Outputs raw logits (no activation) for use with BinaryCrossentropy(from_logits=True).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_shape (tuple, optional): the input shape. Defaults to (4096, 1).</span>
+<span class="sd">        input_shape (tuple, optional): the input shape. Defaults to (8192, 1).</span>
 <span class="sd">        num_classes (int, optional): number of fault classes. Defaults to 4</span>
 <span class="sd">            (inner race, outer race, ball, cage).</span>
 <span class="sd">        input_scaling (tuple, optional): scale factor and offset for int16 input rescaling.</span>
@@ -674,10 +675,15 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        keras.Model: a TENN recurrent model for UORED-VAFCLS</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Fix a seed</span>
+    <span class="n">_SEED</span> <span class="o">=</span> <span class="mi">42</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">_SEED</span><span class="p">)</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="n">_SEED</span><span class="p">)</span>
+
     <span class="c1"># architecture parameters</span>
     <span class="n">num_coeffs</span> <span class="o">=</span> <span class="mi">32</span>
-    <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
-    <span class="n">subsampling_pattern</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># total 256x -&gt; 4096/256 = 16 final temporal steps</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+    <span class="n">subsampling_pattern</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>  <span class="c1"># total 256x -&gt; 8192/256 = 32 final temporal steps</span>
 
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
 
@@ -742,10 +748,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">quantized</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_recurrent_uored_stateful_i8_w8_a8.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;fc16370d2c5de11e3021d7df8069a6399f72b859cc19117c12578b570d40222b&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;bf3ee50205f8172fc3e803809f0342e7a4eb8d42545562f84560fff3ea9adda4&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">model_name_v2</span> <span class="o">=</span> <span class="s1">&#39;tenn_recurrent_uored_stateful.h5&#39;</span>
-        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;a71d725fa222191164695ed45f667654bc3cae11b39310ee4d7cc0f04150aef5&#39;</span>
+        <span class="n">file_hash_v2</span> <span class="o">=</span> <span class="s1">&#39;903ac958193b72f85909d623b1c16b404efa58fac04d306ae6b10bf8d0f085ee&#39;</span>
 
     <span class="n">model_path</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">file_hash</span> <span class="o">=</span> <span class="n">get_model_path</span><span class="p">(</span>
         <span class="s2">&quot;tenn_recurrent&quot;</span><span class="p">,</span> <span class="n">model_name_v2</span><span class="o">=</span><span class="n">model_name_v2</span><span class="p">,</span> <span class="n">file_hash_v2</span><span class="o">=</span><span class="n">file_hash_v2</span><span class="p">)</span>
