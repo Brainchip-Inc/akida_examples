@@ -68,20 +68,34 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 # ----------------------
 #
 
+import os
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
+
+from akida_models import fetch_file
 
 # Define task specific variables
 IMG_SIZE = 224
 BATCH_SIZE = 32
 CLASSES = 38
 
+fname = fetch_file(
+    fname='Plant_leaf_diseases_dataset_without_augmentation.zip',
+    origin="https://data.brainchip.com/dataset-mirror/plantvillage/"
+           "Plant_leaf_diseases_dataset_without_augmentation.zip",
+    cache_subdir='datasets/plant_village')
+fdir = os.path.dirname(fname)
+dl_and_prepare = {'download_config': tfds.download.DownloadConfig(manual_dir=fdir)}
+
 # Load the tensorflow dataset
 (train_ds, validation_ds, test_ds), ds_info = tfds.load(
     'plant_village',
     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
     with_info=True,
-    as_supervised=True)
+    as_supervised=True,
+    data_dir=fdir,
+    download_and_prepare_kwargs=dl_and_prepare)
 
 # Visualize some data
 _ = tfds.show_examples(test_ds, ds_info)
