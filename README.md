@@ -92,8 +92,9 @@ sequenceDiagram
     participant 2.17.0
     participant 2.18.2
     participant 2.19.1
+    participant 2.19.2
     participant next
-    Note right of 2.19.1: Today
+    Note right of 2.19.2: Today
 rect rgb(171, 170, 166)
     [...]-->>2.2.5: TensorFlow 2.8
     2.2.5-->>2.8.1: TensorFlow 2.10
