@@ -28,22 +28,23 @@ Supported configurations
 Quick installation
 ------------------
 
-.. warning::
-    TensorFlow package is required to use the `CNN2SNN tool
-    <https://pypi.org/project/cnn2snn>`_, the `Akida model zoo
-    <https://pypi.org/project/akida-models>`_ and to run the `examples
-    <./examples/index.html>`_. Please refer to
-    `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_
-    for installation.
-
-The akida, cnn2snn and akida_models python packages can
-be setup with Python's pip package manager:
+The akida, cnn2snn, quantizeml and akida_models python packages can
+be setup with Python's pip package manager by installing the akida-models
+package only:
 
 .. code-block:: bash
 
-    pip install akida=={AKIDA_VERSION}
-    pip install cnn2snn=={CNN2SNN_VERSION}
     pip install akida-models=={MODELS_VERSION}
+
+.. note::
+    Installing akida-models automatically pulls the other MetaTF packages as
+    dependencies: `cnn2snn <https://pypi.org/project/cnn2snn>`_, `akida
+    <https://pypi.org/project/akida>`_ and `quantizeml
+    <https://pypi.org/project/quantizeml>`_, along with `TensorFlow
+    <https://www.tensorflow.org/>`_ and `TF-Keras
+    <https://github.com/keras-team/tf-keras>`__ — there is no need to install
+    TensorFlow separately. For a GPU-enabled TensorFlow setup, please refer to
+    `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_.
 
 .. note::
     We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_.
