@@ -652,7 +652,7 @@ Akida Pico models
 Pico models are recurrent TENNs targeting the Akida Pico Neuromorphic Processor IP. Please refer
 to the `Recurrent TENNs API <./api_reference/akida_models_apis.html#recurrent-tenns>`__ for
 models description and to the `Akida Pico layers hardware constraints
-<./user_guide/hardware/2.0.html>`__ for mapping limits.
+<./user_guide/hardware/pico.html>`__ for mapping limits.
 
 |audio_icon_ref| Audio domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

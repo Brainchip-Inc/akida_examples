@@ -13,3 +13,4 @@ Akida HW capabilities
 .. toctree::
    hardware/1.0.rst
    hardware/2.0.rst
+   hardware/pico.rst
