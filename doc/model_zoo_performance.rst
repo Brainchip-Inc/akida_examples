@@ -6,11 +6,12 @@ Model zoo performance
   scripts. Please refer to the `model zoo API reference <./api_reference/akida_models_apis.html#model-zoo>`__
   for a complete list of the available models.
 
-| This page lists the performance of all models from the zoo reported for both Akida 1.0 and Akida 2.0. Please
-  refer to:
+| This page lists the performance of all models from the zoo reported for Akida 1.0, Akida 2.0 and
+  Akida Pico. Please refer to:
 
 * `Akida 1.0 models`_ for models targeting the Akida Neuromorphic Processor IP 1.0 and the AKD1000 reference SoC,
 * `Akida 2.0 models`_ for models targeting the Akida Neuromorphic Processor IP 2.0,
+* `Akida Pico models`_ for models targeting the Akida Pico Neuromorphic Processor IP,
 * `Upgrading to Akida 2.0 tutorial <./examples/quantization/plot_1_upgrading_to_2.0.html>`_ to understand the
   architectural differences between 1.0 and 2.0 models and their respective workflows.
 
@@ -644,3 +645,43 @@ Eye tracking
 +--------------------+---------+--------------+---------------------+----------------+
 
 .. [#fn-1] PTQ accuracy boosted with 5 epochs QAT.
+
+Akida Pico models
+-----------------
+
+Pico models are recurrent TENNs targeting the Akida Pico Neuromorphic Processor IP. Please refer
+to the `Recurrent TENNs API <./api_reference/akida_models_apis.html#recurrent-tenns>`__ for
+models description and to the `Akida Pico layers hardware constraints
+<./user_guide/hardware/2.0.html>`__ for mapping limits.
+
+|audio_icon_ref| Audio domain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Keyword spotting
+""""""""""""""""
+
+.. |tr_sc12_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/tenn_recurrent/tenn_recurrent_sc12_stateful_i8_w8_a8.h5
+
++----------------+-----------------------+---------+--------------+----------+--------------+
+| Architecture   | Dataset               | #Params | Quantization | Accuracy | Download     |
++================+=======================+=========+==============+==========+==============+
+| TENN recurrent | Google speech command | 46.6K   | 8            | 93.80%   | |tr_sc12_dl| |
++----------------+-----------------------+---------+--------------+----------+--------------+
+
+Vibration domain
+~~~~~~~~~~~~~~~~
+
+Fault classification
+""""""""""""""""""""
+
+.. |tr_uored_dl| image:: ./img/download_icon.png
+   :scale: 4 %
+   :target: https://data.brainchip.com/models/AkidaV2/tenn_recurrent/tenn_recurrent_uored_stateful_i8_w8_a8.h5
+
++----------------+-----------------------+---------+--------------+-----------+---------------+
+| Architecture   | Dataset               | #Params | Quantization | Avg AUROC | Download      |
++================+=======================+=========+==============+===========+===============+
+| TENN recurrent | UORED-VAFCLS          | 16.6K   | 8            | 0.9420    | |tr_uored_dl| |
++----------------+-----------------------+---------+--------------+-----------+---------------+
