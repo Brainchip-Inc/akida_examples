@@ -1,6 +1,7 @@
-# Online documentation
-Please refer to the [online documentation](https://doc.brainchipinc.com/) for
-installation steps, user guides and APIs.
+# MetaTF documentation
+This repository holds the sources of the MetaTF documentation and examples.
+Please refer to the [MetaTF online documentation](https://doc.brainchipinc.com/)
+for installation steps, user guides and APIs.
 
 # Building the documentation
 Documentation is based on [Sphinx](https://www.sphinx-doc.org/en/master/) and

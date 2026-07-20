@@ -2,7 +2,7 @@ from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
-project = 'Akida Examples'
+project = 'MetaTF'
 copyright = f'{datetime.now().year}, BrainChip Holdings Ltd. All Rights Reserved'
 author = 'Brainchip'
 version = 'Akida, 2nd Generation'

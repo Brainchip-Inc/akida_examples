@@ -17,12 +17,12 @@ Overview
    ./license.rst
 
 
-The Akida Neuromorphic ML Framework
------------------------------------
+The MetaTF ML Framework
+-----------------------
 
-| The Akida Development Environment (MetaTF) is a complete machine learning
-  framework enabling the seamless creation, training, and testing of neural
-  networks on the Akida Neuromorphic Processor Platform. MetaTF includes an
+| MetaTF is a complete machine learning framework enabling the seamless
+  creation, training, and testing of neural networks on the Akida
+  Neuromorphic Processor Platform. MetaTF includes an
   `Akida Neuromorphic Processor IP <https://brainchip.com/akida2-0//>`_
   simulator for execution of models in addition to Akida hardware implementations
   such as the `AKD1000 reference SoC <https://brainchip.com/metatf-dev-tools/#akd1000>`_.
@@ -67,7 +67,7 @@ The Akida Neuromorphic ML Framework
    :scale: 40%
    :align: center
 
-   Akida MetaTF ML Framework
+   MetaTF ML Framework
 
 |
 |
