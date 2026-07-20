@@ -57,6 +57,32 @@ package only:
       conda create --name akida_env python=3.11
       conda activate akida_env
 
+Verify the installation
+------------------------
+
+Once the packages are installed, check that everything is in place:
+
+.. code-block:: bash
+
+    python -c "import akida; print(akida.__version__); print(akida.devices())"
+
+The expected output is:
+
+.. code-block:: bash
+
+    {AKIDA_VERSION}
+    []
+
+An empty device list ``[]`` is the correct result on a machine without Akida
+hardware: no hardware is required, and everything on this site (user guide and
+examples) runs on the software simulator that comes with the akida package.
+
+.. note::
+    If the import fails with ``ModuleNotFoundError``, the virtual environment
+    where the packages were installed is probably not active. If the printed
+    version is not ``{AKIDA_VERSION}``, update the package with
+    ``pip install --upgrade akida=={AKIDA_VERSION}``.
+
 Running examples
 ----------------
 
