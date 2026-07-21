@@ -27,7 +27,7 @@ for layers description.
               layer is allowed at the end of a series of StatefulRecurrent layers, and it must be
               the last layer of the model.
             | :octicon:`report;1em;sd-text-warning` When the ReLU activation is present, it must be
-              unbouded.
+              unbounded.
         .. card::
 
             **Input**
@@ -41,10 +41,29 @@ for layers description.
             +--------------------------+---------------------------+----------------------------+
             |Intermediate              |8                          |<=256                       |
             +--------------------------+---------------------------+----------------------------+
-            ++++++++
+
             | :octicon:`report;1em;sd-text-warning` For the first layer, the packed input row
               (channels × input bits) must occupy a power-of-2 number of 32-bit words and cannot
               exceed 512 bytes.
+
+            For example:
+
+            +-----------------------+---------------+----------------+----------------------------------------------+
+            |**Input configuration**|**Packed size**|**32-bit words**|**Status**                                    |
+            +-----------------------+---------------+----------------+----------------------------------------------+
+            |3 × 8-bit              |24 bits        |1               |Valid                                         |
+            +-----------------------+---------------+----------------+----------------------------------------------+
+            |9 × 8-bit              |72 bits        |3               |Mapping error, pad channels to 13-16 (4 words)|
+            +-----------------------+---------------+----------------+----------------------------------------------+
+            |3 × 16-bit             |48 bits        |2               |Valid                                         |
+            +-----------------------+---------------+----------------+----------------------------------------------+
+            |6 × 16-bit             |96 bits        |3               |Mapping error, pad channels to 7-8 (4 words)  |
+            +-----------------------+---------------+----------------+----------------------------------------------+
+
+            | :octicon:`report;1em;sd-text-warning` Padding is not performed automatically by MetaTF
+              tools: if the packed input row does not occupy a power-of-2 number of
+              32-bit words, mapping fails and the user must pad the input channels to reach the
+              next power-of-2 word count.
 
         .. card::
 
