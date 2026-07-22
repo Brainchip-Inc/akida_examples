@@ -6,8 +6,7 @@ your own machine — in under a minute. No hardware, no training and no
 TensorFlow required: you will build a tiny network from Akida 2.0 layers, wire
 its weights by hand and watch it compute XOR.
 
-**Requirements:** Python 3.10 to 3.12 (see the
-`supported configurations <./installation.html#supported-configurations>`__).
+**Requirements:** `supported configurations <./installation.html#supported-configurations>`__.
 
 Install the akida package
 -------------------------
@@ -101,6 +100,12 @@ The hand-wired weights implement the classic two-neuron solution:
 1    0    1                 0                     **1**
 1    1    2                 1                     **0**
 ===  ===  ================  ====================  =======
+
+.. note::
+    XOR is the classic first problem for a reason: a single-layer
+    `perceptron <https://en.wikipedia.org/wiki/Perceptron>`__ cannot compute
+    it, as famously shown by Minsky and Papert in 1969 — solving it takes a
+    hidden layer, like the one you just wired.
 
 Besides ``weights`` and ``bias``, each layer carries quantization variables
 (``input_shift``, ``bias_shift``, ``output_scales``, ``output_shift``) that
