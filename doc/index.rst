@@ -7,6 +7,7 @@ Overview
    :maxdepth: 2
 
    self
+   Getting started <./getting_started.rst>
    Installation <./installation.rst>
    User guide <./user_guide/user_guide.rst>
    API reference <./api_reference/api_reference.rst>
@@ -29,6 +30,10 @@ The MetaTF ML Framework
 | Inspired by the `Keras API <https://keras.io>`_, MetaTF provides a high-level
   Python API for neural networks. This API facilitates early evaluation,
   design, final tuning, and productization of neural network models.
+
+.. tip::
+    New to MetaTF? Run your first model on the Akida simulator in under a
+    minute with the `Getting started <./getting_started.html>`__ page.
 
 .. figure:: ./img/Akida_Neural_Processor.png
   :target: ./_images/Akida_Neural_Processor.png
