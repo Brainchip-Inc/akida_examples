@@ -9,6 +9,10 @@ Notice that the performance of the original TF-Keras floating-point model is mai
 throughout the Akida flow.
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
 
+If you train in PyTorch, the `PyTorch to Akida workflow
+<./plot_1_global_pytorch_workflow.html>`__ is the equivalent entry point, going through
+the ONNX format.
+
 .. Note:: Please refer to the TensorFlow  `tf_keras.models
           <https://www.tensorflow.org/api_docs/python/tf/keras/models>`__
           module for model creation/import details and the `TensorFlow Guide

@@ -15,8 +15,20 @@ version = 'Akida, 2nd Generation'
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon',
     'sphinx_gallery.gen_gallery', 'autodocsumm', 'sphinx.ext.viewcode',
-    'sphinx_design', 'sphinxcontrib.video'
+    'sphinx_design', 'sphinxcontrib.video', 'sphinx_reredirects'
 ]
+
+# Redirect stubs keeping published deep links alive after the general examples
+# were renumbered (PyTorch/ONNX workflow promoted to second position).
+redirects = {
+    "examples/general/plot_7_global_pytorch_workflow": "plot_1_global_pytorch_workflow.html",
+    "examples/general/plot_1_akidanet_imagenet": "plot_2_akidanet_imagenet.html",
+    "examples/general/plot_2_ds_cnn_kws": "plot_3_ds_cnn_kws.html",
+    "examples/general/plot_3_regression": "plot_4_regression.html",
+    "examples/general/plot_4_transfer_learning": "plot_5_transfer_learning.html",
+    "examples/general/plot_5_voc_yolo_detection": "plot_6_voc_yolo_detection.html",
+    "examples/general/plot_6_segmentation": "plot_7_segmentation.html",
+}
 
 # The suffix(es) of source filenames.
 source_suffix = ['.rst']

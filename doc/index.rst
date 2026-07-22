@@ -104,6 +104,13 @@ The `examples section <./examples/index.html>`_ includes tutorials and examples 
 get started with Akida technology. This section illustrates the use of Akida technology
 on a variety of inference and incremental, on-device learning applications.
 
+Two workflows are available as equal entry points, depending on the framework you train in:
+
+* the `Global Akida workflow <./examples/general/plot_0_global_workflow.html>`_ for
+  TF-Keras models,
+* the `PyTorch to Akida workflow <./examples/general/plot_1_global_pytorch_workflow.html>`_
+  for PyTorch models, going through the ONNX format.
+
 .. warning::
     | While the Akida examples are provided under an
       `Apache License 2.0 <https://www.apache.org/licenses/LICENSE-2.0.txt>`_,
