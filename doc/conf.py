@@ -131,6 +131,23 @@ models_version = importlib_version('akida-models')
 from pip._internal.operations.freeze import freeze
 pip_freeze = ', '.join([str(i) for i in freeze(local_only=True)])
 
+# -- Version switcher --------------------------------------------------------
+# The RTD theme version flyout is only injected when hosted on readthedocs.org,
+# so this self-hosted build renders _templates/versions.html instead, driven by
+# the lists below. On release, add the archived version to legacy_doc_versions
+# (it also feeds the "Previous versions" list on the Changelog page).
+legacy_doc_versions = [
+    '2.18.2', '2.17.0', '2.16.1', '2.15.0', '2.14.0', '2.13.0', '2.12.0',
+    '2.11.0', '2.10.0', '2.9.0', '2.8.1', '2.7.2', '2.6.0', '2.4.0', '2.3.0'
+]
+legacy_doc_url = 'https://brainchip-inc.github.io/akida_examples_{}-doc-1/'
+
+html_context = {
+    'current_version': akida_version,
+    'versions': [(akida_version, 'https://doc.brainchipinc.com/')] +
+                [(v, legacy_doc_url.format(v)) for v in legacy_doc_versions],
+}
+
 
 def ultimateReplace(app, docname, source):
     result = source[0]
@@ -143,7 +160,9 @@ ultimate_replacements = {
     "{AKIDA_VERSION}": akida_version,
     "{CNN2SNN_VERSION}": cnn2snn_version,
     "{MODELS_VERSION}": models_version,
-    "{PIP_FREEZE}": pip_freeze
+    "{PIP_FREEZE}": pip_freeze,
+    "{DOC_VERSIONS}": '\n   '.join(
+        f'* `{v}-doc-1 <{legacy_doc_url.format(v)}>`_' for v in legacy_doc_versions)
 }
 
 # -- Link checks -----------------------------------------------------

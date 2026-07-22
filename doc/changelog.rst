@@ -42,24 +42,14 @@ Released in July 2026. Package set: **akida/cnn2snn 2.19.2**, **quantizeml 1.2.4
 Previous versions
 -----------------
 
+| Previous documentation versions are also reachable from the version switcher
+  at the bottom of the navigation sidebar. They are kept online for reference
+  but are no longer updated.
+
 .. dropdown:: MetaTF documentation previous versions
    :animate: fade-in
 
-   * `2.18.2-doc-1 <https://brainchip-inc.github.io/akida_examples_2.18.2-doc-1/>`_
-   * `2.17.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.17.0-doc-1/>`_
-   * `2.16.1-doc-1 <https://brainchip-inc.github.io/akida_examples_2.16.1-doc-1/>`_
-   * `2.15.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.15.0-doc-1/>`_
-   * `2.14.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.14.0-doc-1/>`_
-   * `2.13.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.13.0-doc-1/>`_
-   * `2.12.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.12.0-doc-1/>`_
-   * `2.11.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.11.0-doc-1/>`_
-   * `2.10.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.10.0-doc-1/>`_
-   * `2.9.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.9.0-doc-1/>`_
-   * `2.8.1-doc-1 <https://brainchip-inc.github.io/akida_examples_2.8.1-doc-1/>`_
-   * `2.7.2-doc-1 <https://brainchip-inc.github.io/akida_examples_2.7.2-doc-1/>`_
-   * `2.6.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.6.0-doc-1/>`_
-   * `2.4.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.4.0-doc-1/>`_
-   * `2.3.0-doc-1 <https://brainchip-inc.github.io/akida_examples_2.3.0-doc-1/>`_
+   {DOC_VERSIONS}
 
 MetaTF Beta
 -----------
