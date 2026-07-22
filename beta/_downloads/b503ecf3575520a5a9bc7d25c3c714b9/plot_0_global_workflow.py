@@ -104,7 +104,7 @@ model_keras.compile(
     optimizer=Adam(learning_rate=1e-3),
     metrics=['accuracy'])
 
-_ = model_keras.fit(x_train, y_train, epochs=10, validation_split=0.1)
+_ = model_keras.fit(x_train, y_train, epochs=10, validation_split=0.1, verbose=2)
 
 ######################################################################
 score = model_keras.evaluate(x_test, y_test, verbose=0)
@@ -231,7 +231,7 @@ model_quantized.compile(
     optimizer=Adam(learning_rate=1e-4),
     metrics=['accuracy'])
 
-model_quantized.fit(x_train, y_train, epochs=5, validation_split=0.1)
+model_quantized.fit(x_train, y_train, epochs=5, validation_split=0.1, verbose=2)
 
 ######################################################################
 score = model_quantized.evaluate(x_test, y_test, verbose=0)[1]

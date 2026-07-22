@@ -232,7 +232,7 @@ compile_model(model, 3e-4, val_steps, 1, sampling_frequency)
 
 ##############################################################################
 
-hist = model.evaluate(val_dataset)
+hist = model.evaluate(val_dataset, verbose=0)
 print(hist)
 
 ######################################################################
