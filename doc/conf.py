@@ -109,6 +109,10 @@ suppress_warnings = ['app.add_directive', 'config.cache']
 # This folder is copied to the documentation's HTML output
 html_static_path = ['_static']
 
+# Root-level extra files, copied verbatim to the output root — holds the
+# LLM-facing documentation index (https://llmstxt.org)
+html_extra_path = ['_extra']
+
 # Custom templates folder (used for GTM injection)
 templates_path = ['_templates']
 
