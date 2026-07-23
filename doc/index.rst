@@ -8,6 +8,7 @@ Overview
 
    self
    Getting started <./getting_started.rst>
+   See the power number <./power_number.rst>
    Installation <./installation.rst>
    User guide <./user_guide/user_guide.rst>
    API reference <./api_reference/api_reference.rst>

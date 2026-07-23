@@ -128,3 +128,6 @@ the `Installation <./installation.html>`__ page, then pick your entry point:
   for TF-Keras models,
 * the `PyTorch to Akida workflow <./examples/general/plot_1_global_pytorch_workflow.html>`__
   for PyTorch models, going through the ONNX format.
+
+And to see what sets Akida apart — power measured on the chip itself —
+`See the power number <./power_number.html>`__ gets there in three commands.
