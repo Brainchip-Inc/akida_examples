@@ -368,7 +368,7 @@ raw_height, raw_width, _ = raw_image.shape
 image = preprocess_image(raw_image, input_shape)
 input_image = image[np.newaxis, :].astype(np.uint8)
 
-# Call evaluate on the image
+# Call predict on the image
 pots = model_akida.predict(input_image)[0]
 
 # Reshape the potentials to prepare for decoding

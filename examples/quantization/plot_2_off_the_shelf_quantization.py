@@ -188,7 +188,7 @@ model_quantized = quantize(model_onnx, qparams=qparams, num_samples=5)
 
 # Evaluate the quantized model performance
 correctly_classified = evaluate_onnx_model(model_quantized)
-print(f'Quantized model accuracy: {correctly_classified_floating}/{num_images}.')
+print(f'Quantized model accuracy: {correctly_classified}/{num_images}.')
 
 ######################################################################
 # 5. Convert to Akida

@@ -199,7 +199,7 @@ train_batches = train_ds.map(format_example).batch(BATCH_SIZE)
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
 # Quantize the model, using 1024 calibration samples from the train set and calibrating over 2
-# epochs with a batch_size of 100.
+# epochs with a batch_size of 32.
 model_quantized = quantize(model_keras, qparams=qparams,
                            samples=train_batches, epochs=2, batch_size=BATCH_SIZE, num_samples=1024)
 

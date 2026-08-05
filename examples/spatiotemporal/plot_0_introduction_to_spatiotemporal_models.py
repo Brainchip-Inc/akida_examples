@@ -207,10 +207,11 @@ print(f"classes available are : {class_names}")
 # First, we'll look at the floating-point model, available using the following APIs. The evaluation
 # tool is also available to rapidly test the performance on the validation dataset.
 #
-# .. Note: the accuracy here is low because it is computed by weighing each time point equally, i.e.
-#          the first frame when the event has not started contributes as much to the predicted label
-#          as a frame with an actual movement in it. The validation accuracy will dramatically
-#          improve once we allow the model to weigh its output in time (see section below).
+# .. Note:: the accuracy here is low because it is computed by weighing each time point equally,
+#           i.e. the first frame when the event has not started contributes as much to the predicted
+#           label as a frame with an actual movement in it. The validation accuracy will
+#           dramatically improve once we allow the model to weigh its output in time (see section
+#           below).
 
 ######################################################################
 from akida_models.model_io import get_model_path, load_model
