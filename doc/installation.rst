@@ -28,22 +28,25 @@ Supported configurations
 Quick installation
 ------------------
 
-The akida, cnn2snn, quantizeml and akida_models Python packages can
-be set up with Python's pip package manager by installing the akida-models
-package only:
+The complete MetaTF framework can be set up with Python's pip package manager
+by installing the `metatf <https://pypi.org/project/metatf>`_ package only:
 
 .. code-block:: bash
 
-    pip install akida-models=={MODELS_VERSION}
+    pip install metatf=={METATF_VERSION}
 
 .. note::
-    Installing akida-models automatically pulls the other MetaTF packages as
-    dependencies: `cnn2snn <https://pypi.org/project/cnn2snn>`_, `akida
+    metatf is a meta-package that pulls the complete, validated set of MetaTF
+    packages as dependencies: `akida-models
+    <https://pypi.org/project/akida-models>`_, `cnn2snn
+    <https://pypi.org/project/cnn2snn>`_, `akida
     <https://pypi.org/project/akida>`_ and `quantizeml
     <https://pypi.org/project/quantizeml>`_, along with `TensorFlow
     <https://www.tensorflow.org/>`_ and `TF-Keras
     <https://github.com/keras-team/tf-keras>`__ — there is no need to install
-    TensorFlow separately. For a GPU-enabled TensorFlow setup, please refer to
+    TensorFlow separately. metatf itself contains no code: it provides no
+    ``metatf`` module or command line, the four packages above are imported
+    and used directly. For a GPU-enabled TensorFlow setup, please refer to
     `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_.
 
 .. note::
@@ -80,8 +83,8 @@ examples) runs on the software simulator that comes with the akida package.
 .. note::
     If the import fails with ``ModuleNotFoundError``, the virtual environment
     where the packages were installed is probably not active. If the printed
-    version is not ``{AKIDA_VERSION}``, update the package with
-    ``pip install --upgrade akida=={AKIDA_VERSION}``.
+    version is not ``{AKIDA_VERSION}``, update the framework with
+    ``pip install --upgrade metatf=={METATF_VERSION}``.
 
 Running examples
 ----------------

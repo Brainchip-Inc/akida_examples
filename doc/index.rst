@@ -49,7 +49,8 @@ The MetaTF ML Framework
 | MetaTF is composed of four Python packages which leverage both the
   `TensorFlow <https://www.tensorflow.org/>`_ (through
   `TF-Keras <https://github.com/keras-team/tf-keras>`__) and `ONNX <https://onnx.ai/>`__
-  frameworks, and are installed from the `PyPI <https://pypi.org/>`_ repository via the `pip` command.
+  frameworks, and are installed together from the `PyPI <https://pypi.org/>`_ repository through
+  the single `metatf <https://pypi.org/project/metatf>`_ meta-package.
 | The four MetaTF packages contain:
 
   * a Model zoo (`akida-models <https://pypi.org/project/akida-models>`_) to

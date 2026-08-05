@@ -127,6 +127,7 @@ from importlib.metadata import version as importlib_version
 akida_version = importlib_version('akida')
 cnn2snn_version = importlib_version('cnn2snn')
 models_version = importlib_version('akida-models')
+metatf_version = importlib_version('metatf')
 
 from pip._internal.operations.freeze import freeze
 pip_freeze = ', '.join([str(i) for i in freeze(local_only=True)])
@@ -160,6 +161,7 @@ ultimate_replacements = {
     "{AKIDA_VERSION}": akida_version,
     "{CNN2SNN_VERSION}": cnn2snn_version,
     "{MODELS_VERSION}": models_version,
+    "{METATF_VERSION}": metatf_version,
     "{PIP_FREEZE}": pip_freeze,
     "{DOC_VERSIONS}": '\n   '.join(
         f'* `{v}-doc-1 <{legacy_doc_url.format(v)}>`_' for v in legacy_doc_versions)
