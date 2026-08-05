@@ -5,10 +5,10 @@ Akida models zoo
 Overview
 --------
 
-Brainchip Akida Models package is a model zoo that offers a set of pre-built akida compatible
-models (e.g MobileNet, AkidaNet), pretrained weights for those models and training scripts.
+The Brainchip Akida Models package is a model zoo that offers a set of pre-built Akida-compatible
+models (e.g. MobileNet, AkidaNet), pretrained weights for those models and training scripts.
 See the `model zoo API reference <../api_reference/akida_models_apis.html#model-zoo>`_ for a
-complete list of the available models. The performance of all models from the zoo are reported for
+complete list of the available models. The performance of all models from the zoo is reported for
 both Akida 1.0 and Akida 2.0 in the `model zoo performance page <../model_zoo_performance.html>`__.
 Akida Models also contains a set of
 `layer blocks <../api_reference/akida_models_apis.html#layer-blocks>`_ that are used to define the
@@ -51,7 +51,7 @@ To create a YOLO model with 20 classes, 5 anchors and a model width of 0.5:
 
     akida_models create yolo_base -c 20 -na 5 -a 0.5
 
-The full parameter list with description can be obtained using the  ``-h`` or
+The full parameter list with descriptions can be obtained using the ``-h`` or
 ``--help`` argument for each model:
 
 .. code-block:: bash
@@ -71,7 +71,7 @@ The full parameter list with description can be obtained using the  ``-h`` or
          -a ALPHA, --alpha ALPHA
                               The width of the model, by default 1.0.
 
-Current available models for creation are:
+The models currently available for creation are:
 
  * vgg_utk_face
  * convtiny_dvs_handy
@@ -111,13 +111,13 @@ ready to be loaded on the Akida NSoC using the
 KWS training
 ^^^^^^^^^^^^
 
-KWS training pipeline uses the ``ds_cnn_kws`` model and the QuantizeML ``quantize`` CLI. Dataset
+The KWS training pipeline uses the ``ds_cnn_kws`` model and the QuantizeML ``quantize`` CLI. Dataset
 loading and preprocessing is done within the training script called by the ``kws_train`` CLI.
 
 **Example**
 
 Create a DS-CNN model for KWS, train it over 16 epochs, then quantize it to 4-bit weights and
-activations (using a set of samples for calibration only), perform a 16 epochs QAT to recover
+activations (using a set of samples for calibration only), perform a 16-epoch QAT to recover
 accuracy and evaluate.
 
 .. code-block:: bash
@@ -133,15 +133,16 @@ accuracy and evaluate.
 AkidaNet training
 ^^^^^^^^^^^^^^^^^
 
-AkidaNet training pipeline uses the ``akidanet_imagenet`` model and the QuantizeML ``quantize`` CLI.
+The AkidaNet training pipeline uses the ``akidanet_imagenet`` model and the QuantizeML ``quantize``
+CLI.
 Dataset loading and preprocessing is done within the training script called by the
 ``imagenet_train`` CLI. Note that ImageNet data must be downloaded from
 `<https://www.image-net.org/>`__ first.
 
 **Example**
 
-Create an AkidaNet 0.5 with resolution 160, train it for 90 epochs then quantize to 4-bit weights
-and activations, perform a 10 epochs QAT to recover accuracy, upscale to resolution 224 and
+Create an AkidaNet 0.5 with resolution 160, train it for 90 epochs, then quantize to 4-bit weights
+and activations, perform a 10-epoch QAT to recover accuracy, upscale to resolution 224 and
 evaluate.
 
 
@@ -161,7 +162,7 @@ evaluate.
    imagenet_train eval -d path/to/imagenet/ -m akidanet_imagenet_224_alpha_0.5_i8_w4_a4.h5
 
 
-Current training pipelines available are:
+The training pipelines currently available are:
 
 * utk_face_train
 * kws_train
@@ -182,8 +183,8 @@ Current training pipelines available are:
 Command-line interface for model evaluation
 -------------------------------------------
 
-The CLI also comes with an ``eval`` action that allows to evaluate model performance, the ``-ak``
-or ``--akida`` option allows to convert to Akida then evaluate the model.
+The CLI also comes with an ``eval`` action that allows evaluating model performance; the ``-ak``
+or ``--akida`` option allows converting the model to Akida before evaluating it.
 
 .. code-block:: bash
 
@@ -194,8 +195,8 @@ or ``--akida`` option allows to convert to Akida then evaluate the model.
 Command-line interface to display summary
 -----------------------------------------
 
-CLI comes with a ``summary`` action that allows to display a model summary (supports TF-Keras, ONNX
-and Akida model files).
+The CLI comes with a ``summary`` action that allows displaying a model summary (supports TF-Keras,
+ONNX and Akida model files).
 
 .. code-block:: bash
 
@@ -204,15 +205,15 @@ and Akida model files).
 Command-line interface to display sparsity
 ------------------------------------------
 
-CLI comes with a ``sparsity`` action that allows to display a model sparsity (supports TF-Keras,
-ONNX and Akida model files).
+The CLI comes with a ``sparsity`` action that allows displaying a model's sparsity (supports
+TF-Keras, ONNX and Akida model files).
 
 .. code-block:: bash
 
    akida_models sparsity -m akidanet_imagenet_224_alpha_0.5.h5 -v
 
-The ``-v`` option (or ``--verbose``) will display all layers sparsity and the average across all
-layers. The ``--layer_names`` option allows to display sparsity for target layers.
+The ``-v`` option (or ``--verbose``) will display each layer's sparsity and the average across all
+layers. The ``--layer_names`` option allows displaying sparsity for target layers.
 
 .. code-block:: bash
 
@@ -231,7 +232,7 @@ processing layer, e.g.:
    x = BatchNormalization()(x)
    x = Activation('relu')(x)
 
-In order to ease the design of a TF-Keras model compatible for conversion into an Akida model, a
+In order to ease the design of a TF-Keras model suitable for conversion into an Akida model, a
 higher-level interface is proposed with the use of layer blocks. These blocks are available
 in the package through:
 
@@ -251,7 +252,7 @@ The ``dense_block`` function will produce a group of layers that we call a "bloc
 .. note::
    - To avoid adding the activation layer, add the parameter ``relu_activation = False`` to the
      block.
-   - The ReLU activation max_value can be set in the parameter using a string expression, that is
+   - The ReLU activation max_value can be set in the parameter using a string expression, that is,
      ``relu_activation='ReLU6'`` will create a ReLU activation with max_value set to 6.
    - The ReLU activation can also be defined as unbounded, that is ``relu_activation='ReLU'`` (only
      supported for models targeting Akida 2.0)
@@ -294,7 +295,7 @@ Handling Akida 1.0 and Akida 2.0 specificities
 ----------------------------------------------
 
 Akida 1.0 and 2.0 specific model architecture requirements are embedded in the returned models
-(pretrained or not). By default, the returned models and pretrained model target Akida 2.0. It is
+(pretrained or not). By default, the returned models and pretrained models target Akida 2.0. It is
 however possible to build and instantiate Akida 1.0 models.
 
 Using the programming interface:
@@ -308,7 +309,7 @@ Using the programming interface:
       model = ds_cnn_kws()
       pretrained = ds_cnn_kws_pretrained()
 
-Using the CLI interface:
+Using the CLI:
 
 .. code-block:: bash
 

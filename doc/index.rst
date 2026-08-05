@@ -46,15 +46,15 @@ The MetaTF ML Framework
 
 |
 |
-| MetaTF is comprised of four Python packages which leverage both the
+| MetaTF is composed of four Python packages which leverage both the
   `TensorFlow <https://www.tensorflow.org/>`_ (through
   `TF-Keras <https://github.com/keras-team/tf-keras>`__) and `ONNX <https://onnx.ai/>`__
-  frameworks, and are installed from the `PyPI <https://pypi.org/>`_ repository via `pip` command.
+  frameworks, and are installed from the `PyPI <https://pypi.org/>`_ repository via the `pip` command.
 | The four MetaTF packages contain:
 
   * a Model zoo (`akida-models <https://pypi.org/project/akida-models>`_) to
-    directly load quantized models or to easily instantiate and train Akida
-    compatible models,
+    directly load quantized models or to easily instantiate and train
+    Akida-compatible models,
 
   * a quantization tool (`quantizeml <https://pypi.org/project/quantizeml>`_)
     for quantization of models using low-bitwidth weights and outputs,
@@ -108,7 +108,7 @@ The Akida examples
 
 The `examples section <./examples/index.html>`_ includes tutorials and examples to easily
 get started with Akida technology. This section illustrates the use of Akida technology
-on a variety of inference and incremental, on-device learning applications.
+in a variety of inference and incremental, on-device learning applications.
 
 Two workflows are available as equal entry points, depending on the framework you train in:
 

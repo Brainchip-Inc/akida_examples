@@ -5,14 +5,15 @@ QuantizeML toolkit
 Overview
 --------
 
-QuantizeML package provides base layers and quantization tools for deep-learning models. It allows
-the quantization of CNN models using low-bitwidth weights and outputs. Once quantized with the
-provided tools, CNN2SNN toolkit will be able to convert the model and execute it with Akida runtime.
+The QuantizeML package provides base layers and quantization tools for deep-learning models. It
+allows the quantization of CNN models using low-bitwidth weights and outputs. Once a model is
+quantized with the provided tools, the CNN2SNN toolkit can convert it for execution with the Akida
+runtime.
 
 The FixedPoint representation
 -----------------------------
 
-QuantizeML uses a FixedPoint representation in place of float values for layers inputs, outputs and
+QuantizeML uses a FixedPoint representation in place of float values for layer inputs, outputs and
 weights.
 
 FixedPoint numbers are actually integers with a static number of fractional bits so that:
@@ -21,7 +22,7 @@ FixedPoint numbers are actually integers with a static number of fractional bits
     x_{float} \approx x_{int}.2^{-x_{frac\_bits}}
 
 The precision of the representation is directly related to the number of fractional bits. For
-example, representing PI using an 8-bit FixedPoint with varying fractional bits:
+example, representing π using an 8-bit FixedPoint with varying fractional bits:
 
 +-----------+-------+-------------+
 | frac_bits | x_int | float value |
@@ -36,8 +37,8 @@ example, representing PI using an 8-bit FixedPoint with varying fractional bits:
 Further details are available in the
 `FixedPoint API <../api_reference/quantizeml_apis.html#fixedpoint>`__ documentation.
 
-Thanks to the FixedPoint representation, all operations within layers are implemented as integer
-only operations [#fn-1]_.
+Thanks to the FixedPoint representation, all operations within layers are implemented as
+integer-only operations [#fn-1]_.
 
 
 Quantization flow
@@ -45,7 +46,7 @@ Quantization flow
 
 The first step in the workflow is to train a model. The trained model is the starting point for the
 quantization stage. Once it is established that the overall model configuration prior to
-quantization yields a satisfactory performance on the task, one can proceed with quantization.
+quantization yields satisfactory performance on the task, one can proceed with quantization.
 
 .. note:: For simplicity, the following leverages the TF-Keras API to define a model, but QuantizeML
           also comes with ONNX support, see the `PyTorch to Akida
@@ -55,7 +56,7 @@ quantization yields a satisfactory performance on the task, one can proceed with
           examples for more information.
 
 Let's take the `DS-CNN <../api_reference/akida_models_apis.html#ds-cnn>`__ model from our zoo that
-targets KWS task as an example:
+targets the KWS task as an example:
 
 .. code-block:: python
 
@@ -67,7 +68,7 @@ targets KWS task as an example:
 
 The QuantizeML toolkit offers a turnkey solution to quantize a model: the
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function. It
-replaces the TF-Keras layers (or custom QuantizeML layers) with quantized, integer only layers. The
+replaces the TF-Keras layers (or custom QuantizeML layers) with quantized, integer-only layers. The
 obtained quantized model is still a TF-Keras model that can be evaluated with a standard TF-Keras
 pipeline.
 
@@ -91,7 +92,7 @@ Here's an example for 4-bit quantization (with first layer weights set to 8-bit)
     from quantizeml.models import QuantizationParams
     qparams4 = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
-Note that quantizing the first weights to 8-bit helps preserving accuracy.
+Note that quantizing the first layer weights to 8-bit helps preserve accuracy.
 
 QuantizeML uses a uniform quantization scheme centered on zero. During quantization, the floating
 point values are mapped to a given bitwidth quantization space of the form:
@@ -105,9 +106,9 @@ calculated as follows:
 .. math::
     scales = \frac {max(abs(data))}{2^{bitwidth} - 1}
 
-Inputs, weights and outputs scales are folded into a single output scale vector.
+Input, weight and output scales are folded into a single output scale vector.
 
-To avoid saturation in downstream operations throughout a model graph, the bitwidth of intermediary
+To avoid saturation in downstream operations throughout a model graph, the bitwidth of intermediate
 results is decreased using
 `OutputQuantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__. The
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function has
@@ -119,11 +120,11 @@ objects during the quantization process.
 To properly operate, an
 `OutputQuantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.OutputQuantizer>`__ must
 be calibrated so that it determines an adequate quantization range. Calibration will determine the
-quantization range statistically. It is possible to pass down samples to the
+quantization range statistically. It is possible to pass samples to the
 `quantize <../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function so that
 calibration and quantization are performed simultaneously.
 
-Calibration samples are available on
+Calibration samples are available on the
 `Brainchip data server <https://data.brainchip.com/dataset-mirror/samples/>`__ for datasets used in
 our zoo. They must be downloaded and deserialized before being used for calibration.
 
@@ -149,8 +150,8 @@ for more details on calibration.
 Direct quantization of a standard TF-Keras model (also called Post Training Quantization, PTQ)
 generally introduces a drop in performance. This drop is usually small for 8-bit or even 4-bit
 quantization of simple models, but it can be very significant for low quantization bitwidth and
-complex models (`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
-architecture).
+complex models (e.g. the
+`AkidaNet <../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_ architecture).
 
 If the quantized model offers acceptable performance, it can be directly converted into an Akida
 model (see the `convert <../api_reference/cnn2snn_apis.html#cnn2snn.convert>`_ function).
@@ -166,8 +167,8 @@ Compatibility constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The toolkit supports a wide range of layers (see the
-`supported type section <./quantizeml.html#supported-layer-types>`__). When hitting a non-compatible
-layer, QuantizeML will simply stop the quantization before this layer and add a
+`supported layer types section <./quantizeml.html#supported-layer-types>`__). When hitting an
+incompatible layer, QuantizeML will simply stop the quantization before this layer and add a
 `Dequantizer <../api_reference/quantizeml_apis.html#quantizeml.layers.Dequantizer>`__ before it so
 that inference is still possible. When such an event occurs, a warning is raised to the user with the
 faulty layer name.
@@ -191,29 +192,29 @@ handle some layers that are not in the
 Model loading
 ~~~~~~~~~~~~~
 
-The toolkit offers a helper that allows to load float and quantized models from TF-Keras or ONNX
+The toolkit offers a helper that allows loading float and quantized models from the TF-Keras or ONNX
 frameworks: `quantizeml.load_model <../api_reference/quantizeml_apis.html#quantizeml.load_model>`__.
 
-Command line interface
+Command-line interface
 ----------------------
 
-In addition to the programming interface, QuantizeML toolkit also provides a command-line interface
+In addition to the programming interface, the QuantizeML toolkit also provides a command-line interface
 to perform quantization, dump a quantized model configuration, check a quantized model and insert a
 rescaling layer.
 
 quantize CLI
 ~~~~~~~~~~~~
 
-Quantizing a model through the CLI uses almost the same arguments as the programming interface but
-the quantization parameters are split into the parameters: input weight quantization with "-i",
-weight bitwidth with "-w" and activation bitwidth with the "-a" options.
+Quantizing a model through the CLI uses almost the same arguments as the programming interface, but
+the quantization parameters are split into separate options: input weight quantization with "-i",
+weight bitwidth with "-w" and activation bitwidth with "-a".
 
 .. code-block:: bash
 
     quantizeml quantize -m model_keras.h5 -i 8 -w 8 -a 8
 
 Note that without calibration options explicitly given, calibration will happen with 1024 randomly
-generated samples. It is generally advised to use real samples serialized in a numpy `.npz` file.
+generated samples. It is generally advised to use real samples serialized in a NumPy `.npz` file.
 
 .. code-block:: bash
 
@@ -231,7 +232,7 @@ the default per-axis quantization:
 config CLI
 ~~~~~~~~~~
 
-Advanced users might want to customize the default quantization pattern and this is made possible by
+Advanced users might want to customize the default quantization pattern, and this is made possible by
 dumping a quantized model configuration to a `.json` file and quantizing again using the "-c"
 option.
 
@@ -245,8 +246,8 @@ option.
 
 .. warning::
     Editing a model configuration can be complicated and might have negative effects on quantized
-    accuracy or even model graph. This should be reserved to users deeply familiar with QuantizeML
-    concepts.
+    accuracy or even the model graph. This should be reserved for users deeply familiar with
+    QuantizeML concepts.
 
 .. note:: This is only available for TF-Keras models.
 
@@ -254,7 +255,7 @@ check CLI
 ~~~~~~~~~
 
 It is possible to check for quantization errors using the `check` CLI that will report inaccurate
-weight scales quantization or saturation in integer operations.
+weight scale quantization or saturation in integer operations.
 
 .. code-block:: bash
 
@@ -265,8 +266,8 @@ weight scales quantization or saturation in integer operations.
 insert_rescaling CLI
 ~~~~~~~~~~~~~~~~~~~~
 
-Some models might not include a Rescaling layer in their architecture and have a separated
-preprocessing pipeline (ie. moving from [0, 255] images to a [-1, 1] normalized representation). As
+Some models might not include a Rescaling layer in their architecture and have a separate
+preprocessing pipeline (i.e. moving from [0, 255] images to a [-1, 1] normalized representation). As
 having a rescaling layer might be useful, QuantizeML offers the `insert_rescaling` CLI that will add
 a Rescaling layer at the beginning of a given model.
 
@@ -285,7 +286,7 @@ TF-Keras support
 ~~~~~~~~~~~~~~~~
 
 The QuantizeML toolkit provides quantization of the following layer types which are standard
-TF-Keras layers for most part and custom QuantizeML layers for some of them:
+TF-Keras layers for the most part and custom QuantizeML layers for some of them:
 
 - Neural layers
     - `Conv2D <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedConv2D>`__
@@ -307,7 +308,7 @@ TF-Keras layers for most part and custom QuantizeML layers for some of them:
 - Activations
     - `ReLU <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedReLU>`__
       (both unbounded and with a max value)
-    - GeLU, SiLU(Swish), HardSiLU, LeakyReLU and PReLU (with a fixed slope) through
+    - GeLU, SiLU (Swish), HardSiLU, LeakyReLU and PReLU (with a fixed slope) through
       `QuantizedActivation <../api_reference/quantizeml_apis.html#quantizeml.layers.QuantizedActivation>`__
       (custom QuantizeML layer)
 
@@ -327,7 +328,7 @@ TF-Keras layers for most part and custom QuantizeML layers for some of them:
 ONNX support
 ~~~~~~~~~~~~
 
-The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns' and quantize towards:
+The QuantizeML toolkit will identify groups of ONNX operations, or 'patterns', and quantize towards:
 
 - `QuantizedConv2D <../api_reference/quantizeml_apis.html#quantizeml.onnx_support.layers.QuantizedConv2D>`__
   when the pattern is:
@@ -397,7 +398,7 @@ Analysis module
 
 The QuantizeML toolkit comes with an `analysis <../api_reference/quantizeml_apis.html#analysis>`__
 submodule that provides tools to better analyze the impact of quantization on a model. Quantization
-errors and minimal accuracy drops are an expected behavior going from float to integer (8-bit).
+errors and minor accuracy drops are an expected behavior when going from float to integer (8-bit).
 While no simple and generic solution can be provided to solve larger accuracy issues, the analysis
 tool can help pinpoint faulty layers or kernels that might be poorly quantized and thus harm
 accuracy. Once the culprit is found, adding regularization or training constraints can help tackle
@@ -415,11 +416,11 @@ the issue, quantizing per-tensor or per-axis can also help.
 Kernel distribution
 ~~~~~~~~~~~~~~~~~~~
 
-This tool leverages the `Tensorboard visualization toolkit
+This tool leverages the `TensorBoard visualization toolkit
 <https://www.tensorflow.org/tensorboard>`__ to draw the kernel distributions of a given model. The
 `plot_kernel_distribution
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.plot_kernel_distribution>`__ API takes as
-inputs the model of interest and a path to save a preset Tensorboard configuration to display. The
+inputs the model of interest and a path to save a preset TensorBoard configuration to display. The
 following command line will enable the histogram and boxplot displays:
 
 .. code-block:: bash
@@ -440,7 +441,7 @@ Example output for the classification layer of the `DS-CNN/KWS
 Quantization error
 ~~~~~~~~~~~~~~~~~~
 
-The tool offers 2 possible ways to check quantization error in a model:
+The tool offers two possible ways to check quantization error in a model:
 
     - for all layers: a quantization error is computed on each layer output
     - for a single layer: per-channel error is then reported
@@ -448,17 +449,17 @@ The tool offers 2 possible ways to check quantization error in a model:
 This is accessible using the `measure_layer_quantization_error
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_layer_quantization_error>`__ API.
 The quantization error is then computed independently for each layer or channel accordingly. The
-cumulative error, that is the error propagated from the input to each layer, is computed with the
+cumulative error, that is, the error propagated from the input to each layer, is computed with the
 `measure_cumulative_quantization_error
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_cumulative_quantization_error>`__
-dedicated API. Both APIs will return a python dictionary containing the metrics that can be
+dedicated API. Both APIs will return a Python dictionary containing the metrics that can be
 displayed using the `print_metric_table
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.tools.print_metric_table>`__ function.
 
 A `batch_size` parameter is present in the quantization error functions and can be used to better
-refine the computed error by averaging error on more data.
+refine the computed error by averaging the error over more data.
 
-It is also possible to compute weight quantization error (model or layer wise) using the
+It is also possible to compute weight quantization error (model- or layer-wise) using the
 `measure_weight_quantization_error
 <../api_reference/quantizeml_apis.html#quantizeml.analysis.measure_weight_quantization_error>`__
 helper.
@@ -483,7 +484,7 @@ is saturated when it is equal to the minimum or maximum value allowed by a given
 Command line
 ~~~~~~~~~~~~
 
-The analysis tools are accessible via command-line using the `analysis` action:
+The analysis tools are accessible via the command line using the `analysis` action:
 
 .. code-block:: bash
 
@@ -519,7 +520,7 @@ A model and a directory must be provided:
     -m MODEL, --model MODEL    Model to analyze
     -l LOGDIR, --logdir LOGDIR Log directory to save plots
 
-Tensorboard called on the log directory:
+TensorBoard is then called on the log directory:
 
 .. code-block:: bash
 
@@ -548,8 +549,8 @@ All the options described in the previous section are accessible through paramet
                                                            instead of isolated one. Defaults to
                                                            False
 
-Providing only a model and it's quantized version will print out quantization error per-layer
-individually:
+Providing only a model and its quantized version will print out the quantization error for each
+layer individually:
 
 .. code-block:: bash
 
@@ -577,8 +578,8 @@ individually:
     dense_5 (QuantizedDense)                                    | 0.0078 | 0.0000
     =====================================================================================
 
-Using the `cumulative` option will display a similar report where error is cumulated top-down from
-layer to layer:
+Using the `cumulative` option will display a similar report where the error is accumulated top-down
+from layer to layer:
 
 .. code-block:: bash
 
@@ -606,8 +607,8 @@ layer to layer:
     dense_5 (QuantizedDense)                                    | 0.0962 | 0.0000
     =====================================================================================
 
-The `target_layer` allows to focus on a given layer and display a per-axis error on all output
-channels for this layer, for example on the classification dense layer:
+The `target_layer` option allows focusing on a given layer and displays a per-axis error on all
+output channels for this layer, for example on the classification dense layer:
 
 .. code-block:: bash
 
@@ -658,4 +659,4 @@ channels for this layer, for example on the classification dense layer:
 ____
 
 .. [#fn-1] See https://en.wikipedia.org/wiki/Fixed-point_arithmetic for more details on the
-    arithmetics.
+    arithmetic.

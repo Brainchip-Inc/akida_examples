@@ -16,7 +16,7 @@ CNN2SNN offers a simple `convert <../api_reference/cnn2snn_apis.html#cnn2snn.con
 that takes a quantized model as input and converts it into an Akida runtime compatible network.
 
 Let's take the `DS-CNN <../api_reference/akida_models_apis.html#ds-cnn>`__ model from our zoo that
-targets KWS task as an example:
+targets the KWS task as an example:
 
 .. code-block:: python
 
@@ -34,7 +34,7 @@ Conversion compatibility
 It is possible to check if a float model is compatible with Akida conversion using the
 `check_model_compatibility <../api_reference/cnn2snn_apis.html#cnn2snn.check_model_compatibility>`__
 helper. This helper will check that the model quantization scheme is allowed and that building
-blocks are compatible with Akida layers blocks, convert the model and optionally map on an Akida
+blocks are compatible with Akida layer blocks, convert the model and optionally map it on Akida
 hardware.
 
 Command-line interface
@@ -56,7 +56,8 @@ Convert the DS-CNN/KWS 8/8/8 quantized model:
     cnn2snn convert -m ds_cnn_kws_i8_w8_a8.h5
 
 An Akida ``.fbz`` model named ``ds_cnn_kws_i8_w8_a8.fbz`` is then saved. This model can be loaded
-back into an `akida.Model <../api_reference/akida_apis.html#akida.Model>`__ and run on Akida runtime.
+back into an `akida.Model <../api_reference/akida_apis.html#akida.Model>`__ and run on the Akida
+runtime.
 
 Deprecated CLI actions
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -64,9 +65,9 @@ Deprecated CLI actions
 The ``scale`` and ``shift`` options of the ``convert`` CLI action that were used to set input
 scaling parameters are now deprecated.
 
-CNN2SNN CLI comes with additional actions that are also deprecated and should no longer be used:
-``quantize``, ``reshape`` and  ``calibrate``. You should rather use
-`QuantizeML <./quantizeml.html#>`__ tool to perform the same operations.
+The CNN2SNN CLI comes with additional actions that are also deprecated and should no longer be used:
+``quantize``, ``reshape`` and ``calibrate``. You should use the
+`QuantizeML <./quantizeml.html#>`__ tool instead to perform the same operations.
 
 
 Handling Akida 1.0 and Akida 2.0 specificities
@@ -87,7 +88,7 @@ Using the programming interface:
       quantized_model = ds_cnn_kws_pretrained()
       model_akida = convert(quantized_model)
 
-Using the CLI interface:
+Using the CLI:
 
 .. code-block:: bash
 

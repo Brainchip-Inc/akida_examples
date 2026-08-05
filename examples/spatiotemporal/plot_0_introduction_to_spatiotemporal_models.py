@@ -12,7 +12,7 @@ A tutorial on designing efficient models for streaming video tasks.
 # Recognizing gestures from video is a challenging task that requires understanding not just
 # individual frames but how those frames evolve over time. Traditional 2D convolutional neural
 # networks (CNNs) are limited here — they analyze only spatial features and discard temporal
-# continuity. 3D CNNs, while well suited to the task, are on the other hand computationally heavy.
+# continuity. 3D CNNs, while well suited to the task, are computationally heavy.
 #
 # To tackle this, we turn to lightweight spatiotemporal models, specifically designed to process
 # patterns in both space (image structure) and time (motion, rhythm). These models are essential
@@ -22,7 +22,7 @@ A tutorial on designing efficient models for streaming video tasks.
 # * Online eye-tracking
 # * Real-time activity detection in video streams
 #
-# At the heart of these models lies a simple idea: decoupling spatial and temporal analysis,
+# At the heart of these models lies a simple idea: decoupling spatial and temporal analysis
 # enables efficient, real-time detection — even on resource-constrained devices.
 
 ######################################################################
@@ -30,12 +30,12 @@ A tutorial on designing efficient models for streaming video tasks.
 # ------------------------------------------
 #
 # Rather than using full, computationally expensive 3D convolutions, our spatiotemporal blocks break
-# the operation into two parts, a:
+# the operation into two parts:
 #
 # 1. Temporal convolution, which focuses on changes over time for each spatial pixel (e.g. motion).
 # 2. Spatial convolution, which looks at image structure in each frame (e.g. shape, position).
 #
-# The figures below highlights the difference between a full 3D convolution kernel versus our
+# The figures below highlight the difference between a full 3D convolution kernel and our
 # spatiotemporal convolution (a.k.a. TENN in the figure below).
 #
 # .. figure:: ../../img/example3Dconv.png
@@ -62,7 +62,7 @@ A tutorial on designing efficient models for streaming video tasks.
 # 2.1. Making it efficient using depthwise separable convolutions
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# To further reduce the computational load of the blocks, we can make them separable, just like
+# To further reduce the computational load of the blocks, we can make them separable. Just like
 # depthwise separable convolutions replace full convolutions, reducing computation with minimal
 # accuracy loss, our decomposed temporal-spatial convolutions can also be made separable using
 # an approach inspired by the `MobileNet paper <https://arxiv.org/abs/1704.04861>`__. Each layer
@@ -83,7 +83,7 @@ A tutorial on designing efficient models for streaming video tasks.
 #    :align: center
 #
 #    Kernel dimensions and strides for various types of 3D convolutions. Dotted lines show depthwise
-#    convolutions. Full lines show full convolutions. Orange outlines are for spatial 3D convs and
+#    convolutions. Solid lines show full convolutions. Orange outlines are for spatial 3D convs and
 #    purple ones for temporal convolutions.
 #
 # A spatiotemporal block can be easily built using the predefined spatiotemporal
@@ -116,10 +116,10 @@ model.summary()
 ######################################################################
 # 3.1 Preserving temporal information
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# As you can see from the summary, the model ends with an 3D average pooling applied only
-# on the spatial dimensions. This ensures that the model can make predictions after the
-# first input frame, preserving fine-grained temporal dynamics and bufferized inference
-# (see section 6.)
+# As you can see from the summary, the model ends with a 3D average pooling applied only
+# to the spatial dimensions. This ensures that the model can make predictions after the
+# first input frame, preserving fine-grained temporal dynamics and enabling bufferized
+# inference (see section 6).
 
 ######################################################################
 # 4. Gesture classification in videos
@@ -129,7 +129,7 @@ model.summary()
 # <https://www.qualcomm.com/developer/software/jester-dataset>`__,
 # a gesture recognition dataset specifically designed to include movements targeted at human/machine
 # interactions. To do well on the task, information needs to be aggregated across time to accurately
-# separate complex gestures such as clockwise or counterclowise hand turning.
+# separate complex gestures such as clockwise or counterclockwise hand turning.
 #
 # The data is available to download in the form of zip files from the
 # `qualcomm website <https://www.qualcomm.com/developer/software/jester-dataset>`__ along with
@@ -139,14 +139,14 @@ model.summary()
 ######################################################################
 # 4.1 Dataset description
 # ^^^^^^^^^^^^^^^^^^^^^^^
-# In the jester dataset, each sample is a short video clip (about 3 seconds) recorded through a
-# webcam with fixed resolution of 100 pixels in height and a frame rate of 12 FPS. There are in
+# In the Jester dataset, each sample is a short video clip (about 3 seconds) recorded through a
+# webcam with a fixed resolution of 100 pixels in height and a frame rate of 12 FPS. There are in
 # total 148,092 videos of 27 different complex gestures covering examples such as "Zooming Out With
-# 2 fingers", "Rolling Hand Forward", "Shaking Hand", "Stop Sign", "Swiping Left", etc..., also
-# including a "no gesture" and a "other movements" classes.
+# 2 fingers", "Rolling Hand Forward", "Shaking Hand", "Stop Sign", "Swiping Left", etc., also
+# including "no gesture" and "other movements" classes.
 #
 # It is a rich and varied dataset with over 1300 different actors performing the gestures.
-# The dataset has determined splits for training, validation and testing with the ratio of
+# The dataset has predetermined splits for training, validation and testing with a ratio of
 # 80%/10%/10%.
 
 ######################################################################
@@ -158,7 +158,7 @@ model.summary()
 # - Use strided sampling (stride=2) to reduce redundancy and speed up training
 # - Resize the input to a fixed input size (100, 100)
 # - Normalize inputs (between -1 and 1)
-# - Optionally apply an affine transform for training data (ie. randomly and independently apply
+# - Optionally apply an affine transform for training data (i.e. randomly and independently apply
 #   translation, scaling, shearing and rotation to each video).
 #
 # The dataset is too large to load completely in a tutorial. If you download the dataset
@@ -166,12 +166,12 @@ model.summary()
 # available under akida_models.tenn_spatiotemporal.jester_train.
 #
 # Alternatively, the first few validation samples have been set aside and
-# can be loaded here to demonstration purposes.
+# can be loaded here for demonstration purposes.
 
 ######################################################################
 batch_size = 8
 
-# Download and load validation subset from Brainchip data server
+# Download and load validation subset from BrainChip data server
 import os
 from akida_models import fetch_file
 from akida_models.tenn_spatiotemporal.jester_train import get_data
@@ -183,7 +183,7 @@ data_path = fetch_file(
 data_dir = os.path.join(os.path.dirname(data_path), "jester_subset")
 val_dataset, val_steps = get_data("val", data_dir, sampling_frequency, input_shape[:2], batch_size)
 
-# Decode numeric labels into human readable ones: contains all string names for classes
+# Decode numeric labels into human-readable ones: contains all string names for classes
 # available in the dataset
 import csv
 with open(os.path.join(data_dir, "jester-v1-labels.csv")) as csvfile:
@@ -203,11 +203,11 @@ print(f"classes available are : {class_names}")
 # classify each video frame.
 #
 # Since the training requires a few GPU hours to complete, we will load a pre-trained model for
-# inference. Pre-trained models are available either in floating-point or quantized version.
-# First, we'll look at the floating-point model, available using the following apis. The evaluation
+# inference. Pre-trained models are available in either floating-point or quantized versions.
+# First, we'll look at the floating-point model, available using the following APIs. The evaluation
 # tool is also available to rapidly test the performance on the validation dataset.
 #
-# .. Note: the accuracy here is low because it is computed weighing each time point equally, i.e.
+# .. Note: the accuracy here is low because it is computed by weighing each time point equally, i.e.
 #          the first frame when the event has not started contributes as much to the predicted label
 #          as a frame with an actual movement in it. The validation accuracy will dramatically
 #          improve once we allow the model to weigh its output in time (see section below).
@@ -243,14 +243,14 @@ print(hist)
 # frame-by-frame. This works thanks to:
 #
 # - **causal convolutions**, which ensure that predictions at time *t* use only past and current
-#   frames, not future ones by adding (left-sided) zero-padding. This is critical for streaming
+#   frames, not future ones, by adding (left-sided) zero-padding. This is critical for streaming
 #   inference where latency matters: we want to be able to make predictions immediately. Our
 #   causal temporal layers don't rely on future frames and start making predictions after the
 #   first frame is received.
 # - **not using a temporal stride**: our model purposefully preserves time information and thus
 #   is able to make a classification guess after each incoming frame.
 #
-# These choices also allow us to configure the spatio-temporal layer in a efficient way using
+# These choices also allow us to configure the spatiotemporal layer in an efficient way using
 # FIFO buffers during inference.
 
 ######################################################################
@@ -275,10 +275,10 @@ print(hist)
 # To make this process more efficient, we can use a FIFO (First In, First Out) buffer to
 # automatically manage the sliding window. Here's how it works:
 #
-# - The input buffer holds the most recent values from the input signal (top row on the figure
+# - The input buffer holds the most recent values from the input signal (top row in the figure
 #   above).
 # - The size of this buffer is equal to the size of the temporal kernel.
-# - After each new incoming values, we perform a dot product between the buffer contents and the
+# - After each new incoming value, we perform a dot product between the buffer contents and the
 #   kernel to produce one output value.
 # - Every time a new input value arrives, it's added to the buffer, and the oldest value is
 #   removed.
@@ -299,7 +299,7 @@ print(hist)
 #   - After conversion, the 3D Convolution layers are transformed into custom
 #     `BufferTempConv <../../api_reference/quantizeml_apis.html#quantizeml.layers.BufferTempConv>`__
 #     layers.
-#   - As opposed to training where the whole 16 frames samples is passed to the model, the inference
+#   - As opposed to training, where the whole 16-frame sample is passed to the model, the inference
 #     model requires samples to be passed one by one.
 #   - For a better understanding of the buffering process, the sections below will explicitly use
 #     `quantizeml.models.transforms.sanitize
@@ -313,8 +313,8 @@ model_buffer = sanitize(model)
 model_buffer.summary()
 
 ######################################################################
-# The models then can be evaluated on the data using the helper available that passes
-# data frame by frame to the model, accumulating the model's responses
+# The models can then be evaluated on the data using the available helper that passes
+# data frame by frame to the model, accumulating the model's responses.
 from akida_models.tenn_spatiotemporal.jester_train import evaluate_bufferized_model
 evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in_akida=False)
 
@@ -322,10 +322,10 @@ evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in
 # 6.2 Weighing information
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The performance of the buffered model is improved because we use a smoothing mecanism on the
+# The performance of the buffered model is improved because we use a smoothing mechanism on the
 # model's output:
 #
-# - at time *t*, the model's outputs is softmaxed
+# - at time *t*, the model's output is softmaxed
 # - the softmaxed values from time *t-1* are decayed (using a decay_factor of 0.8)
 # - the two are added
 #
@@ -340,7 +340,7 @@ evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in
 #
 # Because of this buffering and how the model was trained to output a prediction after each time
 # step, we can effectively visualize the response of the model in time.
-# This part of the tutorial is heavily inspired from the tensorflow tutorial on streaming
+# This part of the tutorial is heavily inspired by the TensorFlow tutorial on streaming
 # recognition of gestures based on the `movinet models
 # <https://www.tensorflow.org/hub/tutorials/movinet>`__.
 #
@@ -348,8 +348,8 @@ evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in
 # applying a softmax on the output of the model.
 # To make the prediction more robust, at each time step we decay the old predictions by a
 # decay_factor so that they contribute less and less to the final predicted class.
-# The decay_factor is an hyperparameter that you can play with. In practice, it slightly improves
-# performance by smoothing the prediction in time and reducing the impact of earlier frames to
+# The decay_factor is a hyperparameter that you can play with. In practice, it slightly improves
+# performance by smoothing the prediction in time and reducing the impact of earlier frames on
 # the final prediction.
 #
 # The video below shows one sample along with the probabilities of the top 5 predictions from
@@ -365,14 +365,14 @@ evaluate_bufferized_model(model_buffer, val_dataset, val_steps // batch_size, in
 #    :align: center
 
 ######################################################################
-# 8. Quantizing the model and convertion to Akida
+# 8. Quantizing the model and conversion to Akida
 # -----------------------------------------------
 # The model can be easily quantized with no cost in accuracy. It can then be easily deployed on
 # hardware for online gesture recognition using the convert method from the cnn2snn package.
 
 ######################################################################
 import numpy as np
-# Get the calibration data for accurate quantization: these are a subset from the training data.
+# Get the calibration data for accurate quantization: these are a subset of the training data.
 samples = fetch_file(
     fname="jester_video_bs100.npz",
     origin="https://data.brainchip.com/dataset-mirror/samples/jester_video/jester_video_bs100.npz",
@@ -419,4 +419,4 @@ akida_model.summary()
 # - Prioritize temporal modeling early in the network
 # - Use factorized spatiotemporal convolutions for efficiency
 # - Train with augmentation that preserves causality
-# - is seamlessly deployed using streaming inference using FIFO buffers
+# - Deploy seamlessly using streaming inference with FIFO buffers

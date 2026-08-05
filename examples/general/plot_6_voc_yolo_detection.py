@@ -6,7 +6,7 @@ This tutorial demonstrates that Akida can perform object detection. This is illu
 subset of the
 `PASCAL-VOC 2007 dataset <https://www.tensorflow.org/datasets/catalog/voc>`__
 which contains 20 classes. The YOLOv2 architecture from
-`Redmon et al (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
+`Redmon et al. (2016) <https://arxiv.org/pdf/1506.02640.pdf>`_ has been chosen to
 tackle this object detection problem.
 
 """
@@ -21,8 +21,8 @@ tackle this object detection problem.
 #
 # Object detection is a computer vision task that combines two elemental tasks:
 #
-#  - object classification that consists in assigning a class label to an image
-#    like shown in the `AkidaNet/ImageNet inference <./plot_2_akidanet_imagenet.html>`_
+#  - object classification that consists of assigning a class label to an image
+#    as shown in the `AkidaNet/ImageNet inference <./plot_2_akidanet_imagenet.html>`_
 #    example
 #  - object localization that consists of drawing a bounding box around one or
 #    several objects in an image
@@ -45,22 +45,22 @@ tackle this object detection problem.
 # detection task is reduced to a regression problem to spatially separated boxes
 # and associated class probabilities.
 #
-# YOLO base concept is to divide an input image into regions, forming a grid,
+# The YOLO base concept is to divide an input image into regions, forming a grid,
 # and to predict bounding boxes and probabilities for each region. The bounding
 # boxes are weighted by the prediction probabilities.
 #
-# YOLO also uses the concept of "anchors boxes" or "prior boxes". The network
-# does not actually predict the actual bounding boxes but offsets from anchors
-# boxes which are templates (width/height ratio) computed by clustering the
+# YOLO also uses the concept of "anchor boxes" or "prior boxes". The network
+# does not predict the actual bounding boxes but offsets from anchor
+# boxes, which are templates (width/height ratio) computed by clustering the
 # dimensions of the ground truth boxes from the training dataset. The anchors
 # then represent the average shape and size of the objects to detect.
 #
 # Additional information about YOLO can be found on the `Darknet website
-# <https://pjreddie.com/darknet/yolov2/>`_ and source code for the preprocessing
-# and postprocessing functions that are included in akida_models package (see
+# <https://pjreddie.com/darknet/yolov2/>`_, and the source code for the preprocessing
+# and postprocessing functions that are included in the akida_models package (see
 # the `processing section <../../api_reference/akida_models_apis.html#processing>`_
-# in the model zoo) is largely inspired from
-# `experiencor github <https://github.com/experiencor/keras-yolo2>`_.
+# in the model zoo) is largely inspired by the
+# `experiencor GitHub repository <https://github.com/experiencor/keras-yolo2>`_.
 #
 
 ######################################################################
@@ -69,10 +69,10 @@ tackle this object detection problem.
 #
 # A subset of VOC has been prepared with test images from VOC2007
 # that contains 5 examples of each class. The dataset is represented as
-# a tfrecord file, containing images, labels, and bounding boxes.
+# a TFRecord file, containing images, labels, and bounding boxes.
 #
 # The `load_tf_dataset` function is a helper function that facilitates the loading
-# and parsing of the tfrecord file.
+# and parsing of the TFRecord file.
 #
 # The `YOLO toolkit <../../api_reference/akida_models_apis.html#yolo-toolkit>`_
 # offers several methods to prepare data for processing, see
@@ -85,7 +85,7 @@ import tensorflow as tf
 
 from akida_models import fetch_file
 
-# Download TFrecords test set from Brainchip data server
+# Download the TFRecord test set from the BrainChip data server
 data_path = fetch_file(
     fname="voc_test_20_classes.tfrecord",
     origin="https://data.brainchip.com/dataset-mirror/voc/test_20_classes.tfrecord",
@@ -93,7 +93,7 @@ data_path = fetch_file(
     extract=True)
 
 
-# Helper function to load and parse the Tfrecord file.
+# Helper function to load and parse the TFRecord file.
 def load_tf_dataset(tf_record_file_path):
     tfrecord_files = [tf_record_file_path]
 
@@ -117,7 +117,7 @@ def load_tf_dataset(tf_record_file_path):
         example['objects/label'] = tf.sparse.to_dense(example['objects/label'], default_value=0)
 
         example['objects/bbox'] = tf.sparse.to_dense(example['objects/bbox'])
-        # Boxes were flattenned that's why we need to reshape them
+        # Boxes were flattened, so we need to reshape them
         example['objects/bbox'] = tf.reshape(example['objects/bbox'],
                                              (tf.shape(example['objects/label'])[0], 4))
         # Create a new dictionary structure
@@ -158,7 +158,7 @@ val_dataset, len_val_dataset = load_tf_dataset(data_path)
 print(f"Loaded VOC2007 sample test data: {len_val_dataset} images.")
 
 ######################################################################
-# Anchors can also be computed easily using YOLO toolkit.
+# Anchors can also be computed easily using the YOLO toolkit.
 #
 # .. Note:: The following code is given as an example. In a real use case
 #           scenario, anchors are computed on the training dataset.
@@ -177,14 +177,14 @@ anchors_example = generate_anchors(val_dataset, num_anchors, grid_size)
 # YOLO model that is built upon the `AkidaNet architecture
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet>`_
 # and 3 separable convolutional layers at the top for bounding box and class
-# estimation followed by a final separable convolutional which is the detection
+# estimation followed by a final separable convolution, which is the detection
 # layer. Note that for efficiency, the alpha parameter in AkidaNet (network
-# width or number of filter in each layer) is set to 0.5.
+# width or number of filters in each layer) is set to 0.5.
 #
 
 from akida_models import yolo_base
 
-# Create a yolo model for 20 classes with 5 anchors and grid size of 7
+# Create a YOLO model for 20 classes with 5 anchors and a grid size of 7
 classes = len(labels)
 
 model = yolo_base(input_shape=(224, 224, 3),
@@ -221,12 +221,12 @@ full_model.output
 # 4. Training
 # ~~~~~~~~~~~
 #
-# As the YOLO model relies on Brainchip AkidaNet/ImageNet network, it is
+# As the YOLO model relies on the BrainChip AkidaNet/ImageNet network, it is
 # possible to perform transfer learning from ImageNet pretrained weights when
 # training a YOLO model. See the `PlantVillage transfer learning example
-# <./plot_5_transfer_learning.html>`_ for a detail explanation on transfer
+# <./plot_5_transfer_learning.html>`_ for a detailed explanation of transfer
 # learning principles.
-# Additionally, for achieving optimal results, consider the following approach:
+# Additionally, to achieve optimal results, consider the following approach:
 #
 # 1. Initially, train the model on the COCO dataset. This process helps in learning
 # general object detection features and improves the model's ability to detect various
@@ -244,14 +244,14 @@ full_model.output
 # 5. Performance
 # ~~~~~~~~~~~~~~
 #
-# The model zoo also contains an `helper method
+# The model zoo also contains a `helper method
 # <../../api_reference/akida_models_apis.html#akida_models.yolo_voc_pretrained>`_
-# that allows to create a YOLO model for VOC and load pretrained weights for the
+# that allows creating a YOLO model for VOC and loading pretrained weights for the
 # detection task and the corresponding anchors. The anchors are used to interpret
 # the model outputs.
 #
-# The metric used to evaluate YOLO is the mean average precision (mAP) which is
-# the percentage of correct prediction and is given for an intersection over
+# The metric used to evaluate YOLO is the mean average precision (mAP), which is
+# the percentage of correct predictions and is given for an intersection over
 # union (IoU) ratio. Scores in this example are given for the standard IoU of
 # 0.5, meaning that a detection is considered valid if the intersection over union
 # ratio with its ground truth equivalent is above 0.5 (mAP 50).
@@ -317,7 +317,7 @@ model_akida = convert(compatible_model)
 model_akida.summary()
 
 ######################################################################
-# 6.1 Check performance
+# 6.2 Check performance
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # Akida model accuracy is tested on the first *n* images of the validation set.
@@ -343,7 +343,7 @@ print('mAP 50: {:.4f}'.format(map_ak_dict[0.5]))
 print(f'Akida inference on {len_val_dataset} images took {end-start:.2f} s.\n')
 
 ######################################################################
-# 6.2 Show predictions for a random image
+# 6.3 Show predictions for a random image
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 
@@ -361,7 +361,7 @@ input_shape = model_akida.layers[0].input_dims
 # Load the image
 raw_image = next(iter(val_dataset))['image']
 
-# Keep the original image size for later bounding boxes rescaling
+# Keep the original image size for later bounding box rescaling
 raw_height, raw_width, _ = raw_image.shape
 
 # Pre-process the image

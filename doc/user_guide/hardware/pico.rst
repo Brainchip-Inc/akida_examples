@@ -11,7 +11,7 @@ model to a specific device (real or virtual). This page details the limits for t
 Akida Pico IP.
 
 Please refer to `Akida Pico layers <../../api_reference/akida_apis.html#akida-pico-layers>`__
-for layers description.
+for layer descriptions.
 
 .. tab-set::
 

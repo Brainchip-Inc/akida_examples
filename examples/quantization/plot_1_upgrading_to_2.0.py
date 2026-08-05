@@ -2,8 +2,8 @@
 Upgrading to Akida 2.0
 ======================
 
-This tutorial targets Akida 1.0 users that are looking for advice on how to migrate their Akida 1.0
-model towards Akida 2.0. It also lists the major differences in model architecture compatibilities
+This tutorial targets Akida 1.0 users who are looking for advice on how to migrate their Akida 1.0
+model to Akida 2.0. It also lists the major differences in model architecture compatibility
 between 1.0 and 2.0.
 
 """
@@ -21,9 +21,9 @@ between 1.0 and 2.0.
 #    Akida 1.0 and 2.0 workflows
 #
 # As shown in the figure above, the main difference between 1.0 and 2.0 workflows is the
-# quantization step that was based on CNN2SNN and that is now based on QuantizeML.
+# quantization step, which was based on CNN2SNN and is now based on QuantizeML.
 #
-# Providing your model architecture is 2.0 compatible (`next section
+# Provided your model architecture is 2.0 compatible (the `next section
 # <./plot_1_upgrading_to_2.0.html#models-architecture-differences>`__ lists differences), upgrading to
 # 2.0 is limited to moving from a `cnn2snn.quantize` call to a `quantizeml.models.quantize
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ call. The code snippets
@@ -72,8 +72,8 @@ akida_model_2_0.summary()
 # .. note:: Here we use 8/4/4 quantization to match the CNN2SNN version above, but most users will
 #           typically use the default 8-bit quantization that comes with QuantizeML.
 #
-# QuantizeML quantization API is close to the legacy CNN2SNN quantization API and further details on
-# how to use it are given in the `global workflow tutorial
+# The QuantizeML quantization API is close to the legacy CNN2SNN quantization API and further
+# details on how to use it are given in the `global workflow tutorial
 # <../general/plot_0_global_workflow.html>`__ and the `advanced QuantizeML tutorial
 # <./plot_0_advanced_quantizeml.html>`__.
 
@@ -125,20 +125,20 @@ akida_model_2_0.summary()
 # has changed in Akida 2.0 as it now must come after the ReLU activation (when there is one). In
 # other words, in Akida 1.0 the layers were organized as follows:
 #
-# * ... > Neural layer > GlobalAveragePooling > (BatchNormalization) > ReLU >  Neural layer > ...
+# * ... > Neural layer > GlobalAveragePooling > (BatchNormalization) > ReLU > Neural layer > ...
 #
-# In Akida 2.0 the supported sequence of layer is:
+# In Akida 2.0 the supported sequence of layers is:
 #
-# * ... > Neural layer > (BatchNormalization) > (ReLU) > GlobalAveragePooling >  Neural layer > ...
+# * ... > Neural layer > (BatchNormalization) > (ReLU) > GlobalAveragePooling > Neural layer > ...
 #
 # This can also be configured using the ``post_relu_gap`` parameter of akida_models `layer_blocks
 # <../../api_reference/akida_models_apis.html#layer-blocks>`__.
 #
-# To migrate an existing model from 1.0 to 2.0, it is possible to load 1.0 weights into a 2.0
-# oriented architecture using `TF-Keras save and load APIs
+# To migrate an existing model from 1.0 to 2.0, it is possible to load 1.0 weights into a
+# 2.0-oriented architecture using `TF-Keras save and load APIs
 # <https://www.tensorflow.org/tutorials/keras/save_and_load>`__ because the global average pooling
 # position does not have an effect on model weights. However, the sequences between 1.0 and 2.0 are
-# not mathematically equivalent so it might be required to tune or even retrain the model.
+# not mathematically equivalent, so it might be required to tune or even retrain the model.
 #
 
 ######################################################################
@@ -155,5 +155,5 @@ with cnn2snn.set_akida_version(cnn2snn.AkidaVersion.v1):
 akida_model.summary()
 
 ######################################################################
-# One will notice the different Akida layers types as detailed in `Akida user guide
+# One will notice the different Akida layer types as detailed in the `Akida user guide
 # <../../user_guide/akida.html#akida-layers>`__.

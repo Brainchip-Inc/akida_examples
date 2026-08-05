@@ -6,17 +6,17 @@ Overview
 --------
 
 Like many other machine learning frameworks, the core data structures of Akida are layers and
-models, and users familiar with Keras, Tensorflow or Pytorch should be on familiar ground.
+models, and users familiar with Keras, TensorFlow or PyTorch should be on familiar ground.
 
-The main difference between Akida and other machine learning networks is that inputs and weights are
-integers and it only performs integer operations, so that it can further reduce the power
-consumption and memory footprint. Since quantization and ReLU activation functions lead to a
-substantial sparsity, Akida takes advantage of this by implementing operations in biologically
+The main difference between Akida and other machine learning frameworks is that inputs and weights
+are integers and it only performs integer operations, which further reduces the power
+consumption and memory footprint. Since quantization and ReLU activation functions lead to
+substantial sparsity, Akida takes advantage of this by implementing operations as biologically
 inspired event-based calculations. However, to simplify the user experience, the model weights and
-the inputs are represented as integer tensors (Numpy arrays), similar to what you would see in other
+the inputs are represented as integer tensors (NumPy arrays), similar to what you would see in other
 machine learning frameworks.
 
-Going from the standard deep learning world to Akida world is done by following simple steps:
+Going from the standard deep learning world to the Akida world is done in a few simple steps:
 
 - build a model using TF-Keras or optionally using a model from the
   `Brainchip zoo <./akida_models.html>`__
@@ -48,8 +48,8 @@ The ``Model`` object has basic features such as:
 
 - `summary() <../api_reference/akida_apis.html#akida.Model.summary>`__ method that prints a
   description of the model architecture.
-- `save() <../api_reference/akida_apis.html#akida.Model.save>`__ method that needs a path for the
-  model and that allows saving to disk for future use. The model will be saved as a file with an
+- `save() <../api_reference/akida_apis.html#akida.Model.save>`__ method that takes a path for the
+  model and saves it to disk for future use. The model will be saved as a file with an
   ``.fbz`` extension. A saved model can be reloaded using the ``Model`` object constructor with the
   full path of the saved file as a string argument. This will automatically load the model weights.
 
@@ -80,7 +80,7 @@ Akida layers
 ^^^^^^^^^^^^
 
 The sections below list the available layers for Akida 1.0 and Akida 2.0. Those layers are obtained
-from converting a quantized model to Akida and are thus automatically defined during conversion.
+by converting a quantized model to Akida and are thus automatically defined during conversion.
 Akida layers only perform integer operations using 8-bit or 4-bit quantized inputs and weights. The
 exception is FullyConnected layers performing edge learning (1.0 only), where both inputs and
 weights are 1-bit.
@@ -128,7 +128,7 @@ In order to perform model inference on hardware, the corresponding ``Model`` obj
 mapped on a specific ``Device``.
 
 The Akida ``Device`` represents a device object that holds a version and the hardware topology of the
-mesh. The main properties of such object are:
+mesh. The main properties of such an object are:
 
 - its `hardware version <../api_reference/akida_apis.html#hwversion>`__,
 - the description of its `mesh <../api_reference/akida_apis.html#akida.NP.Mesh>`__ of
@@ -159,12 +159,12 @@ Virtual Devices
 Most of the time, ``Device`` objects are real hardware devices, but virtual devices can also be
 created to allow the mapping of a ``Model`` on a host that is not connected to a hardware device.
 
-It is possible to build a virtual device for known hardware devices, by calling functions
+It is possible to build a virtual device for known hardware devices, by calling the functions
 `AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__,
 `AKD1500() <../api_reference/akida_apis.html#akida.AKD1500>`__ and
-`TwoNodesIPv1() <../api_reference/akida_apis.html#akida.TwoNodesIPv1>`__ for 1.0 or
-`TwoNodesIPv2() <../api_reference/akida_apis.html#akida.TwoNodesIPv2>`__, and
-`SixNodesIPv2() <../api_reference/akida_apis.html#akida.SixNodesIPv2>`__, for 2.0. Alternatively,
+`TwoNodesIPv1() <../api_reference/akida_apis.html#akida.TwoNodesIPv1>`__ for 1.0, or
+`TwoNodesIPv2() <../api_reference/akida_apis.html#akida.TwoNodesIPv2>`__ and
+`SixNodesIPv2() <../api_reference/akida_apis.html#akida.SixNodesIPv2>`__ for 2.0. Alternatively,
 a custom virtual device can be created using `create_device
 <../api_reference/akida_apis.html#akida.create_device>`__.
 
@@ -191,7 +191,7 @@ Advanced Mapping Details and Hardware Devices Usage
 When ``Model`` `.map() <../api_reference/akida_apis.html#akida.Model.map>`__  results in more than
 one hardware sequence, on inference each sequence will be chain loaded onto the device to process a
 given input. Sequences can be obtained using the ``Model``
-`.sequences() <../api_reference/akida_apis.html#akida.Model.sequences>`__ property, that will return
+`.sequences() <../api_reference/akida_apis.html#akida.Model.sequences>`__ property, which returns
 a list of sequence objects. The program used to load one sequence can be obtained programmatically.
 
 .. code-block:: python
@@ -203,8 +203,8 @@ a list of sequence objects. The program used to load one sequence can be obtaine
     # Check program size
     print(len(sequence.program))
 
-Once the model has been mapped, the sequences mapped in the Hardware run on the device,
-and the sequences mapped in the Software run on the CPU.
+Once the model has been mapped, the sequences mapped in hardware run on the device,
+and the sequences mapped in software run on the CPU.
 
 .. note::
   Where mapping to a single on-hardware sequence is necessary, one can force an exception to be
@@ -217,7 +217,7 @@ and the sequences mapped in the Software run on the CPU.
 
 By default, the mapping uses the `MapMode.AllNps
 <../api_reference/akida_apis.html#akida.MapMode.AllNps>`__ mode that targets a higher throughput,
-lower latency, and better NP concurrent utilization but an optimal mapping depends on the system
+lower latency, and better NP concurrent utilization, but an optimal mapping depends on the system
 characteristics. The other modes `MapMode.HwPr
 <../api_reference/akida_apis.html#akida.MapMode.HwPr>`__ and `MapMode.Minimal
 <../api_reference/akida_apis.html#akida.MapMode.Minimal>`__ will respectively leverage the NP
@@ -252,7 +252,7 @@ tutorial <../examples/general/plot_2_akidanet_imagenet.html#hardware-mapping-and
 Command-line interface for model evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In addition to the aforementioned APIs, the akida python package provides a command-line interface
+In addition to the aforementioned APIs, the akida Python package provides a command-line interface
 for `mapping <../api_reference/akida_apis.html#akida.Model.map>`__ a model to the available
 `device <../api_reference/akida_apis.html#akida.devices>`__ and sending data for inference so that
 hardware details can be retrieved.
@@ -269,21 +269,21 @@ hardware details can be retrieved.
         -i INPUT, --input INPUT Input image or a numpy array
 
 
-| If no input data is provided a random sample will be generated and used for inference.
-| CLI outputs a summary of the mapped model with details regarding NP units allocation,
+| If no input data is provided, a random sample will be generated and used for inference.
+| The CLI outputs a summary of the mapped model with details regarding NP units allocation,
   `statistics <../api_reference/akida_apis.html#akida.Model.statistics>`__ and
   `metrics <../api_reference/akida_apis.html#akida.HardwareDevice.metrics>`__.
 
 .. note:: About the model statistics:
 
     * it shows the inference power/energy when measurable (i.e. whenever the inference
-      is lasting long enough to collect meaningful data),
+      lasts long enough to collect meaningful data),
     * displayed numbers include the floor power.
 
 | The two examples below show:
 
    * the CLI output using a pretrained DS-CNN model and a random input
-   * the CLI output using a pretrained AkidaNet model and a 10 images input
+   * the CLI output using a pretrained AkidaNet model and a 10-image input
 
 .. code-block:: bash
 
@@ -470,7 +470,7 @@ Only the last layer of a model can be trained with Akida Edge Learning and must 
 following constraints:
 
 * must be of type `FullyConnected <../api_reference/akida_apis.html#akida.FullyConnected>`__,
-* must have binary weight,
+* must have binary weights,
 * must receive binary inputs.
 
 .. note::

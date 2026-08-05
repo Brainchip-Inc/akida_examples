@@ -2,7 +2,7 @@ Model zoo performance
 =====================
 
 | The Brainchip `akida_models <https://pypi.org/project/akida-models>`__ package offers a set of pre-built
-  Akida compatible models (e.g MobileNet, AkidaNet), pretrained weights for those models and training
+  Akida-compatible models (e.g. MobileNet, AkidaNet), pretrained weights for those models and training
   scripts. Please refer to the `model zoo API reference <./api_reference/akida_models_apis.html#model-zoo>`__
   for a complete list of the available models.
 
@@ -16,8 +16,8 @@ Model zoo performance
   architectural differences between 1.0 and 2.0 models and their respective workflows.
 
 .. note::
-    The download links provided point towards standard Tensorflow Keras models
-    that must be converted to Akida model using
+    The download links provided point towards standard TensorFlow Keras models
+    that must be converted to an Akida model using
     `cnn2snn.convert <./api_reference/cnn2snn_apis.html#convert>`_.
 
 .. |image_icon_ref| image:: ./img/image_icon.png
@@ -45,7 +45,8 @@ For 1.0 models, 4-bit accuracy is provided and is always obtained through a QAT 
       `map <./api_reference/akida_apis.html#akida.Model.map>`_ operation using the
       `Minimal MapMode <./api_reference/akida_apis.html#akida.MapMode>`_ targeting AKD1000/AKD1500
       SoC.
-    * Energy per inference is average, measured on AKD1500 device for the most efficient mapping.
+    * Energy per inference is an average, measured on an AKD1500 device for the most efficient
+      mapping.
 
 |image_icon_ref| Image domain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,7 +234,7 @@ Keyword spotting
 +--------------+-----------------------+---------+--------------+----------------+-----------+-----+-------------+----------+
 | Architecture | Dataset               | #Params | Quantization | Top-1 accuracy | Size (KB) | NPs | Energy (mJ) | Download |
 +==============+=======================+=========+==============+================+===========+=====+=============+==========+
-| DS-CNN       | Google speech command | 22.7K   | 8/4/4        | 91.72%         | 23.1      | 5   | 0.07        | |kws_dl| |
+| DS-CNN       | Google Speech Commands| 22.7K   | 8/4/4        | 91.72%         | 23.1      | 5   | 0.07        | |kws_dl| |
 +--------------+-----------------------+---------+--------------+----------------+-----------+-----+-------------+----------+
 
 
@@ -258,13 +259,13 @@ Classification
 Akida 2.0 models
 ----------------
 
-For 2.0 models, both 8-bit PTQ and 4-bit QAT numbers are given. When not explicitly stated 8-bit PTQ
-accuracy is given as is (ie no further tuning/training, only quantization and calibration). The 4-bit
+For 2.0 models, both 8-bit PTQ and 4-bit QAT numbers are given. When not explicitly stated, 8-bit PTQ
+accuracy is given as is (i.e. no further tuning/training, only quantization and calibration). The 4-bit
 QAT is the same as for 1.0.
 
 .. note::
-    * The digit for quantization scheme stands for both weights and activations bitwidth. Weights in
-      the first layer are always quantized to 8-bit.
+    * The digit in the quantization scheme stands for both the weights and activations bitwidth.
+      Weights in the first layer are always quantized to 8-bit.
     * The NPs column provides the minimal number of neural processors required for the model
       execution on the Akida IP. The numbers given are the result of the
       `map <./api_reference/akida_apis.html#akida.Model.map>`_ operation using the
@@ -585,7 +586,7 @@ Keyword spotting
 +--------------+-----------------------+---------+--------------+----------------+-----+------------+
 | Architecture | Dataset               | #Params | Quantization | Top-1 accuracy | NPs | Download   |
 +==============+=======================+=========+==============+================+=====+============+
-| DS-CNN       | Google speech command | 23.8K   | 8            | 92.83%         | 9   | |kws8_dl|  |
+| DS-CNN       | Google Speech Commands| 23.8K   | 8            | 92.83%         | 9   | |kws8_dl|  |
 |              |                       |         |              |                |     |            |
 |              |                       |         | 4            | 92.58%         | 9   | |kws4_dl|  |
 +--------------+-----------------------+---------+--------------+----------------+-----+------------+
@@ -656,7 +657,7 @@ Akida Pico models
 
 Pico models are recurrent TENNs targeting the Akida Pico Neuromorphic Processor IP. Please refer
 to the `Recurrent TENNs API <./api_reference/akida_models_apis.html#recurrent-tenns>`__ for
-models description and to the `Akida Pico layers hardware constraints
+model descriptions and to the `Akida Pico layers hardware constraints
 <./user_guide/hardware/pico.html>`__ for mapping limits.
 
 |audio_icon_ref| Audio domain
@@ -672,7 +673,7 @@ Keyword spotting
 +----------------+-----------------------+---------+--------------+----------+--------------+
 | Architecture   | Dataset               | #Params | Quantization | Accuracy | Download     |
 +================+=======================+=========+==============+==========+==============+
-| TENN recurrent | Google speech command | 46.6K   | 8            | 93.80%   | |tr_sc12_dl| |
+| TENN recurrent | Google Speech Commands| 46.6K   | 8            | 93.80%   | |tr_sc12_dl| |
 +----------------+-----------------------+---------+--------------+----------+--------------+
 
 Vibration domain

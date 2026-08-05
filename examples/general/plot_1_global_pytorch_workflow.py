@@ -13,7 +13,7 @@ Here we will instead describe a workflow to go from a model trained in PyTorch.
    | Note however that this pathway offers slightly less flexibility than our default,
      TensorFlow-based pathway - specifically, fine-tuning of the quantized model is
      not possible when starting from PyTorch.
-   | In most cases, that won't matter, there should be almost no performance drop when
+   | In most cases, that won't matter: there should be almost no performance drop when
      quantizing to 8-bit anyway.
    | However, advanced users interested in further optimization of the original model
      (going to 4-bit quantization for example) or users who don't yet have a
@@ -22,14 +22,14 @@ Here we will instead describe a workflow to go from a model trained in PyTorch.
 
 
 QuantizeML natively allows the quantization and fine-tuning of TensorFlow models. While
-it does not support PyTorch quantization natively, it allows to quantize float models
+it does not support PyTorch quantization natively, it allows quantizing float models
 stored in the `Open Neural Network eXchange (ONNX) <https://onnx.ai>`__ format. Export
 from PyTorch to ONNX is well supported, and so this provides a straightforward pathway to
 prepare your PyTorch model for Akida.
 
 As a concrete example, we will prepare a PyTorch model on a simple classification task
 (MNIST). This model will then be exported to ONNX and quantized to 8-bit using QuantizeML.
-The quantized model is then converted to Akida, and performance evaluated to show that
+The quantized model is then converted to Akida, and its performance is evaluated to show that
 there has been no loss in accuracy.
 
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
@@ -50,7 +50,7 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
    | The MNIST example below is light enough to train on the CPU only.
    | However, where GPU acceleration is desirable for the PyTorch training step, you may find
      it simpler to use separate virtual environments for the PyTorch-dependent sections
-     (`1. Create and train`_ and `2. Export`_) vs the TensorFlow-dependent sections
+     (`1. Create and train`_ and `2. Export`_) vs. the TensorFlow-dependent sections
      (`3. Quantize`_ and `4. Convert`_).
 
 
@@ -217,7 +217,7 @@ torch.onnx.export(model_torch,
 
 ######################################################################
 # .. Note::
-#  Find more information about how to export PyTorch models in ONNX at
+#  Find more information about how to export PyTorch models to ONNX at
 #  `<https://pytorch.org/docs/stable/onnx.html>`_.
 #
 
@@ -225,8 +225,8 @@ torch.onnx.export(model_torch,
 # 3. Quantize
 # ~~~~~~~~~~~
 #
-# An Akida accelerator processes integer activations and weights. Therefore, the floating
-# point model must be quantized in preparation to run on an Akida accelerator.
+# An Akida accelerator processes integer activations and weights. Therefore, the
+# floating-point model must be quantized in preparation for running on an Akida accelerator.
 #
 # The `QuantizeML quantize() <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function recognizes `ModelProto <https://onnx.ai/onnx/api/classes.html#modelproto>`__ objects
@@ -281,15 +281,15 @@ model_akida.summary()
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
 # Native PyTorch data must be presented in a different format to perform
-# the evaluation in Akida models. Specifically:
+# the evaluation with Akida models. Specifically:
 #
-# 1. images must be numpy-raw, with an 8-bit unsigned integer data type and
+# 1. images must be numpy-raw, with an 8-bit unsigned integer data type, and
 # 2. the channel dimension must be in the last dimension.
 #
 
 import numpy as np
 
-# Read raw data and convert it into numpy
+# Read raw data and convert it into NumPy
 x_test = testloader.dataset.data.numpy()
 y_test = testloader.dataset.targets.numpy()
 

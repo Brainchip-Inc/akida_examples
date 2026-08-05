@@ -15,7 +15,7 @@ device at hand? `Without a device`_ below shows what you can still see.
     Power measurement is currently supported on the AKD1000 only. On other
     devices (AKD1500 included) the same commands run inference but print
     ``Power measurement disabled...`` instead of the power figures — support
-    for these devices will be addressed later.
+    for these devices will be added later.
 
 Three commands
 --------------

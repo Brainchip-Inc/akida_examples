@@ -2,10 +2,10 @@ Installation
 ============
 
 .. important::
-    MetaTF 2.16 was the last release supporting Tensorflow 2.15.0 (Keras 2) and python 3.9.
+    MetaTF 2.16 was the last release supporting TensorFlow 2.15.0 (Keras 2) and Python 3.9.
 
     Starting with MetaTF 2.17, releases will support
-    `TF-Keras <https://github.com/keras-team/tf-keras>`__ 2.19 (Tensorflow 2.19) and python 3.10 to
+    `TF-Keras <https://github.com/keras-team/tf-keras>`__ 2.19 (TensorFlow 2.19) and Python 3.10 to
     3.12.
 
 
@@ -17,10 +17,10 @@ Supported configurations
     * Any Linux variant compatible with `manylinux 2.28 <https://github.com/pypa/manylinux>`_ (Ubuntu 22.04, Ubuntu 24.04, ...)
 * **Python versions:** 3.10 to 3.12
 * **TF-Keras versions:** 2.19
-* **pytorch version:** While not an explicit MetaTF/ONNX requirement, Pytorch versions >= 2.6 are supported. GPU support and Tensorflow dependency management are left to the user discretion.
+* **PyTorch versions:** While not an explicit MetaTF/ONNX requirement, PyTorch versions >= 2.6 are supported. GPU support and TensorFlow dependency management are left to the user's discretion.
 
 .. warning::
-    Using Windows, the latest Visual C++ redistributable package is required.
+    On Windows, the latest Visual C++ redistributable package is required.
     Please refer to `this link
     <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist>`__
     for installation.
@@ -28,8 +28,8 @@ Supported configurations
 Quick installation
 ------------------
 
-The akida, cnn2snn, quantizeml and akida_models python packages can
-be setup with Python's pip package manager by installing the akida-models
+The akida, cnn2snn, quantizeml and akida_models Python packages can
+be set up with Python's pip package manager by installing the akida-models
 package only:
 
 .. code-block:: bash
@@ -47,9 +47,9 @@ package only:
     `Install TensorFlow with pip <https://www.tensorflow.org/install/pip>`_.
 
 .. note::
-    We recommend using virtual environment such as `Conda <https://conda.io/docs/>`_.
-    Please note that the python version must be explicitly specified when creating a
-    conda environment. The specification must be for one of the supported python
+    We recommend using a virtual environment such as `Conda <https://conda.io/docs/>`_.
+    Please note that the Python version must be explicitly specified when creating a
+    conda environment. The specification must be for one of the supported Python
     versions listed above.
 
     .. code-block:: bash
@@ -87,7 +87,7 @@ Running examples
 ----------------
 
 The Akida tutorials can be downloaded from the `examples <./examples/index.html>`_
-section as python scripts or Jupyter Notebooks. Dependencies needed to replay
+section as Python scripts or Jupyter Notebooks. Dependencies needed to replay
 the examples can be installed using the :download:`requirements.txt <../requirements.txt>`
 file:
 

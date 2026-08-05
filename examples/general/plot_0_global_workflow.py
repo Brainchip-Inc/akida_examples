@@ -13,7 +13,7 @@ If you train in PyTorch, the `PyTorch to Akida workflow
 <./plot_1_global_pytorch_workflow.html>`__ is the equivalent entry point, going through
 the ONNX format.
 
-.. Note:: Please refer to the TensorFlow  `tf_keras.models
+.. Note:: Please refer to the TensorFlow `tf_keras.models
           <https://www.tensorflow.org/api_docs/python/tf/keras/models>`__
           module for model creation/import details and the `TensorFlow Guide
           <https://www.tensorflow.org/guide>`__ for TensorFlow usage.
@@ -51,7 +51,7 @@ from tf_keras.datasets import mnist
 # Load MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# Add a channels dimension to the image sets as Akida expects 4-D inputs (corresponding to
+# Add a channels dimension to the image sets as Akida expects 4-D inputs corresponding to
 # (num_samples, height, width, channels). Note: MNIST is a grayscale dataset and is unusual
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
@@ -70,7 +70,7 @@ plt.show()
 # ^^^^^^^^^^^^^^^^^^^^^
 #
 # Note that at this stage, there is nothing specific to the Akida IP.
-# The model constructed below, as inspired by `this example
+# The model constructed below, inspired by `this example
 # <https://www.tensorflow.org/model_optimization/guide/quantization/training_example#train_a_model_for_mnist_without_quantization_aware_training>`__,
 # is a completely standard `TF-Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__ CNN model.
 #
@@ -122,8 +122,9 @@ print('Test accuracy:', score[1])
 # 2.1. 8-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# An Akida accelerator processes 8 or 4-bit integer activations and weights. Therefore,
-# the floating-point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
+# An Akida accelerator processes 8- or 4-bit integer activations and weights. Therefore, the
+# floating-point TF-Keras model must be quantized in preparation for running on an Akida
+# accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function can be used to quantize a TF-Keras model for Akida. For this step in this example, an
@@ -132,8 +133,8 @@ print('Test accuracy:', score[1])
 #
 # The quantization process results in a TF-Keras model with custom `QuantizeML quantized layers
 # <../../api_reference/quantizeml_apis.html#layers>`__ substituted for the original TF-Keras layers.
-# All TF-Keras API functions can be applied on this new model: ``summary()``, ``compile()``,
-# ``fit()``. etc.
+# All TF-Keras API functions can be applied to this new model: ``summary()``, ``compile()``,
+# ``fit()``, etc.
 #
 # .. Note:: The ``quantize`` function applies `several transformations
 #           <../../api_reference/quantizeml_apis.html#transforms>`__ to
@@ -151,9 +152,9 @@ model_quantized = quantize(model_keras, qparams=qparams)
 model_quantized.summary()
 
 ######################################################################
-# .. Note:: Note that the number of parameters for the floating and quantized models differs,
+# .. Note:: The number of parameters for the floating and quantized models differs,
 #           a consequence of the BatchNormalization folding and the additional parameters
-#           added for quantization. For further details, please refer to their respective summary.
+#           added for quantization. For further details, please refer to their respective summaries.
 #
 
 ######################################################################
@@ -174,7 +175,7 @@ print('Test accuracy after 8-bit quantization:', compile_evaluate(model_quantize
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The previous call to ``quantize`` was made with random samples for calibration
-# (default parameters). While the observed drop in accuracy is minimal, that is
+# (default parameters). While the observed drop in accuracy is minimal, that is,
 # around 1%, it can be worse on more complex models. Therefore, it is advised to
 # use a set of real samples from the training set for calibration during a call
 # to ``quantize``.
@@ -202,11 +203,11 @@ print('Test accuracy after calibration:', compile_evaluate(model_quantized))
 # 2.3. 4-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The accuracy of the 8/8/8 quantized model is equal to that of the Keras floating-point
+# The accuracy of the 8/8/8 quantized model is equal to that of the TF-Keras floating-point
 # model. In some cases, a smaller memory size for the model is required. This can be
 # accomplished through quantization of the model to smaller bitwidths.
 #
-# The model will now be quantized to 8/4/4, that is 8-bit weights in the first layer with
+# The model will now be quantized to 8/4/4, that is, 8-bit weights in the first layer with
 # 4-bit weights and activations in all other layers. Such a quantization scheme will usually
 # introduce a performance drop.
 #
@@ -227,7 +228,7 @@ print('Test accuracy after 4-bit quantization:', compile_evaluate(model_quantize
 # When a model suffers from an accuracy drop after quantization, fine-tuning or Quantization
 # Aware Training (QAT) may recover some or all of the original performance.
 #
-# Note that since this is a fine-tuning step, both the number of epochs and learning rate are
+# Note that since this is a fine-tuning step, both the number of epochs and the learning rate are
 # expected to be lower than during the initial float training.
 #
 model_quantized.compile(

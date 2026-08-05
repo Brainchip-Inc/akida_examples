@@ -5,26 +5,26 @@ Off-the-shelf models quantization
 | The `Global Akida workflow <../general/plot_0_global_workflow.html>`__ and the
   `PyTorch to Akida workflow <../general/plot_1_global_pytorch_workflow.html>`__ guides
   describe all the steps required to create, train, quantize and convert a model for Akida,
-  respectively using TF-Keras and PyTorch frameworks.
-| Here we will illustrate off-the-shelf/pretrained CNN models quantization for Akida using
-  `MobileNet V2 <https://huggingface.co/docs/transformers/model_doc/mobilenet_v2>`__ from
+  using the TF-Keras and PyTorch frameworks, respectively.
+| Here we will illustrate the quantization of off-the-shelf/pretrained CNN models for Akida
+  using `MobileNet V2 <https://huggingface.co/docs/transformers/model_doc/mobilenet_v2>`__ from
   the `Hugging Face Hub <https://huggingface.co/docs/hub/index>`__.
 
 .. Note::
    | Off-the-shelf CNN models refer to already trained floating-point models.
-   | Their training recipe and framework have no importance as long as they can be exported
+   | Their training recipe and framework are not important as long as they can be exported
      to `ONNX <https://onnx.ai>`__.
    | Note however that this pathway offers slightly less flexibility than our default,
      TensorFlow-based pathway - specifically, fine-tuning of the quantized model is
      not possible.
-   | In most cases, that won't matter, there should be almost no performance drop when
+   | In most cases, that won't matter; there should be almost no performance drop when
      quantizing to 8-bit anyway.
 
 .. Note::
    | This tutorial leverages the `Optimum toolkit
      <https://huggingface.co/docs/optimum/main/en/exporters/onnx/usage_guides/export_a_model>`__,
-     an external tool, based on `PyTorch <https://pytorch.org/>`__, that allows models direct
-     download and export to  ONNX.
+     an external tool, based on `PyTorch <https://pytorch.org/>`__, that allows direct model
+     download and export to ONNX.
 
      .. code-block::
 
@@ -46,7 +46,7 @@ Off-the-shelf models quantization
 #    Off-the-shelf CNN models Akida workflow
 #
 # As shown in the figure above, the `QuantizeML toolkit
-# <../../api_reference/quantizeml_apis.html>`__ allows the Post Training Quantization of ONNX
+# <../../api_reference/quantizeml_apis.html>`__ allows the Post-Training Quantization of ONNX
 # models.
 #
 
@@ -55,11 +55,12 @@ Off-the-shelf models quantization
 # 2. Data preparation
 # ~~~~~~~~~~~~~~~~~~~
 #
-# Given that the reference model was trained on `ImageNet <https://www.image-net.org/>`__ dataset
-# (which is not publicly available), this tutorial used a subset of 10 copyright free images.
+# Given that the reference model was trained on the `ImageNet <https://www.image-net.org/>`__
+# dataset (which is not publicly available), this tutorial uses a subset of 10 copyright-free
+# images.
 # A helper function ``imagenet.preprocessing.get_preprocessed_samples`` loads
-# and preprocesses (decodes, crops and extracts a square 224x224x3 patch from an input image)
-# these images.
+# and preprocesses these images (decodes, crops and extracts a square 224x224x3 patch from an
+# input image).
 #
 
 import numpy as np
@@ -74,8 +75,8 @@ x_test_raw, labels_test = get_preprocessed_samples(IMAGE_SIZE, NUM_CHANNELS)
 num_images = x_test_raw.shape[0]
 
 # Get labels for the test set by index
-# Note: Hugging Face models reserve the first index to null predictions
-# (labeled as 'background' id). That is why we increase in '1' the original label id.
+# Note: Hugging Face models reserve the first index for null predictions
+# (labeled as 'background' id). That is why we increase the original label id by 1.
 labels_test = labels_test + 1
 
 print(f'{num_images} images and their labels are loaded and preprocessed.')
@@ -83,8 +84,8 @@ print(f'{num_images} images and their labels are loaded and preprocessed.')
 ######################################################################
 # As illustrated in `1. Workflow overview`_, the model's source is at the user's
 # discretion. Here, we know a priori that MobileNet V2 was trained with
-# images normalized within [-1, 1] interval. Also, ONNX models are usually
-# saved with a `channels-first` format, input images are expected to be passed
+# images normalized within the [-1, 1] interval. Also, ONNX models are usually
+# saved with a `channels-first` format, so input images are expected to be passed
 # with the channels dimension on `axis = 1`.
 #
 
@@ -104,7 +105,7 @@ x_test = np.transpose(x_test, (0, 3, 1, 2))
 # 3.1. Download ONNX MobileNet V2
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# There are many repositories with models saved in ONNX format. In this example the
+# There are many repositories with models saved in ONNX format. In this example, the
 # `Optimum API <https://huggingface.co/docs/optimum/main/en/exporters/onnx/usage_guides/export_a_model>`__
 # is used for downloading and exporting models to ONNX.
 #
@@ -123,13 +124,13 @@ print(onnx.helper.printable_graph(model_onnx.graph))
 
 
 ######################################################################
-# 3.2. Evaluate model performances
+# 3.2. Evaluate model performance
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The `ONNXRuntime <https://onnxruntime.ai>`__ package is a cross-platform
 # accelerator capable of loading and running models described in ONNX format.
 # We take advantage of this framework to run the ONNX models and evaluate
-# their performances.
+# their performance.
 #
 # .. Note:: We only compute accuracy on 10 images.
 #
@@ -156,9 +157,10 @@ print(f'Floating-point model accuracy: {correctly_classified_floating}/{num_imag
 # ~~~~~~~~~~~
 #
 # | Akida processes integer activations and weights. Therefore, the floating-point model
-#   must be quantized in preparation to run on an Akida accelerator.
-# | `QuantizeML quantize() <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
-#   function recognizes `ModelProto <https://onnx.ai/onnx/api/classes.html#modelproto>`__ objects
+#   must be quantized in preparation for running on an Akida accelerator.
+# | The `QuantizeML quantize()
+#   <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__ function recognizes
+#   `ModelProto <https://onnx.ai/onnx/api/classes.html#modelproto>`__ objects
 #   and quantizes them for Akida. The result is another ``ModelProto``, compatible with the
 #   `CNN2SNN Toolkit <../../user_guide/cnn2snn.html>`__.
 # | The table below summarizes the obtained accuracy at the various stages using the full
@@ -169,7 +171,7 @@ print(f'Floating-point model accuracy: {correctly_classified_floating}/{num_imag
 # +===============================+================+====================+================+
 # | Random samples / per-tensor   | 71.790         | 70.550             | 70.588         |
 # +-------------------------------+----------------+--------------------+----------------+
-# | Imagenet samples / per-tensor | 71.790         | 70.472             | 70.628         |
+# | ImageNet samples / per-tensor | 71.790         | 70.472             | 70.628         |
 # +-------------------------------+----------------+--------------------+----------------+
 #
 # .. Note::

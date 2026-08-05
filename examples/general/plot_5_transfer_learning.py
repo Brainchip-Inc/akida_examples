@@ -5,7 +5,7 @@ Transfer learning with AkidaNet for PlantVillage
 This tutorial presents how to perform transfer learning for quantized models targeting an Akida
 accelerator.
 
-The transfer learning example is derived from the `Tensorflow tutorial
+The transfer learning example is derived from the `TensorFlow tutorial
 <https://www.tensorflow.org/tutorials/images/transfer_learning>`__ where the
 base model is an AkidaNet 0.5 quantized model trained on ImageNet and the
 target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/plant_village>`__.
@@ -15,7 +15,7 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 # Transfer learning process
 # -------------------------
 #
-# Transfer learning consists in customizing a pretrained model or feature
+# Transfer learning consists of customizing a pretrained model or feature
 # extractor to fit another task.
 #
 # **Base model**
@@ -28,11 +28,11 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 # **Classification head**
 #
 # Customization of the model happens by adding layers on top of the base model,
-# which in AkidaNet case ends with a global average operation.
+# which in the AkidaNet case ends with a global average operation.
 #
 # The classification head is typically composed of two dense layers as follows:
 #
-#   - the first dense layer number of units is configurable and depends on the
+#   - the first dense layer's number of units is configurable and depends on the
 #     task but is generally 512 or below,
 #   - a BatchNormalization operation and ReLU activation follow the first layer,
 #   - a dropout layer is placed between the two dense layers to prevent
@@ -52,16 +52,16 @@ target dataset is `PlantVillage <https://www.tensorflow.org/datasets/catalog/pla
 #   5. Optionally perform QAT for a few epochs to recover accuracy
 #
 # The transfer learning process operates in float precision,
-# ensuring seamless integration with users' existing familiarity in setting
+# ensuring seamless integration with users' existing familiarity with setting
 # hyperparameters, adding a new head, and deciding on layer freezing.
 #
-# While this process will apply to most of the tasks, there might be cases where
+# While this process will apply to most tasks, there might be cases where
 # variants are needed:
 #
-#   - Quantization in the 4th step might lead to drop in accuracy (especially for 4
-#     bits quantization). In such a case, an additional step of fine-tuning is needed
-#     and consists in training for a few additional epochs with a lower learning rate
-#     (e.g 10 to 100 times lower than the initial rate).
+#   - Quantization in the 4th step might lead to a drop in accuracy (especially for
+#     4-bit quantization). In such a case, an additional step of fine-tuning is needed
+#     and consists of training for a few additional epochs with a lower learning rate
+#     (e.g. 10 to 100 times lower than the initial rate).
 
 ######################################################################
 # 1. Dataset preparation
@@ -88,7 +88,7 @@ fname = fetch_file(
 fdir = os.path.dirname(fname)
 dl_and_prepare = {'download_config': tfds.download.DownloadConfig(manual_dir=fdir)}
 
-# Load the tensorflow dataset
+# Load the TensorFlow dataset
 (train_ds, validation_ds, test_ds), ds_info = tfds.load(
     'plant_village',
     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
@@ -142,7 +142,7 @@ base_model.summary()
 #
 # As explained in `section 1 <#transfer-learning-process>`__, the classification
 # head is defined as a dense layer with batch normalization and activation,
-# which correspond to a `dense_block
+# which corresponds to a `dense_block
 # <../../api_reference/akida_models_apis.html#akida_models.layer_blocks.dense_block>`__, followed by
 # a dropout layer and a second dense layer.
 
@@ -174,7 +174,7 @@ model_keras.summary()
 # 4. Train for a few epochs
 # -------------------------
 #
-# Only giving textual information for training in this tutorial:
+# Only textual information is given for training in this tutorial:
 #
 #   - the model is compiled with an Adam optimizer and the sparse categorical
 #     crossentropy loss is used,
@@ -189,7 +189,7 @@ model_keras.summary()
 # <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__.
 #
 # In order to get the best possible model, calibration samples should be provided to the model.
-# Using here samples from the train set.
+# Here, samples from the train set are used.
 
 from quantizeml.models import quantize, QuantizationParams
 
@@ -198,13 +198,13 @@ train_batches = train_ds.map(format_example).batch(BATCH_SIZE)
 # Prepare a quantization scheme: first layer weights to 8-bit, other weights and activation to 4-bit
 qparams = QuantizationParams(input_weight_bits=8, weight_bits=4, activation_bits=4)
 
-# Quantize the model, using the 1024 calibration samples from the train set and calibrate over 2
+# Quantize the model, using 1024 calibration samples from the train set and calibrating over 2
 # epochs with a batch_size of 100.
 model_quantized = quantize(model_keras, qparams=qparams,
                            samples=train_batches, epochs=2, batch_size=BATCH_SIZE, num_samples=1024)
 
 ######################################################################
-# To recover the loss of accuracy introduced with 4-bit quantization, an extra QAT step with a lower
+# To recover the accuracy lost with 4-bit quantization, an extra QAT step with a lower
 # learning rate (training rate divided by 10) is required. Note that you could also aim for 8-bit
 # quantization and not require this extra QAT step.
 

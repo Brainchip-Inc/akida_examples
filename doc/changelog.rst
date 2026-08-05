@@ -3,7 +3,7 @@ Changelog
 ==========
 
 | The MetaTF documentation is generated from the `akida_examples repository <https://github.com/Brainchip-Inc/akida_examples>`_.
-| It relies on `Sphinx <https://www.sphinx-doc.org>`_ python documentation
+| It relies on the `Sphinx <https://www.sphinx-doc.org>`_ Python documentation
   generator and `GitHub Pages <https://docs.github.com/pages>`_ documentation
   for rendering.
 
@@ -59,6 +59,6 @@ users to test new features and provide feedback.
 
 - Beta releases are available at https://doc.brainchipinc.com/beta
 - Related packages are to be downloaded from https://data.brainchip.com/metatf_beta/
-- Please fill-in the `feedback survey
+- Please fill in the `feedback survey
   <https://docs.google.com/forms/d/e/1FAIpQLSd9gzZROr-CHdY5jipGdIB8VtNNa5vPL4UvLZ5GOBXOZv2MGw/viewform>`_
   to help us improve future releases.
