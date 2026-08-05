@@ -163,8 +163,11 @@ It is possible to build a virtual device for known hardware devices, by calling 
 `AKD1000() <../api_reference/akida_apis.html#akida.AKD1000>`__,
 `AKD1500() <../api_reference/akida_apis.html#akida.AKD1500>`__ and
 `TwoNodesIPv1() <../api_reference/akida_apis.html#akida.TwoNodesIPv1>`__ for 1.0, or
-`TwoNodesIPv2() <../api_reference/akida_apis.html#akida.TwoNodesIPv2>`__ and
-`SixNodesIPv2() <../api_reference/akida_apis.html#akida.SixNodesIPv2>`__ for 2.0. Alternatively,
+`TwoNodesIPv2() <../api_reference/akida_apis.html#akida.TwoNodesIPv2>`__,
+`FourNodesIPv2() <../api_reference/akida_apis.html#akida.FourNodesIPv2>`__,
+`SixNodesIPv2() <../api_reference/akida_apis.html#akida.SixNodesIPv2>`__ and
+`TwelveNodesIPv2() <../api_reference/akida_apis.html#akida.TwelveNodesIPv2>`__ for 2.0, or
+`PicoIP() <../api_reference/akida_apis.html#akida.PicoIP>`__ for Pico. Alternatively,
 a custom virtual device can be created using `create_device
 <../api_reference/akida_apis.html#akida.create_device>`__.
 
