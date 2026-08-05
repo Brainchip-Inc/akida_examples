@@ -8,7 +8,7 @@ report the power it draws, read from a sensor on the silicon.
 
 **Requirements:** a `MetaTF installation <./installation.html>`__ and an Akida
 device, such as the `AKD1000 reference SoC
-<https://brainchip.com/metatf-dev-tools/#akd1000>`__ on a PCIe board. No
+<https://brainchip.com/dev-tools/>`__ on a PCIe board. No
 device at hand? `Without a device`_ below shows what you can still see.
 
 .. warning::
