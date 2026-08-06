@@ -15,6 +15,7 @@ Overview
    Examples <./examples/index.rst>
    Model zoo performance <./model_zoo_performance.rst>
    Changelog <./changelog.rst>
+   BrainChip DevHub <https://github.com/Brainchip-Inc/brainchip_devhub>
    Support <https://developer.brainchip.com/support/>
    ./license.rst
 
@@ -117,6 +118,10 @@ Two workflows are available as equal entry points, depending on the framework yo
   TF-Keras models,
 * the `PyTorch to Akida workflow <./examples/general/plot_1_global_pytorch_workflow.html>`_
   for PyTorch models, going through the ONNX format.
+
+Looking for more? The `BrainChip DevHub <https://github.com/Brainchip-Inc/brainchip_devhub>`_
+repository complements these examples with self-contained projects to train, convert and
+deploy models on Akida hardware.
 
 .. warning::
     | While the Akida examples are provided under an

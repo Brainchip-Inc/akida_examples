@@ -129,5 +129,9 @@ the `Installation <./installation.html>`__ page, then pick your entry point:
 * the `PyTorch to Akida workflow <./examples/general/plot_1_global_pytorch_workflow.html>`__
   for PyTorch models, going through the ONNX format.
 
+For complete, ready-to-run projects — training, conversion and deployment on Akida
+hardware — browse the `BrainChip DevHub <https://github.com/Brainchip-Inc/brainchip_devhub>`__
+repository.
+
 And to see what sets Akida apart — power measured on the chip itself —
 `See the power number <./power_number.html>`__ gets there in three commands.
