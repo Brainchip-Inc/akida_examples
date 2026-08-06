@@ -11,7 +11,8 @@ Efficient online eye tracking with a lightweight spatiotemporal network and even
 # brightness changes, rather than fixed-rate frames. This modality is especially well suited for
 # high-speed, low-power applications like real-time eye tracking on embedded hardware. Traditional
 # deep learning models, however, are often ill-suited for exploiting the unique characteristics of
-# event data — particularly they lack the tools to leverage their temporal precision and sparsity.
+# event data — in particular, they lack the tools to leverage their temporal precision and
+# sparsity.
 #
 # This tutorial presents a lightweight spatiotemporal neural network architecture designed
 # specifically for online inference on event camera data. The model is:
@@ -48,7 +49,7 @@ Efficient online eye tracking with a lightweight spatiotemporal network and even
 #
 #    Temporal convolutions are strictly causal—output at time *t* depends only on input at time ≤
 #    *t*. This property is critical for real-time, online inference, allowing inference from the
-#    first received frame from the sensor.
+#    first frame received from the sensor.
 #
 # 2. **Factorized 3D Convolution Scheme**
 #
@@ -93,17 +94,17 @@ Efficient online eye tracking with a lightweight spatiotemporal network and even
 #
 # QuantizeML and Akida Models natively work with TF-Keras layers: akida_models has all the
 # necessary functions to instantiate a network based on spatiotemporal layers as well as training
-# pipelines available to train models on the jester dataset, the dvs128 dataset or this dataset.
+# pipelines available to train models on the Jester dataset, the DVS128 dataset or this dataset.
 #
 # In this tutorial, we'll use PyTorch and introduce the
-# `tenns_modules <https://pypi.org/project/tenns-modules/>`__ package which is available to create
-# Akida compatible spatiotemporal blocks. The package contains a `spatio-temporal block
+# `tenns_modules <https://pypi.org/project/tenns-modules/>`__ package, which is available to create
+# Akida-compatible spatiotemporal blocks. The package contains a `spatio-temporal block
 # <../../api_reference/tenns_modules_apis.html#tenns_modules.SpatioTemporalBlock>`__
 # composed of a `spatial <../../api_reference/tenns_modules_apis.html#tenns_modules.SpatialBlock>`__
 # and a `temporal <../../api_reference/tenns_modules_apis.html#tenns_modules.TemporalBlock>`__
 # block.
 #
-# The code below shows how to instantiate the simple 10 layers architecture we used to track the
+# The code below shows how to instantiate the simple 10-layer architecture we used to track the
 # pupil coordinates in time using the tenns_modules package.
 
 # Show how to load and create the model
@@ -156,14 +157,14 @@ summary(model, input_size=(1, 2, 50, 96, 128), depth=4, verbose=0)
 # The model is trained and evaluated on the
 # `AIS 2024 Event-Based Eye Tracking Challenge Dataset
 # <https://www.kaggle.com/competitions/event-based-eye-tracking-ais2024>`__, which contains
-# recordings from 13 participants, captured using 480×640-resolution event camera. Each participant
-# has between 2 and 6 recording sessions. The ground truth pupil (x- and y-) coordinates are
-# provided at a resolution of 100Hz. The evaluation of the predictions is done at 20Hz at a
-# resolution of 60x80 when the eyes are opened.
+# recordings from 13 participants, captured using a 480×640-resolution event camera. Each
+# participant has between 2 and 6 recording sessions. The ground truth pupil (x- and y-)
+# coordinates are provided at a resolution of 100Hz. The evaluation of the predictions is done at
+# 20Hz at a resolution of 60x80 when the eyes are open.
 #
 # The video below shows you an example of the reconstructed frames (note that the video has been
 # sped up). The ground truth pupil location is represented by a cross: the cross is green when the
-# eye is opened and it turns red when the eye closes.
+# eye is open and it turns red when the eye closes.
 #
 # .. video:: ../../img/eye_tracking_valdata_gt_only_fast.mp4
 #    :nocontrols:
@@ -207,9 +208,9 @@ summary(model, input_size=(1, 2, 50, 96, 128), depth=4, verbose=0)
 # To improve generalization in a data-limited regime, the following transforms are applied to the
 # events (and the corresponding pupil coordinates) during training only:
 #
-# * **Spatial affine transforms** are applied such as scaling, rotation, translation.
+# * **Spatial affine transforms** are applied, such as scaling, rotation and translation.
 # * **Temporal augmentations** including random time scaling and flipping (with polarity inversion).
-# * **Random temporal flip** with probability 0.5 is applied to the time and polarity dimension.
+# * **Random temporal flip** with probability 0.5 is applied to the time and polarity dimensions.
 #
 # These transforms are applied to each segment independently (but not varied within a segment).
 # For better legibility, the dataset was preprocessed offline and made available for evaluation
@@ -287,12 +288,12 @@ events, centers = data["events"], data["centers"]
 
 ######################################################################
 # To evaluate the model, we pass the data through our spatiotemporal model. Once we have the output,
-# we need to post process the model's output to reconstruct the predicted pupil coordinates in the
+# we need to post-process the model's output to reconstruct the predicted pupil coordinates in the
 # prediction space (60, 80).
 
 def process_detector_prediction(pred):
     """Post-processing of model predictions to extract the predicted pupil coordinates for a model
-    that has a centernet like head.
+    that has a CenterNet-like head.
 
     Args:
         preds (torch.Tensor): shape (B, C, T, H, W)
@@ -325,7 +326,7 @@ def process_detector_prediction(pred):
 
 
 def compute_distance(pred, center):
-    """Computes the L2 distance for a prediction and center matrice
+    """Computes the L2 distance for a prediction and center matrix
 
     Args:
         pred: torch tensor of shape (2, T)
@@ -343,7 +344,7 @@ def compute_distance(pred, center):
 
 
 def pretty_print_results(collected_distances):
-    """Prints the distance and accuracy within different pixel tolerance.
+    """Prints the distance and accuracy within different pixel tolerances.
 
     By default, only the results at 20Hz will be printed (to be compatible with the
     metrics of the challenge). To print the results computed on the whole trial,
@@ -385,7 +386,7 @@ pretty_print_results(collected_l2_distances)
 # However, other metrics were reported in the original challenge survey: the accuracy within 5 (p5),
 # 3 (p3) or 1 pixel (p1), as well as metrics directly measuring the distance between ground truth
 # and predicted pupil location (L2 and L1, i.e. smaller values are better). On these more stringent
-# metrics, our model outperforms the other models on all the other metrics.
+# metrics, our model outperforms all the other models.
 #
 # .. list-table::
 #    :header-rows: 1
@@ -472,7 +473,7 @@ pretty_print_results(collected_l2_distances)
 #
 # To test the robustness of our design choices, we performed a series of ablation studies. To
 # provide a baseline model for the ablation study, we trained a model on the 'train' split only and
-# tested it on the validation dataset. This model gets a p10 of 0.963 and an l2 distance of 2.79.
+# tested it on the validation dataset. This model gets a p10 of 0.963 and an L2 distance of 2.79.
 #
 # This showed that:
 #
@@ -481,7 +482,7 @@ pretty_print_results(collected_l2_distances)
 # 3. Larger temporal kernels (e.g., size 5 vs. 3) offer small but consistent improvements in
 #    accuracy.
 # 4. Using only batch normalization (BN) layers gave a small improvement over group norm (GN) only
-#    or a mix of BN/GN(96.9 vs 96.0 or 96.3).
+#    or a mix of BN/GN (96.9 vs 96.0 or 96.3).
 #
 # For more details you can refer to the `paper
 # <https://openaccess.thecvf.com/content/CVPR2024W/AI4Streaming/papers/Pei_A_Lightweight_Spatiotemporal_Network_for_Online_Eye_Tracking_with_Event_CVPRW_2024_paper.pdf>`__.
@@ -492,7 +493,7 @@ pretty_print_results(collected_l2_distances)
 #
 # In certain environments, such as edge or low-power devices, the balance between model size and
 # computational demand often matters more than achieving state-of-the-art accuracy. This section
-# explores the trade-off between maximizing accuracy and maintaining model efficiency along 3 axis.
+# explores the trade-off between maximizing accuracy and maintaining model efficiency along 3 axes.
 
 ######################################################################
 # 6.2.1 Spatial resolution
@@ -516,7 +517,7 @@ pretty_print_results(collected_l2_distances)
 # impact on the validation distance. When no separable layers are used, the final validation
 # distance is 2.6 vs. 3.1 when all layers are separable. Our baseline model had the last 4 layers
 # configured as separable. Changing just 2 more to separable could lead to a reduction of almost 30%
-# in compute, with almost no impact on performance (compare the turquoise with green lines on the
+# in compute, with almost no impact on performance (compare the turquoise and green lines in
 # `figure 3.B
 # <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__).
 #
@@ -537,16 +538,17 @@ pretty_print_results(collected_l2_distances)
 # <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__ shows how the
 # average distance varies depending on the regularization strength while `figure 3.D
 # <./plot_1_eye_tracking_cvpr.html#ablation-studies-and-efficiency-optimization>`__ shows how the
-# sparse aware MACs (i.e. MACs multiplied by the model's mean sparsity per layer) is affected by
+# sparse-aware MACs (i.e. MACs multiplied by the model's mean sparsity per layer) are affected by
 # regularization. We can see that over 90% activation sparsity is achievable with a negligible
 # performance degradation (p10 remains >0.96).
 #
-# This is especially interesting because Akida is an event based hardware: it is capable of skipping
-# zero operations. In such hardware, high level of activation sparsity can translate into ~5× speedups.
+# This is especially interesting because Akida is event-based hardware: it is capable of skipping
+# zero operations. In such hardware, high levels of activation sparsity can translate into
+# ~5× speedups.
 #
 # .. warning::
 #   Based on these ablation studies, the model made available through the
-#   `model zoo <../../model_zoo_performance.html#eye-tracking>`__ has been optimized for the inference
+#   `model zoo <../../model_zoo_performance.html#eye-tracking>`__ has been optimized for inference
 #   on Akida Hardware (downsampling by a factor of 6, use of depthwise separable convolutions), so the
 #   number of parameters and accuracy reported differ.
 
@@ -580,8 +582,8 @@ pretty_print_results(collected_l2_distances)
 # 7.2 Exporting to ONNX
 # ^^^^^^^^^^^^^^^^^^^^^
 #
-# The transformation to buffer mode is done during quantization step (see dedicated section below).
-# The first step is to export the model to ONNX format. This is made very easy using the
+# The transformation to buffer mode is done during the quantization step (see the dedicated section
+# below). The first step is to export the model to ONNX format. This is made very easy using the
 # `tenns_modules <https://pypi.org/project/tenns-modules/>`__ package and the `export_to_onnx
 # <../../api_reference/tenns_modules_apis.html#tenns_modules.export_to_onnx>`__ function.
 
@@ -606,7 +608,7 @@ model = onnx.load(onnx_checkpoint_path)
 # ^^^^^^^^^^^^^^^^
 #
 # To be deployable on Akida, the model needs to be quantized. This can easily be done using the
-# QuantizeML package. For more details on the quantization scheme with the ONNX package see this
+# QuantizeML package. For more details on the quantization scheme with the ONNX package, see this
 # example on `off-the-shelf model quantization
 # <../quantization/plot_2_off_the_shelf_quantization.html>`__.
 
@@ -638,7 +640,7 @@ model_quant = quantize(model, qparams=qparams, epochs=1, batch_size=100, samples
 #
 # - We need to pass each frame to the model independently (i.e. the model now has a 4-D input shape
 #   (B, C, H,  W) - batch, channels, height, width).
-# - The post processing function needs to be modified to use numpy functions (instead of torch)
+# - The post-processing function needs to be modified to use NumPy functions (instead of torch).
 # - Once all frames from a given trial have been passed through, the FIFO buffers of the temporal
 #   convolutions need to be reset using the `reset_buffers
 #   <../../api_reference/quantizeml_apis.html#quantizeml.models.reset_buffers>`__ available from
@@ -649,7 +651,7 @@ def custom_process_detector_prediction(pred):
     """ Post-processing of the model's output heatmap.
 
     Reconstructs the predicted x- and y- center location using numpy functions to post-process
-    the output of a ONNX model.
+    the output of an ONNX model.
     """
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
@@ -736,6 +738,6 @@ akida_model.summary()
 #   - For more information you can refer to the paper available `here
 #     <https://openaccess.thecvf.com/content/CVPR2024W/AI4Streaming/papers/Pei_A_Lightweight_Spatiotemporal_Network_for_Online_Eye_Tracking_with_Event_CVPRW_2024_paper.pdf>`__.
 #   - There is also a full training pipeline available in TF-Keras from the akida_models
-#     package that reproduces the performance presented in the paper available with the
+#     package that reproduces the performance presented in the paper, available with the
 #     `akida_models.tenn_spatiotemporal
 #     <../../api_reference/akida_models_apis.html#akida_models.tenn_spatiotemporal_eye>`__ function.

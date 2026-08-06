@@ -6,14 +6,14 @@ Tips to set Akida edge learning parameters
     Edge learning is only supported for Akida 1.0 models and devices.
 
 This tutorial gives details about the Akida learning parameters and tips to
-set their values in a first try in an edge learning application. The KWS dataset
-and the DS-CNN-edge model are used as a classification example to showcase the
+set their values for a first try in an edge learning application. The KWS dataset
+and the DS-CNN-edge model are used as a classification example to showcase these
 handy tips.
 
 One can consult the `KWS edge learning tutorial <./plot_1_edge_learning_kws.html>`_
-for a first approach about Akida learning.
+for a first approach to Akida learning.
 
-.. Note:: The hints given in this tutorial are not a promise to get the best
+.. Note:: The hints given in this tutorial do not guarantee the best
           performance. They can be seen as an initialization, before
           fine-tuning. Besides, even if these tips provide good estimates in
           most examples, they can't be guaranteed to work for every application.
@@ -36,7 +36,7 @@ for a first approach about Akida learning.
 #   - the number of weights
 #   - the number of neurons per class
 #
-# In the next sections, details about these hyper-parameters are given with
+# In the next sections, details about these hyper-parameters are provided with
 # handy tips to give a first estimation.
 
 ##############################################################################
@@ -44,7 +44,7 @@ for a first approach about Akida learning.
 # ~~~~~~~~~~~~~~~~~~~~~
 #
 # In a first stage, we will create the Akida feature extractor returning
-# binary spikes. From then, we will be able to estimate the parameters for
+# binary spikes. From there, we will be able to estimate the parameters for
 # the trainable layer that will be added later.
 #
 # After loading the KWS dataset, we create the pre-trained TF-Keras model and
@@ -130,22 +130,22 @@ print(f"The number of weights is then set to: {num_weights}")
 # Unlike a standard CNN network where each class is represented by a single
 # output neuron, an Akida native training requires several neurons for each
 # class to better represent the class variability. Choosing the right number of
-# neurons per class is a trade-off between enough neurons to represent the
-# classes' variabilities, but not too many neurons implying more memory and
-# computing time. This is similar to clustering algorithms where the clusters
+# neurons per class is a trade-off between having enough neurons to represent
+# the classes' variabilities and not too many, which would imply more memory
+# and computing time. This is similar to clustering algorithms where the clusters
 # represent the distribution of the data. Note that, like clustering algorithms,
-# this analysis requires to have more samples per class than the number of
-# neurons per class: only one neuron can learn per sample. Having more neurons
-# than samples, the extra neurons are guaranteed to be wasted.
+# this analysis requires having more samples per class than the number of
+# neurons per class: only one neuron can learn per sample. If there are more
+# neurons than samples, the extra neurons are guaranteed to be wasted.
 #
 # One direct option is to train the classification layer using the whole dataset
-# with different values of number of neurons per class. Looking at the
+# with different values of the number of neurons per class. Looking at the
 # validation accuracy, it should increase with more neurons per class, then
-# reach a plateau where adding more neurons has very small effect. Choosing the
+# reach a plateau where adding more neurons has a very small effect. Choosing the
 # value where the accuracy begins to flatten is a good estimation.
 #
-# However, this method is very time consuming since it requires multiple
-# trainings using the whole dataset. Another option is to only train on a few
+# However, this method is very time-consuming since it requires multiple
+# trainings using the whole dataset. Another option is to only train on a small
 # number of classes. Rather than measuring accuracy, we measure the error
 # between the potential of the matching neuron and the maximum theoretical
 # potential. Taking a simple example:
@@ -154,10 +154,10 @@ print(f"The number of weights is then set to: {num_weights}")
 # - A sample of a given class returns 3 potentials for the 3 neurons of its
 #   class: [12, 153, 97]. The maximum potential is 153.
 # - The error between the sample and the neuron is 180 - 153 = 27.
-# - Compute the loss being the sum of the errors for all samples of a class.
+# - Compute the loss as the sum of the errors for all samples of a class.
 #
 # Visualizing the loss for a given class as a function of the number of neurons
-# gives hints to have a first estimation of the number of neurons per class.
+# gives hints for a first estimation of the number of neurons per class.
 # Visualizing the number of neurons that have learned as a function of the
 # number of neurons per class provides a similar analysis.
 #
@@ -181,7 +181,7 @@ def compute_losses(model,
     Args:
         model: an Akida model for feature extraction
         samples: a NumPy array of input samples of one class
-        neurons_per_class: an 1-D iterable object storing the integer values of
+        neurons_per_class: a 1-D iterable object storing the integer values of
             the number of neurons to test
         num_weights: the number of non-zero weights in each neuron
         learning_competition: the learning competition of the trainable layer
@@ -239,7 +239,7 @@ neurons_per_class = [
     100, 150, 200, 250, 300, 350, 400, 450, 500, 750, 1000
 ]
 
-# Compute the losses for word 'six' and different number of neurons
+# Compute the losses for word 'six' and different numbers of neurons
 idx_samples = (y_train == word_to_index[word])
 x_train_word = x_train[idx_samples]
 losses, num_learned_neurons = compute_losses(model_ak, x_train_word,
@@ -279,7 +279,7 @@ plt.show()
 # increase for a number of neurons per class higher than 300. Note that in this
 # use case, the validation accuracy remains very high even for a small number of
 # neurons per class: one should be aware that this small decrease in accuracy
-# cannot be generalized for all use cases.
+# cannot be generalized to all use cases.
 #
 # +-------------+----------+-------------+
 # | Nb. neurons | Accuracy | Time ratio  |

@@ -115,7 +115,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#model-loading">Model loading</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../user_guide/quantizeml.html#command-line-interface">Command line interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/quantizeml.html#command-line-interface">Command-line interface</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#quantize-cli">quantize CLI</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#config-cli">config CLI</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#check-cli">check CLI</a></li>
@@ -442,7 +442,7 @@
 <li class="toctree-l3"><a class="reference internal" href="plot_7_segmentation.html">Segmentation tutorial</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#load-the-dataset">1. Load the dataset</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#load-a-pre-trained-native-tf-keras-model">2. Load a pre-trained native TF-Keras model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#load-a-pre-trained-quantized-keras-model">3. Load a pre-trained quantized Keras model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#load-a-pre-trained-quantized-tf-keras-model">3. Load a pre-trained quantized TF-Keras model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#conversion-to-akida">4. Conversion to Akida</a></li>
 <li class="toctree-l4"><a class="reference internal" href="plot_7_segmentation.html#segment-a-single-image">5. Segment a single image</a></li>
 </ul>
@@ -481,7 +481,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to Akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#quantizing-the-model-and-conversion-to-akida">8. Quantizing the model and conversion to Akida</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../spatiotemporal/plot_0_introduction_to_spatiotemporal_models.html#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
 </ul>
 </li>
@@ -623,23 +623,23 @@ to download the full example code.</p>
 <span id="sphx-glr-examples-general-plot-3-ds-cnn-kws-py"></span><h1>DS-CNN/KWS inference<a class="headerlink" href="#ds-cnn-kws-inference" title="Link to this heading"></a></h1>
 <p>This tutorial illustrates the process of developing an Akida-compatible speech recognition
 model that can identify thirty-two different keywords.</p>
-<p>Initially, the model is defined as a CNN in TF-Keras and trained regularly. Next, it undergoes
-quantization using <a class="reference external" href="../../user_guide/quantizeml.html">QuantizeML</a> and finally converted
+<p>Initially, the model is defined as a CNN in TF-Keras and trained normally. Next, it undergoes
+quantization using <a class="reference external" href="../../user_guide/quantizeml.html">QuantizeML</a> and is finally converted
 to Akida using <a class="reference external" href="../../user_guide/cnn2snn.html">CNN2SNN</a>.</p>
-<p>This example uses a Keyword Spotting Dataset prepared using <strong>TensorFlow</strong> <a class="reference external" href="https://www.tensorflow.org/tutorials/audio/simple_audio">audio recognition
+<p>This example uses a Keyword Spotting Dataset prepared using the <strong>TensorFlow</strong> <a class="reference external" href="https://www.tensorflow.org/tutorials/audio/simple_audio">audio recognition
 example</a> utils.</p>
 <section id="load-the-preprocessed-dataset">
 <h2>1. Load the preprocessed dataset<a class="headerlink" href="#load-the-preprocessed-dataset" title="Link to this heading"></a></h2>
 <p>The TensorFlow <a class="reference external" href="https://www.tensorflow.org/datasets/catalog/speech_commands">speech_commands</a>
 dataset is used for training and validation. All keywords except “backward”,
-“follow” and “forward”, are retrieved. These three words are kept to
-illustrate the edge learning in this
+“follow” and “forward” are retrieved. These three words are kept to
+illustrate edge learning in this
 <a class="reference external" href="../edge/plot_1_edge_learning_kws.html">edge example</a>.</p>
 <p>The words to recognize have been converted to <a class="reference external" href="https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work">spectrogram images</a>
-that allows us to use a model architecture that is typically used for image recognition tasks.
+that allow us to use a model architecture that is typically used for image recognition tasks.
 The raw audio data have been preprocessed, transforming the audio files into MFCC features,
 well-suited for CNN networks.
-A pickle file containing the preprocessed data is available on Brainchip data server.</p>
+A pickle file containing the preprocessed data is available on the BrainChip data server.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
@@ -661,39 +661,34 @@ A pickle file containing the preprocessed data is available on Brainchip data se
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/kws/kws_preprocessed_all_words_except_backward_follow_forward.pkl.
 
        0/62628765 [..............................] - ETA: 0s
-  229376/62628765 [..............................] - ETA: 13s
- 2113536/62628765 [&gt;.............................] - ETA: 2s 
- 3489792/62628765 [&gt;.............................] - ETA: 2s
- 8404992/62628765 [===&gt;..........................] - ETA: 1s
-13041664/62628765 [=====&gt;........................] - ETA: 0s
-15220736/62628765 [======&gt;.......................] - ETA: 1s
-18825216/62628765 [========&gt;.....................] - ETA: 0s
-21774336/62628765 [=========&gt;....................] - ETA: 0s
-24264704/62628765 [==========&gt;...................] - ETA: 0s
-27148288/62628765 [============&gt;.................] - ETA: 0s
-29941760/62628765 [=============&gt;................] - ETA: 0s
-32505856/62628765 [==============&gt;...............] - ETA: 0s
-34865152/62628765 [===============&gt;..............] - ETA: 0s
-36519936/62628765 [================&gt;.............] - ETA: 0s
-38060032/62628765 [=================&gt;............] - ETA: 0s
-39780352/62628765 [==================&gt;...........] - ETA: 0s
-41385984/62628765 [==================&gt;...........] - ETA: 0s
-42614784/62628765 [===================&gt;..........] - ETA: 0s
-43859968/62628765 [====================&gt;.........] - ETA: 0s
-45252608/62628765 [====================&gt;.........] - ETA: 0s
-46825472/62628765 [=====================&gt;........] - ETA: 0s
-48152576/62628765 [======================&gt;.......] - ETA: 0s
-49709056/62628765 [======================&gt;.......] - ETA: 0s
-50954240/62628765 [=======================&gt;......] - ETA: 0s
-52314112/62628765 [========================&gt;.....] - ETA: 0s
-53886976/62628765 [========================&gt;.....] - ETA: 0s
-55197696/62628765 [=========================&gt;....] - ETA: 0s
-56442880/62628765 [==========================&gt;...] - ETA: 0s
-57835520/62628765 [==========================&gt;...] - ETA: 0s
-59490304/62628765 [===========================&gt;..] - ETA: 0s
-60768256/62628765 [============================&gt;.] - ETA: 0s
-62046208/62628765 [============================&gt;.] - ETA: 0s
-62628765/62628765 [==============================] - 2s 0us/step
+  262144/62628765 [..............................] - ETA: 12s
+ 2138112/62628765 [&gt;.............................] - ETA: 2s 
+ 4997120/62628765 [=&gt;............................] - ETA: 1s
+ 6815744/62628765 [==&gt;...........................] - ETA: 1s
+10002432/62628765 [===&gt;..........................] - ETA: 1s
+12566528/62628765 [=====&gt;........................] - ETA: 1s
+15106048/62628765 [======&gt;.......................] - ETA: 1s
+17383424/62628765 [=======&gt;......................] - ETA: 1s
+20004864/62628765 [========&gt;.....................] - ETA: 0s
+22478848/62628765 [=========&gt;....................] - ETA: 0s
+25067520/62628765 [===========&gt;..................] - ETA: 0s
+27770880/62628765 [============&gt;.................] - ETA: 0s
+30695424/62628765 [=============&gt;................] - ETA: 0s
+33505280/62628765 [===============&gt;..............] - ETA: 0s
+36257792/62628765 [================&gt;.............] - ETA: 0s
+38928384/62628765 [=================&gt;............] - ETA: 0s
+41598976/62628765 [==================&gt;...........] - ETA: 0s
+44335104/62628765 [====================&gt;.........] - ETA: 0s
+46809088/62628765 [=====================&gt;........] - ETA: 0s
+49004544/62628765 [======================&gt;.......] - ETA: 0s
+51167232/62628765 [=======================&gt;......] - ETA: 0s
+52903936/62628765 [========================&gt;.....] - ETA: 0s
+54706176/62628765 [=========================&gt;....] - ETA: 0s
+56459264/62628765 [==========================&gt;...] - ETA: 0s
+58146816/62628765 [==========================&gt;...] - ETA: 0s
+60112896/62628765 [===========================&gt;..] - ETA: 0s
+61997056/62628765 [============================&gt;.] - ETA: 0s
+62628765/62628765 [==============================] - 1s 0us/step
 Download complete.
 Wanted words and labels:
  {&#39;six&#39;: 23, &#39;three&#39;: 25, &#39;seven&#39;: 21, &#39;bed&#39;: 1, &#39;eight&#39;: 6, &#39;yes&#39;: 31, &#39;cat&#39;: 3, &#39;on&#39;: 18, &#39;one&#39;: 19, &#39;stop&#39;: 24, &#39;two&#39;: 27, &#39;house&#39;: 11, &#39;five&#39;: 7, &#39;down&#39;: 5, &#39;four&#39;: 8, &#39;go&#39;: 9, &#39;up&#39;: 28, &#39;learn&#39;: 12, &#39;no&#39;: 16, &#39;bird&#39;: 2, &#39;zero&#39;: 32, &#39;nine&#39;: 15, &#39;visual&#39;: 29, &#39;wow&#39;: 30, &#39;sheila&#39;: 22, &#39;marvin&#39;: 14, &#39;off&#39;: 17, &#39;right&#39;: 20, &#39;left&#39;: 13, &#39;happy&#39;: 10, &#39;dog&#39;: 4, &#39;tree&#39;: 26, &#39;_silence_&#39;: 0}
@@ -706,7 +701,7 @@ Wanted words and labels:
 <ul class="simple">
 <li><p>a first convolutional layer accepting dense inputs (images),</p></li>
 <li><p>several separable convolutional layers preserving spatial dimensions,</p></li>
-<li><p>a global pooling reducing the spatial dimensions to a single pixel,</p></li>
+<li><p>a global pooling layer reducing the spatial dimensions to a single pixel,</p></li>
 <li><p>a final dense layer to classify words.</p></li>
 </ul>
 <p>All layers are followed by a batch normalization and a ReLU activation.</p>
@@ -808,14 +803,14 @@ _________________________________________________________________
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">accuracy</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  1/308 [..............................] - ETA: 34s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  1/308 [..............................] - ETA: 35s
  43/308 [===&gt;..........................] - ETA: 0s 
  86/308 [=======&gt;......................] - ETA: 0s
 129/308 [===========&gt;..................] - ETA: 0s
-171/308 [===============&gt;..............] - ETA: 0s
-216/308 [====================&gt;.........] - ETA: 0s
-261/308 [========================&gt;.....] - ETA: 0s
-304/308 [============================&gt;.] - ETA: 0s
+172/308 [===============&gt;..............] - ETA: 0s
+215/308 [===================&gt;..........] - ETA: 0s
+260/308 [========================&gt;.....] - ETA: 0s
+305/308 [============================&gt;.] - ETA: 0s
 308/308 [==============================] - 0s 1ms/step
 Accuracy: 93.09%
 </pre></div>
@@ -915,7 +910,7 @@ Trainable params: 22753 (88.88 KB)
 Non-trainable params: 1026 (4.01 KB)
 _________________________________________________________________
 
-  1/308 [..............................] - ETA: 12:26
+  1/308 [..............................] - ETA: 12:37
   7/308 [..............................] - ETA: 2s   
  13/308 [&gt;.............................] - ETA: 2s
  19/308 [&gt;.............................] - ETA: 2s
@@ -974,8 +969,8 @@ Accuracy: 92.83%
 </section>
 <section id="conversion-to-akida">
 <h2>4. Conversion to Akida<a class="headerlink" href="#conversion-to-akida" title="Link to this heading"></a></h2>
-<p>The converted model is Akida 2.0 compatible and its performance
-evaluation is done using the Akida simulator.</p>
+<p>The converted model is compatible with Akida 2.0 and its performance
+is evaluated using the Akida simulator.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
 <span class="c1"># Convert the model</span>
@@ -1046,10 +1041,10 @@ _________________________________________________________________
 <h2>5. Confusion matrix<a class="headerlink" href="#confusion-matrix" title="Link to this heading"></a></h2>
 <p>The confusion matrix provides a good summary of what mistakes the
 network is making.</p>
-<p>Per scikit-learn convention it displays the true class in each row (ie
+<p>Per scikit-learn convention, it displays the true class in each row (i.e.
 on each row you can see what the network predicted for the corresponding
 word).</p>
-<p>Please refer to the Tensorflow <a class="reference external" href="https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#confusion-matrix">audio
+<p>Please refer to the TensorFlow <a class="reference external" href="https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#confusion-matrix">audio
 recognition</a>
 example for a detailed explanation of the confusion matrix.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
@@ -1092,7 +1087,7 @@ example for a detailed explanation of the confusion matrix.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_plot_3_ds_cnn_kws_001.png" srcset="../../_images/sphx_glr_plot_3_ds_cnn_kws_001.png" alt="Confusion matrix" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 23.413 seconds)</p>
+<img src="../../_images/sphx_glr_plot_3_ds_cnn_kws_001.png" srcset="../../_images/sphx_glr_plot_3_ds_cnn_kws_001.png" alt="Confusion matrix" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 23.317 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-3-ds-cnn-kws-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/40db5cf4edcd108311156a00027d82f7/plot_3_ds_cnn_kws.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_3_ds_cnn_kws.ipynb</span></code></a></p>

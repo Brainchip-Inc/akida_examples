@@ -115,7 +115,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#model-loading">Model loading</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../user_guide/quantizeml.html#command-line-interface">Command line interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/quantizeml.html#command-line-interface">Command-line interface</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#quantize-cli">quantize CLI</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#config-cli">config CLI</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/quantizeml.html#check-cli">check CLI</a></li>
@@ -442,7 +442,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../general/plot_7_segmentation.html">Segmentation tutorial</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#load-the-dataset">1. Load the dataset</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#load-a-pre-trained-native-tf-keras-model">2. Load a pre-trained native TF-Keras model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#load-a-pre-trained-quantized-keras-model">3. Load a pre-trained quantized Keras model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#load-a-pre-trained-quantized-tf-keras-model">3. Load a pre-trained quantized TF-Keras model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#conversion-to-akida">4. Conversion to Akida</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../general/plot_7_segmentation.html#segment-a-single-image">5. Segment a single image</a></li>
 </ul>
@@ -481,7 +481,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#training-and-evaluating-the-model">5. Training and evaluating the model</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#streaming-inference-making-real-time-predictions">6. Streaming inference: making real-time predictions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#visualizing-the-predictions-of-the-model-in-real-time">7. Visualizing the predictions of the model in real time</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#quantizing-the-model-and-convertion-to-akida">8. Quantizing the model and convertion to Akida</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quantizing-the-model-and-conversion-to-akida">8. Quantizing the model and conversion to Akida</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#final-thoughts-generalizing-the-approach">9. Final thoughts: generalizing the approach</a></li>
 </ul>
 </li>
@@ -627,7 +627,7 @@ to download the full example code.</p>
 <p>Recognizing gestures from video is a challenging task that requires understanding not just
 individual frames but how those frames evolve over time. Traditional 2D convolutional neural
 networks (CNNs) are limited here — they analyze only spatial features and discard temporal
-continuity. 3D CNNs, while well suited to the task, are on the other hand computationally heavy.</p>
+continuity. 3D CNNs, while well suited to the task, are computationally heavy.</p>
 <p>To tackle this, we turn to lightweight spatiotemporal models, specifically designed to process
 patterns in both space (image structure) and time (motion, rhythm). These models are essential
 for tasks like:</p>
@@ -636,18 +636,18 @@ for tasks like:</p>
 <li><p>Online eye-tracking</p></li>
 <li><p>Real-time activity detection in video streams</p></li>
 </ul>
-<p>At the heart of these models lies a simple idea: decoupling spatial and temporal analysis,
+<p>At the heart of these models lies a simple idea: decoupling spatial and temporal analysis
 enables efficient, real-time detection — even on resource-constrained devices.</p>
 </section>
 <section id="spatiotemporal-blocks-the-core-concept">
 <h2>2. Spatiotemporal blocks: the core concept<a class="headerlink" href="#spatiotemporal-blocks-the-core-concept" title="Link to this heading"></a></h2>
 <p>Rather than using full, computationally expensive 3D convolutions, our spatiotemporal blocks break
-the operation into two parts, a:</p>
+the operation into two parts:</p>
 <ol class="arabic simple">
 <li><p>Temporal convolution, which focuses on changes over time for each spatial pixel (e.g. motion).</p></li>
 <li><p>Spatial convolution, which looks at image structure in each frame (e.g. shape, position).</p></li>
 </ol>
-<p>The figures below highlights the difference between a full 3D convolution kernel versus our
+<p>The figures below highlight the difference between a full 3D convolution kernel and our
 spatiotemporal convolution (a.k.a. TENN in the figure below).</p>
 <figure class="align-center" id="id1">
 <a class="reference external image-reference" href="../../_images/example3Dconv.png"><img alt="3D convolutions" height="237" src="../../_images/example3Dconv.png" width="454" />
@@ -668,7 +668,7 @@ very different domains: it was applied to gesture videos as well as event-based 
 (see tutorial).</p>
 <section id="making-it-efficient-using-depthwise-separable-convolutions">
 <h3>2.1. Making it efficient using depthwise separable convolutions<a class="headerlink" href="#making-it-efficient-using-depthwise-separable-convolutions" title="Link to this heading"></a></h3>
-<p>To further reduce the computational load of the blocks, we can make them separable, just like
+<p>To further reduce the computational load of the blocks, we can make them separable. Just like
 depthwise separable convolutions replace full convolutions, reducing computation with minimal
 accuracy loss, our decomposed temporal-spatial convolutions can also be made separable using
 an approach inspired by the <a class="reference external" href="https://arxiv.org/abs/1704.04861">MobileNet paper</a>. Each layer
@@ -687,7 +687,7 @@ layers do not have a stride (compared to R(2+1)D layers).</p>
 </a>
 <figcaption>
 <p><span class="caption-text">Kernel dimensions and strides for various types of 3D convolutions. Dotted lines show depthwise
-convolutions. Full lines show full convolutions. Orange outlines are for spatial 3D convs and
+convolutions. Solid lines show full convolutions. Orange outlines are for spatial 3D convs and
 purple ones for temporal convolutions.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
@@ -907,10 +907,10 @@ _________________________________________________________________
 </div>
 <section id="preserving-temporal-information">
 <h3>3.1 Preserving temporal information<a class="headerlink" href="#preserving-temporal-information" title="Link to this heading"></a></h3>
-<p>As you can see from the summary, the model ends with an 3D average pooling applied only
-on the spatial dimensions. This ensures that the model can make predictions after the
-first input frame, preserving fine-grained temporal dynamics and bufferized inference
-(see section 6.)</p>
+<p>As you can see from the summary, the model ends with a 3D average pooling applied only
+to the spatial dimensions. This ensures that the model can make predictions after the
+first input frame, preserving fine-grained temporal dynamics and enabling bufferized
+inference (see section 6).</p>
 </section>
 </section>
 <section id="gesture-classification-in-videos">
@@ -918,19 +918,19 @@ first input frame, preserving fine-grained temporal dynamics and bufferized infe
 <p>In this tutorial, we use the <a class="reference external" href="https://www.qualcomm.com/developer/software/jester-dataset">Jester dataset</a>,
 a gesture recognition dataset specifically designed to include movements targeted at human/machine
 interactions. To do well on the task, information needs to be aggregated across time to accurately
-separate complex gestures such as clockwise or counterclowise hand turning.</p>
+separate complex gestures such as clockwise or counterclockwise hand turning.</p>
 <p>The data is available to download in the form of zip files from the
 <a class="reference external" href="https://www.qualcomm.com/developer/software/jester-dataset">qualcomm website</a> along with
 <a class="reference external" href="https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/qualcomm-ai-research-jester-download-instructions-v2.pdf">download instructions</a>.</p>
 <section id="dataset-description">
 <h3>4.1 Dataset description<a class="headerlink" href="#dataset-description" title="Link to this heading"></a></h3>
-<p>In the jester dataset, each sample is a short video clip (about 3 seconds) recorded through a
-webcam with fixed resolution of 100 pixels in height and a frame rate of 12 FPS. There are in
+<p>In the Jester dataset, each sample is a short video clip (about 3 seconds) recorded through a
+webcam with a fixed resolution of 100 pixels in height and a frame rate of 12 FPS. There are in
 total 148,092 videos of 27 different complex gestures covering examples such as “Zooming Out With
-2 fingers”, “Rolling Hand Forward”, “Shaking Hand”, “Stop Sign”, “Swiping Left”, etc…, also
-including a “no gesture” and a “other movements” classes.</p>
+2 fingers”, “Rolling Hand Forward”, “Shaking Hand”, “Stop Sign”, “Swiping Left”, etc., also
+including “no gesture” and “other movements” classes.</p>
 <p>It is a rich and varied dataset with over 1300 different actors performing the gestures.
-The dataset has determined splits for training, validation and testing with the ratio of
+The dataset has predetermined splits for training, validation and testing with a ratio of
 80%/10%/10%.</p>
 </section>
 <section id="data-preprocessing">
@@ -941,17 +941,17 @@ The dataset has determined splits for training, validation and testing with the 
 <li><p>Use strided sampling (stride=2) to reduce redundancy and speed up training</p></li>
 <li><p>Resize the input to a fixed input size (100, 100)</p></li>
 <li><p>Normalize inputs (between -1 and 1)</p></li>
-<li><p>Optionally apply an affine transform for training data (ie. randomly and independently apply
+<li><p>Optionally apply an affine transform for training data (i.e. randomly and independently apply
 translation, scaling, shearing and rotation to each video).</p></li>
 </ul>
 <p>The dataset is too large to load completely in a tutorial. If you download the dataset
 at the links mentioned above, you can load and preprocess it using the get_data API
 available under akida_models.tenn_spatiotemporal.jester_train.</p>
 <p>Alternatively, the first few validation samples have been set aside and
-can be loaded here to demonstration purposes.</p>
+can be loaded here for demonstration purposes.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">8</span>
 
-<span class="c1"># Download and load validation subset from Brainchip data server</span>
+<span class="c1"># Download and load validation subset from BrainChip data server</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.tenn_spatiotemporal.jester_train</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data</span>
@@ -963,7 +963,7 @@ can be loaded here to demonstration purposes.</p>
 <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_path</span><span class="p">),</span> <span class="s2">&quot;jester_subset&quot;</span><span class="p">)</span>
 <span class="n">val_dataset</span><span class="p">,</span> <span class="n">val_steps</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">sampling_frequency</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">batch_size</span><span class="p">)</span>
 
-<span class="c1"># Decode numeric labels into human readable ones: contains all string names for classes</span>
+<span class="c1"># Decode numeric labels into human-readable ones: contains all string names for classes</span>
 <span class="c1"># available in the dataset</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;jester-v1-labels.csv&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
@@ -973,69 +973,73 @@ can be loaded here to demonstration purposes.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/jester/jester_subset.tar.gz.
 
         0/105037345 [..............................] - ETA: 0s
-   212992/105037345 [..............................] - ETA: 29s
-  1687552/105037345 [..............................] - ETA: 6s 
-  3670016/105037345 [&gt;.............................] - ETA: 4s
-  6373376/105037345 [&gt;.............................] - ETA: 3s
-  8404992/105037345 [=&gt;............................] - ETA: 3s
-  9601024/105037345 [=&gt;............................] - ETA: 3s
- 11010048/105037345 [==&gt;...........................] - ETA: 3s
- 12271616/105037345 [==&gt;...........................] - ETA: 3s
- 13287424/105037345 [==&gt;...........................] - ETA: 3s
- 15351808/105037345 [===&gt;..........................] - ETA: 3s
- 17498112/105037345 [===&gt;..........................] - ETA: 2s
- 19562496/105037345 [====&gt;.........................] - ETA: 2s
- 21102592/105037345 [=====&gt;........................] - ETA: 2s
- 23371776/105037345 [=====&gt;........................] - ETA: 2s
- 24887296/105037345 [======&gt;.......................] - ETA: 2s
- 26394624/105037345 [======&gt;.......................] - ETA: 2s
- 27852800/105037345 [======&gt;.......................] - ETA: 2s
- 29736960/105037345 [=======&gt;......................] - ETA: 2s
- 31277056/105037345 [=======&gt;......................] - ETA: 2s
- 32620544/105037345 [========&gt;.....................] - ETA: 2s
- 34193408/105037345 [========&gt;.....................] - ETA: 2s
- 35848192/105037345 [=========&gt;....................] - ETA: 2s
- 37568512/105037345 [=========&gt;....................] - ETA: 2s
- 39157760/105037345 [==========&gt;...................] - ETA: 2s
- 40615936/105037345 [==========&gt;...................] - ETA: 2s
- 42156032/105037345 [===========&gt;..................] - ETA: 1s
- 43778048/105037345 [===========&gt;..................] - ETA: 1s
- 45563904/105037345 [============&gt;.................] - ETA: 1s
- 47185920/105037345 [============&gt;.................] - ETA: 1s
- 48791552/105037345 [============&gt;.................] - ETA: 1s
- 50495488/105037345 [=============&gt;................] - ETA: 1s
- 52412416/105037345 [=============&gt;................] - ETA: 1s
- 53952512/105037345 [==============&gt;...............] - ETA: 1s
- 55525376/105037345 [==============&gt;...............] - ETA: 1s
- 57081856/105037345 [===============&gt;..............] - ETA: 1s
- 58785792/105037345 [===============&gt;..............] - ETA: 1s
- 60588032/105037345 [================&gt;.............] - ETA: 1s
- 62259200/105037345 [================&gt;.............] - ETA: 1s
- 63815680/105037345 [=================&gt;............] - ETA: 1s
- 65372160/105037345 [=================&gt;............] - ETA: 1s
- 66945024/105037345 [==================&gt;...........] - ETA: 1s
- 68501504/105037345 [==================&gt;...........] - ETA: 1s
- 70156288/105037345 [===================&gt;..........] - ETA: 1s
- 71942144/105037345 [===================&gt;..........] - ETA: 1s
- 73777152/105037345 [====================&gt;.........] - ETA: 0s
- 75399168/105037345 [====================&gt;.........] - ETA: 0s
- 77135872/105037345 [=====================&gt;........] - ETA: 0s
- 78954496/105037345 [=====================&gt;........] - ETA: 0s
- 80773120/105037345 [======================&gt;.......] - ETA: 0s
- 82296832/105037345 [======================&gt;.......] - ETA: 0s
- 84230144/105037345 [=======================&gt;......] - ETA: 0s
- 85909504/105037345 [=======================&gt;......] - ETA: 0s
- 87506944/105037345 [=======================&gt;......] - ETA: 0s
- 89128960/105037345 [========================&gt;.....] - ETA: 0s
- 90800128/105037345 [========================&gt;.....] - ETA: 0s
- 92569600/105037345 [=========================&gt;....] - ETA: 0s
- 94380032/105037345 [=========================&gt;....] - ETA: 0s
- 96190464/105037345 [==========================&gt;...] - ETA: 0s
- 97943552/105037345 [==========================&gt;...] - ETA: 0s
- 99614720/105037345 [===========================&gt;..] - ETA: 0s
-101122048/105037345 [===========================&gt;..] - ETA: 0s
-102744064/105037345 [============================&gt;.] - ETA: 0s
-104382464/105037345 [============================&gt;.] - ETA: 0s
+   245760/105037345 [..............................] - ETA: 21s
+  1302528/105037345 [..............................] - ETA: 7s 
+  2203648/105037345 [..............................] - ETA: 7s
+  4399104/105037345 [&gt;.............................] - ETA: 4s
+  7135232/105037345 [=&gt;............................] - ETA: 3s
+  8986624/105037345 [=&gt;............................] - ETA: 3s
+ 10805248/105037345 [==&gt;...........................] - ETA: 3s
+ 12132352/105037345 [==&gt;...........................] - ETA: 3s
+ 13819904/105037345 [==&gt;...........................] - ETA: 3s
+ 15212544/105037345 [===&gt;..........................] - ETA: 3s
+ 16883712/105037345 [===&gt;..........................] - ETA: 2s
+ 18096128/105037345 [====&gt;.........................] - ETA: 2s
+ 19423232/105037345 [====&gt;.........................] - ETA: 2s
+ 21192704/105037345 [=====&gt;........................] - ETA: 2s
+ 22487040/105037345 [=====&gt;........................] - ETA: 2s
+ 23977984/105037345 [=====&gt;........................] - ETA: 2s
+ 25665536/105037345 [======&gt;.......................] - ETA: 2s
+ 26976256/105037345 [======&gt;.......................] - ETA: 2s
+ 28336128/105037345 [=======&gt;......................] - ETA: 2s
+ 29966336/105037345 [=======&gt;......................] - ETA: 2s
+ 31416320/105037345 [=======&gt;......................] - ETA: 2s
+ 32792576/105037345 [========&gt;.....................] - ETA: 2s
+ 34316288/105037345 [========&gt;.....................] - ETA: 2s
+ 36036608/105037345 [=========&gt;....................] - ETA: 2s
+ 37363712/105037345 [=========&gt;....................] - ETA: 2s
+ 38854656/105037345 [==========&gt;...................] - ETA: 2s
+ 40574976/105037345 [==========&gt;...................] - ETA: 2s
+ 41984000/105037345 [==========&gt;...................] - ETA: 2s
+ 43458560/105037345 [===========&gt;..................] - ETA: 2s
+ 45023232/105037345 [===========&gt;..................] - ETA: 2s
+ 46424064/105037345 [============&gt;.................] - ETA: 2s
+ 48005120/105037345 [============&gt;.................] - ETA: 1s
+ 49471488/105037345 [=============&gt;................] - ETA: 1s
+ 50847744/105037345 [=============&gt;................] - ETA: 1s
+ 52305920/105037345 [=============&gt;................] - ETA: 1s
+ 53829632/105037345 [==============&gt;...............] - ETA: 1s
+ 55304192/105037345 [==============&gt;...............] - ETA: 1s
+ 56745984/105037345 [===============&gt;..............] - ETA: 1s
+ 58499072/105037345 [===============&gt;..............] - ETA: 1s
+ 60022784/105037345 [================&gt;.............] - ETA: 1s
+ 61415424/105037345 [================&gt;.............] - ETA: 1s
+ 62889984/105037345 [================&gt;.............] - ETA: 1s
+ 64331776/105037345 [=================&gt;............] - ETA: 1s
+ 65871872/105037345 [=================&gt;............] - ETA: 1s
+ 67543040/105037345 [==================&gt;...........] - ETA: 1s
+ 69246976/105037345 [==================&gt;...........] - ETA: 1s
+ 70770688/105037345 [===================&gt;..........] - ETA: 1s
+ 72278016/105037345 [===================&gt;..........] - ETA: 1s
+ 73752576/105037345 [====================&gt;.........] - ETA: 1s
+ 75259904/105037345 [====================&gt;.........] - ETA: 1s
+ 76898304/105037345 [====================&gt;.........] - ETA: 0s
+ 78667776/105037345 [=====================&gt;........] - ETA: 0s
+ 80158720/105037345 [=====================&gt;........] - ETA: 0s
+ 81649664/105037345 [======================&gt;.......] - ETA: 0s
+ 83337216/105037345 [======================&gt;.......] - ETA: 0s
+ 85221376/105037345 [=======================&gt;......] - ETA: 0s
+ 86810624/105037345 [=======================&gt;......] - ETA: 0s
+ 88334336/105037345 [========================&gt;.....] - ETA: 0s
+ 89907200/105037345 [========================&gt;.....] - ETA: 0s
+ 91758592/105037345 [=========================&gt;....] - ETA: 0s
+ 93331456/105037345 [=========================&gt;....] - ETA: 0s
+ 95002624/105037345 [==========================&gt;...] - ETA: 0s
+ 96804864/105037345 [==========================&gt;...] - ETA: 0s
+ 98557952/105037345 [===========================&gt;..] - ETA: 0s
+100098048/105037345 [===========================&gt;..] - ETA: 0s
+101720064/105037345 [============================&gt;.] - ETA: 0s
+103587840/105037345 [============================&gt;.] - ETA: 0s
 105037345/105037345 [==============================] - 3s 0us/step
 Download complete.
 </pre></div>
@@ -1055,9 +1059,17 @@ Categorical Cross-Entropy. We modify the categorical crossentropy slightly to ma
 the target class (y-label) is replicated at each time point, thus forcing the model to correctly
 classify each video frame.</p>
 <p>Since the training requires a few GPU hours to complete, we will load a pre-trained model for
-inference. Pre-trained models are available either in floating-point or quantized version.
-First, we’ll look at the floating-point model, available using the following apis. The evaluation
+inference. Pre-trained models are available in either floating-point or quantized versions.
+First, we’ll look at the floating-point model, available using the following APIs. The evaluation
 tool is also available to rapidly test the performance on the validation dataset.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>the accuracy here is low because it is computed by weighing each time point equally,
+i.e. the first frame when the event has not started contributes as much to the predicted
+label as a frame with an actual movement in it. The validation accuracy will
+dramatically improve once we allow the model to weigh its output in time (see section
+below).</p>
+</div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.model_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_path</span><span class="p">,</span> <span class="n">load_model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_file</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.tenn_spatiotemporal.jester_train</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_model</span>
@@ -1079,9 +1091,11 @@ tool is also available to rapidly test the performance on the validation dataset
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/models/AkidaV2/tenn_spatiotemporal/tenn_spatiotemporal_jester.h5.
 
       0/5615064 [..............................] - ETA: 0s
- 245760/5615064 [&gt;.............................] - ETA: 1s
-1703936/5615064 [========&gt;.....................] - ETA: 0s
-3653632/5615064 [==================&gt;...........] - ETA: 0s
+ 253952/5615064 [&gt;.............................] - ETA: 1s
+1253376/5615064 [=====&gt;........................] - ETA: 0s
+2564096/5615064 [============&gt;.................] - ETA: 0s
+4038656/5615064 [====================&gt;.........] - ETA: 0s
+4153344/5615064 [=====================&gt;........] - ETA: 0s
 5615064/5615064 [==============================] - 0s 0us/step
 Download complete.
 </pre></div>
@@ -1100,14 +1114,14 @@ Download complete.
 frame-by-frame. This works thanks to:</p>
 <ul class="simple">
 <li><p><strong>causal convolutions</strong>, which ensure that predictions at time <em>t</em> use only past and current
-frames, not future ones by adding (left-sided) zero-padding. This is critical for streaming
+frames, not future ones, by adding (left-sided) zero-padding. This is critical for streaming
 inference where latency matters: we want to be able to make predictions immediately. Our
 causal temporal layers don’t rely on future frames and start making predictions after the
 first frame is received.</p></li>
 <li><p><strong>not using a temporal stride</strong>: our model purposefully preserves time information and thus
 is able to make a classification guess after each incoming frame.</p></li>
 </ul>
-<p>These choices also allow us to configure the spatio-temporal layer in a efficient way using
+<p>These choices also allow us to configure the spatiotemporal layer in an efficient way using
 FIFO buffers during inference.</p>
 <section id="fifo-buffering">
 <h3>6.1 FIFO buffering<a class="headerlink" href="#fifo-buffering" title="Link to this heading"></a></h3>
@@ -1125,10 +1139,10 @@ segment (or window) of the input at each step.</p>
 <p>To make this process more efficient, we can use a FIFO (First In, First Out) buffer to
 automatically manage the sliding window. Here’s how it works:</p>
 <ul class="simple">
-<li><p>The input buffer holds the most recent values from the input signal (top row on the figure
+<li><p>The input buffer holds the most recent values from the input signal (top row in the figure
 above).</p></li>
 <li><p>The size of this buffer is equal to the size of the temporal kernel.</p></li>
-<li><p>After each new incoming values, we perform a dot product between the buffer contents and the
+<li><p>After each new incoming value, we perform a dot product between the buffer contents and the
 kernel to produce one output value.</p></li>
 <li><p>Every time a new input value arrives, it’s added to the buffer, and the oldest value is
 removed.</p></li>
@@ -1147,7 +1161,7 @@ their equivalent bufferized version during the <em>sanitizing</em> step.</p>
 <li><p>After conversion, the 3D Convolution layers are transformed into custom
 <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.layers.BufferTempConv">BufferTempConv</a>
 layers.</p></li>
-<li><p>As opposed to training where the whole 16 frames samples is passed to the model, the inference
+<li><p>As opposed to training, where the whole 16-frame sample is passed to the model, the inference
 model requires samples to be passed one by one.</p></li>
 <li><p>For a better understanding of the buffering process, the sections below will explicitly use
 <a class="reference external" href="../../api_reference/quantizeml_apis.html#quantizeml.models.transforms.sanitize">quantizeml.models.transforms.sanitize</a> to convert
@@ -1251,47 +1265,47 @@ Non-trainable params: 115940 (452.89 KB)
 _________________________________________________________________
 </pre></div>
 </div>
-<p>The models then can be evaluated on the data using the helper available that passes
-data frame by frame to the model, accumulating the model’s responses</p>
+<p>The models can then be evaluated on the data using the available helper that passes
+data frame by frame to the model, accumulating the model’s responses.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">akida_models.tenn_spatiotemporal.jester_train</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate_bufferized_model</span>
 <span class="n">evaluate_bufferized_model</span><span class="p">(</span><span class="n">model_buffer</span><span class="p">,</span> <span class="n">val_dataset</span><span class="p">,</span> <span class="n">val_steps</span> <span class="o">//</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">in_akida</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/231 [00:00&lt;?, ?it/s]
-  0%|          | 1/231 [00:00&lt;01:56,  1.98it/s]
-  2%|▏         | 4/231 [00:00&lt;00:28,  7.91it/s]
-  3%|▎         | 7/231 [00:00&lt;00:17, 12.68it/s]
-  4%|▍         | 10/231 [00:00&lt;00:13, 16.44it/s]
-  6%|▌         | 13/231 [00:00&lt;00:11, 19.24it/s]
-  7%|▋         | 16/231 [00:01&lt;00:10, 21.34it/s]
-  8%|▊         | 19/231 [00:01&lt;00:09, 22.87it/s]
- 10%|▉         | 22/231 [00:01&lt;00:08, 24.04it/s]
- 11%|█         | 25/231 [00:01&lt;00:08, 24.61it/s]
- 12%|█▏        | 28/231 [00:01&lt;00:08, 25.20it/s]
- 13%|█▎        | 31/231 [00:01&lt;00:07, 25.63it/s]
- 15%|█▍        | 34/231 [00:01&lt;00:07, 26.07it/s]
- 16%|█▌        | 37/231 [00:01&lt;00:07, 26.27it/s]
- 17%|█▋        | 40/231 [00:01&lt;00:07, 26.38it/s]
- 19%|█▊        | 43/231 [00:02&lt;00:07, 26.53it/s]
- 20%|█▉        | 46/231 [00:02&lt;00:06, 26.57it/s]
- 21%|██        | 49/231 [00:02&lt;00:06, 26.64it/s]
- 23%|██▎       | 52/231 [00:02&lt;00:06, 26.61it/s]
- 24%|██▍       | 55/231 [00:02&lt;00:06, 26.55it/s]
- 25%|██▌       | 58/231 [00:02&lt;00:06, 26.54it/s]
- 26%|██▋       | 61/231 [00:02&lt;00:06, 26.59it/s]
- 28%|██▊       | 64/231 [00:02&lt;00:06, 26.62it/s]
- 29%|██▉       | 67/231 [00:02&lt;00:05, 27.45it/s]
- 29%|██▉       | 68/231 [00:03&lt;00:08, 20.33it/s]
+  0%|          | 1/231 [00:00&lt;01:58,  1.94it/s]
+  2%|▏         | 4/231 [00:00&lt;00:29,  7.64it/s]
+  3%|▎         | 7/231 [00:00&lt;00:18, 12.36it/s]
+  4%|▍         | 10/231 [00:00&lt;00:13, 16.15it/s]
+  6%|▌         | 13/231 [00:00&lt;00:11, 18.99it/s]
+  7%|▋         | 16/231 [00:01&lt;00:10, 21.05it/s]
+  8%|▊         | 19/231 [00:01&lt;00:09, 22.59it/s]
+ 10%|▉         | 22/231 [00:01&lt;00:08, 23.71it/s]
+ 11%|█         | 25/231 [00:01&lt;00:08, 24.50it/s]
+ 12%|█▏        | 28/231 [00:01&lt;00:08, 25.02it/s]
+ 13%|█▎        | 31/231 [00:01&lt;00:07, 25.55it/s]
+ 15%|█▍        | 34/231 [00:01&lt;00:07, 25.74it/s]
+ 16%|█▌        | 37/231 [00:01&lt;00:07, 25.95it/s]
+ 17%|█▋        | 40/231 [00:02&lt;00:07, 26.05it/s]
+ 19%|█▊        | 43/231 [00:02&lt;00:07, 26.19it/s]
+ 20%|█▉        | 46/231 [00:02&lt;00:07, 26.25it/s]
+ 21%|██        | 49/231 [00:02&lt;00:06, 26.29it/s]
+ 23%|██▎       | 52/231 [00:02&lt;00:06, 26.40it/s]
+ 24%|██▍       | 55/231 [00:02&lt;00:06, 26.39it/s]
+ 25%|██▌       | 58/231 [00:02&lt;00:06, 26.42it/s]
+ 26%|██▋       | 61/231 [00:02&lt;00:06, 26.53it/s]
+ 28%|██▊       | 64/231 [00:02&lt;00:06, 26.44it/s]
+ 29%|██▉       | 67/231 [00:03&lt;00:05, 27.37it/s]
+ 29%|██▉       | 68/231 [00:03&lt;00:08, 20.18it/s]
 Accuracy:  95.01%
 </pre></div>
 </div>
 </section>
 <section id="weighing-information">
 <h3>6.2 Weighing information<a class="headerlink" href="#weighing-information" title="Link to this heading"></a></h3>
-<p>The performance of the buffered model is improved because we use a smoothing mecanism on the
+<p>The performance of the buffered model is improved because we use a smoothing mechanism on the
 model’s output:</p>
 <ul class="simple">
-<li><p>at time <em>t</em>, the model’s outputs is softmaxed</p></li>
+<li><p>at time <em>t</em>, the model’s output is softmaxed</p></li>
 <li><p>the softmaxed values from time <em>t-1</em> are decayed (using a decay_factor of 0.8)</p></li>
 <li><p>the two are added</p></li>
 </ul>
@@ -1305,24 +1319,24 @@ Section 7 below shows an example of this.</p>
 <h2>7. Visualizing the predictions of the model in real time<a class="headerlink" href="#visualizing-the-predictions-of-the-model-in-real-time" title="Link to this heading"></a></h2>
 <p>Because of this buffering and how the model was trained to output a prediction after each time
 step, we can effectively visualize the response of the model in time.
-This part of the tutorial is heavily inspired from the tensorflow tutorial on streaming
+This part of the tutorial is heavily inspired by the TensorFlow tutorial on streaming
 recognition of gestures based on the <a class="reference external" href="https://www.tensorflow.org/hub/tutorials/movinet">movinet models</a>.</p>
 <p>We pass the data through the trained model frame by frame and collect the predicted classes,
 applying a softmax on the output of the model.
 To make the prediction more robust, at each time step we decay the old predictions by a
 decay_factor so that they contribute less and less to the final predicted class.
-The decay_factor is an hyperparameter that you can play with. In practice, it slightly improves
-performance by smoothing the prediction in time and reducing the impact of earlier frames to
+The decay_factor is a hyperparameter that you can play with. In practice, it slightly improves
+performance by smoothing the prediction in time and reducing the impact of earlier frames on
 the final prediction.</p>
 <p>The video below shows one sample along with the probabilities of the top 5 predictions from
 our bufferized spatiotemporal model at each time point.</p>
 <div  class="sphinx-contrib-video-container align-center"><video autoplay="True" loop="True" muted="True" preload="auto" width="50%" playsinline="True"><source src="../../_images/streaming_preds.mp4" type="video/mp4"></video></div></section>
-<section id="quantizing-the-model-and-convertion-to-akida">
-<h2>8. Quantizing the model and convertion to Akida<a class="headerlink" href="#quantizing-the-model-and-convertion-to-akida" title="Link to this heading"></a></h2>
+<section id="quantizing-the-model-and-conversion-to-akida">
+<h2>8. Quantizing the model and conversion to Akida<a class="headerlink" href="#quantizing-the-model-and-conversion-to-akida" title="Link to this heading"></a></h2>
 <p>The model can be easily quantized with no cost in accuracy. It can then be easily deployed on
 hardware for online gesture recognition using the convert method from the cnn2snn package.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="c1"># Get the calibration data for accurate quantization: these are a subset from the training data.</span>
+<span class="c1"># Get the calibration data for accurate quantization: these are a subset of the training data.</span>
 <span class="n">samples</span> <span class="o">=</span> <span class="n">fetch_file</span><span class="p">(</span>
     <span class="n">fname</span><span class="o">=</span><span class="s2">&quot;jester_video_bs100.npz&quot;</span><span class="p">,</span>
     <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;https://data.brainchip.com/dataset-mirror/samples/jester_video/jester_video_bs100.npz&quot;</span><span class="p">,</span>
@@ -1336,34 +1350,29 @@ hardware for online gesture recognition using the convert method from the cnn2sn
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://data.brainchip.com/dataset-mirror/samples/jester_video/jester_video_bs100.npz.
 
        0/48000262 [..............................] - ETA: 0s
-  262144/48000262 [..............................] - ETA: 9s
- 1884160/48000262 [&gt;.............................] - ETA: 2s
- 3620864/48000262 [=&gt;............................] - ETA: 1s
- 6766592/48000262 [===&gt;..........................] - ETA: 1s
- 8740864/48000262 [====&gt;.........................] - ETA: 1s
-10682368/48000262 [=====&gt;........................] - ETA: 1s
-12369920/48000262 [======&gt;.......................] - ETA: 1s
-14974976/48000262 [========&gt;.....................] - ETA: 0s
-16515072/48000262 [=========&gt;....................] - ETA: 0s
-18137088/48000262 [==========&gt;...................] - ETA: 0s
-20037632/48000262 [===========&gt;..................] - ETA: 0s
-21610496/48000262 [============&gt;.................] - ETA: 0s
-23314432/48000262 [=============&gt;................] - ETA: 0s
-25182208/48000262 [==============&gt;...............] - ETA: 0s
-26632192/48000262 [===============&gt;..............] - ETA: 0s
-28278784/48000262 [================&gt;.............] - ETA: 0s
-29802496/48000262 [=================&gt;............] - ETA: 0s
-31031296/48000262 [==================&gt;...........] - ETA: 0s
-32194560/48000262 [===================&gt;..........] - ETA: 0s
-33701888/48000262 [====================&gt;.........] - ETA: 0s
-35209216/48000262 [=====================&gt;........] - ETA: 0s
-36798464/48000262 [=====================&gt;........] - ETA: 0s
-38592512/48000262 [=======================&gt;......] - ETA: 0s
-40435712/48000262 [========================&gt;.....] - ETA: 0s
-42041344/48000262 [=========================&gt;....] - ETA: 0s
-43646976/48000262 [==========================&gt;...] - ETA: 0s
-45318144/48000262 [===========================&gt;..] - ETA: 0s
-47005696/48000262 [============================&gt;.] - ETA: 0s
+  245760/48000262 [..............................] - ETA: 10s
+ 1695744/48000262 [&gt;.............................] - ETA: 2s 
+ 3530752/48000262 [=&gt;............................] - ETA: 1s
+ 7643136/48000262 [===&gt;..........................] - ETA: 1s
+ 9592832/48000262 [====&gt;.........................] - ETA: 1s
+11739136/48000262 [======&gt;.......................] - ETA: 0s
+13803520/48000262 [=======&gt;......................] - ETA: 0s
+15736832/48000262 [========&gt;.....................] - ETA: 0s
+17752064/48000262 [==========&gt;...................] - ETA: 0s
+19767296/48000262 [===========&gt;..................] - ETA: 0s
+21782528/48000262 [============&gt;.................] - ETA: 0s
+24076288/48000262 [==============&gt;...............] - ETA: 0s
+26075136/48000262 [===============&gt;..............] - ETA: 0s
+28286976/48000262 [================&gt;.............] - ETA: 0s
+30220288/48000262 [=================&gt;............] - ETA: 0s
+32497664/48000262 [===================&gt;..........] - ETA: 0s
+34463744/48000262 [====================&gt;.........] - ETA: 0s
+36315136/48000262 [=====================&gt;........] - ETA: 0s
+38412288/48000262 [=======================&gt;......] - ETA: 0s
+40386560/48000262 [========================&gt;.....] - ETA: 0s
+42344448/48000262 [=========================&gt;....] - ETA: 0s
+44359680/48000262 [==========================&gt;...] - ETA: 0s
+46456832/48000262 [============================&gt;.] - ETA: 0s
 48000262/48000262 [==============================] - 1s 0us/step
 Download complete.
 </pre></div>
@@ -1393,75 +1402,75 @@ Download complete.
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/231 [00:00&lt;?, ?it/s]
-  0%|          | 1/231 [00:05&lt;20:54,  5.45s/it]
-  1%|          | 2/231 [00:05&lt;09:08,  2.39s/it]
-  1%|▏         | 3/231 [00:05&lt;05:23,  1.42s/it]
-  2%|▏         | 4/231 [00:06&lt;03:37,  1.04it/s]
-  2%|▏         | 5/231 [00:06&lt;02:39,  1.41it/s]
-  3%|▎         | 6/231 [00:06&lt;02:04,  1.80it/s]
-  3%|▎         | 7/231 [00:06&lt;01:42,  2.18it/s]
-  3%|▎         | 8/231 [00:07&lt;01:28,  2.53it/s]
-  4%|▍         | 9/231 [00:07&lt;01:18,  2.84it/s]
-  4%|▍         | 10/231 [00:07&lt;01:11,  3.10it/s]
-  5%|▍         | 11/231 [00:08&lt;01:06,  3.30it/s]
-  5%|▌         | 12/231 [00:08&lt;01:03,  3.43it/s]
-  6%|▌         | 13/231 [00:08&lt;01:01,  3.54it/s]
-  6%|▌         | 14/231 [00:08&lt;00:59,  3.63it/s]
-  6%|▋         | 15/231 [00:09&lt;00:58,  3.70it/s]
-  7%|▋         | 16/231 [00:09&lt;00:57,  3.76it/s]
+  0%|          | 1/231 [00:05&lt;21:00,  5.48s/it]
+  1%|          | 2/231 [00:05&lt;09:11,  2.41s/it]
+  1%|▏         | 3/231 [00:05&lt;05:25,  1.43s/it]
+  2%|▏         | 4/231 [00:06&lt;03:39,  1.04it/s]
+  2%|▏         | 5/231 [00:06&lt;02:40,  1.41it/s]
+  3%|▎         | 6/231 [00:06&lt;02:05,  1.79it/s]
+  3%|▎         | 7/231 [00:07&lt;01:43,  2.17it/s]
+  3%|▎         | 8/231 [00:07&lt;01:27,  2.54it/s]
+  4%|▍         | 9/231 [00:07&lt;01:17,  2.85it/s]
+  4%|▍         | 10/231 [00:07&lt;01:10,  3.12it/s]
+  5%|▍         | 11/231 [00:08&lt;01:06,  3.33it/s]
+  5%|▌         | 12/231 [00:08&lt;01:02,  3.48it/s]
+  6%|▌         | 13/231 [00:08&lt;01:00,  3.59it/s]
+  6%|▌         | 14/231 [00:08&lt;00:59,  3.66it/s]
+  6%|▋         | 15/231 [00:09&lt;00:58,  3.72it/s]
+  7%|▋         | 16/231 [00:09&lt;00:57,  3.75it/s]
   7%|▋         | 17/231 [00:09&lt;00:56,  3.80it/s]
   8%|▊         | 18/231 [00:09&lt;00:55,  3.82it/s]
-  8%|▊         | 19/231 [00:10&lt;00:55,  3.85it/s]
-  9%|▊         | 20/231 [00:10&lt;00:54,  3.86it/s]
-  9%|▉         | 21/231 [00:10&lt;00:54,  3.86it/s]
- 10%|▉         | 22/231 [00:10&lt;00:54,  3.86it/s]
- 10%|▉         | 23/231 [00:11&lt;00:53,  3.87it/s]
+  8%|▊         | 19/231 [00:10&lt;00:54,  3.85it/s]
+  9%|▊         | 20/231 [00:10&lt;00:55,  3.83it/s]
+  9%|▉         | 21/231 [00:10&lt;00:54,  3.82it/s]
+ 10%|▉         | 22/231 [00:10&lt;00:54,  3.85it/s]
+ 10%|▉         | 23/231 [00:11&lt;00:54,  3.84it/s]
  10%|█         | 24/231 [00:11&lt;00:53,  3.86it/s]
- 11%|█         | 25/231 [00:11&lt;00:53,  3.87it/s]
- 11%|█▏        | 26/231 [00:11&lt;00:52,  3.88it/s]
- 12%|█▏        | 27/231 [00:12&lt;00:52,  3.87it/s]
- 12%|█▏        | 28/231 [00:12&lt;00:52,  3.87it/s]
- 13%|█▎        | 29/231 [00:12&lt;00:51,  3.88it/s]
- 13%|█▎        | 30/231 [00:12&lt;00:51,  3.89it/s]
- 13%|█▎        | 31/231 [00:13&lt;00:51,  3.91it/s]
- 14%|█▍        | 32/231 [00:13&lt;00:51,  3.90it/s]
- 14%|█▍        | 33/231 [00:13&lt;00:50,  3.89it/s]
- 15%|█▍        | 34/231 [00:13&lt;00:50,  3.89it/s]
- 15%|█▌        | 35/231 [00:14&lt;00:50,  3.89it/s]
- 16%|█▌        | 36/231 [00:14&lt;00:50,  3.89it/s]
+ 11%|█         | 25/231 [00:11&lt;00:53,  3.86it/s]
+ 11%|█▏        | 26/231 [00:11&lt;00:52,  3.87it/s]
+ 12%|█▏        | 27/231 [00:12&lt;00:52,  3.86it/s]
+ 12%|█▏        | 28/231 [00:12&lt;00:52,  3.85it/s]
+ 13%|█▎        | 29/231 [00:12&lt;00:52,  3.84it/s]
+ 13%|█▎        | 30/231 [00:12&lt;00:52,  3.85it/s]
+ 13%|█▎        | 31/231 [00:13&lt;00:51,  3.85it/s]
+ 14%|█▍        | 32/231 [00:13&lt;00:51,  3.87it/s]
+ 14%|█▍        | 33/231 [00:13&lt;00:51,  3.86it/s]
+ 15%|█▍        | 34/231 [00:14&lt;00:51,  3.85it/s]
+ 15%|█▌        | 35/231 [00:14&lt;00:50,  3.86it/s]
+ 16%|█▌        | 36/231 [00:14&lt;00:50,  3.86it/s]
  16%|█▌        | 37/231 [00:14&lt;00:50,  3.86it/s]
- 16%|█▋        | 38/231 [00:14&lt;00:49,  3.88it/s]
- 17%|█▋        | 39/231 [00:15&lt;00:49,  3.90it/s]
- 17%|█▋        | 40/231 [00:15&lt;00:49,  3.86it/s]
- 18%|█▊        | 41/231 [00:15&lt;00:49,  3.87it/s]
- 18%|█▊        | 42/231 [00:16&lt;00:48,  3.88it/s]
- 19%|█▊        | 43/231 [00:16&lt;00:48,  3.85it/s]
+ 16%|█▋        | 38/231 [00:15&lt;00:49,  3.87it/s]
+ 17%|█▋        | 39/231 [00:15&lt;00:49,  3.86it/s]
+ 17%|█▋        | 40/231 [00:15&lt;00:49,  3.87it/s]
+ 18%|█▊        | 41/231 [00:15&lt;00:49,  3.86it/s]
+ 18%|█▊        | 42/231 [00:16&lt;00:48,  3.86it/s]
+ 19%|█▊        | 43/231 [00:16&lt;00:48,  3.89it/s]
  19%|█▉        | 44/231 [00:16&lt;00:48,  3.87it/s]
- 19%|█▉        | 45/231 [00:16&lt;00:48,  3.86it/s]
- 20%|█▉        | 46/231 [00:17&lt;00:47,  3.86it/s]
+ 19%|█▉        | 45/231 [00:16&lt;00:48,  3.84it/s]
+ 20%|█▉        | 46/231 [00:17&lt;00:48,  3.84it/s]
  20%|██        | 47/231 [00:17&lt;00:47,  3.86it/s]
- 21%|██        | 48/231 [00:17&lt;00:47,  3.87it/s]
- 21%|██        | 49/231 [00:17&lt;00:46,  3.89it/s]
- 22%|██▏       | 50/231 [00:18&lt;00:46,  3.90it/s]
- 22%|██▏       | 51/231 [00:18&lt;00:46,  3.89it/s]
- 23%|██▎       | 52/231 [00:18&lt;00:46,  3.89it/s]
- 23%|██▎       | 53/231 [00:18&lt;00:45,  3.88it/s]
- 23%|██▎       | 54/231 [00:19&lt;00:45,  3.87it/s]
- 24%|██▍       | 55/231 [00:19&lt;00:45,  3.86it/s]
- 24%|██▍       | 56/231 [00:19&lt;00:45,  3.87it/s]
- 25%|██▍       | 57/231 [00:19&lt;00:44,  3.88it/s]
- 25%|██▌       | 58/231 [00:20&lt;00:44,  3.88it/s]
+ 21%|██        | 48/231 [00:17&lt;00:47,  3.88it/s]
+ 21%|██        | 49/231 [00:17&lt;00:47,  3.85it/s]
+ 22%|██▏       | 50/231 [00:18&lt;00:46,  3.86it/s]
+ 22%|██▏       | 51/231 [00:18&lt;00:46,  3.86it/s]
+ 23%|██▎       | 52/231 [00:18&lt;00:46,  3.83it/s]
+ 23%|██▎       | 53/231 [00:18&lt;00:46,  3.85it/s]
+ 23%|██▎       | 54/231 [00:19&lt;00:46,  3.84it/s]
+ 24%|██▍       | 55/231 [00:19&lt;00:45,  3.85it/s]
+ 24%|██▍       | 56/231 [00:19&lt;00:45,  3.85it/s]
+ 25%|██▍       | 57/231 [00:19&lt;00:45,  3.86it/s]
+ 25%|██▌       | 58/231 [00:20&lt;00:44,  3.87it/s]
  26%|██▌       | 59/231 [00:20&lt;00:44,  3.88it/s]
- 26%|██▌       | 60/231 [00:20&lt;00:43,  3.91it/s]
- 26%|██▋       | 61/231 [00:20&lt;00:43,  3.91it/s]
- 27%|██▋       | 62/231 [00:21&lt;00:43,  3.88it/s]
- 27%|██▋       | 63/231 [00:21&lt;00:43,  3.88it/s]
- 28%|██▊       | 64/231 [00:21&lt;00:42,  3.89it/s]
- 28%|██▊       | 65/231 [00:21&lt;00:42,  3.88it/s]
+ 26%|██▌       | 60/231 [00:20&lt;00:44,  3.87it/s]
+ 26%|██▋       | 61/231 [00:21&lt;00:43,  3.88it/s]
+ 27%|██▋       | 62/231 [00:21&lt;00:43,  3.89it/s]
+ 27%|██▋       | 63/231 [00:21&lt;00:43,  3.89it/s]
+ 28%|██▊       | 64/231 [00:21&lt;00:43,  3.88it/s]
+ 28%|██▊       | 65/231 [00:22&lt;00:42,  3.89it/s]
  29%|██▊       | 66/231 [00:22&lt;00:42,  3.90it/s]
  29%|██▉       | 67/231 [00:22&lt;00:41,  3.91it/s]
- 29%|██▉       | 68/231 [00:27&lt;04:49,  1.77s/it]
- 29%|██▉       | 68/231 [00:27&lt;01:06,  2.45it/s]
+ 29%|██▉       | 68/231 [00:27&lt;04:48,  1.77s/it]
+ 29%|██▉       | 68/231 [00:27&lt;01:06,  2.44it/s]
 Accuracy:  94.64%
 </pre></div>
 </div>
@@ -1531,9 +1540,9 @@ apply:</p>
 <li><p>Prioritize temporal modeling early in the network</p></li>
 <li><p>Use factorized spatiotemporal convolutions for efficiency</p></li>
 <li><p>Train with augmentation that preserves causality</p></li>
-<li><p>is seamlessly deployed using streaming inference using FIFO buffers</p></li>
+<li><p>Deploy seamlessly using streaming inference with FIFO buffers</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 0.799 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 0.542 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-spatiotemporal-plot-0-introduction-to-spatiotemporal-models-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/de4b756cab404463917a0f36dac8298e/plot_0_introduction_to_spatiotemporal_models.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_0_introduction_to_spatiotemporal_models.ipynb</span></code></a></p>

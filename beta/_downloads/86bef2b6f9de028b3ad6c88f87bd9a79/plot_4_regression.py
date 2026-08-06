@@ -6,7 +6,7 @@ This tutorial aims to demonstrate the comparable accuracy of the Akida-compatibl
 model to the traditional TF-Keras model in performing an age estimation task.
 
 It uses the `UTKFace dataset <https://susanqq.github.io/UTKFace/>`__, which
-includes images of faces and age labels, to showcase how well akida compatible
+includes images of faces and age labels, to showcase how well the Akida-compatible
 model can predict the ages of individuals based on their facial features.
 
 """
@@ -16,12 +16,12 @@ model can predict the ages of individuals based on their facial features.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The UTKFace dataset has 20,000+ diverse face images spanning 0 to 116 years.
-# It includes age, gender, ethnicity annotations. This dataset is useful for
+# It includes age, gender, and ethnicity annotations. This dataset is useful for
 # various tasks like age estimation, face detection, and more.
 #
-# Load the dataset from Brainchip data server using the `load_data
+# Load the dataset from the BrainChip data server using the `load_data
 # <../../api_reference/akida_models_apis.html#akida_models.utk_face.preprocessing.load_data>`__
-# helper (decode JPEG images and load the associated labels).
+# helper (decodes JPEG images and loads the associated labels).
 
 from akida_models.utk_face.preprocessing import load_data
 
@@ -39,13 +39,13 @@ x_test = x_test.astype('uint8')
 # 2. Load a pre-trained native TF-Keras model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The model is a simplified version inspired from `VGG <https://arxiv.org/abs/1409.1556>`__
+# The model is a simplified version inspired by the `VGG <https://arxiv.org/abs/1409.1556>`__
 # architecture. It consists of a succession of convolutional and pooling layers
-# and ends with two dense layers that outputs a single value
+# and ends with two dense layers that output a single value
 # corresponding to the estimated age.
 #
 # The performance of the model is evaluated using the "Mean Absolute Error"
-# (MAE). The MAE, used as a metric in regression problem, is calculated as an
+# (MAE). The MAE, used as a metric in regression problems, is calculated as an
 # average of absolute differences between the target values and the predictions.
 # The MAE is a linear score, i.e. all the individual differences are equally
 # weighted in the average.

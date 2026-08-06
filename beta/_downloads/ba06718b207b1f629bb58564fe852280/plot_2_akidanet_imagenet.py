@@ -2,16 +2,16 @@
 AkidaNet/ImageNet inference
 ============================
 
-This tutorial presents how to convert, map, and capture performance from AKD1000 Hardware using an
+This tutorial shows how to convert, map, and capture performance from AKD1000 Hardware using an
 AkidaNet model.
 
-AkidaNet architecture is a `MobileNet v1-inspired <https://arxiv.org/abs/1704.04861>`__ architecture
-optimized for implementation on Akida 1.0: it exploits the richer expressive power of standard
-convolutions in early layers, but uses separable convolutions in later layers where filter memory is
-limiting.
+The AkidaNet architecture is a `MobileNet v1-inspired <https://arxiv.org/abs/1704.04861>`__
+architecture optimized for implementation on Akida 1.0: it exploits the richer expressive power of
+standard convolutions in early layers, but uses separable convolutions in later layers where
+filter memory is limiting.
 
 As `ImageNet <https://www.image-net.org/>`__ images are not publicly available, performance is
-assessed using a set of 10 copyright free images that were found on Google using ImageNet class
+assessed using a set of 10 copyright-free images that were found on Google using ImageNet class
 names.
 
 .. Note::
@@ -25,11 +25,11 @@ names.
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # Test images all have at least 256 pixels in the smallest dimension. They must
-# be preprocessed to fit in the model. The ``imagenet.preprocessing.get_preprocessed_samples``
+# be preprocessed to fit the model. The ``imagenet.preprocessing.get_preprocessed_samples``
 # function loads and preprocesses (decodes, crops and extracts a square
 # 224x224x3 patch from an input image) a set of 10 ImageNet-like images.
 #
-# .. Note:: Input size is here set to 224x224x3 as this is what is used by the
+# .. Note:: The input size is set to 224x224x3 here, as this is what is used by the
 #           model presented in the next section.
 
 import akida
@@ -51,7 +51,7 @@ print(f'{x_test.shape[0]} images and their labels are loaded and preprocessed.')
 # The Akida model zoo contains a `pretrained quantized helper
 # <../../api_reference/akida_models_apis.html#akida_models.akidanet_imagenet_pretrained>`_.
 #
-# The quantization scheme for this model is the following:
+# The quantization scheme for this model is as follows:
 #
 #  * the first layer has 8-bit weights,
 #  * all other layers have 4-bit weights,
@@ -66,7 +66,7 @@ with set_akida_version(AkidaVersion.v1):
 model_keras_quantized_pretrained.summary()
 
 ######################################################################
-# Check model performance on the 10 images set.
+# Check model performance on the 10-image set.
 
 from timeit import default_timer as timer
 
@@ -92,7 +92,7 @@ print(f"TF-Keras accuracy: {accuracy_keras*num_images:.0f}/{num_images}.")
 # Here, the TF-Keras quantized model is converted into a suitable version for
 # the Akida accelerator. The
 # `cnn2snn.convert <../../api_reference/cnn2snn_apis.html#cnn2snn.convert>`__ function only needs
-# the TF-Keras model as argument.
+# the TF-Keras model as an argument.
 
 from cnn2snn import convert
 
@@ -108,7 +108,7 @@ model_akida.summary()
 # 3.2 Check performance
 # ^^^^^^^^^^^^^^^^^^^^^
 #
-# The following will only compute accuracy for the 10 images set.
+# The following will only compute accuracy for the 10-image set.
 
 # Check Model performance
 start = timer()
@@ -125,7 +125,7 @@ assert accuracy_akida >= 0.8
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Labels for test images are stored in the akida_models package. The matching
-# between names (*string*) and labels (*integer*) is given through the
+# between names (*string*) and labels (*integer*) is provided by the
 # ``imagenet.preprocessing.index_to_label`` method.
 
 
@@ -291,7 +291,7 @@ model_akida.summary()
 # 4.2. Performance measurement
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Power measurement must be enabled on the device' soc (disabled by default).
+# Power measurement must be enabled on the device's SoC (disabled by default).
 # After sending data for inference, performance measurements are available in
 # the `model statistics <../../api_reference/akida_apis.html#akida.Model.statistics>`__.
 
@@ -301,7 +301,7 @@ device.soc.power_measurement_enabled = True
 # Send data for inference
 _ = model_akida.forward(x_test)
 
-# Display floor current
+# Display floor power
 floor_power = device.soc.power_meter.floor
 print(f'Floor power: {floor_power:.2f} mW')
 

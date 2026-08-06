@@ -5,11 +5,11 @@ DS-CNN/KWS inference
 This tutorial illustrates the process of developing an Akida-compatible speech recognition
 model that can identify thirty-two different keywords.
 
-Initially, the model is defined as a CNN in TF-Keras and trained regularly. Next, it undergoes
-quantization using `QuantizeML <../../user_guide/quantizeml.html>`__ and finally converted
+Initially, the model is defined as a CNN in TF-Keras and trained normally. Next, it undergoes
+quantization using `QuantizeML <../../user_guide/quantizeml.html>`__ and is finally converted
 to Akida using `CNN2SNN <../../user_guide/cnn2snn.html>`__.
 
-This example uses a Keyword Spotting Dataset prepared using **TensorFlow** `audio recognition
+This example uses a Keyword Spotting Dataset prepared using the **TensorFlow** `audio recognition
 example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 
 """
@@ -20,16 +20,16 @@ example <https://www.tensorflow.org/tutorials/audio/simple_audio>`__ utils.
 #
 # The TensorFlow `speech_commands <https://www.tensorflow.org/datasets/catalog/speech_commands>`__
 # dataset is used for training and validation. All keywords except "backward",
-# "follow" and "forward", are retrieved. These three words are kept to
-# illustrate the edge learning in this
+# "follow" and "forward" are retrieved. These three words are kept to
+# illustrate edge learning in this
 # `edge example <../edge/plot_1_edge_learning_kws.html>`__.
 #
 # The words to recognize have been converted to `spectrogram images
 # <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#how-does-this-model-work>`__
-# that allows us to use a model architecture that is typically used for image recognition tasks.
+# that allow us to use a model architecture that is typically used for image recognition tasks.
 # The raw audio data have been preprocessed, transforming the audio files into MFCC features,
 # well-suited for CNN networks.
-# A pickle file containing the preprocessed data is available on Brainchip data server.
+# A pickle file containing the preprocessed data is available on the BrainChip data server.
 #
 import pickle
 
@@ -56,7 +56,7 @@ print("Wanted words and labels:\n", word_to_index)
 #
 # * a first convolutional layer accepting dense inputs (images),
 # * several separable convolutional layers preserving spatial dimensions,
-# * a global pooling reducing the spatial dimensions to a single pixel,
+# * a global pooling layer reducing the spatial dimensions to a single pixel,
 # * a final dense layer to classify words.
 #
 # All layers are followed by a batch normalization and a ReLU activation.
@@ -115,8 +115,8 @@ print("Accuracy: " + "{0:.2f}".format(100 * accuracy_q) + "%")
 # 4. Conversion to Akida
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# The converted model is Akida 2.0 compatible and its performance
-# evaluation is done using the Akida simulator.
+# The converted model is compatible with Akida 2.0 and its performance
+# is evaluated using the Akida simulator.
 #
 
 from cnn2snn import convert
@@ -143,11 +143,11 @@ assert accuracy > 0.9
 # The confusion matrix provides a good summary of what mistakes the
 # network is making.
 #
-# Per scikit-learn convention it displays the true class in each row (ie
+# Per scikit-learn convention, it displays the true class in each row (i.e.
 # on each row you can see what the network predicted for the corresponding
 # word).
 #
-# Please refer to the Tensorflow `audio
+# Please refer to the TensorFlow `audio
 # recognition <https://github.com/tensorflow/docs/blob/master/site/en/r1/tutorials/sequences/audio_recognition.md#confusion-matrix>`__
 # example for a detailed explanation of the confusion matrix.
 #

@@ -22,7 +22,8 @@ import os
 import numpy as np
 from akida_models import fetch_file
 
-# Download validation set from Brainchip data server, it contains 10% of the original dataset
+# Download the validation set from the BrainChip data server, it contains 10% of the original
+# dataset
 data_path = fetch_file(fname="val.tar.gz",
                        origin="https://data.brainchip.com/dataset-mirror/portrait128/val.tar.gz",
                        cache_subdir=os.path.join("datasets", "portrait128"),
@@ -71,13 +72,13 @@ plt.show()
 #
 # The performance of the model is evaluated using both pixel accuracy and `Binary IoU
 # <https://www.tensorflow.org/api_docs/python/tf/keras/metrics/BinaryIoU>`__. The pixel
-# accuracy describes how well the model can predict the segmentation mask pixel by pixel
+# accuracy describes how well the model can predict the segmentation mask pixel by pixel,
 # and the Binary IoU takes into account how close the predicted mask is to the ground truth.
 #
 
 from akida_models.model_io import load_model
 
-# Retrieve the model file from Brainchip data server
+# Retrieve the model file from the BrainChip data server
 model_file = fetch_file(fname="akida_unet_portrait128.h5",
                         origin="https://data.brainchip.com/models/AkidaV2/akida_unet/akida_unet_portrait128.h5",
                         cache_subdir='models')
@@ -99,10 +100,10 @@ _, biou, acc = model_keras.evaluate(x_val, y_val, steps=steps, verbose=0)
 print(f"TF-Keras binary IoU / pixel accuracy: {biou:.4f} / {100*acc:.2f}%")
 
 ######################################################################
-# 3. Load a pre-trained quantized Keras model
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Load a pre-trained quantized TF-Keras model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The next step is to quantize and potentially perform Quantize Aware Training (QAT) on the
+# The next step is to quantize and potentially perform Quantization Aware Training (QAT) on the
 # TF-Keras model from the previous step. After the TF-Keras model is quantized to 8-bit for
 # all weights and activations, QAT is used to maintain the performance of the quantized
 # model. Again, a pre-trained model is downloaded to save runtime.
@@ -168,7 +169,7 @@ m_accuracy.update_state(labels, preds > 0.5)
 accuracy = m_accuracy.result().numpy()
 print(f"Akida binary IoU / pixel accuracy: {binary_iou:.4f} / {100*accuracy:.2f}%")
 
-# For non-regression purpose
+# For non-regression purposes
 assert binary_iou > 0.9
 
 ######################################################################
@@ -182,7 +183,7 @@ assert binary_iou > 0.9
 
 import matplotlib.pyplot as plt
 
-# Estimate age on a random single image and display TF-Keras and Akida outputs
+# Run inference on a random single image and display TF-Keras and Akida outputs
 sample = np.expand_dims(x_val[id, :], 0)
 keras_out = model_keras(sample)
 akida_out = keras.activations.sigmoid(model_akida.forward(sample.astype('uint8')))
