@@ -81,12 +81,17 @@ steps:
   commands:
   - uv pip install --system -r requirements.txt
   - uv cache prune --ci
+  # on PR builds only, reuse datasets/pretrained weights fetched by previous builds
+  # (fetch_file caches under ~/.keras/datasets). main/tag builds download end to end
+  - if [ "$DRONE_BUILD_EVENT" = "pull_request" ]; then mkdir -p /root/.keras && ln -snf /var/cache/keras-datasets /root/.keras/datasets; fi
   - sphinx-build -j auto -D plot_gallery=1 -b html ./doc ./build
   volumes:
     - name: akida_chip
       path: /dev/akida0
     - name: uv_cache
       path: /root/.cache/uv
+    - name: keras_datasets_cache
+      path: /var/cache/keras-datasets
 
 - name: update_gh_pages
   image: bender:5000/drone/git:linux
@@ -139,6 +144,9 @@ volumes:
 - name: uv_cache
   host:
     path: /var/cache/drone/uv
+- name: keras_datasets_cache
+  host:
+    path: /var/cache/drone/keras-datasets
 
 node:
   hw: gpu-nsoc_v2
