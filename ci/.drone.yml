@@ -81,10 +81,36 @@ steps:
   commands:
   - uv pip install --system -r requirements.txt
   - uv cache prune --ci
-  # on PR builds only, reuse datasets/pretrained weights fetched by previous builds
-  # (fetch_file caches under ~/.keras/datasets). main/tag builds download end to end
+  # on PR builds only:
+  # reuse datasets/pretrained weights fetched by previous builds
+  # (fetch_file caches under ~/.keras/datasets).
   - if [ "$DRONE_BUILD_EVENT" = "pull_request" ]; then mkdir -p /root/.keras && ln -snf /var/cache/keras-datasets /root/.keras/datasets; fi
-  - sphinx-build -j auto -D plot_gallery=1 -b html ./doc ./build
+  # on PR builds, use the git diff against the target branch to decide which examples to execute:
+  # - requirements.txt changed -> execute all examples
+  # - otherwise -> execute only the changed examples (sphinx-gallery filename_pattern override);
+  #   the other examples are still rendered in the gallery, just not executed. If no example
+  #   changed, skip execution entirely (plot_gallery=0).
+  # If the diff cannot be computed, or on any other event (main/tag), all examples are executed
+  # (GALLERY_OPTS stays empty).
+  - |
+    GALLERY_OPTS=""
+    if [ "$DRONE_BUILD_EVENT" = "pull_request" ]; then
+      if git fetch --no-tags origin "$DRONE_TARGET_BRANCH" && CHANGED=$(git diff --name-only "FETCH_HEAD...HEAD"); then
+        echo "Files changed in PR:"
+        echo "$CHANGED"
+        if ! echo "$CHANGED" | grep -qx "requirements.txt"; then
+          PATTERN=$(echo "$CHANGED" | grep '^examples/.*\.py$' | sed 's|.*/||; s|\.py$||' | paste -sd "|" -)
+          if [ -n "$PATTERN" ]; then
+            GALLERY_OPTS="-D sphinx_gallery_conf.filename_pattern=($PATTERN)\.py"
+          else
+            GALLERY_OPTS="-D plot_gallery=0"
+          fi
+        fi
+      else
+        echo "Could not diff against $DRONE_TARGET_BRANCH, executing all examples"
+      fi
+    fi
+  - sphinx-build -j auto -D plot_gallery=1 -b html ./doc ./build $GALLERY_OPTS
   volumes:
     - name: akida_chip
       path: /dev/akida0
