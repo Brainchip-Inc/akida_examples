@@ -4,7 +4,8 @@ Global Akida workflow
 
 Using the MNIST dataset, this example shows the definition and training of a TF-Keras
 floating-point model, its quantization to 8-bit with the help of calibration,
-its quantization to 4-bit using QAT and its conversion to Akida.
+its quantization to 4-bit using QAT, its conversion to Akida and finally the measurement
+of the processor's differentiator: power and energy per inference on an Akida device.
 Notice that the performance of the original TF-Keras floating-point model is maintained
 throughout the Akida flow.
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
@@ -21,6 +22,10 @@ the ONNX format.
           The MNIST example below is light enough so that a `GPU
           <https://www.tensorflow.org/install/gpu>`__ is not needed for training.
 
+.. Note:: Power is measured on silicon and is currently supported on the AKD1000 SoC, which
+          implements Akida 1.0, while this tutorial's main flow targets Akida 2.0. The final
+          section therefore switches to the Akida 1.0 version of an MNIST model from the model
+          zoo to report the power figures. Everything else runs on the free software simulator.
 
 .. figure:: ../../img/overall_flow.png
    :target: ../../_images/overall_flow.png
@@ -306,3 +311,92 @@ print(outputs.squeeze())
 # In the bar chart above, you can see the outputs from all 10 neurons. It is easy to see that neuron
 # 7 responds much more strongly than the others. The first sample is indeed a number 7.
 #
+
+######################################################################
+# 4. Measure power and energy on hardware
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Accuracy parity is only half of the story: the reason to run a model on Akida is efficiency.
+# This last section measures the power the processor draws while classifying the MNIST test set,
+# read from a sensor on the chip.
+#
+# Power is measured on silicon, currently on the AKD1000 SoC that implements Akida 1.0 (see the
+# `See the power number <../../power_number.html>`__ page). Since the model trained above uses
+# the default Akida 2.0 quantization, this section switches to the Akida 1.0 MNIST model from
+# the model zoo: the `GXNOR/MNIST
+# <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained>`__ CNN,
+# pretrained and quantized to 2-bit weights and 1-bit activations.
+
+######################################################################
+# 4.1. Load and convert a pretrained Akida 1.0 model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The `set_akida_version <../../api_reference/cnn2snn_apis.html#cnn2snn.set_akida_version>`__
+# context selects the Akida 1.0 version of the pretrained model, which is then converted exactly
+# like the trained model above.
+
+from cnn2snn import set_akida_version, AkidaVersion
+from akida_models import gxnor_mnist_pretrained
+
+# Use a quantized model with pretrained quantized weights
+with set_akida_version(AkidaVersion.v1):
+    model_quantized_1_0 = gxnor_mnist_pretrained()
+
+model_akida_1_0 = convert(model_quantized_1_0)
+
+######################################################################
+# 4.2. Map on hardware
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# List available Akida devices and check that an NSoC V2, Akida 1.0 production chip is available.
+
+import akida
+
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
+device = devices[0]
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
+
+######################################################################
+# Map the model on the device
+
+model_akida_1_0.map(device)
+
+# Check model mapping: NP allocation and binary size
+model_akida_1_0.summary()
+
+######################################################################
+# 4.3. Performance measurement
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Power measurement must be enabled on the device's SoC (disabled by default).
+# After sending data for inference, performance measurements are available in
+# the `model statistics <../../api_reference/akida_apis.html#akida.Model.statistics>`__.
+
+# Enable power measurement
+device.soc.power_measurement_enabled = True
+
+# Send the test set for inference
+_ = model_akida_1_0.forward(x_test)
+
+# Display floor power
+floor_power = device.soc.power_meter.floor
+print(f'Floor power: {floor_power:.2f} mW')
+
+# Retrieve statistics
+print(model_akida_1_0.statistics)
+
+######################################################################
+# The floor power is the idle draw of the board. In the statistics above, next to the average
+# framerate, you should see the two numbers this workflow was building toward:
+#
+# - ``Last inference power range (mW)``: the power drawn while classifying, measured on-chip,
+# - ``Last inference energy consumed (mJ/frame)``: the energy cost of classifying one digit.
+#
+# Both figures include the floor power.
+#
+# .. Note:: Power is read from a sensor on the silicon: the software simulator cannot measure
+#           it. Without a device, the `model zoo performance
+#           <../../model_zoo_performance.html#akida-1-0-models>`__ page publishes the measured
+#           reference figure for this model — 0.34 mJ per frame on an AKD1500 device.
