@@ -187,3 +187,6 @@ linkcheck_timeout = 60
 def setup(app):
     app.add_config_value('ultimate_replacements', {}, True)
     app.connect('source-read', ultimateReplace)
+    # ultimateReplace is a pure per-document string substitution, safe for
+    # parallel builds (sphinx-build -j)
+    return {'parallel_read_safe': True, 'parallel_write_safe': True}
