@@ -31,9 +31,12 @@ steps:
 
 - name: link checks
   image: *image
+  environment:
+    UV_EXTRA_INDEX_URL: http://bender2.brainchipinc.local:81/
+    UV_INSECURE_HOST: bender2.brainchipinc.local
   commands:
-  - pip install --index-url http://bender2.brainchipinc.local:81/ --trusted-host bender2.brainchipinc.local -r requirements.txt
-  - sphinx-build -D plot_gallery=0 -b html ./doc ./build -b linkcheck
+  - uv pip install --system -r requirements.txt
+  - sphinx-build -j auto -D plot_gallery=0 -b html ./doc ./build -b linkcheck
 
 ---
 kind: pipeline
@@ -72,12 +75,18 @@ steps:
 - name: build
   image: *image
   privileged: true
+  environment:
+    UV_EXTRA_INDEX_URL: http://bender2.brainchipinc.local:81/
+    UV_INSECURE_HOST: bender2.brainchipinc.local
   commands:
-  - pip install --index-url http://bender2.brainchipinc.local:81/ --trusted-host bender2.brainchipinc.local -r requirements.txt
+  - uv pip install --system -r requirements.txt
+  - uv cache prune --ci
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
   volumes:
     - name: akida_chip
       path: /dev/akida0
+    - name: uv_cache
+      path: /root/.cache/uv
 
 - name: update_gh_pages
   image: bender:5000/drone/git:linux
@@ -127,6 +136,9 @@ volumes:
 - name: akida_chip
   host:
     path: /dev/akida0
+- name: uv_cache
+  host:
+    path: /var/cache/drone/uv
 
 node:
   hw: gpu-nsoc_v2
@@ -171,18 +183,27 @@ steps:
 - name: build
   image: *image
   privileged: true
+  environment:
+    UV_EXTRA_INDEX_URL: http://bender2.brainchipinc.local:81/
+    UV_INSECURE_HOST: bender2.brainchipinc.local
   commands:
-  - pip install --index-url http://bender2.brainchipinc.local:81/ --trusted-host bender2.brainchipinc.local -r requirements.txt
-  - pip install --index-url http://bender2.brainchipinc.local:81/ --trusted-host bender2.brainchipinc.local --pre -U cnn2snn akida_models
+  - uv pip install --system -r requirements.txt
+  - uv pip install --system --pre -U cnn2snn akida_models
+  - uv cache prune --ci
   - sphinx-build -D plot_gallery=1 -b html ./doc ./build
   volumes:
     - name: akida_chip
       path: /dev/akida0
+    - name: uv_cache
+      path: /root/.cache/uv
 
 volumes:
 - name: akida_chip
   host:
     path: /dev/akida0
+- name: uv_cache
+  host:
+    path: /var/cache/drone/uv
 
 node:
   hw: gpu-nsoc_v2
