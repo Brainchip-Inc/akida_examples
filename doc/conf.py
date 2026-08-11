@@ -138,7 +138,7 @@ pip_freeze = ', '.join([str(i) for i in freeze(local_only=True)])
 # the lists below. On release, add the archived version to legacy_doc_versions
 # (it also feeds the "Previous versions" list on the Changelog page).
 legacy_doc_versions = [
-    '2.18.2', '2.17.0', '2.16.1', '2.15.0', '2.14.0', '2.13.0', '2.12.0',
+    '2.19.2', '2.18.2', '2.17.0', '2.16.1', '2.15.0', '2.14.0', '2.13.0', '2.12.0',
     '2.11.0', '2.10.0', '2.9.0', '2.8.1', '2.7.2', '2.6.0', '2.4.0', '2.3.0'
 ]
 legacy_doc_url = 'https://brainchip-inc.github.io/akida_examples_{}-doc-1/'

@@ -15,29 +15,24 @@ Changelog
 
       {PIP_FREEZE}
 
-MetaTF 2.19.2
+MetaTF 2.19.3
 -------------
 
-Released in July 2026. Package set: **akida/cnn2snn 2.19.2**, **quantizeml 1.2.4**,
-**akida-models 1.14.1**. Aligned with FPGA versions 1764 (2-nodes), 1765 (6-nodes),
+Released in August 2026. Package set: **akida/cnn2snn 2.19.3**, **quantizeml 1.2.5**,
+**akida-models 1.14.2**. Aligned with FPGA versions 1764 (2-nodes), 1765 (6-nodes),
 1766 (6-nodes bittware) and 905 (Pico).
 
 **New features:**
 
-* Added 4-node and 12-node virtual devices
-* Added AKD1500 files to the engine deploy CLI
-* Added InputQuantizer support for 1.0 models
-* Relaxed TNP-R (Pico) mapping constraints to match hardware capabilities
-* Enabled dynamic shape support on Conv2D for TensorFlow evaluation (quantizeml)
+* Improved user experience in documentation. Now coming with an extra example in Getting started
+  <./getting_started.rst>, a new See power number <./power_number.rst> page, power number in the
+  model zoo <./model_zoo.rst> and a version switcher.
+* A new `MetaTF <https://pypi.org/project/metatf>`_ package is provided on PyPI to ease
+  installation and dependecy pulling.
 
 **Bug fixes:**
 
-* InputConvolutional: reject ``act_bits=8``, fixed MaxPooling padding mismatch and
-  activation equalization errors
-* Improved TNP-R layer error messages
-* Resolved importlib_resources and tensorflow-metadata dependency conflicts, and
-  updated the matplotlib requirement to >= 3.11 (quantizeml)
-* Pico fault classification model is now hardware compatible (akida-models)
+* Resolved googleapis-common-protos dependency conflict
 
 Previous versions
 -----------------
