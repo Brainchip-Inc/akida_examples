@@ -388,6 +388,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#create-and-train">1. Create and train</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quantize">2. Quantize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#convert">3. Convert</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#measure-power-and-energy-on-hardware">4. Measure power and energy on hardware</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="plot_1_global_pytorch_workflow.html">PyTorch to Akida workflow</a><ul>
@@ -624,7 +625,8 @@ to download the full example code.</p>
 <span id="sphx-glr-examples-general-plot-0-global-workflow-py"></span><h1>Global Akida workflow<a class="headerlink" href="#global-akida-workflow" title="Link to this heading"></a></h1>
 <p>Using the MNIST dataset, this example shows the definition and training of a TF-Keras
 floating-point model, its quantization to 8-bit with the help of calibration,
-its quantization to 4-bit using QAT and its conversion to Akida.
+its quantization to 4-bit using QAT, its conversion to Akida and finally the measurement
+of the processor’s differentiator: power and energy per inference on an Akida device.
 Notice that the performance of the original TF-Keras floating-point model is maintained
 throughout the Akida flow.
 Please refer to the <a class="reference external" href="../../user_guide/akida.html">Akida user guide</a> for further information.</p>
@@ -635,6 +637,13 @@ the ONNX format.</p>
 <p>Please refer to the TensorFlow <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/models">tf_keras.models</a>
 module for model creation/import details and the <a class="reference external" href="https://www.tensorflow.org/guide">TensorFlow Guide</a> for TensorFlow usage.</p>
 <p>The MNIST example below is light enough so that a <a class="reference external" href="https://www.tensorflow.org/install/gpu">GPU</a> is not needed for training.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Power is measured on silicon and is currently supported on the AKD1000 SoC, which
+implements Akida 1.0, while this tutorial’s main flow targets Akida 2.0. The final
+section therefore switches to the Akida 1.0 version of an MNIST model from the model
+zoo to report the power figures. Everything else runs on the free software simulator.</p>
 </div>
 <figure class="align-center" id="id2">
 <a class="reference external image-reference" href="../../_images/overall_flow.png"><img alt="Overall flow" height="323" src="../../_images/overall_flow.png" width="847" />
@@ -676,22 +685,22 @@ module for model creation/import details and the <a class="reference external" h
 <img src="../../_images/sphx_glr_plot_0_global_workflow_001.png" srcset="../../_images/sphx_glr_plot_0_global_workflow_001.png" alt="Class 7, Class 2, Class 1, Class 0" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
 
     8192/11490434 [..............................] - ETA: 0s
-   16384/11490434 [..............................] - ETA: 52s
-   49152/11490434 [..............................] - ETA: 41s
-   81920/11490434 [..............................] - ETA: 39s
-  131072/11490434 [..............................] - ETA: 28s
-  180224/11490434 [..............................] - ETA: 24s
-  278528/11490434 [..............................] - ETA: 18s
-  409600/11490434 [&gt;.............................] - ETA: 13s
-  573440/11490434 [&gt;.............................] - ETA: 10s
-  851968/11490434 [=&gt;............................] - ETA: 7s 
- 1228800/11490434 [==&gt;...........................] - ETA: 5s
- 1843200/11490434 [===&gt;..........................] - ETA: 3s
- 2392064/11490434 [=====&gt;........................] - ETA: 2s
- 3645440/11490434 [========&gt;.....................] - ETA: 1s
- 4849664/11490434 [===========&gt;..................] - ETA: 1s
- 6471680/11490434 [===============&gt;..............] - ETA: 0s
-10108928/11490434 [=========================&gt;....] - ETA: 0s
+   16384/11490434 [..............................] - ETA: 40s
+   49152/11490434 [..............................] - ETA: 37s
+   81920/11490434 [..............................] - ETA: 35s
+  147456/11490434 [..............................] - ETA: 25s
+  212992/11490434 [..............................] - ETA: 20s
+  311296/11490434 [..............................] - ETA: 15s
+  442368/11490434 [&gt;.............................] - ETA: 12s
+  638976/11490434 [&gt;.............................] - ETA: 9s 
+  925696/11490434 [=&gt;............................] - ETA: 6s
+ 1359872/11490434 [==&gt;...........................] - ETA: 4s
+ 2031616/11490434 [====&gt;.........................] - ETA: 3s
+ 2973696/11490434 [======&gt;.......................] - ETA: 2s
+ 4399104/11490434 [==========&gt;...................] - ETA: 1s
+ 6332416/11490434 [===============&gt;..............] - ETA: 0s
+ 8486912/11490434 [=====================&gt;........] - ETA: 0s
+10797056/11490434 [===========================&gt;..] - ETA: 0s
 11490434/11490434 [==============================] - 1s 0us/step
 </pre></div>
 </div>
@@ -771,32 +780,32 @@ a test accuracy over 98% after 10 epochs.</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Epoch 1/10
-1688/1688 - 6s - loss: 0.1712 - accuracy: 0.9472 - val_loss: 0.0664 - val_accuracy: 0.9830 - 6s/epoch - 4ms/step
+1688/1688 - 7s - loss: 0.1719 - accuracy: 0.9477 - val_loss: 0.0888 - val_accuracy: 0.9750 - 7s/epoch - 4ms/step
 Epoch 2/10
-1688/1688 - 4s - loss: 0.0697 - accuracy: 0.9787 - val_loss: 0.0579 - val_accuracy: 0.9840 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0741 - accuracy: 0.9772 - val_loss: 0.0623 - val_accuracy: 0.9830 - 4s/epoch - 2ms/step
 Epoch 3/10
-1688/1688 - 4s - loss: 0.0526 - accuracy: 0.9839 - val_loss: 0.0900 - val_accuracy: 0.9728 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0530 - accuracy: 0.9835 - val_loss: 0.0589 - val_accuracy: 0.9833 - 4s/epoch - 2ms/step
 Epoch 4/10
-1688/1688 - 4s - loss: 0.0434 - accuracy: 0.9858 - val_loss: 0.0584 - val_accuracy: 0.9828 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0421 - accuracy: 0.9867 - val_loss: 0.0579 - val_accuracy: 0.9842 - 4s/epoch - 2ms/step
 Epoch 5/10
-1688/1688 - 4s - loss: 0.0342 - accuracy: 0.9892 - val_loss: 0.0527 - val_accuracy: 0.9847 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0338 - accuracy: 0.9890 - val_loss: 0.0523 - val_accuracy: 0.9860 - 4s/epoch - 2ms/step
 Epoch 6/10
-1688/1688 - 4s - loss: 0.0288 - accuracy: 0.9905 - val_loss: 0.0532 - val_accuracy: 0.9867 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0292 - accuracy: 0.9901 - val_loss: 0.0668 - val_accuracy: 0.9840 - 4s/epoch - 2ms/step
 Epoch 7/10
-1688/1688 - 4s - loss: 0.0256 - accuracy: 0.9916 - val_loss: 0.0607 - val_accuracy: 0.9832 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0248 - accuracy: 0.9917 - val_loss: 0.0563 - val_accuracy: 0.9847 - 4s/epoch - 2ms/step
 Epoch 8/10
-1688/1688 - 4s - loss: 0.0211 - accuracy: 0.9926 - val_loss: 0.0522 - val_accuracy: 0.9865 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0189 - accuracy: 0.9937 - val_loss: 0.0581 - val_accuracy: 0.9860 - 4s/epoch - 2ms/step
 Epoch 9/10
-1688/1688 - 4s - loss: 0.0182 - accuracy: 0.9938 - val_loss: 0.0461 - val_accuracy: 0.9882 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0186 - accuracy: 0.9935 - val_loss: 0.0621 - val_accuracy: 0.9867 - 4s/epoch - 2ms/step
 Epoch 10/10
-1688/1688 - 4s - loss: 0.0158 - accuracy: 0.9944 - val_loss: 0.0755 - val_accuracy: 0.9817 - 4s/epoch - 2ms/step
+1688/1688 - 4s - loss: 0.0150 - accuracy: 0.9951 - val_loss: 0.0592 - val_accuracy: 0.9865 - 4s/epoch - 2ms/step
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">score</span> <span class="o">=</span> <span class="n">model_keras</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test accuracy:&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy: 0.9824000000953674
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy: 0.9854000210762024
 </pre></div>
 </div>
 </section>
@@ -831,28 +840,27 @@ operation.</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.11/dist-packages/quantizeml/models/quantize.py:577: UserWarning: Quantizing per-axis with random calibration samples is not accurate. Set QuantizationParams.per_tensor_activations=True when calibrating with random samples. Continuing execution.
   warnings.warn(&quot;Quantizing per-axis with random calibration samples is not accurate. &quot;
 
-   1/1024 [..............................] - ETA: 2:34
+   1/1024 [..............................] - ETA: 2:37
   51/1024 [&gt;.............................] - ETA: 0s  
  103/1024 [==&gt;...........................] - ETA: 0s
- 154/1024 [===&gt;..........................] - ETA: 0s
- 205/1024 [=====&gt;........................] - ETA: 0s
- 256/1024 [======&gt;.......................] - ETA: 0s
- 307/1024 [=======&gt;......................] - ETA: 0s
- 358/1024 [=========&gt;....................] - ETA: 0s
- 410/1024 [===========&gt;..................] - ETA: 0s
- 461/1024 [============&gt;.................] - ETA: 0s
- 512/1024 [==============&gt;...............] - ETA: 0s
- 563/1024 [===============&gt;..............] - ETA: 0s
- 614/1024 [================&gt;.............] - ETA: 0s
- 665/1024 [==================&gt;...........] - ETA: 0s
- 717/1024 [====================&gt;.........] - ETA: 0s
- 767/1024 [=====================&gt;........] - ETA: 0s
- 818/1024 [======================&gt;.......] - ETA: 0s
- 870/1024 [========================&gt;.....] - ETA: 0s
- 922/1024 [==========================&gt;...] - ETA: 0s
- 973/1024 [===========================&gt;..] - ETA: 0s
-1024/1024 [==============================] - ETA: 0s
-1024/1024 [==============================] - 1s 987us/step
+ 155/1024 [===&gt;..........................] - ETA: 0s
+ 206/1024 [=====&gt;........................] - ETA: 0s
+ 258/1024 [======&gt;.......................] - ETA: 0s
+ 311/1024 [========&gt;.....................] - ETA: 0s
+ 363/1024 [=========&gt;....................] - ETA: 0s
+ 415/1024 [===========&gt;..................] - ETA: 0s
+ 467/1024 [============&gt;.................] - ETA: 0s
+ 518/1024 [==============&gt;...............] - ETA: 0s
+ 571/1024 [===============&gt;..............] - ETA: 0s
+ 623/1024 [=================&gt;............] - ETA: 0s
+ 676/1024 [==================&gt;...........] - ETA: 0s
+ 728/1024 [====================&gt;.........] - ETA: 0s
+ 781/1024 [=====================&gt;........] - ETA: 0s
+ 833/1024 [=======================&gt;......] - ETA: 0s
+ 886/1024 [========================&gt;.....] - ETA: 0s
+ 938/1024 [==========================&gt;...] - ETA: 0s
+ 989/1024 [===========================&gt;..] - ETA: 0s
+1024/1024 [==============================] - 1s 970us/step
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">model_quantized</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
@@ -907,7 +915,7 @@ added for quantization. For further details, please refer to their respective su
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test accuracy after 8-bit quantization:&#39;</span><span class="p">,</span> <span class="n">compile_evaluate</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after 8-bit quantization: 0.9745000004768372
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after 8-bit quantization: 0.9814000129699707
 </pre></div>
 </div>
 </section>
@@ -931,7 +939,7 @@ obtain the <a class="reference external" href="../../model_zoo_performance.html#
                            <span class="n">samples</span><span class="o">=</span><span class="n">x_train</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span> 1/11 [=&gt;............................] - ETA: 3s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span> 1/11 [=&gt;............................] - ETA: 1s
 11/11 [==============================] - 0s 1ms/step
 
  1/11 [=&gt;............................] - ETA: 0s
@@ -942,7 +950,7 @@ obtain the <a class="reference external" href="../../model_zoo_performance.html#
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test accuracy after calibration:&#39;</span><span class="p">,</span> <span class="n">compile_evaluate</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after calibration: 0.9815000295639038
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after calibration: 0.9854000210762024
 </pre></div>
 </div>
 <p>Calibrating with real samples on this model recovers the initial float accuracy.</p>
@@ -971,7 +979,7 @@ introduce a performance drop.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test accuracy after 4-bit quantization:&#39;</span><span class="p">,</span> <span class="n">compile_evaluate</span><span class="p">(</span><span class="n">model_quantized</span><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after 4-bit quantization: 0.979200005531311
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after 4-bit quantization: 0.982699990272522
 </pre></div>
 </div>
 </section>
@@ -990,24 +998,24 @@ expected to be lower than during the initial float training.</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Epoch 1/5
-1688/1688 - 15s - loss: 0.0097 - accuracy: 0.9971 - val_loss: 0.0563 - val_accuracy: 0.9873 - 15s/epoch - 9ms/step
+1688/1688 - 15s - loss: 0.0101 - accuracy: 0.9969 - val_loss: 0.0542 - val_accuracy: 0.9877 - 15s/epoch - 9ms/step
 Epoch 2/5
-1688/1688 - 10s - loss: 0.0063 - accuracy: 0.9983 - val_loss: 0.0498 - val_accuracy: 0.9883 - 10s/epoch - 6ms/step
+1688/1688 - 10s - loss: 0.0066 - accuracy: 0.9981 - val_loss: 0.0539 - val_accuracy: 0.9878 - 10s/epoch - 6ms/step
 Epoch 3/5
-1688/1688 - 10s - loss: 0.0051 - accuracy: 0.9990 - val_loss: 0.0534 - val_accuracy: 0.9883 - 10s/epoch - 6ms/step
+1688/1688 - 10s - loss: 0.0054 - accuracy: 0.9986 - val_loss: 0.0545 - val_accuracy: 0.9885 - 10s/epoch - 6ms/step
 Epoch 4/5
-1688/1688 - 10s - loss: 0.0045 - accuracy: 0.9991 - val_loss: 0.0526 - val_accuracy: 0.9880 - 10s/epoch - 6ms/step
+1688/1688 - 10s - loss: 0.0047 - accuracy: 0.9991 - val_loss: 0.0550 - val_accuracy: 0.9877 - 10s/epoch - 6ms/step
 Epoch 5/5
-1688/1688 - 10s - loss: 0.0039 - accuracy: 0.9994 - val_loss: 0.0499 - val_accuracy: 0.9882 - 10s/epoch - 6ms/step
+1688/1688 - 10s - loss: 0.0041 - accuracy: 0.9992 - val_loss: 0.0550 - val_accuracy: 0.9877 - 10s/epoch - 6ms/step
 
-&lt;tf_keras.src.callbacks.History object at 0x7d19b3f2f7d0&gt;
+&lt;tf_keras.src.callbacks.History object at 0x706344c99f10&gt;
 </pre></div>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">score</span> <span class="o">=</span> <span class="n">model_quantized</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Test accuracy after fine-tuning:&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after fine-tuning: 0.9879000186920166
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after fine-tuning: 0.9869999885559082
 </pre></div>
 </div>
 </section>
@@ -1060,7 +1068,7 @@ __________________________________________________________________
 <span class="k">assert</span> <span class="n">accuracy</span> <span class="o">&gt;</span> <span class="mf">0.96</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after conversion: 0.9846000075340271
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Test accuracy after conversion: 0.9854999780654907
 </pre></div>
 </div>
 </section>
@@ -1085,8 +1093,8 @@ the output of the model.</p>
 </pre></div>
 </div>
 <img src="../../_images/sphx_glr_plot_0_global_workflow_002.png" srcset="../../_images/sphx_glr_plot_0_global_workflow_002.png" alt="Class 7" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Input Label: 7
-[-12.959751  -15.810172   -7.161416    0.2368029 -16.840425  -12.492912
- -33.281612   12.604363   -4.8552556   0.4942379]
+[-15.981614  -10.506374   -6.2764544   0.9273067 -20.331224   -9.444105
+ -30.199617   12.041858   -6.896565   -2.6125205]
 </pre></div>
 </div>
 <p>Consider the output from the model above. As is typical in backprop-trained models, the final
@@ -1095,7 +1103,153 @@ training is to maximize the response of the neuron corresponding to the label of
 sample while minimizing the responses of the other neurons.</p>
 <p>In the bar chart above, you can see the outputs from all 10 neurons. It is easy to see that neuron
 7 responds much more strongly than the others. The first sample is indeed a number 7.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 5.375 seconds)</p>
+</section>
+</section>
+<section id="measure-power-and-energy-on-hardware">
+<h2>4. Measure power and energy on hardware<a class="headerlink" href="#measure-power-and-energy-on-hardware" title="Link to this heading"></a></h2>
+<p>Accuracy parity is only half of the story: the reason to run a model on Akida is efficiency.
+This last section measures the power the processor draws while classifying the MNIST test set,
+read from a sensor on the chip.</p>
+<p>Power is measured on silicon, currently on the AKD1000 SoC that implements Akida 1.0 (see the
+<a class="reference external" href="../../power_number.html">See the power number</a> page). Since the model trained above uses
+the default Akida 2.0 quantization, this section switches to the Akida 1.0 MNIST model from
+the model zoo: the <a class="reference external" href="../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained">GXNOR/MNIST</a> CNN,
+pretrained and quantized to 2-bit weights and 1-bit activations.</p>
+<section id="load-and-convert-a-pretrained-akida-1-0-model">
+<h3>4.1. Load and convert a pretrained Akida 1.0 model<a class="headerlink" href="#load-and-convert-a-pretrained-akida-1-0-model" title="Link to this heading"></a></h3>
+<p>The <a class="reference external" href="../../api_reference/cnn2snn_apis.html#cnn2snn.set_akida_version">set_akida_version</a>
+context selects the Akida 1.0 version of the pretrained model, which is then converted exactly
+like the trained model above.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cnn2snn</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_akida_version</span><span class="p">,</span> <span class="n">AkidaVersion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">akida_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">gxnor_mnist_pretrained</span>
+
+<span class="c1"># Use a quantized model with pretrained quantized weights</span>
+<span class="k">with</span> <span class="n">set_akida_version</span><span class="p">(</span><span class="n">AkidaVersion</span><span class="o">.</span><span class="n">v1</span><span class="p">):</span>
+    <span class="n">model_quantized_1_0</span> <span class="o">=</span> <span class="n">gxnor_mnist_pretrained</span><span class="p">()</span>
+
+<span class="n">model_akida_1_0</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">model_quantized_1_0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.11/dist-packages/akida_models/model_io.py:147: UserWarning: Model gxnor_mnist_iq2_wq2_aq1.h5 has been trained with akida_models 1.1.10 which is the last version supporting 1.0 models training. Continuing execution.
+  warnings.warn(f&#39;Model {model_name_v1} has been trained with akida_models 1.1.10 which is &#39;
+Downloading data from https://data.brainchip.com/models/AkidaV1/gxnor/gxnor_mnist_iq2_wq2_aq1.h5.
+
+      0/6556040 [..............................] - ETA: 0s
+ 286720/6556040 [&gt;.............................] - ETA: 1s
+1720320/6556040 [======&gt;.......................] - ETA: 0s
+3022848/6556040 [============&gt;.................] - ETA: 0s
+6119424/6556040 [===========================&gt;..] - ETA: 0s
+6556040/6556040 [==============================] - 0s 0us/step
+Download complete.
+WARNING:tensorflow:No training configuration found in the save file, so the model was *not* compiled. Compile it manually.
+</pre></div>
+</div>
+</section>
+<section id="map-on-hardware">
+<h3>4.2. Map on hardware<a class="headerlink" href="#map-on-hardware" title="Link to this heading"></a></h3>
+<p>List available Akida devices and check that an NSoC V2, Akida 1.0 production chip is available.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">akida</span>
+
+<span class="n">devices</span> <span class="o">=</span> <span class="n">akida</span><span class="o">.</span><span class="n">devices</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Available devices: </span><span class="si">{</span><span class="p">[</span><span class="n">dev</span><span class="o">.</span><span class="n">desc</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">dev</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">devices</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">),</span> <span class="s2">&quot;No device found, this example needs an Akida NSoC_v2 device.&quot;</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">device</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">akida</span><span class="o">.</span><span class="n">NSoC_v2</span><span class="p">,</span> <span class="s2">&quot;Wrong device found, this example needs an Akida NSoC_v2.&quot;</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Available devices: [&#39;PCIe/NSoC_v2/0&#39;]
+</pre></div>
+</div>
+<p>Map the model on the device</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">model_akida_1_0</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+<span class="c1"># Check model mapping: NP allocation and binary size</span>
+<span class="n">model_akida_1_0</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>                                     Model Summary
+_______________________________________________________________________________________
+Input shape  Output shape  Sequences  Layers  NPs  Skip DMAs  External Memory (Bytes)
+=======================================================================================
+[28, 28, 1]  [1, 1, 10]    1          4       66   0          409600
+_______________________________________________________________________________________
+
+_________________________
+Component (type)  Count
+=========================
+HRC               1
+_________________________
+CNP1              64
+_________________________
+FNP2              1
+_________________________
+FNP3              1
+_________________________
+
+        External Memory Summary
+________________________________________
+Layer (type)   External Memory (Bytes)
+========================================
+fc_1 (Fully.)  409600
+________________________________________
+
+__________________________________________________________________________
+Layer (type)                 Output shape  Kernel shape       Components
+
+====== HW/block_1/conv_1-predictions (Hardware) - size: 559748 bytes =====
+
+block_1/conv_1 (InputConv.)  [14, 14, 32]  (5, 5, 1, 32)      1 HRC
+__________________________________________________________________________
+block_2/conv_1 (Conv.)       [7, 7, 64]    (3, 3, 32, 64)     64 CNP1
+__________________________________________________________________________
+fc_1 (Fully.)                [1, 1, 512]   (1, 1, 3136, 512)  1 FNP2
+__________________________________________________________________________
+predictions (Fully.)         [1, 1, 10]    (1, 1, 512, 10)    1 FNP3
+__________________________________________________________________________
+</pre></div>
+</div>
+</section>
+<section id="performance-measurement">
+<h3>4.3. Performance measurement<a class="headerlink" href="#performance-measurement" title="Link to this heading"></a></h3>
+<p>Power measurement must be enabled on the device’s SoC (disabled by default).
+After sending data for inference, performance measurements are available in
+the <a class="reference external" href="../../api_reference/akida_apis.html#akida.Model.statistics">model statistics</a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable power measurement</span>
+<span class="n">device</span><span class="o">.</span><span class="n">soc</span><span class="o">.</span><span class="n">power_measurement_enabled</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># Send the test set for inference</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">model_akida_1_0</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+
+<span class="c1"># Display floor power</span>
+<span class="n">floor_power</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">soc</span><span class="o">.</span><span class="n">power_meter</span><span class="o">.</span><span class="n">floor</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Floor power: </span><span class="si">{</span><span class="n">floor_power</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> mW&#39;</span><span class="p">)</span>
+
+<span class="c1"># Retrieve statistics</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_akida_1_0</span><span class="o">.</span><span class="n">statistics</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Floor power: 921.15 mW
+Average framerate = 1795.98 fps
+Last inference power range (mW):  Avg 1199.65 / Min 921.00 / Max 1207.00 / Std 34.27
+Last inference energy consumed (mJ/frame): 0.67
+Last inference clock: 1657354803
+Last program clock: 130517
+</pre></div>
+</div>
+<p>The floor power is the idle draw of the board. In the statistics above, next to the average
+framerate, you should see the two numbers this workflow was building toward:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Last</span> <span class="pre">inference</span> <span class="pre">power</span> <span class="pre">range</span> <span class="pre">(mW)</span></code>: the power drawn while classifying, measured on-chip,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Last</span> <span class="pre">inference</span> <span class="pre">energy</span> <span class="pre">consumed</span> <span class="pre">(mJ/frame)</span></code>: the energy cost of classifying one digit.</p></li>
+</ul>
+<p>Both figures include the floor power.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Power is read from a sensor on the silicon: the software simulator cannot measure
+it. Without a device, the <a class="reference external" href="../../model_zoo_performance.html#akida-1-0-models">model zoo performance</a> page publishes the measured
+reference figure for this model — 0.34 mJ per frame on an AKD1500 device.</p>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 12.148 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-general-plot-0-global-workflow-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/760d542b3c76090266d36acf0a686630/plot_0_global_workflow.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_0_global_workflow.ipynb</span></code></a></p>
