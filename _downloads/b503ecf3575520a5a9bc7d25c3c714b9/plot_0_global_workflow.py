@@ -4,12 +4,17 @@ Global Akida workflow
 
 Using the MNIST dataset, this example shows the definition and training of a TF-Keras
 floating-point model, its quantization to 8-bit with the help of calibration,
-its quantization to 4-bit using QAT and its conversion to Akida.
+its quantization to 4-bit using QAT, its conversion to Akida and finally the measurement
+of the processor's differentiator: power and energy per inference on an Akida device.
 Notice that the performance of the original TF-Keras floating-point model is maintained
 throughout the Akida flow.
 Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for further information.
 
-.. Note:: Please refer to the TensorFlow  `tf_keras.models
+If you train in PyTorch, the `PyTorch to Akida workflow
+<./plot_1_global_pytorch_workflow.html>`__ is the equivalent entry point, going through
+the ONNX format.
+
+.. Note:: Please refer to the TensorFlow `tf_keras.models
           <https://www.tensorflow.org/api_docs/python/tf/keras/models>`__
           module for model creation/import details and the `TensorFlow Guide
           <https://www.tensorflow.org/guide>`__ for TensorFlow usage.
@@ -17,6 +22,10 @@ Please refer to the `Akida user guide <../../user_guide/akida.html>`__ for furth
           The MNIST example below is light enough so that a `GPU
           <https://www.tensorflow.org/install/gpu>`__ is not needed for training.
 
+.. Note:: Power is measured on silicon and is currently supported on the AKD1000 SoC, which
+          implements Akida 1.0, while this tutorial's main flow targets Akida 2.0. The final
+          section therefore switches to the Akida 1.0 version of an MNIST model from the model
+          zoo to report the power figures. Everything else runs on the free software simulator.
 
 .. figure:: ../../img/overall_flow.png
    :target: ../../_images/overall_flow.png
@@ -47,7 +56,7 @@ from tf_keras.datasets import mnist
 # Load MNIST dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# Add a channels dimension to the image sets as Akida expects 4-D inputs (corresponding to
+# Add a channels dimension to the image sets as Akida expects 4-D inputs corresponding to
 # (num_samples, height, width, channels). Note: MNIST is a grayscale dataset and is unusual
 # in this respect - most image data already includes a channel dimension, and this step will
 # not be necessary.
@@ -66,7 +75,7 @@ plt.show()
 # ^^^^^^^^^^^^^^^^^^^^^
 #
 # Note that at this stage, there is nothing specific to the Akida IP.
-# The model constructed below, as inspired by `this example
+# The model constructed below, inspired by `this example
 # <https://www.tensorflow.org/model_optimization/guide/quantization/training_example#train_a_model_for_mnist_without_quantization_aware_training>`__,
 # is a completely standard `TF-Keras <https://www.tensorflow.org/api_docs/python/tf/keras>`__ CNN model.
 #
@@ -104,7 +113,7 @@ model_keras.compile(
     optimizer=Adam(learning_rate=1e-3),
     metrics=['accuracy'])
 
-_ = model_keras.fit(x_train, y_train, epochs=10, validation_split=0.1)
+_ = model_keras.fit(x_train, y_train, epochs=10, validation_split=0.1, verbose=2)
 
 ######################################################################
 score = model_keras.evaluate(x_test, y_test, verbose=0)
@@ -118,8 +127,9 @@ print('Test accuracy:', score[1])
 # 2.1. 8-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# An Akida accelerator processes 8 or 4-bit integer activations and weights. Therefore,
-# the floating-point TF-Keras model must be quantized in preparation to run on an Akida accelerator.
+# An Akida accelerator processes 8- or 4-bit integer activations and weights. Therefore, the
+# floating-point TF-Keras model must be quantized in preparation for running on an Akida
+# accelerator.
 #
 # The QuantizeML `quantize <../../api_reference/quantizeml_apis.html#quantizeml.models.quantize>`__
 # function can be used to quantize a TF-Keras model for Akida. For this step in this example, an
@@ -128,8 +138,8 @@ print('Test accuracy:', score[1])
 #
 # The quantization process results in a TF-Keras model with custom `QuantizeML quantized layers
 # <../../api_reference/quantizeml_apis.html#layers>`__ substituted for the original TF-Keras layers.
-# All TF-Keras API functions can be applied on this new model: ``summary()``, ``compile()``,
-# ``fit()``. etc.
+# All TF-Keras API functions can be applied to this new model: ``summary()``, ``compile()``,
+# ``fit()``, etc.
 #
 # .. Note:: The ``quantize`` function applies `several transformations
 #           <../../api_reference/quantizeml_apis.html#transforms>`__ to
@@ -147,9 +157,9 @@ model_quantized = quantize(model_keras, qparams=qparams)
 model_quantized.summary()
 
 ######################################################################
-# .. Note:: Note that the number of parameters for the floating and quantized models differs,
+# .. Note:: The number of parameters for the floating and quantized models differs,
 #           a consequence of the BatchNormalization folding and the additional parameters
-#           added for quantization. For further details, please refer to their respective summary.
+#           added for quantization. For further details, please refer to their respective summaries.
 #
 
 ######################################################################
@@ -170,7 +180,7 @@ print('Test accuracy after 8-bit quantization:', compile_evaluate(model_quantize
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # The previous call to ``quantize`` was made with random samples for calibration
-# (default parameters). While the observed drop in accuracy is minimal, that is
+# (default parameters). While the observed drop in accuracy is minimal, that is,
 # around 1%, it can be worse on more complex models. Therefore, it is advised to
 # use a set of real samples from the training set for calibration during a call
 # to ``quantize``.
@@ -198,11 +208,11 @@ print('Test accuracy after calibration:', compile_evaluate(model_quantized))
 # 2.3. 4-bit quantization
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The accuracy of the 8/8/8 quantized model is equal to that of the Keras floating-point
+# The accuracy of the 8/8/8 quantized model is equal to that of the TF-Keras floating-point
 # model. In some cases, a smaller memory size for the model is required. This can be
 # accomplished through quantization of the model to smaller bitwidths.
 #
-# The model will now be quantized to 8/4/4, that is 8-bit weights in the first layer with
+# The model will now be quantized to 8/4/4, that is, 8-bit weights in the first layer with
 # 4-bit weights and activations in all other layers. Such a quantization scheme will usually
 # introduce a performance drop.
 #
@@ -223,7 +233,7 @@ print('Test accuracy after 4-bit quantization:', compile_evaluate(model_quantize
 # When a model suffers from an accuracy drop after quantization, fine-tuning or Quantization
 # Aware Training (QAT) may recover some or all of the original performance.
 #
-# Note that since this is a fine-tuning step, both the number of epochs and learning rate are
+# Note that since this is a fine-tuning step, both the number of epochs and the learning rate are
 # expected to be lower than during the initial float training.
 #
 model_quantized.compile(
@@ -231,7 +241,7 @@ model_quantized.compile(
     optimizer=Adam(learning_rate=1e-4),
     metrics=['accuracy'])
 
-model_quantized.fit(x_train, y_train, epochs=5, validation_split=0.1)
+model_quantized.fit(x_train, y_train, epochs=5, validation_split=0.1, verbose=2)
 
 ######################################################################
 score = model_quantized.evaluate(x_test, y_test, verbose=0)[1]
@@ -301,3 +311,92 @@ print(outputs.squeeze())
 # In the bar chart above, you can see the outputs from all 10 neurons. It is easy to see that neuron
 # 7 responds much more strongly than the others. The first sample is indeed a number 7.
 #
+
+######################################################################
+# 4. Measure power and energy on hardware
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Accuracy parity is only half of the story: the reason to run a model on Akida is efficiency.
+# This last section measures the power the processor draws while classifying the MNIST test set,
+# read from a sensor on the chip.
+#
+# Power is measured on silicon, currently on the AKD1000 SoC that implements Akida 1.0 (see the
+# `See the power number <../../power_number.html>`__ page). Since the model trained above uses
+# the default Akida 2.0 quantization, this section switches to the Akida 1.0 MNIST model from
+# the model zoo: the `GXNOR/MNIST
+# <../../api_reference/akida_models_apis.html#akida_models.gxnor_mnist_pretrained>`__ CNN,
+# pretrained and quantized to 2-bit weights and 1-bit activations.
+
+######################################################################
+# 4.1. Load and convert a pretrained Akida 1.0 model
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The `set_akida_version <../../api_reference/cnn2snn_apis.html#cnn2snn.set_akida_version>`__
+# context selects the Akida 1.0 version of the pretrained model, which is then converted exactly
+# like the trained model above.
+
+from cnn2snn import set_akida_version, AkidaVersion
+from akida_models import gxnor_mnist_pretrained
+
+# Use a quantized model with pretrained quantized weights
+with set_akida_version(AkidaVersion.v1):
+    model_quantized_1_0 = gxnor_mnist_pretrained()
+
+model_akida_1_0 = convert(model_quantized_1_0)
+
+######################################################################
+# 4.2. Map on hardware
+# ^^^^^^^^^^^^^^^^^^^^
+#
+# List available Akida devices and check that an NSoC V2, Akida 1.0 production chip is available.
+
+import akida
+
+devices = akida.devices()
+print(f'Available devices: {[dev.desc for dev in devices]}')
+assert len(devices), "No device found, this example needs an Akida NSoC_v2 device."
+device = devices[0]
+assert device.version == akida.NSoC_v2, "Wrong device found, this example needs an Akida NSoC_v2."
+
+######################################################################
+# Map the model on the device
+
+model_akida_1_0.map(device)
+
+# Check model mapping: NP allocation and binary size
+model_akida_1_0.summary()
+
+######################################################################
+# 4.3. Performance measurement
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Power measurement must be enabled on the device's SoC (disabled by default).
+# After sending data for inference, performance measurements are available in
+# the `model statistics <../../api_reference/akida_apis.html#akida.Model.statistics>`__.
+
+# Enable power measurement
+device.soc.power_measurement_enabled = True
+
+# Send the test set for inference
+_ = model_akida_1_0.forward(x_test)
+
+# Display floor power
+floor_power = device.soc.power_meter.floor
+print(f'Floor power: {floor_power:.2f} mW')
+
+# Retrieve statistics
+print(model_akida_1_0.statistics)
+
+######################################################################
+# The floor power is the idle draw of the board. In the statistics above, next to the average
+# framerate, you should see the two numbers this workflow was building toward:
+#
+# - ``Last inference power range (mW)``: the power drawn while classifying, measured on-chip,
+# - ``Last inference energy consumed (mJ/frame)``: the energy cost of classifying one digit.
+#
+# Both figures include the floor power.
+#
+# .. Note:: Power is read from a sensor on the silicon: the software simulator cannot measure
+#           it. Without a device, the `model zoo performance
+#           <../../model_zoo_performance.html#akida-1-0-models>`__ page publishes the measured
+#           reference figure for this model — 0.34 mJ per frame on an AKD1500 device.

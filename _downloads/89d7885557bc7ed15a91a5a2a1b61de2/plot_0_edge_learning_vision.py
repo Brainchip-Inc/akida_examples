@@ -14,7 +14,7 @@ Just a few samples (few-shot learning) of the new classes are sufficient
 to augment the Akida model with extra classes, while preserving high accuracy.
 
 Please refer to the `keyword spotting (KWS) tutorial <./plot_1_edge_learning_kws.html>`__
-for edge learning documentation, parameters fine-tuning and steps details.
+for edge learning documentation, parameter fine-tuning and details of the steps.
 
 """
 
@@ -29,7 +29,7 @@ from akida import FullyConnected
 from akida_models import fetch_file
 
 # Retrieve TensorFlow `coil100 <https://www.tensorflow.org/datasets/catalog/coil100>`__
-# dataset (explicit download because file location changed and TFDS is not up to date).
+# dataset (explicit download because the file location changed and TFDS is not up to date).
 fname = fetch_file(fname='coil-100.zip', cache_subdir='datasets/coil-100', extract=True,
                    origin="https://data.brainchip.com/dataset-mirror/coil-100/coil-100.zip")
 fdir = os.path.dirname(fname)

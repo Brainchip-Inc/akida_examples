@@ -19,16 +19,16 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # 1. Edge learning process
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# By "edge learning", we mean the process of network learning in an edge device.
+# By "edge learning", we mean the process of network learning on an edge device.
 # Aside from technical requirements imposed by the device (low power, latency,
 # etc.), the task itself will often present particular challenges:
 #
-# 1. The application cannot know which, or indeed, how many classes it will
+# 1. The application cannot know which, or indeed how many, classes it will
 #    be trained on ultimately, so it must be possible to **add new classes**
-#    to the classifier online, i.e. requires **continual learning**.
+#    to the classifier online, i.e. **continual learning** is required.
 # 2. Often, there will be no large labelled dataset for new classes, which
-#    must instead be learned from just a few samples, i.e. requires **few-shot
-#    learning**.
+#    must instead be learned from just a few samples, i.e. **few-shot
+#    learning** is required.
 #
 # The Akida NSoC has a built-in learning algorithm designed for training the
 # last layer of a model and well suited for edge learning.
@@ -37,11 +37,11 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # pre-trained voice recognition system with a few preset keywords.
 # To achieve this using the Akida NSoC, learning occurs in 3 stages:
 #
-# 1. The Akida model preparation: an Akida model must meet specific conditions
-#    to be compatible for `Akida learning <../../user_guide/akida.html#using-akida-edge-learning>`__.
+# 1. The Akida model preparation: an Akida model must meet specific conditions to be compatible
+#    with `Akida learning <../../user_guide/akida.html#using-akida-edge-learning>`__.
 # 2. The "offline" Akida learning: the last layer of the Akida model is trained
 #    from scratch with a large dataset. In this KWS case, the model is trained
-#    with 32 keywords from the Google "Speech Commands dataset".
+#    with 32 keywords from the Google "Speech Commands" dataset.
 # 3. The "online" (edge learning) stage: new keywords are learned with few
 #    samples, adding to the pre-trained words from stage 2.
 #
@@ -69,13 +69,13 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # of centroids to represent a class; there is an analogy with k-means clustering
 # applied to one-class samples, k being the number of neurons. The choice of the
 # number of neurons is a trade-off: too many neurons per class may be
-# computationally inefficient; in contrast too few neurons per class may have
+# computationally inefficient; in contrast, too few neurons per class may have
 # difficulty representing within-class heterogeneity. Like k-means
 # clustering, the choice of k depends on the cluster representation of the data.
 #
-# Like any training process, hyper-parameters must be set appropriately.
+# As in any training process, hyper-parameters must be set appropriately.
 # The only mandatory parameter is the number of weights (i.e. number of
-# connections for each neuron) which must be correlated to the number of spikes
+# connections for each neuron), which must be correlated to the number of spikes
 # at the end of the feature extractor. Other parameters, such as
 # ``min_plasticity`` or ``learning_competition``, are optional and mainly used
 # for model fine-tuning: one can set them to default for a first try.
@@ -106,16 +106,16 @@ augment the Akida model with extra classes, while preserving high accuracy.
 # 1.3 "Online" edge learning
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# "Online" edge learning consists in adding and learning new classes to a
-# former pre-trained model. This stage is meant to be performed on a chip with
-# few examples for each new class.
+# "Online" edge learning consists in adding new classes to a previously
+# trained model and learning them. This stage is meant to be performed on a
+# chip with few examples for each new class.
 #
 # In practice, edge learning with Akida is similar to "offline" learning,
 # except that:
 #
 # - the network has already been trained on a set of classes which need to be
 #   kept, and so the novel classes are in addition to those.
-# - only few samples are available for training.
+# - only a few samples are available for training.
 #
 # In this KWS example, 3 new keywords are learned using 4 samples per word from
 # a single user. Applying data augmentation on these samples adds variability
@@ -148,16 +148,16 @@ augment the Akida model with extra classes, while preserving high accuracy.
 #   samples, but the number of repetitions per individual speaker in the
 #   database makes this impossible). Data augmentation is applied with time
 #   shift and additional background noise, generating 40 training samples per
-#   utterances, therefore 4 x 40 = 160 training samples per new word.
+#   utterance, therefore 4 x 40 = 160 training samples per new word.
 #
 # The audio files are pre-processed: the mel-frequency cepstral coefficients
-# (MFCC) are computed as features to represent each audio sample. The obtained
-# features for one sample are stored in an array of shape (49, 10, 1). This
-# array of features is chosen as input in the Akida network.
+# (MFCC) are computed as features to represent each audio sample. The features
+# obtained for one sample are stored in an array of shape (49, 10, 1). This
+# array of features is chosen as input to the Akida network.
 #
 # For the sake of simplicity, the pre-processing step is not detailed here;
 # this tutorial directly fetches the pre-processed audio data for both datasets.
-# The pre-processed utility methods to generate these MFCC data are available in
+# The pre-processing utility methods to generate these MFCC data are available in
 # the ``akida_models`` package.
 
 from akida import FullyConnected, Model
@@ -207,10 +207,10 @@ print("New words:\n", word_to_index_new)
 # quantized with Keras and the CNN2SNN tool. The first dataset with 33 classes
 # (32 keywords + "silence") was used for training.
 #
-# However, the last layer of this pre-trained model is not compatible for Akida
+# However, the last layer of this pre-trained model is not compatible with Akida
 # learning since it doesn't have binary weights. We then remove this last layer
 # and add a new classification layer with 33 classes and
-# 15 neurons per class. One can try with different values of neurons per
+# 15 neurons per class. One can try different values of neurons per
 # class, e.g. from 1 to 500 neurons per class, and see the effects on
 # performance and time cost.
 #
@@ -307,12 +307,12 @@ print("The number of weights is then set to:", num_weights)
 # configured for training and ready to be trained. For more information about
 # the learning hyper-parameters, check the `user guide <../../user_guide/akida.html#compiling-a-layer>`__.
 # Note that we set the `learning_competition` to 0.1, which gives a little
-# competition between neurons to prevent learning similar features.
+# competition between neurons to prevent them from learning similar features.
 #
 # Once the last layer is compiled, the
 # `fit <../../api_reference/akida_apis.html#akida.Model.fit>`_ method is used to
 # pass the dataset for training. This call is similar to the `fit` method in
-# tf-keras.
+# TF-Keras.
 #
 # After training, the model is assessed on the validation set using the
 # `predict <../../api_reference/akida_apis.html#akida.Model.predict>`_ method. It
@@ -320,9 +320,9 @@ print("The number of weights is then set to:", num_weights)
 # The model is then saved to a ``.fbz`` file.
 #
 # Note that in this specific case, the same dataset was used to train the
-# feature extractor using the CNN2SNN tool in an early stage, and to train this
+# feature extractor using the CNN2SNN tool in an earlier stage, and to train this
 # classification layer using the native learning algorithm. However, the edge
-# learning in the next stage passes completely new data in the network.
+# learning in the next stage passes completely new data through the network.
 
 # Compile Akida model with learning parameters
 from akida import AkidaUnsupervised
@@ -392,14 +392,14 @@ del model_ak
 # Here, each new class is trained using 160 samples, stored in the second
 # dataset: 4 utterances per word from a single speaker, augmented 40 times each.
 # The validation set for new words ['backward', 'follow', 'forward'] contains
-# respectively 6, 7 and 6 utterances.
+# 6, 7 and 6 utterances, respectively.
 
 print(f"Validation set of new words ({y_val_new.shape[0]} samples):")
 for word, label in word_to_index_new.items():
     print(f" - {word} (label {label}): {np.sum(y_val_new == label)} samples")
 
-# Update new labels following the numbering of the old keywords, i.e, new word
-# with label '0' becomes label '34', new word label '1' becomes '35', etc.
+# Update new labels following the numbering of the old keywords, i.e., new word
+# with label '0' becomes label '34', new word with label '1' becomes '35', etc.
 y_train_new += num_classes
 y_val_new += num_classes
 
@@ -409,7 +409,7 @@ y_val_new += num_classes
 model_edge = Model(model_file)
 model_edge.add_classes(3)
 
-# Train the Akida model with new keywords; only few samples are used.
+# Train the Akida model with new keywords; only a few samples are used.
 print("\nEdge learning with 3 new classes ...")
 start = time()
 model_edge.fit(x_train_new, y_train_new.astype(np.int32))
